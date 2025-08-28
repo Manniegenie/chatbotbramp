@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import SignIn, { SignInResult } from './signin'
 import { tokenStore } from './lib/secureStore'
 import logo from './assets/logo.jpeg'
-import SellModal from './sell' // 👈 add the sell modal
+import SellModal from './sell'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -47,8 +47,8 @@ export default function App() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [showSignIn, setShowSignIn] = useState(false)
-  const [showSell, setShowSell] = useState(false)                   // 👈 control Sell modal
-  const [openSellAfterAuth, setOpenSellAfterAuth] = useState(false) // 👈 queue Sell modal if not authed
+  const [showSell, setShowSell] = useState(false)
+  const [openSellAfterAuth, setOpenSellAfterAuth] = useState(false)
 
   const [auth, setAuth] = useState<SignInResult | null>(() => {
     const { access, refresh } = tokenStore.getTokens()
@@ -110,15 +110,18 @@ export default function App() {
   function signOut() {
     tokenStore.clear()
     setAuth(null)
-    setShowSell(false) // close modal if open
+    setShowSell(false)
   }
 
-  // helper to detect Sell URL
-  function isSellUrl(u: string) {
-    return /(^https?:\/\/)?(www\.)?chatbramp\.com\/sell\/?$/i.test(u)
+  // ✅ Robust Sell CTA detector:
+  // - prefer the CTA id "start_sell"
+  // - otherwise match any URL that contains "/sell" (with optional query/hash, absolute or relative)
+  function isSellCTA(btn: CTAButton) {
+    if (btn?.id === 'start_sell') return true
+    const u = String(btn?.url || '')
+    return /(^|\/)sell(\/|$|\?|#)/i.test(u) || /chatbramp\.com\/sell/i.test(u)
   }
 
-  // handle clicking the CTA for Sell
   function handleSellClick() {
     if (!auth) {
       setOpenSellAfterAuth(true)
@@ -128,7 +131,7 @@ export default function App() {
     setShowSell(true)
   }
 
-  // 👇 Allow the Sell modal to push friendly recap messages into chat
+  // Allow the Sell modal to push friendly recap messages into chat
   function echoFromModalToChat(text: string) {
     if (!text) return
     setMessages(prev => [
@@ -184,7 +187,6 @@ export default function App() {
               text: `You're in, ${res.user.username || res.user.firstname || 'there'} ✅`,
               ts: Date.now()
             }])
-            // if user clicked Sell before signing in, open the Sell modal now
             if (openSellAfterAuth) {
               setOpenSellAfterAuth(false)
               setShowSell(true)
@@ -202,11 +204,10 @@ export default function App() {
                   {m.role === 'assistant' && m.cta?.type === 'button' && m.cta.buttons?.length > 0 && (
                     <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       {m.cta.buttons.map((b) => {
-                        // Intercept Sell URL to open modal
-                        if (isSellUrl(b.url)) {
+                        if (isSellCTA(b)) {
                           return (
                             <button
-                              key={b.id}
+                              key={b.id || b.title}
                               className="btn"
                               onClick={handleSellClick}
                               style={b.style === 'primary'
@@ -217,10 +218,9 @@ export default function App() {
                             </button>
                           )
                         }
-                        // Other CTAs behave as normal links
                         return (
                           <a
-                            key={b.id}
+                            key={b.id || b.title}
                             className="btn"
                             href={b.url}
                             target="_blank"
@@ -262,7 +262,7 @@ export default function App() {
         </main>
       )}
 
-      {/* Sell modal (opens from CTA). Pass echo callback so the modal can recap in chat. */}
+      {/* Sell modal */}
       <SellModal
         open={showSell}
         onClose={() => setShowSell(false)}
