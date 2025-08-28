@@ -25,7 +25,17 @@ function flipIv(iv: Uint8Array): Uint8Array {
 
 function toArrayBuffer(view: Uint8Array): ArrayBuffer {
   // Ensures the underlying type is a real ArrayBuffer, not ArrayBufferLike.
-  return view.buffer.slice(view.byteOffset, view.byteOffset + view.byteLength);
+  const sliced = view.buffer.slice(view.byteOffset, view.byteOffset + view.byteLength);
+  
+  // Handle the case where slice() might return SharedArrayBuffer
+  if (sliced instanceof ArrayBuffer) {
+    return sliced;
+  } else {
+    // Convert SharedArrayBuffer to ArrayBuffer if needed
+    const arrayBuffer = new ArrayBuffer(sliced.byteLength);
+    new Uint8Array(arrayBuffer).set(new Uint8Array(sliced));
+    return arrayBuffer;
+  }
 }
 
 function bytesToB64(bytes: ArrayBuffer | Uint8Array): string {
