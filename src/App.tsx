@@ -113,21 +113,56 @@ export default function App() {
     setShowSell(false)
   }
 
-  // Robust Sell CTA detector:
-  // - prefer CTA id "start_sell"
-  // - otherwise match any URL that contains "/sell" (relative/absolute, with query/hash ok)
-  function isSellCTA(btn: CTAButton) {
-    if (btn?.id === 'start_sell') return true
-    const u = String(btn?.url || '')
-    return /(^|\/)sell(\/|$|\?|#)/i.test(u) || /chatbramp\.com\/sell/i.test(u)
+  // Enhanced Sell CTA detector with better debugging
+  function isSellCTA(btn: CTAButton): boolean {
+    if (!btn) {
+      console.log('❌ No button provided to isSellCTA')
+      return false
+    }
+
+    console.log('🔍 Checking button:', { id: btn.id, title: btn.title, url: btn.url })
+
+    // Primary check: button ID is "start_sell"
+    if (btn.id === 'start_sell') {
+      console.log('✅ Matched by ID: start_sell')
+      return true
+    }
+
+    // Secondary check: URL contains sell-related patterns
+    const url = String(btn.url || '').toLowerCase()
+    console.log('🔍 Checking URL patterns for:', url)
+
+    const sellPatterns = [
+      /\/sell($|\/|\?|#)/,           // /sell at path boundary
+      /chatbramp\.com\/sell/,        // specific domain sell page
+      /localhost.*\/sell/,           // local dev sell page
+      /sell\.html?$/,                // sell.html page
+      /\bsell\b/                     // any standalone "sell" word
+    ]
+
+    for (const pattern of sellPatterns) {
+      if (pattern.test(url)) {
+        console.log('✅ Matched URL pattern:', pattern.source)
+        return true
+      }
+    }
+
+    console.log('❌ No sell patterns matched for button')
+    return false
   }
 
-  function handleSellClick() {
+  function handleSellClick(event?: React.MouseEvent) {
+    console.log('🔥 Sell button clicked!')
+    event?.preventDefault() // Prevent any default link behavior
+    
     if (!auth) {
+      console.log('📝 User not authenticated, showing sign-in')
       setOpenSellAfterAuth(true)
       setShowSignIn(true)
       return
     }
+    
+    console.log('🎯 Opening sell modal')
     setShowSell(true)
   }
 
@@ -203,33 +238,44 @@ export default function App() {
                   {m.text}
                   {m.role === 'assistant' && m.cta?.type === 'button' && m.cta.buttons?.length > 0 && (
                     <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      {m.cta.buttons.map((b) => {
-                        if (isSellCTA(b)) {
+                      {m.cta.buttons.map((btn, index) => {
+                        const isSell = isSellCTA(btn)
+                        console.log('🎨 Rendering button:', { 
+                          index, 
+                          id: btn.id, 
+                          title: btn.title, 
+                          isSell,
+                          url: btn.url 
+                        })
+
+                        if (isSell) {
                           return (
                             <button
-                              key={b.id || b.title}
+                              key={btn.id || btn.title || index}
                               className="btn"
                               onClick={handleSellClick}
-                              style={b.style === 'primary'
+                              style={btn.style === 'primary'
                                 ? undefined
                                 : { background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }}
                             >
-                              {b.title}
+                              {btn.title}
                             </button>
                           )
                         }
+
+                        // Non-sell buttons remain as links
                         return (
                           <a
-                            key={b.id || b.title}
+                            key={btn.id || btn.title || index}
                             className="btn"
-                            href={b.url}
+                            href={btn.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            style={b.style === 'primary'
+                            style={btn.style === 'primary'
                               ? undefined
                               : { background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }}
                           >
-                            {b.title}
+                            {btn.title}
                           </a>
                         )
                       })}
