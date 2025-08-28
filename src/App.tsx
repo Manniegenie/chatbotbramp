@@ -2,7 +2,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import SignIn, { SignInResult } from './signin'
 import { tokenStore } from './lib/secureStore'
-import logo from './assets/logo.jpeg'   // 👈 import your logo (png, svg, etc.)
+import logo from './assets/logo.jpeg'
+import SellModal from './sell' // 👈 add the sell modal
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -42,9 +43,13 @@ export default function App() {
     text: "Hi, I'm Bramp AI. You can say things like 'Sell 200 USDT to NGN' or 'Show my balance'.",
     ts: Date.now()
   }])
+
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [showSignIn, setShowSignIn] = useState(false)
+  const [showSell, setShowSell] = useState(false)                   // 👈 control Sell modal
+  const [openSellAfterAuth, setOpenSellAfterAuth] = useState(false) // 👈 queue Sell modal if not authed
+
   const [auth, setAuth] = useState<SignInResult | null>(() => {
     const { access, refresh } = tokenStore.getTokens()
     const user = tokenStore.getUser()
@@ -105,13 +110,43 @@ export default function App() {
   function signOut() {
     tokenStore.clear()
     setAuth(null)
+    setShowSell(false) // close modal if open
+  }
+
+  // helper to detect Sell URL
+  function isSellUrl(u: string) {
+    return /(^https?:\/\/)?(www\.)?chatbramp\.com\/sell\/?$/i.test(u)
+  }
+
+  // handle clicking the CTA for Sell
+  function handleSellClick() {
+    if (!auth) {
+      setOpenSellAfterAuth(true)
+      setShowSignIn(true)
+      return
+    }
+    setShowSell(true)
+  }
+
+  // 👇 Allow the Sell modal to push friendly recap messages into chat
+  function echoFromModalToChat(text: string) {
+    if (!text) return
+    setMessages(prev => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        text,
+        ts: Date.now(),
+      },
+    ])
   }
 
   return (
     <div className="page">
       <header className="header">
         <div className="brand">
-          <img src={logo} alt="Bramp AI logo" className="logo" /> {/* 👈 Logo here */}
+          <img src={logo} alt="Bramp AI logo" className="logo" />
           <div>
             <h1>Bramp AI</h1>
             <p className="tag">Secure access to digital assets & payments — via licensed partners.</p>
@@ -136,7 +171,10 @@ export default function App() {
 
       {showSignIn ? (
         <SignIn
-          onCancel={() => setShowSignIn(false)}
+          onCancel={() => {
+            setShowSignIn(false)
+            setOpenSellAfterAuth(false)
+          }}
           onSuccess={(res) => {
             setAuth(res)
             setShowSignIn(false)
@@ -146,6 +184,11 @@ export default function App() {
               text: `You're in, ${res.user.username || res.user.firstname || 'there'} ✅`,
               ts: Date.now()
             }])
+            // if user clicked Sell before signing in, open the Sell modal now
+            if (openSellAfterAuth) {
+              setOpenSellAfterAuth(false)
+              setShowSell(true)
+            }
           }}
         />
       ) : (
@@ -158,20 +201,38 @@ export default function App() {
                   {m.text}
                   {m.role === 'assistant' && m.cta?.type === 'button' && m.cta.buttons?.length > 0 && (
                     <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      {m.cta.buttons.map((b) => (
-                        <a
-                          key={b.id}
-                          className="btn"
-                          href={b.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={b.style === 'primary'
-                            ? undefined
-                            : { background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }}
-                        >
-                          {b.title}
-                        </a>
-                      ))}
+                      {m.cta.buttons.map((b) => {
+                        // Intercept Sell URL to open modal
+                        if (isSellUrl(b.url)) {
+                          return (
+                            <button
+                              key={b.id}
+                              className="btn"
+                              onClick={handleSellClick}
+                              style={b.style === 'primary'
+                                ? undefined
+                                : { background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }}
+                            >
+                              {b.title}
+                            </button>
+                          )
+                        }
+                        // Other CTAs behave as normal links
+                        return (
+                          <a
+                            key={b.id}
+                            className="btn"
+                            href={b.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={b.style === 'primary'
+                              ? undefined
+                              : { background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }}
+                          >
+                            {b.title}
+                          </a>
+                        )
+                      })}
                     </div>
                   )}
                 </div>
@@ -200,6 +261,13 @@ export default function App() {
           </div>
         </main>
       )}
+
+      {/* Sell modal (opens from CTA). Pass echo callback so the modal can recap in chat. */}
+      <SellModal
+        open={showSell}
+        onClose={() => setShowSell(false)}
+        onChatEcho={echoFromModalToChat}
+      />
 
       <footer className="footer">
         <a href="/aml" target="_blank">AML/CFT Policy</a>
