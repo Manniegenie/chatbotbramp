@@ -1,5 +1,6 @@
 // src/sell.tsx
 import React, { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { tokenStore } from './lib/secureStore'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
@@ -68,8 +69,8 @@ const NETWORKS_BY_TOKEN: Record<TokenSym, { code: string; label: string }[]> = {
   ETH:   [{ code: 'ETH', label: 'Ethereum' }],
   SOL:   [{ code: 'SOL', label: 'Solana' }],
   BNB:   [{ code: 'BSC', label: 'BNB Smart Chain' }],
-  MATIC: [{ code: 'ETH', label: 'Ethereum (ERC-20)' }],
-  AVAX:  [{ code: 'BSC', label: 'BNB Smart Chain' }],
+  MATIC: [{ code: 'ETH', label: 'Ethereum (ERC-20)' }], // adjust if using Polygon mainnet
+  AVAX:  [{ code: 'BSC', label: 'BNB Smart Chain' }],  // adjust to AVAXC if using C-Chain
   USDT:  [
     { code: 'ETH', label: 'Ethereum (ERC-20)' },
     { code: 'TRX', label: 'Tron (TRC-20)' },
@@ -114,6 +115,7 @@ function useCountdown(expiryIso?: string | null) {
   return { msLeft, text: `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`, expired: msLeft <= 0 }
 }
 
+// Network code -> friendly label
 function toNetworkLabel(token: string, code: string) {
   const t = (token || '').toUpperCase() as TokenSym
   const list = NETWORKS_BY_TOKEN[t]
@@ -121,6 +123,7 @@ function toNetworkLabel(token: string, code: string) {
   return hit?.label || code
 }
 
+// Friendly chat recaps
 function buildInitiateRecap(d: InitiateSellRes) {
   const t = (d.deposit?.token || d.token || '').toUpperCase()
   const netLabel = toNetworkLabel(t, d.deposit?.network || d.network || '')
@@ -157,6 +160,22 @@ function buildPayoutRecap(init: InitiateSellRes | null, p: PayoutRes) {
   ].join('\n')
 }
 
+/** Inline styles for an overlay centered modal (no CSS edits needed) */
+const overlayStyle: React.CSSProperties = {
+  position: 'fixed',
+  inset: 0,
+  background: 'rgba(0,0,0,.5)',
+  display: 'grid',
+  placeItems: 'center',
+  padding: 20,
+  zIndex: 1000,
+}
+
+const sheetStyle: React.CSSProperties = {
+  maxWidth: 640,
+  width: '100%',
+}
+
 export default function SellModal({ open, onClose, onChatEcho }: SellModalProps) {
   const [step, setStep] = useState<1 | 2>(1)
 
@@ -177,6 +196,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [payError, setPayError] = useState<string | null>(null)
   const [payData, setPayData] = useState<PayoutRes | null>(null)
 
+  // Reset per open
   useEffect(() => {
     if (!open) return
     setStep(1)
@@ -195,12 +215,21 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     setPayData(null)
   }, [open])
 
+  // Keep network valid if token changes
   useEffect(() => {
     const list = NETWORKS_BY_TOKEN[token]
     if (!list.find(n => n.code === network)) {
       setNetwork(list[0].code)
     }
   }, [token])
+
+  // ESC to close
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, onClose])
 
   const quote = initData?.quote
   const deposit = initData?.deposit
@@ -272,186 +301,198 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
   if (!open) return null
 
-  // 👇 Use the same centered structure as SignIn (chat → messages → bubble)
-  return (
-    <div className="chat" role="dialog" aria-modal="true" aria-labelledby="sell-title">
-      <div className="messages" style={{ paddingTop: 0 }}>
-        <div className="bubble" style={{ maxWidth: 640 }}>
-          <div className="role">Sell</div>
-          <div className="text">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 id="sell-title" style={{ marginTop: 0, marginBottom: 8 }}>
-                {step === 1 ? 'Start a Sell' : 'Payout Details'}
-              </h2>
-              <button
-                type="button"
-                className="btn"
-                style={{ background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border)' }}
-                onClick={onClose}
-              >
-                ✕
-              </button>
-            </div>
-
-            {step === 1 && (
-              <>
-                <p style={{ marginTop: 0, color: 'var(--muted)' }}>
-                  Choose token, network, and amount. You’ll get a single deposit address and a 10-minute window.
-                </p>
-
-                <form onSubmit={submitInitiate} className="form-grid">
-                  <label>
-                    <span>Token</span>
-                    <select value={token} onChange={e => setToken(e.target.value as TokenSym)}>
-                      {TOKENS.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                  </label>
-
-                  <label>
-                    <span>Network</span>
-                    <select value={network} onChange={e => setNetwork(e.target.value)}>
-                      {NETWORKS_BY_TOKEN[token].map(n => (
-                        <option key={n.code} value={n.code}>{n.label}</option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label>
-                    <span>Amount ({token})</span>
-                    <input
-                      inputMode="decimal"
-                      placeholder="e.g. 100"
-                      value={amount}
-                      onChange={e => setAmount(e.target.value)}
-                    />
-                  </label>
-
-                  {initError && <div className="error">{initError}</div>}
-
-                  <button className="btn" disabled={initLoading}>
-                    {initLoading ? 'Starting…' : 'Get Deposit Details'}
-                  </button>
-                </form>
-
-                {initData && (
-                  <>
-                    <div className="panel">
-                      <h3>Deposit Details</h3>
-                      <div className="kv">
-                        <div>
-                          <div className="k">Send to Address</div>
-                          <div className="v mono">{deposit?.address}</div>
-                          <button className="btn" onClick={() => deposit?.address && copyToClipboard(deposit.address)}>Copy Address</button>
-                        </div>
-
-                        {!!deposit?.memo && (
-                          <div>
-                            <div className="k">Memo / Tag</div>
-                            <div className="v mono">{deposit?.memo}</div>
-                            <button className="btn" onClick={() => copyToClipboard(deposit!.memo!)}>Copy Memo</button>
-                          </div>
-                        )}
-
-                        <div>
-                          <div className="k">Window</div>
-                          <div className="v">{(useCountdown(deposit ? initData.quote.expiresAt : null).text)} (10:00 max)</div>
-                        </div>
-
-                        <div>
-                          <div className="k">You Receive</div>
-                          <div className="v">
-                            {prettyNgn(initData.quote.receiveAmount)} at {prettyAmount(initData.quote.rate)} NGN/{deposit?.token || token}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="small muted">
-                        Only send {deposit?.token || token} on the selected network ({toNetworkLabel(deposit?.token || token, deposit?.network || network)}). Wrong-network deposits can be lost.
-                      </div>
-                    </div>
-
-                    <div className="row">
-                      <button className="btn" style={{ background: 'transparent', border: '1px solid var(--border)' }} onClick={() => setInitData(null)}>Restart</button>
-                      <button className="btn" onClick={() => setStep(2)} disabled={false}>
-                        Continue to Payout
-                      </button>
-                    </div>
-                  </>
-                )}
-              </>
-            )}
-
-            {step === 2 && (
-              <>
-                {!initData && <div className="error">Missing sell reference — please restart.</div>}
-
-                {initData && (
-                  <>
-                    <div className="panel">
-                      <div className="kv">
-                        <div>
-                          <div className="k">Payment ID</div>
-                          <div className="v mono">{initData.paymentId}</div>
-                        </div>
-                        <div>
-                          <div className="k">Reference</div>
-                          <div className="v mono">{initData.reference}</div>
-                        </div>
-                        <div>
-                          <div className="k">You Receive</div>
-                          <div className="v">{prettyNgn(initData.quote.receiveAmount)} ({initData.quote.receiveCurrency})</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <form onSubmit={submitPayout} className="form-grid">
-                      <label>
-                        <span>Bank Name</span>
-                        <input value={bankName} onChange={e => setBankName(e.target.value)} placeholder="e.g. GTBank" />
-                      </label>
-                      <label>
-                        <span>Bank Code</span>
-                        <input value={bankCode} onChange={e => setBankCode(e.target.value)} placeholder="e.g. 058" />
-                      </label>
-                      <label>
-                        <span>Account Number</span>
-                        <input value={accountNumber} onChange={e => setAccountNumber(e.target.value)} placeholder="e.g. 0123456789" />
-                      </label>
-                      <label>
-                        <span>Account Name</span>
-                        <input value={accountName} onChange={e => setAccountName(e.target.value)} placeholder="e.g. Chibuike Nwogbo Emmanuel" />
-                      </label>
-
-                      {payError && <div className="error">{payError}</div>}
-
-                      <button className="btn" disabled={payLoading}>
-                        {payLoading ? 'Saving…' : 'Save Payout Details'}
-                      </button>
-                    </form>
-
-                    {payData && (
-                      <div className="panel success">
-                        <h3>Saved ✅</h3>
-                        <div className="kv">
-                          <div><div className="k">Status</div><div className="v">{payData.status}</div></div>
-                          <div><div className="k">Account</div><div className="v">{payData.payout.accountName} — {payData.payout.accountNumber}</div></div>
-                          <div><div className="k">Bank</div><div className="v">{payData.payout.bankName} ({payData.payout.bankCode})</div></div>
-                        </div>
-                        <div className="row">
-                          <button className="btn" onClick={onClose}>Done</button>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                <div className="row">
-                  <button className="btn" style={{ background: 'transparent', border: '1px solid var(--border)' }} onClick={() => setStep(1)}>← Back</button>
-                </div>
-              </>
-            )}
+  // Render as centered overlay via portal
+  return createPortal(
+    <div style={overlayStyle} role="dialog" aria-modal="true" aria-labelledby="sell-title" onClick={onClose}>
+      {/* stop overlay click from closing when clicking inside the card */}
+      <div className="bubble" style={sheetStyle} onClick={(e) => e.stopPropagation()}>
+        <div className="role">Sell</div>
+        <div className="text">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 id="sell-title" style={{ marginTop: 0, marginBottom: 8 }}>
+              {step === 1 ? 'Start a Sell' : 'Payout Details'}
+            </h2>
+            <button
+              type="button"
+              className="btn"
+              style={{ background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border)' }}
+              onClick={onClose}
+            >
+              ✕
+            </button>
           </div>
+
+          {step === 1 && (
+            <>
+              <p style={{ marginTop: 0, color: 'var(--muted)' }}>
+                Choose token, network, and amount. You’ll get a single deposit address and a 10-minute window.
+              </p>
+
+              <form onSubmit={submitInitiate} className="form-grid">
+                <label>
+                  <span>Token</span>
+                  <select value={token} onChange={e => setToken(e.target.value as TokenSym)}>
+                    {TOKENS.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </label>
+
+                <label>
+                  <span>Network</span>
+                  <select value={network} onChange={e => setNetwork(e.target.value)}>
+                    {NETWORKS_BY_TOKEN[token].map(n => (
+                      <option key={n.code} value={n.code}>{n.label}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  <span>Amount ({token})</span>
+                  <input
+                    inputMode="decimal"
+                    placeholder="e.g. 100"
+                    value={amount}
+                    onChange={e => setAmount(e.target.value)}
+                  />
+                </label>
+
+                {initError && <div className="error">{initError}</div>}
+
+                <button className="btn" disabled={initLoading}>
+                  {initLoading ? 'Starting…' : 'Get Deposit Details'}
+                </button>
+              </form>
+
+              {initData && (
+                <>
+                  <div className="panel">
+                    <h3>Deposit Details</h3>
+                    <div className="kv">
+                      <div>
+                        <div className="k">Send to Address</div>
+                        <div className="v mono">{deposit?.address}</div>
+                        <button className="btn" onClick={() => deposit?.address && copyToClipboard(deposit.address)}>Copy Address</button>
+                      </div>
+
+                      {!!deposit?.memo && (
+                        <div>
+                          <div className="k">Memo / Tag</div>
+                          <div className="v mono">{deposit?.memo}</div>
+                          <button className="btn" onClick={() => copyToClipboard(deposit!.memo!)}>Copy Memo</button>
+                        </div>
+                      )}
+
+                      <div>
+                        <div className="k">Window</div>
+                        <div className="v">{(expired ? 'Expired' : countdown)} (10:00 max)</div>
+                      </div>
+
+                      <div>
+                        <div className="k">You Receive</div>
+                        <div className="v">
+                          {prettyNgn(quote?.receiveAmount || 0)} at {prettyAmount(quote?.rate || 0)} NGN/{deposit?.token || token}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="small muted">
+                      Only send {deposit?.token || token} on the selected network ({toNetworkLabel(deposit?.token || token, deposit?.network || network)}). Wrong-network deposits can be lost.
+                    </div>
+                  </div>
+
+                  <div className="row">
+                    <button
+                      className="btn"
+                      style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }}
+                      onClick={() => setInitData(null)}
+                    >
+                      Restart
+                    </button>
+                    <button className="btn" onClick={() => setStep(2)} disabled={expired}>
+                      Continue to Payout
+                    </button>
+                  </div>
+                </>
+              )}
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              {!initData && <div className="error">Missing sell reference — please restart.</div>}
+
+              {initData && (
+                <>
+                  <div className="panel">
+                    <div className="kv">
+                      <div>
+                        <div className="k">Payment ID</div>
+                        <div className="v mono">{initData.paymentId}</div>
+                      </div>
+                      <div>
+                        <div className="k">Reference</div>
+                        <div className="v mono">{initData.reference}</div>
+                      </div>
+                      <div>
+                        <div className="k">You Receive</div>
+                        <div className="v">{prettyNgn(initData.quote.receiveAmount)} ({initData.quote.receiveCurrency})</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <form onSubmit={submitPayout} className="form-grid">
+                    <label>
+                      <span>Bank Name</span>
+                      <input value={bankName} onChange={e => setBankName(e.target.value)} placeholder="e.g. GTBank" />
+                    </label>
+                    <label>
+                      <span>Bank Code</span>
+                      <input value={bankCode} onChange={e => setBankCode(e.target.value)} placeholder="e.g. 058" />
+                    </label>
+                    <label>
+                      <span>Account Number</span>
+                      <input value={accountNumber} onChange={e => setAccountNumber(e.target.value)} placeholder="e.g. 0123456789" />
+                    </label>
+                    <label>
+                      <span>Account Name</span>
+                      <input value={accountName} onChange={e => setAccountName(e.target.value)} placeholder="e.g. Chibuike Nwogbo Emmanuel" />
+                    </label>
+
+                    {payError && <div className="error">{payError}</div>}
+
+                    <button className="btn" disabled={payLoading}>
+                      {payLoading ? 'Saving…' : 'Save Payout Details'}
+                    </button>
+                  </form>
+
+                  {payData && (
+                    <div className="panel success">
+                      <h3>Saved ✅</h3>
+                      <div className="kv">
+                        <div><div className="k">Status</div><div className="v">{payData.status}</div></div>
+                        <div><div className="k">Account</div><div className="v">{payData.payout.accountName} — {payData.payout.accountNumber}</div></div>
+                        <div><div className="k">Bank</div><div className="v">{payData.payout.bankName} ({payData.payout.bankCode})</div></div>
+                      </div>
+                      <div className="row">
+                        <button className="btn" onClick={onClose}>Done</button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              <div className="row">
+                <button
+                  className="btn"
+                  style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }}
+                  onClick={() => setStep(1)}
+                >
+                  ← Back
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

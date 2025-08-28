@@ -59,7 +59,7 @@ export default function App() {
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, loading, showSignIn])
+  }, [messages, loading, showSignIn, showSell])
 
   async function sendMessage(e?: React.FormEvent) {
     e?.preventDefault()
@@ -113,9 +113,9 @@ export default function App() {
     setShowSell(false)
   }
 
-  // ✅ Robust Sell CTA detector:
-  // - prefer the CTA id "start_sell"
-  // - otherwise match any URL that contains "/sell" (with optional query/hash, absolute or relative)
+  // Robust Sell CTA detector:
+  // - prefer CTA id "start_sell"
+  // - otherwise match any URL that contains "/sell" (relative/absolute, with query/hash ok)
   function isSellCTA(btn: CTAButton) {
     if (btn?.id === 'start_sell') return true
     const u = String(btn?.url || '')
