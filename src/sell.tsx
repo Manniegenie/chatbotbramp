@@ -12,6 +12,7 @@ type InitiateSellRes = {
   token?: string
   network?: string
   sellAmount?: number
+  banks?: string[]              // ⬅️ bank names from backend
   deposit: {
     address: string
     memo?: string | null
@@ -349,8 +350,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [initData, setInitData] = useState<InitiateSellRes | null>(null)
 
   // Step 2 state
-  const [bankName, setBankName] = useState('')
-  const [bankCode, setBankCode] = useState('')
+  const [bankName, setBankName] = useState('')      // will come from dropdown
   const [accountNumber, setAccountNumber] = useState('')
   const [accountName, setAccountName] = useState('')
   const [payLoading, setPayLoading] = useState(false)
@@ -368,7 +368,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     setInitError(null)
     setInitData(null)
     setBankName('')
-    setBankCode('')
     setAccountNumber('')
     setAccountName('')
     setPayLoading(false)
@@ -394,6 +393,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
   const quote = initData?.quote
   const deposit = initData?.deposit
+  const banks = initData?.banks ?? []            // ⬅️ names from backend
   const { text: countdown, expired } = useCountdown(quote?.expiresAt ?? null)
 
   async function submitInitiate(e: React.FormEvent) {
@@ -424,7 +424,8 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   async function submitPayout(e: React.FormEvent) {
     e.preventDefault()
     setPayError(null)
-    if (!bankName || !bankCode || !accountNumber || !accountName) {
+    // bankCode is resolved server-side; we only need bankName + account details here
+    if (!bankName || !accountNumber || !accountName) {
       setPayError('Fill in all bank fields')
       return
     }
@@ -439,8 +440,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         headers: getHeaders(),
         body: JSON.stringify({
           paymentId: initData.paymentId,
-          bankName,
-          bankCode,
+          bankName,               // ⬅️ only name sent; server maps to code
           accountNumber,
           accountName,
         }),
@@ -469,6 +469,9 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const canContinue = !!initData && !expired
   const headerTitle = step === 1 ? 'Start a Sell' : 'Payout Details'
 
+  // Final summary visibility (after payout saved)
+  const showFinalSummary = !!payData
+
   return createPortal(
     <div style={overlayStyle} role="dialog" aria-modal="true" aria-labelledby="sell-title" onClick={onClose}>
       <div style={sheetStyle} onClick={(e) => e.stopPropagation()}>
@@ -492,6 +495,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
         {/* Body */}
         <div style={bodyStyle}>
+          {/* STEP 1 */}
           {step === 1 && (
             <div style={{ display: 'grid', gap: 14 }}>
               <p style={{ margin: 0, color: 'var(--muted)' }}>
@@ -623,6 +627,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
             </div>
           )}
 
+          {/* STEP 2 */}
           {step === 2 && (
             <div style={{ display: 'grid', gap: 14 }}>
               {!initData && (
@@ -631,7 +636,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                 </div>
               )}
 
-              {initData && (
+              {initData && !showFinalSummary && (
                 <>
                   <div style={card}>
                     <h3 style={{ margin: 0, fontSize: 16 }}>Summary</h3>
@@ -663,26 +668,35 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     </div>
                   )}
 
+                  {/* Bank Name dropdown + account fields */}
                   <form onSubmit={submitPayout} style={gridForm}>
                     <label style={inputWrap}>
                       <span style={labelText}>Bank Name</span>
-                      <input
-                        ref={firstInputRef as any}
-                        style={inputBase}
-                        value={bankName}
-                        onChange={e => setBankName(e.target.value)}
-                        placeholder="e.g. GTBank"
-                      />
+                      {banks.length > 0 ? (
+                        <select
+                          ref={firstInputRef as any}
+                          style={inputBase}
+                          value={bankName}
+                          onChange={e => setBankName(e.target.value)}
+                        >
+                          <option value="" disabled>Select your bank</option>
+                          {banks.map(name => (
+                            <option key={name} value={name}>{name}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          ref={firstInputRef as any}
+                          style={inputBase}
+                          value={bankName}
+                          onChange={e => setBankName(e.target.value)}
+                          placeholder="Type bank name"
+                        />
+                      )}
                     </label>
-                    <label style={inputWrap}>
-                      <span style={labelText}>Bank Code</span>
-                      <input
-                        style={inputBase}
-                        value={bankCode}
-                        onChange={e => setBankCode(e.target.value)}
-                        placeholder="e.g. 058"
-                      />
-                    </label>
+
+                    {/* Bank code is no longer needed on client; resolved server-side */}
+
                     <label style={inputWrap}>
                       <span style={labelText}>Account Number</span>
                       <input
@@ -692,7 +706,8 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                         placeholder="e.g. 0123456789"
                       />
                     </label>
-                    <label style={inputWrap}>
+
+                    <label style={{ ...inputWrap, gridColumn: '1 / span 2' }}>
                       <span style={labelText}>Account Name</span>
                       <input
                         style={inputBase}
@@ -708,30 +723,86 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                       </button>
                     </div>
                   </form>
+                </>
+              )}
 
-                  {payData && (
-                    <div style={successCard}>
-                      <h3 style={{ margin: 0, fontSize: 16 }}>Saved ✅</h3>
-                      <div style={kvGrid}>
-                        <div>
-                          <div style={kStyle}>Status</div>
-                          <div style={vStyle}>{payData.status}</div>
-                        </div>
-                        <div>
-                          <div style={kStyle}>Account</div>
-                          <div style={vStyle}>{payData.payout.accountName} — {payData.payout.accountNumber}</div>
-                        </div>
-                        <div>
-                          <div style={kStyle}>Bank</div>
-                          <div style={vStyle}>{payData.payout.bankName} ({payData.payout.bankCode})</div>
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <button style={btnPrimary} onClick={onClose}>Done</button>
+              {/* FINAL SUMMARY (after payout saved) */}
+              {initData && showFinalSummary && payData && (
+                <div style={successCard}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                    <h3 style={{ margin: 0, fontSize: 16 }}>Transaction Summary</h3>
+                    <div style={badge}>
+                      ⏱ {expired ? 'Expired' : countdown} <span style={{ opacity: .6 }}>of 10:00</span>
+                    </div>
+                  </div>
+
+                  <div style={kvGrid}>
+                    <div>
+                      <div style={kStyle}>Status</div>
+                      <div style={vStyle}>{payData.status}</div>
+                    </div>
+                    <div>
+                      <div style={kStyle}>Payment ID</div>
+                      <div style={{ ...vStyle, ...mono }}>{payData.paymentId}</div>
+                    </div>
+                    <div>
+                      <div style={kStyle}>Reference</div>
+                      <div style={{ ...vStyle, ...mono }}>{initData.reference}</div>
+                    </div>
+                    <div>
+                      <div style={kStyle}>You Receive</div>
+                      <div style={vStyle}>
+                        {prettyNgn((initData.quote.receiveAmount) || 0)} ({initData.quote.receiveCurrency})
                       </div>
                     </div>
-                  )}
-                </>
+                    <div>
+                      <div style={kStyle}>Rate</div>
+                      <div style={vStyle}>{prettyAmount(initData.quote.rate)} NGN/{initData.deposit.token}</div>
+                    </div>
+                    <div>
+                      <div style={kStyle}>Bank</div>
+                      <div style={vStyle}>{payData.payout.bankName} ({payData.payout.bankCode})</div>
+                    </div>
+                    <div>
+                      <div style={kStyle}>Account</div>
+                      <div style={vStyle}>{payData.payout.accountName} — {payData.payout.accountNumber}</div>
+                    </div>
+                    <div>
+                      <div style={kStyle}>Deposit Address</div>
+                      <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{initData.deposit.address}</div>
+                      <div style={row}>
+                        <button
+                          style={btn}
+                          onClick={() => copyToClipboard(initData.deposit.address, 'addr2')}
+                        >
+                          {copiedKey === 'addr2' ? 'Copied ✓' : 'Copy Address'}
+                        </button>
+                      </div>
+                    </div>
+                    {!!initData.deposit.memo && (
+                      <div>
+                        <div style={kStyle}>Memo / Tag</div>
+                        <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{initData.deposit.memo}</div>
+                        <div style={row}>
+                          <button
+                            style={btn}
+                            onClick={() => copyToClipboard(initData.deposit.memo!, 'memo2')}
+                          >
+                            {copiedKey === 'memo2' ? 'Copied ✓' : 'Copy Memo'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ ...smallMuted, ...badgeWarn }}>
+                    ⚠️ Send exactly {prettyAmount(initData.deposit.amount)} {initData.deposit.token} on {toNetworkLabel(initData.deposit.token, initData.deposit.network)} before the timer runs out.
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <button style={btnPrimary} onClick={onClose}>Done</button>
+                  </div>
+                </div>
               )}
             </div>
           )}
@@ -742,11 +813,17 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
           <div style={smallMuted}>
             {step === 1
               ? 'Send the exact amount within the window for smooth processing.'
-              : 'Ensure your bank details match your account name.'}
+              : (showFinalSummary
+                  ? 'You can close this modal anytime after copying the details.'
+                  : 'Ensure your bank details match your account name.')}
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
             {step === 2 ? (
-              <button style={btn} onClick={() => setStep(1)}>← Back</button>
+              !showFinalSummary ? (
+                <button style={btn} onClick={() => setStep(1)}>← Back</button>
+              ) : (
+                <button style={btn} onClick={onClose}>Close</button>
+              )
             ) : (
               <button style={btn} onClick={onClose}>Cancel</button>
             )}
