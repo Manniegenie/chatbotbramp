@@ -25,7 +25,8 @@ function flipIv(iv: Uint8Array): Uint8Array {
 
 function bytesToB64(bytes: ArrayBuffer | Uint8Array): string {
   const arr = bytes instanceof ArrayBuffer ? new Uint8Array(bytes) : bytes;
-  let s = ''; for (let i = 0; i < arr.length; i++) s += String.fromCharCode(arr[i]);
+  let s = '';
+  for (let i = 0; i < arr.length; i++) s += String.fromCharCode(arr[i]);
   return btoa(s);
 }
 
@@ -36,7 +37,13 @@ export function hasPublicKeyInEnv(): boolean {
 async function importRsaFromEnv(): Promise<CryptoKey> {
   if (!PEM && !B64) throw new Error('No VITE_RSA_PUBLIC_KEY_PEM or VITE_RSA_PUBLIC_KEY_B64 in env.');
   const spkiBytes = PEM ? pemToSpkiBytes(PEM) : (B64 ? b64ToBytes(B64) : new Uint8Array());
-  return crypto.subtle.importKey('spki', spkiBytes, { name: 'RSA-OAEP', hash: 'SHA-256' }, false, ['encrypt']);
+  return crypto.subtle.importKey(
+    'spki',
+    spkiBytes.buffer, // 👈 must be ArrayBuffer
+    { name: 'RSA-OAEP', hash: 'SHA-256' },
+    false,
+    ['encrypt']
+  );
 }
 
 export async function sendSecure(message: string, history: any[], sessionId: string) {
@@ -46,9 +53,19 @@ export async function sendSecure(message: string, history: any[], sessionId: str
   const aesRaw = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
 
-  const wrapped = await crypto.subtle.encrypt({ name: 'RSA-OAEP' }, rsa, aesRaw);
-  const aesKey = await crypto.subtle.importKey('raw', aesRaw, { name: 'AES-GCM', length: 128 }, false, ['encrypt','decrypt']);
+  // Wrap AES key with RSA
+  const wrapped = await crypto.subtle.encrypt({ name: 'RSA-OAEP' }, rsa, aesRaw.buffer);
 
+  // Import AES key for encryption/decryption
+  const aesKey = await crypto.subtle.importKey(
+    'raw',
+    aesRaw.buffer, // 👈 ArrayBuffer
+    { name: 'AES-GCM', length: 128 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+
+  // Encrypt payload
   const pt = new TextEncoder().encode(JSON.stringify({ message, history, sessionId }));
   const ctxt = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, aesKey, pt);
 
@@ -67,9 +84,8 @@ export async function sendSecure(message: string, history: any[], sessionId: str
 
   const encReplyB64 = await resp.text();
   if (!resp.ok) {
-    // If 421, server asks us to retry with fresh key/iv; doing one fresh attempt is reasonable.
     if (resp.status === 421) {
-      return sendSecure(message, history, sessionId); // one retry
+      return sendSecure(message, history, sessionId); // retry once
     }
     throw new Error(`Secure chat failed: ${resp.status}`);
   }
@@ -77,7 +93,12 @@ export async function sendSecure(message: string, history: any[], sessionId: str
   // decrypt response with flipped IV
   const flipped = flipIv(iv);
   const replyBytes = b64ToBytes(encReplyB64);
-  const clear = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: flipped }, aesKey, replyBytes);
+  const clear = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: flipped },
+    aesKey,
+    replyBytes.buffer // 👈 ArrayBuffer
+  );
+
   return JSON.parse(new TextDecoder().decode(clear)); // { reply, timestamp }
 }
 
