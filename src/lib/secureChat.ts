@@ -23,6 +23,11 @@ function flipIv(iv: Uint8Array): Uint8Array {
   return out;
 }
 
+function toArrayBuffer(view: Uint8Array): ArrayBuffer {
+  // Ensures the underlying type is a real ArrayBuffer, not ArrayBufferLike.
+  return view.buffer.slice(view.byteOffset, view.byteOffset + view.byteLength);
+}
+
 function bytesToB64(bytes: ArrayBuffer | Uint8Array): string {
   const arr = bytes instanceof ArrayBuffer ? new Uint8Array(bytes) : bytes;
   let s = '';
@@ -36,10 +41,10 @@ export function hasPublicKeyInEnv(): boolean {
 
 async function importRsaFromEnv(): Promise<CryptoKey> {
   if (!PEM && !B64) throw new Error('No VITE_RSA_PUBLIC_KEY_PEM or VITE_RSA_PUBLIC_KEY_B64 in env.');
-  const spkiBytes = PEM ? pemToSpkiBytes(PEM) : (B64 ? b64ToBytes(B64) : new Uint8Array());
+  const spkiBytes = PEM ? pemToSpkiBytes(PEM) : b64ToBytes(B64!);
   return crypto.subtle.importKey(
     'spki',
-    spkiBytes.buffer, // 👈 must be ArrayBuffer
+    toArrayBuffer(spkiBytes),              // 👈 ArrayBuffer
     { name: 'RSA-OAEP', hash: 'SHA-256' },
     false,
     ['encrypt']
@@ -54,12 +59,12 @@ export async function sendSecure(message: string, history: any[], sessionId: str
   const iv = crypto.getRandomValues(new Uint8Array(12));
 
   // Wrap AES key with RSA
-  const wrapped = await crypto.subtle.encrypt({ name: 'RSA-OAEP' }, rsa, aesRaw.buffer);
+  const wrapped = await crypto.subtle.encrypt({ name: 'RSA-OAEP' }, rsa, toArrayBuffer(aesRaw));
 
   // Import AES key for encryption/decryption
   const aesKey = await crypto.subtle.importKey(
     'raw',
-    aesRaw.buffer, // 👈 ArrayBuffer
+    toArrayBuffer(aesRaw),                 // 👈 ArrayBuffer
     { name: 'AES-GCM', length: 128 },
     false,
     ['encrypt', 'decrypt']
@@ -67,7 +72,11 @@ export async function sendSecure(message: string, history: any[], sessionId: str
 
   // Encrypt payload
   const pt = new TextEncoder().encode(JSON.stringify({ message, history, sessionId }));
-  const ctxt = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, aesKey, pt);
+  const ctxt = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: toArrayBuffer(iv) },  // 👈 ArrayBuffer
+    aesKey,
+    pt
+  );
 
   const payload = {
     encrypted_aes_key: bytesToB64(wrapped),
@@ -85,21 +94,22 @@ export async function sendSecure(message: string, history: any[], sessionId: str
   const encReplyB64 = await resp.text();
   if (!resp.ok) {
     if (resp.status === 421) {
-      return sendSecure(message, history, sessionId); // retry once
+      // retry once with a fresh key/iv
+      return sendSecure(message, history, sessionId);
     }
     throw new Error(`Secure chat failed: ${resp.status}`);
   }
 
-  // decrypt response with flipped IV
+  // Decrypt response with flipped IV
   const flipped = flipIv(iv);
   const replyBytes = b64ToBytes(encReplyB64);
   const clear = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv: flipped },
+    { name: 'AES-GCM', iv: toArrayBuffer(flipped) }, // 👈 ArrayBuffer
     aesKey,
-    replyBytes.buffer // 👈 ArrayBuffer
+    toArrayBuffer(replyBytes)                         // 👈 ArrayBuffer
   );
 
-  return JSON.parse(new TextDecoder().decode(clear)); // { reply, timestamp }
+  return JSON.parse(new TextDecoder().decode(clear)); // { reply, cta?, timestamp }
 }
 
 export { API_BASE };
