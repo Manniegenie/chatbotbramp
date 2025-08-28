@@ -1,5 +1,5 @@
 // src/sell.tsx
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { tokenStore } from './lib/secureStore'
 
@@ -69,8 +69,8 @@ const NETWORKS_BY_TOKEN: Record<TokenSym, { code: string; label: string }[]> = {
   ETH:   [{ code: 'ETH', label: 'Ethereum' }],
   SOL:   [{ code: 'SOL', label: 'Solana' }],
   BNB:   [{ code: 'BSC', label: 'BNB Smart Chain' }],
-  MATIC: [{ code: 'ETH', label: 'Ethereum (ERC-20)' }], // adjust if using Polygon mainnet
-  AVAX:  [{ code: 'BSC', label: 'BNB Smart Chain' }],  // adjust to AVAXC if using C-Chain
+  MATIC: [{ code: 'ETH', label: 'Ethereum (ERC-20)' }],
+  AVAX:  [{ code: 'BSC', label: 'BNB Smart Chain' }],
   USDT:  [
     { code: 'ETH', label: 'Ethereum (ERC-20)' },
     { code: 'TRX', label: 'Tron (TRC-20)' },
@@ -115,7 +115,6 @@ function useCountdown(expiryIso?: string | null) {
   return { msLeft, text: `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`, expired: msLeft <= 0 }
 }
 
-// Network code -> friendly label
 function toNetworkLabel(token: string, code: string) {
   const t = (token || '').toUpperCase() as TokenSym
   const list = NETWORKS_BY_TOKEN[t]
@@ -123,7 +122,6 @@ function toNetworkLabel(token: string, code: string) {
   return hit?.label || code
 }
 
-// Friendly chat recaps
 function buildInitiateRecap(d: InitiateSellRes) {
   const t = (d.deposit?.token || d.token || '').toUpperCase()
   const netLabel = toNetworkLabel(t, d.deposit?.network || d.network || '')
@@ -160,26 +158,189 @@ function buildPayoutRecap(init: InitiateSellRes | null, p: PayoutRes) {
   ].join('\n')
 }
 
-/** Inline styles for an overlay centered modal (no CSS edits needed) */
+/* =========================
+   Polished Modal UI Styles
+   ========================= */
 const overlayStyle: React.CSSProperties = {
   position: 'fixed',
   inset: 0,
-  background: 'rgba(0,0,0,.5)',
+  background: 'rgba(0,0,0,.55)',
   display: 'grid',
   placeItems: 'center',
-  padding: 20,
+  padding: 16,
   zIndex: 1000,
 }
 
 const sheetStyle: React.CSSProperties = {
-  maxWidth: 640,
   width: '100%',
+  maxWidth: 760,
+  background: 'var(--card)',
+  color: 'var(--txt)',
+  border: '1px solid var(--border)',
+  borderRadius: 16,
+  boxShadow: 'var(--shadow)',
+  overflow: 'hidden',
+  display: 'grid',
+  gridTemplateRows: 'auto 1fr auto',
+  animation: 'scaleIn 120ms ease-out',
 }
 
+const headerStyle: React.CSSProperties = {
+  padding: '16px 18px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  borderBottom: '1px solid var(--border)',
+}
+
+const titleRowStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 10,
+}
+
+const stepperStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 8,
+  fontSize: 12,
+  color: 'var(--muted)',
+}
+
+const dot = (active: boolean): React.CSSProperties => ({
+  width: 8,
+  height: 8,
+  borderRadius: 999,
+  background: active ? 'var(--accent)' : 'var(--border)',
+})
+
+const bodyStyle: React.CSSProperties = {
+  padding: 18,
+  overflow: 'auto',
+}
+
+const footerStyle: React.CSSProperties = {
+  padding: 16,
+  display: 'flex',
+  justifyContent: 'space-between',
+  gap: 12,
+  borderTop: '1px solid var(--border)',
+  background: 'linear-gradient(180deg, transparent, rgba(0,0,0,.05))',
+}
+
+const btn: React.CSSProperties = {
+  appearance: 'none',
+  border: '1px solid var(--border)',
+  background: 'transparent',
+  color: 'var(--txt)',
+  padding: '10px 14px',
+  borderRadius: 10,
+  cursor: 'pointer',
+}
+
+const btnPrimary: React.CSSProperties = {
+  ...btn,
+  border: 'none',
+  background: 'var(--accent)',
+  color: 'white',
+}
+
+const btnDangerGhost: React.CSSProperties = {
+  ...btn,
+  borderColor: 'var(--border)',
+  color: 'var(--muted)',
+}
+
+const gridForm: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '1fr 1fr',
+  gap: 12,
+}
+
+const inputWrap: React.CSSProperties = {
+  display: 'grid',
+  gap: 6,
+}
+
+const labelText: React.CSSProperties = {
+  fontSize: 12,
+  color: 'var(--muted)',
+}
+
+const inputBase: React.CSSProperties = {
+  background: '#0f1117',
+  color: 'var(--txt)',
+  border: '1px solid var(--border)',
+  borderRadius: 10,
+  padding: '10px 12px',
+  outline: 'none',
+}
+
+const singleColForm: React.CSSProperties = {
+  display: 'grid',
+  gap: 12,
+}
+
+const card: React.CSSProperties = {
+  border: '1px solid var(--border)',
+  borderRadius: 12,
+  padding: 14,
+  background: '#0e0f15',
+  display: 'grid',
+  gap: 10,
+}
+
+const kvGrid: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '1fr 1fr',
+  gap: 12,
+}
+
+const kStyle: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' }
+const vStyle: React.CSSProperties = { fontWeight: 600 }
+
+const mono: React.CSSProperties = { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace' }
+
+const smallMuted: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' }
+
+const row: React.CSSProperties = { display: 'flex', gap: 10, flexWrap: 'wrap' }
+
+const badge: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 8,
+  fontSize: 12,
+  padding: '6px 10px',
+  borderRadius: 999,
+  border: '1px solid var(--border)',
+  background: '#0d1210',
+}
+
+const badgeWarn: React.CSSProperties = {
+  ...badge,
+  background: 'rgba(255, 170, 0, .08)',
+  borderColor: 'rgba(255, 170, 0, .25)',
+}
+
+const errorBanner: React.CSSProperties = {
+  ...card,
+  background: 'rgba(220, 50, 50, .1)',
+  borderColor: 'rgba(220, 50, 50, .25)',
+}
+
+const successCard: React.CSSProperties = {
+  ...card,
+  background: 'rgba(0, 115, 55, .12)',
+  borderColor: 'rgba(0, 115, 55, .35)',
+}
+
+/* =========================
+   Component
+   ========================= */
 export default function SellModal({ open, onClose, onChatEcho }: SellModalProps) {
   const [step, setStep] = useState<1 | 2>(1)
 
-  // Step 1
+  // Step 1 state
   const [token, setToken] = useState<TokenSym>('USDT')
   const [network, setNetwork] = useState(NETWORKS_BY_TOKEN['USDT'][0].code)
   const [amount, setAmount] = useState<string>('100')
@@ -187,7 +348,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [initError, setInitError] = useState<string | null>(null)
   const [initData, setInitData] = useState<InitiateSellRes | null>(null)
 
-  // Step 2
+  // Step 2 state
   const [bankName, setBankName] = useState('')
   const [bankCode, setBankCode] = useState('')
   const [accountNumber, setAccountNumber] = useState('')
@@ -196,7 +357,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [payError, setPayError] = useState<string | null>(null)
   const [payData, setPayData] = useState<PayoutRes | null>(null)
 
-  // Reset per open
+  // Effects
   useEffect(() => {
     if (!open) return
     setStep(1)
@@ -215,21 +376,21 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     setPayData(null)
   }, [open])
 
-  // Keep network valid if token changes
   useEffect(() => {
     const list = NETWORKS_BY_TOKEN[token]
-    if (!list.find(n => n.code === network)) {
-      setNetwork(list[0].code)
-    }
+    if (!list.find(n => n.code === network)) setNetwork(list[0].code)
   }, [token])
 
-  // ESC to close
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onClose])
+
+  // Autofocus first input per step
+  const firstInputRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null)
+  useEffect(() => { firstInputRef.current?.focus() }, [step])
 
   const quote = initData?.quote
   const deposit = initData?.deposit
@@ -295,59 +456,84 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     }
   }
 
-  function copyToClipboard(text: string) {
-    navigator.clipboard?.writeText(text).catch(() => {})
+  const [copiedKey, setCopiedKey] = useState<string | null>(null)
+  function copyToClipboard(text: string, key: string) {
+    navigator.clipboard?.writeText(text).then(() => {
+      setCopiedKey(key)
+      setTimeout(() => setCopiedKey(null), 1200)
+    }).catch(() => {})
   }
 
   if (!open) return null
 
-  // Render as centered overlay via portal
+  const canContinue = !!initData && !expired
+  const headerTitle = step === 1 ? 'Start a Sell' : 'Payout Details'
+
   return createPortal(
     <div style={overlayStyle} role="dialog" aria-modal="true" aria-labelledby="sell-title" onClick={onClose}>
-      {/* stop overlay click from closing when clicking inside the card */}
-      <div className="bubble" style={sheetStyle} onClick={(e) => e.stopPropagation()}>
-        <div className="role">Sell</div>
-        <div className="text">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 id="sell-title" style={{ marginTop: 0, marginBottom: 8 }}>
-              {step === 1 ? 'Start a Sell' : 'Payout Details'}
-            </h2>
-            <button
-              type="button"
-              className="btn"
-              style={{ background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border)' }}
-              onClick={onClose}
-            >
-              ✕
-            </button>
+      <div style={sheetStyle} onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div style={headerStyle}>
+          <div style={titleRowStyle}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: '#0d1512', display: 'grid', placeItems: 'center', border: '1px solid var(--border)' }}>
+              💱
+            </div>
+            <div>
+              <div id="sell-title" style={{ fontWeight: 700 }}>{headerTitle}</div>
+              <div style={stepperStyle}>
+                <span style={dot(step === 1)}></span> Step 1 — Deposit
+                <span style={{ opacity: .4, padding: '0 6px' }}>•</span>
+                <span style={dot(step === 2)}></span> Step 2 — Payout
+              </div>
+            </div>
           </div>
+          <button type="button" aria-label="Close" style={btnDangerGhost} onClick={onClose}>✕</button>
+        </div>
 
+        {/* Body */}
+        <div style={bodyStyle}>
           {step === 1 && (
-            <>
-              <p style={{ marginTop: 0, color: 'var(--muted)' }}>
+            <div style={{ display: 'grid', gap: 14 }}>
+              <p style={{ margin: 0, color: 'var(--muted)' }}>
                 Choose token, network, and amount. You’ll get a single deposit address and a 10-minute window.
               </p>
 
-              <form onSubmit={submitInitiate} className="form-grid">
-                <label>
-                  <span>Token</span>
-                  <select value={token} onChange={e => setToken(e.target.value as TokenSym)}>
+              {!!initError && (
+                <div role="alert" style={errorBanner}>
+                  <strong style={{ color: '#ffaaaa' }}>Error:</strong> {initError}
+                </div>
+              )}
+
+              <form onSubmit={submitInitiate} style={gridForm}>
+                <label style={inputWrap}>
+                  <span style={labelText}>Token</span>
+                  <select
+                    ref={firstInputRef as any}
+                    style={inputBase}
+                    value={token}
+                    onChange={e => setToken(e.target.value as TokenSym)}
+                  >
                     {TOKENS.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </label>
 
-                <label>
-                  <span>Network</span>
-                  <select value={network} onChange={e => setNetwork(e.target.value)}>
+                <label style={inputWrap}>
+                  <span style={labelText}>Network</span>
+                  <select
+                    style={inputBase}
+                    value={network}
+                    onChange={e => setNetwork(e.target.value)}
+                  >
                     {NETWORKS_BY_TOKEN[token].map(n => (
                       <option key={n.code} value={n.code}>{n.label}</option>
                     ))}
                   </select>
                 </label>
 
-                <label>
-                  <span>Amount ({token})</span>
+                <label style={{ ...inputWrap, gridColumn: '1 / span 2' }}>
+                  <span style={labelText}>Amount ({token})</span>
                   <input
+                    style={inputBase}
                     inputMode="decimal"
                     placeholder="e.g. 100"
                     value={amount}
@@ -355,143 +541,228 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   />
                 </label>
 
-                {initError && <div className="error">{initError}</div>}
-
-                <button className="btn" disabled={initLoading}>
-                  {initLoading ? 'Starting…' : 'Get Deposit Details'}
-                </button>
+                <div style={{ gridColumn: '1 / span 2', display: 'flex', justifyContent: 'flex-end' }}>
+                  <button style={btnPrimary} disabled={initLoading}>
+                    {initLoading ? 'Starting…' : 'Get Deposit Details'}
+                  </button>
+                </div>
               </form>
 
               {initData && (
-                <>
-                  <div className="panel">
-                    <h3>Deposit Details</h3>
-                    <div className="kv">
-                      <div>
-                        <div className="k">Send to Address</div>
-                        <div className="v mono">{deposit?.address}</div>
-                        <button className="btn" onClick={() => deposit?.address && copyToClipboard(deposit.address)}>Copy Address</button>
-                      </div>
-
-                      {!!deposit?.memo && (
-                        <div>
-                          <div className="k">Memo / Tag</div>
-                          <div className="v mono">{deposit?.memo}</div>
-                          <button className="btn" onClick={() => copyToClipboard(deposit!.memo!)}>Copy Memo</button>
-                        </div>
-                      )}
-
-                      <div>
-                        <div className="k">Window</div>
-                        <div className="v">{(expired ? 'Expired' : countdown)} (10:00 max)</div>
-                      </div>
-
-                      <div>
-                        <div className="k">You Receive</div>
-                        <div className="v">
-                          {prettyNgn(quote?.receiveAmount || 0)} at {prettyAmount(quote?.rate || 0)} NGN/{deposit?.token || token}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="small muted">
-                      Only send {deposit?.token || token} on the selected network ({toNetworkLabel(deposit?.token || token, deposit?.network || network)}). Wrong-network deposits can be lost.
+                <div style={card}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                    <h3 style={{ margin: 0, fontSize: 16 }}>Deposit Details</h3>
+                    <div style={badge}>
+                      ⏱ {expired ? 'Expired' : countdown} <span style={{ opacity: .6 }}>of 10:00</span>
                     </div>
                   </div>
 
-                  <div className="row">
+                  <div style={kvGrid}>
+                    <div>
+                      <div style={kStyle}>Send to Address</div>
+                      <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{deposit?.address}</div>
+                      <div style={row}>
+                        <button
+                          style={btn}
+                          onClick={() => deposit?.address && copyToClipboard(deposit.address, 'addr')}
+                        >
+                          {copiedKey === 'addr' ? 'Copied ✓' : 'Copy Address'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {!!deposit?.memo && (
+                      <div>
+                        <div style={kStyle}>Memo / Tag</div>
+                        <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{deposit.memo}</div>
+                        <div style={row}>
+                          <button
+                            style={btn}
+                            onClick={() => copyToClipboard(deposit!.memo!, 'memo')}
+                          >
+                            {copiedKey === 'memo' ? 'Copied ✓' : 'Copy Memo'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    <div>
+                      <div style={kStyle}>You Receive</div>
+                      <div style={vStyle}>
+                        {prettyNgn(quote?.receiveAmount || 0)}&nbsp;
+                        <span style={{ color: 'var(--muted)', fontWeight: 500 }}>
+                          at {prettyAmount(quote?.rate || 0)} NGN/{deposit?.token || token}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div style={kStyle}>Network</div>
+                      <div style={vStyle}>{toNetworkLabel(deposit?.token || token, deposit?.network || network)}</div>
+                    </div>
+                  </div>
+
+                  <div style={{ ...smallMuted, ...badgeWarn }}>
+                    ⚠️ Only send {deposit?.token || token} on the selected network. Wrong-network deposits can be lost.
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
                     <button
-                      className="btn"
-                      style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }}
+                      style={btn}
                       onClick={() => setInitData(null)}
+                      title="Restart the sell setup"
                     >
                       Restart
                     </button>
-                    <button className="btn" onClick={() => setStep(2)} disabled={expired}>
+                    <button style={btnPrimary} onClick={() => setStep(2)} disabled={!canContinue}>
                       Continue to Payout
                     </button>
                   </div>
-                </>
+                </div>
               )}
-            </>
+            </div>
           )}
 
           {step === 2 && (
-            <>
-              {!initData && <div className="error">Missing sell reference — please restart.</div>}
+            <div style={{ display: 'grid', gap: 14 }}>
+              {!initData && (
+                <div role="alert" style={errorBanner}>
+                  Missing sell reference — please restart.
+                </div>
+              )}
 
               {initData && (
                 <>
-                  <div className="panel">
-                    <div className="kv">
+                  <div style={card}>
+                    <h3 style={{ margin: 0, fontSize: 16 }}>Summary</h3>
+                    <div style={kvGrid}>
                       <div>
-                        <div className="k">Payment ID</div>
-                        <div className="v mono">{initData.paymentId}</div>
+                        <div style={kStyle}>Payment ID</div>
+                        <div style={{ ...vStyle, ...mono }}>{initData.paymentId}</div>
                       </div>
                       <div>
-                        <div className="k">Reference</div>
-                        <div className="v mono">{initData.reference}</div>
+                        <div style={kStyle}>Reference</div>
+                        <div style={{ ...vStyle, ...mono }}>{initData.reference}</div>
                       </div>
                       <div>
-                        <div className="k">You Receive</div>
-                        <div className="v">{prettyNgn(initData.quote.receiveAmount)} ({initData.quote.receiveCurrency})</div>
+                        <div style={kStyle}>You Receive</div>
+                        <div style={vStyle}>
+                          {prettyNgn(initData.quote.receiveAmount)} ({initData.quote.receiveCurrency})
+                        </div>
+                      </div>
+                      <div>
+                        <div style={kStyle}>Rate</div>
+                        <div style={vStyle}>{prettyAmount(initData.quote.rate)} NGN/{initData.deposit.token}</div>
                       </div>
                     </div>
                   </div>
 
-                  <form onSubmit={submitPayout} className="form-grid">
-                    <label>
-                      <span>Bank Name</span>
-                      <input value={bankName} onChange={e => setBankName(e.target.value)} placeholder="e.g. GTBank" />
+                  {!!payError && (
+                    <div role="alert" style={errorBanner}>
+                      <strong style={{ color: '#ffaaaa' }}>Error:</strong> {payError}
+                    </div>
+                  )}
+
+                  <form onSubmit={submitPayout} style={gridForm}>
+                    <label style={inputWrap}>
+                      <span style={labelText}>Bank Name</span>
+                      <input
+                        ref={firstInputRef as any}
+                        style={inputBase}
+                        value={bankName}
+                        onChange={e => setBankName(e.target.value)}
+                        placeholder="e.g. GTBank"
+                      />
                     </label>
-                    <label>
-                      <span>Bank Code</span>
-                      <input value={bankCode} onChange={e => setBankCode(e.target.value)} placeholder="e.g. 058" />
+                    <label style={inputWrap}>
+                      <span style={labelText}>Bank Code</span>
+                      <input
+                        style={inputBase}
+                        value={bankCode}
+                        onChange={e => setBankCode(e.target.value)}
+                        placeholder="e.g. 058"
+                      />
                     </label>
-                    <label>
-                      <span>Account Number</span>
-                      <input value={accountNumber} onChange={e => setAccountNumber(e.target.value)} placeholder="e.g. 0123456789" />
+                    <label style={inputWrap}>
+                      <span style={labelText}>Account Number</span>
+                      <input
+                        style={inputBase}
+                        value={accountNumber}
+                        onChange={e => setAccountNumber(e.target.value)}
+                        placeholder="e.g. 0123456789"
+                      />
                     </label>
-                    <label>
-                      <span>Account Name</span>
-                      <input value={accountName} onChange={e => setAccountName(e.target.value)} placeholder="e.g. Chibuike Nwogbo Emmanuel" />
+                    <label style={inputWrap}>
+                      <span style={labelText}>Account Name</span>
+                      <input
+                        style={inputBase}
+                        value={accountName}
+                        onChange={e => setAccountName(e.target.value)}
+                        placeholder="e.g. Chibuike Nwogbo Emmanuel"
+                      />
                     </label>
 
-                    {payError && <div className="error">{payError}</div>}
-
-                    <button className="btn" disabled={payLoading}>
-                      {payLoading ? 'Saving…' : 'Save Payout Details'}
-                    </button>
+                    <div style={{ gridColumn: '1 / span 2', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                      <button style={btnPrimary} disabled={payLoading}>
+                        {payLoading ? 'Saving…' : 'Save Payout Details'}
+                      </button>
+                    </div>
                   </form>
 
                   {payData && (
-                    <div className="panel success">
-                      <h3>Saved ✅</h3>
-                      <div className="kv">
-                        <div><div className="k">Status</div><div className="v">{payData.status}</div></div>
-                        <div><div className="k">Account</div><div className="v">{payData.payout.accountName} — {payData.payout.accountNumber}</div></div>
-                        <div><div className="k">Bank</div><div className="v">{payData.payout.bankName} ({payData.payout.bankCode})</div></div>
+                    <div style={successCard}>
+                      <h3 style={{ margin: 0, fontSize: 16 }}>Saved ✅</h3>
+                      <div style={kvGrid}>
+                        <div>
+                          <div style={kStyle}>Status</div>
+                          <div style={vStyle}>{payData.status}</div>
+                        </div>
+                        <div>
+                          <div style={kStyle}>Account</div>
+                          <div style={vStyle}>{payData.payout.accountName} — {payData.payout.accountNumber}</div>
+                        </div>
+                        <div>
+                          <div style={kStyle}>Bank</div>
+                          <div style={vStyle}>{payData.payout.bankName} ({payData.payout.bankCode})</div>
+                        </div>
                       </div>
-                      <div className="row">
-                        <button className="btn" onClick={onClose}>Done</button>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <button style={btnPrimary} onClick={onClose}>Done</button>
                       </div>
                     </div>
                   )}
                 </>
               )}
-
-              <div className="row">
-                <button
-                  className="btn"
-                  style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }}
-                  onClick={() => setStep(1)}
-                >
-                  ← Back
-                </button>
-              </div>
-            </>
+            </div>
           )}
         </div>
+
+        {/* Footer */}
+        <div style={footerStyle}>
+          <div style={smallMuted}>
+            {step === 1
+              ? 'Send the exact amount within the window for smooth processing.'
+              : 'Ensure your bank details match your account name.'}
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            {step === 2 ? (
+              <button style={btn} onClick={() => setStep(1)}>← Back</button>
+            ) : (
+              <button style={btn} onClick={onClose}>Cancel</button>
+            )}
+            {step === 1 && (
+              <button style={{ ...btnPrimary, opacity: initData && !expired ? 1 : .6 }} onClick={() => setStep(2)} disabled={!canContinue}>
+                Continue
+              </button>
+            )}
+          </div>
+        </div>
       </div>
+
+      {/* Tiny animation keyframes */}
+      <style>
+        {`@keyframes scaleIn{from{transform:translateY(8px) scale(.98); opacity:.0} to{transform:none; opacity:1}}`}
+      </style>
     </div>,
     document.body
   )
