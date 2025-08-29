@@ -185,7 +185,7 @@ export default function App() {
       <header className="header">
         <div className="brand">
           <img src={logo} alt="Bramp AI logo" className="logo" />
-          <div>
+        <div>
             <h1>Bramp AI</h1>
             <p className="tag">Secure access to digital assets & payments — via licensed partners.</p>
           </div>
@@ -316,9 +316,21 @@ export default function App() {
       />
 
       <footer className="footer">
-        <a href="/aml" target="_blank">AML/CFT Policy</a>
+        <a
+          href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          AML/CFT Policy
+        </a>
         <a href="/risk" target="_blank">Risk Disclaimer</a>
-        <a href="/privacy" target="_blank">Privacy</a>
+        <a
+          href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Privacy
+        </a>
         <a href="/terms" target="_blank">Terms</a>
       </footer>
     </div>
