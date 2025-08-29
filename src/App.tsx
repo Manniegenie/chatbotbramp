@@ -317,7 +317,7 @@ export default function App() {
 
       <footer className="footer">
         <a
-          href="https://drive.google.com/file/d/1UuUI8WBzxIu9X9aYxtcmB3PxyDW6Haj7/view?usp=sharing"
+          href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -325,7 +325,7 @@ export default function App() {
         </a>
         <a href="/risk" target="_blank">Risk Disclaimer</a>
         <a
-          href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link"
+          href="https://drive.google.com/file/d/1UuUI8WBzxIu9X9aYxtcmB3PxyDW6Haj7/view?usp=sharing"
           target="_blank"
           rel="noopener noreferrer"
         >
