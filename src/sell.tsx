@@ -280,12 +280,25 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         if (!res.ok || json?.success === false) {
           throw new Error(json?.message || `HTTP ${res.status}`)
         }
-        // accept {banks:[...]} or {data:{data:[...]}}
-        const raw = Array.isArray(json?.banks) ? json.banks : (json?.data?.data || [])
-        const opts: BankOption[] = (Array.isArray(raw) ? raw : [])
-          .map((b: any) => ({ name: String(b?.name || ''), code: String(b?.code || '') }))
+
+        // -------- robust extraction (accept multiple shapes & field names) --------
+        const candidates = [
+          json?.banks,
+          json?.data?.data,
+          json?.data?.banks,
+          json?.data,
+        ]
+        const raw: any[] = candidates.find(Array.isArray) ?? []
+
+        const opts: BankOption[] = raw
+          .map((b: any) => ({
+            name: String(b?.name ?? b?.bankName ?? b?.bank_name ?? '').trim(),
+            code: String(b?.code ?? b?.bankCode ?? b?.bank_code ?? '').trim(),
+          }))
           .filter(b => b.name && b.code)
           .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+        // -------------------------------------------------------------------------
+
         setBankOptions(opts)
         if (opts.length) {
           setBankName(opts[0].name)
