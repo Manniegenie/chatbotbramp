@@ -12,7 +12,7 @@ type InitiateSellRes = {
   token?: string
   network?: string
   sellAmount?: number
-  banks?: unknown                 // backend sends string[] (bank names)
+  banks?: any                // backend may send string[] or object[]
   deposit: {
     address: string
     memo?: string | null
@@ -109,7 +109,7 @@ function useCountdown(expiryIso?: string | null) {
       const left = Math.max(0, new Date(expiryIso).getTime() - Date.now())
       setMsLeft(left)
     }, 250)
-  return () => clearInterval(t)
+    return () => clearInterval(t)
   }, [expiryIso])
   const mm = Math.floor(msLeft / 60000)
   const ss = Math.floor((msLeft % 60000) / 1000)
@@ -336,6 +336,33 @@ const successCard: React.CSSProperties = {
 }
 
 /* =========================
+   Helpers (NEW): normalize banks into a clean string[]
+   ========================= */
+function normalizeBankNames(raw: any): string[] {
+  try {
+    // If backend sent { banks: [...] } as strings
+    if (Array.isArray(raw)) {
+      const names = raw
+        .map((b: any) => (typeof b === 'string' ? b : (b?.name ?? b?.bankName ?? b?.label ?? '')))
+        .filter(Boolean)
+        .map((s: string) => s.trim())
+      return [...new Set(names)].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+    }
+    // If it sent a JSON string (rare)
+    if (typeof raw === 'string') {
+      try {
+        const parsed = JSON.parse(raw)
+        if (Array.isArray(parsed)) return normalizeBankNames(parsed)
+      } catch {}
+      // Comma-separated fallback
+      const names = raw.split(',').map(s => s.trim()).filter(Boolean)
+      return [...new Set(names)].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+    }
+  } catch {}
+  return []
+}
+
+/* =========================
    Component
    ========================= */
 export default function SellModal({ open, onClose, onChatEcho }: SellModalProps) {
@@ -395,38 +422,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const deposit = initData?.deposit
   const { text: countdown, expired } = useCountdown(quote?.expiresAt ?? null)
 
-  // --- Extract bank names exactly from initData.banks, with safe fallbacks ---
-  const bankNames: string[] = React.useMemo(() => {
-    const raw = (initData as any)?.banks
-
-    // Most common: array of strings
-    if (Array.isArray(raw)) {
-      // strings or objects with name property
-      const names = raw.map((b: any) =>
-        typeof b === 'string' ? b : (b?.name ?? b?.bankName ?? b?.label ?? '')
-      ).filter(Boolean)
-      return [...new Set(names.map((s: string) => s.trim()))].sort((a,b) => a.localeCompare(b, undefined, {sensitivity:'base'}))
-    }
-
-    // Stringified JSON array (just in case)
-    if (typeof raw === 'string') {
-      try {
-        const parsed = JSON.parse(raw)
-        if (Array.isArray(parsed)) {
-          const names = parsed.map((b: any) =>
-            typeof b === 'string' ? b : (b?.name ?? b?.bankName ?? b?.label ?? '')
-          ).filter(Boolean)
-          return [...new Set(names.map((s: string) => s.trim()))].sort((a,b) => a.localeCompare(b, undefined, {sensitivity:'base'}))
-        }
-      } catch {}
-      // Comma-separated string fallback
-      const names = raw.split(',').map(s => s.trim()).filter(Boolean)
-      return [...new Set(names)].sort((a,b) => a.localeCompare(b, undefined, {sensitivity:'base'}))
-    }
-
-    return []
-  }, [initData])
-
   async function submitInitiate(e: React.FormEvent) {
     e.preventDefault()
     setInitError(null)
@@ -442,9 +437,16 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         body: JSON.stringify({ token, network, sellAmount: +amount }),
       })
       const data: InitiateSellRes = await res.json()
+
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
-      setInitData(data)
-      onChatEcho?.(buildInitiateRecap(data))
+
+      // 🔑 Normalize banks RIGHT HERE and store as string[]
+      const names = normalizeBankNames((data as any)?.banks)
+      const dataFixed: InitiateSellRes = { ...(data as any), banks: names }
+      console.log('sell.init → banks received:', (data as any)?.banks, '→ normalized:', names)
+
+      setInitData(dataFixed)
+      onChatEcho?.(buildInitiateRecap(dataFixed))
     } catch (err: any) {
       setInitError(err.message || 'Failed to initiate sell')
     } finally {
@@ -470,7 +472,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         headers: getHeaders(),
         body: JSON.stringify({
           paymentId: initData.paymentId,
-          bankName,               // server maps name -> code
+          bankName,               // server maps name -> code using cache
           accountNumber,
           accountName,
         }),
@@ -499,6 +501,9 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const canContinue = !!initData && !expired
   const headerTitle = step === 1 ? 'Start a Sell' : 'Payout Details'
   const showFinalSummary = !!payData
+
+  // Use the already-normalized banks from state
+  const bankNames: string[] = (initData?.banks as string[]) ?? []
 
   return createPortal(
     <div style={overlayStyle} role="dialog" aria-modal="true" aria-labelledby="sell-title" onClick={onClose}>
@@ -705,10 +710,12 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                         style={inputBase}
                         value={bankName}
                         onChange={e => setBankName(e.target.value)}
-                        disabled={bankNames.length === 0}
+                        disabled={(bankNames ?? []).length === 0}
                       >
-                        <option value="">{bankNames.length ? 'Select your bank' : 'No banks available'}</option>
-                        {bankNames.map(name => (
+                        <option value="">
+                          {(bankNames ?? []).length ? 'Select your bank' : 'No banks available'}
+                        </option>
+                        {(bankNames ?? []).map(name => (
                           <option key={name} value={name}>{name}</option>
                         ))}
                       </select>
@@ -743,7 +750,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                 </>
               )}
 
-              {/* FINAL SUMMARY */}
+              {/* FINAL SUMMARY (after payout saved) */}
               {initData && showFinalSummary && payData && (
                 <div style={successCard}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
