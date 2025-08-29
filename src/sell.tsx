@@ -1,5 +1,5 @@
 // src/sell.tsx
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { tokenStore } from './lib/secureStore'
 
@@ -14,7 +14,6 @@ type InitiateSellRes = {
   token?: string
   network?: string
   sellAmount?: number
-  banks?: BankOption[]
   deposit: {
     address: string
     memo?: string | null
@@ -161,7 +160,7 @@ function buildPayoutRecap(init: InitiateSellRes | null, p: PayoutRes) {
   ].join('\n')
 }
 
-/* ===== Styles (unchanged) ===== */
+/* ===== Minimal inline modal styles (use your globals for colors) ===== */
 const overlayStyle: React.CSSProperties = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', display: 'grid', placeItems: 'center', padding: 16, zIndex: 1000 }
 const sheetStyle: React.CSSProperties = { width: '100%', maxWidth: 760, background: 'var(--card)', color: 'var(--txt)', border: '1px solid var(--border)', borderRadius: 16, boxShadow: 'var(--shadow)', overflow: 'hidden', display: 'grid', gridTemplateRows: 'auto 1fr auto', animation: 'scaleIn 120ms ease-out' }
 const headerStyle: React.CSSProperties = { padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }
@@ -177,7 +176,6 @@ const gridForm: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1
 const inputWrap: React.CSSProperties = { display: 'grid', gap: 6 }
 const labelText: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' }
 const inputBase: React.CSSProperties = { background: '#0f1117', color: 'var(--txt)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 12px', outline: 'none' }
-const singleColForm: React.CSSProperties = { display: 'grid', gap: 12 }
 const card: React.CSSProperties = { border: '1px solid var(--border)', borderRadius: 12, padding: 14, background: '#0e0f15', display: 'grid', gap: 10 }
 const kvGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }
 const kStyle: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' }
@@ -213,13 +211,14 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [payError, setPayError] = useState<string | null>(null)
   const [payData, setPayData] = useState<PayoutRes | null>(null)
 
-  // Banks fetch state
+  // Banks fetch/search state
   const [banksLoading, setBanksLoading] = useState(false)
   const [banksError, setBanksError] = useState<string | null>(null)
   const [bankOptions, setBankOptions] = useState<BankOption[]>([])
+  const [bankQuery, setBankQuery] = useState('')
   const banksFetchedRef = useRef(false)
 
-  // Effects
+  // Reset on open
   useEffect(() => {
     if (!open) return
     setStep(1)
@@ -236,18 +235,20 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     setPayLoading(false)
     setPayError(null)
     setPayData(null)
-    // reset bank fetch state
     setBanksLoading(false)
     setBanksError(null)
     setBankOptions([])
+    setBankQuery('')
     banksFetchedRef.current = false
   }, [open])
 
+  // Keep a valid network when token changes
   useEffect(() => {
     const list = NETWORKS_BY_TOKEN[token]
     if (!list.find(n => n.code === network)) setNetwork(list[0].code)
   }, [token])
 
+  // Esc to close
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -255,7 +256,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onClose])
 
-  // Autofocus first input per step
+  // Autofocus per step
   const firstInputRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null)
   useEffect(() => { firstInputRef.current?.focus() }, [step])
 
@@ -281,25 +282,25 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
           throw new Error(json?.message || `HTTP ${res.status}`)
         }
 
-        // -------- robust extraction (accept multiple shapes & field names) --------
-        const candidates = [
-          json?.banks,
-          json?.data?.data,
-          json?.data?.banks,
-          json?.data,
-        ]
-        const raw: any[] = candidates.find(Array.isArray) ?? []
+        // Prefer json.banks, fallback to json.data.data
+        const raw = Array.isArray(json?.banks)
+          ? json.banks
+          : (Array.isArray(json?.data?.data) ? json.data.data : [])
 
-        const opts: BankOption[] = raw
-          .map((b: any) => ({
-            name: String(b?.name ?? b?.bankName ?? b?.bank_name ?? '').trim(),
-            code: String(b?.code ?? b?.bankCode ?? b?.bank_code ?? '').trim(),
+        // ✅ Typed chain to avoid implicit any
+        const opts: BankOption[] = (raw as unknown[])
+          .map<BankOption>((b: any) => ({
+            name: String(b?.name || '').trim(),
+            code: String(b?.code || '').trim(),
           }))
-          .filter(b => b.name && b.code)
-          .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
-        // -------------------------------------------------------------------------
+          .filter((b: BankOption) => b.name.length > 0 && b.code.length > 0)
+          .sort((a: BankOption, b: BankOption) =>
+            a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+          )
 
         setBankOptions(opts)
+
+        // Default selection
         if (opts.length) {
           setBankName(opts[0].name)
           setBankCode(opts[0].code)
@@ -317,6 +318,28 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       }
     })()
   }, [open, step])
+
+  // Derived, filtered bank list for search (typed)
+  const filteredBanks = useMemo<BankOption[]>(() => {
+    const q = bankQuery.trim().toLowerCase()
+    if (!q) return bankOptions
+    return bankOptions.filter((b: BankOption) =>
+      b.name.toLowerCase().includes(q) || b.code.toLowerCase().includes(q)
+    )
+  }, [bankQuery, bankOptions])
+
+  // Ensure selection stays valid under filtering
+  useEffect(() => {
+    if (!filteredBanks.length) {
+      setBankName('')
+      setBankCode('')
+      return
+    }
+    if (!filteredBanks.some((b: BankOption) => b.code === bankCode)) {
+      setBankName(filteredBanks[0].name)
+      setBankCode(filteredBanks[0].code)
+    }
+  }, [filteredBanks]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function submitInitiate(e: React.FormEvent) {
     e.preventDefault()
@@ -362,7 +385,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         body: JSON.stringify({
           paymentId: initData.paymentId,
           bankName,
-          bankCode, // always send code along with the name
+          bankCode,
           accountNumber,
           accountName,
         }),
@@ -588,32 +611,43 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     </div>
                   )}
 
-                  {/* Bank dropdown + account fields */}
+                  {/* Bank search + dropdown + account fields */}
                   <form onSubmit={submitPayout} style={gridForm}>
+                    <label style={{ ...inputWrap, gridColumn: '1 / span 2' }}>
+                      <span style={labelText}>Search Bank</span>
+                      <input
+                        style={inputBase}
+                        placeholder="Type bank name or code (e.g. GTBank, 058)"
+                        value={bankQuery}
+                        onChange={(e) => setBankQuery(e.target.value)}
+                      />
+                      <span style={smallMuted}>
+                        {banksLoading ? 'Loading banks…' :
+                          banksError ? `Failed: ${banksError}` :
+                          filteredBanks.length ? `${filteredBanks.length} matches` : 'No matches'}
+                      </span>
+                    </label>
+
                     <label style={inputWrap}>
                       <span style={labelText}>Bank</span>
                       <select
                         ref={firstInputRef as any}
                         style={inputBase}
                         value={bankCode}
-                        disabled={banksLoading || bankOptions.length === 0}
+                        disabled={banksLoading || filteredBanks.length === 0}
                         onChange={e => {
                           const code = e.target.value
-                          const hit = bankOptions.find(b => b.code === code)
+                          const hit = filteredBanks.find((b: BankOption) => b.code === code)
                           if (hit) {
                             setBankCode(hit.code)
                             setBankName(hit.name)
                           }
                         }}
                       >
-                        {bankOptions.map(b => (
+                        {filteredBanks.map((b: BankOption) => (
                           <option key={b.code} value={b.code}>{b.name}</option>
                         ))}
                       </select>
-                      {banksLoading && <span style={smallMuted}>Loading banks…</span>}
-                      {!banksLoading && banksError && (
-                        <span style={{ ...smallMuted, color: '#ffaaaa' }}>Failed: {banksError}</span>
-                      )}
                     </label>
 
                     <label style={inputWrap}>
@@ -637,7 +671,10 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     </label>
 
                     <div style={{ gridColumn: '1 / span 2', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-                      <button style={btnPrimary} disabled={payLoading || !bankCode || banksLoading}>
+                      <button
+                        style={btnPrimary}
+                        disabled={payLoading || !bankCode || banksLoading}
+                      >
                         {payLoading ? 'Saving…' : 'Save Payout Details'}
                       </button>
                     </div>
