@@ -152,7 +152,7 @@ function buildPayoutRecap(init: InitiateSellRes | null, p: PayoutRes) {
 
   return [
     `Payout details saved 🏦`,
-    `Bank: ${p.payout.bankName} (${p.payout.bankCode})`,
+    `Bank: ${p.payout.bankName}`,
     `Account: ${p.payout.accountName} — ${p.payout.accountNumber}`,
     '',
     `Recap: pay **${prettyAmount(Number(payAmount || 0))} ${t}** on **${netLabel}**.`,
@@ -213,6 +213,12 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [payError, setPayError] = useState<string | null>(null)
   const [payData, setPayData] = useState<PayoutRes | null>(null)
 
+  // Banks fetch state
+  const [banksLoading, setBanksLoading] = useState(false)
+  const [banksError, setBanksError] = useState<string | null>(null)
+  const [bankOptions, setBankOptions] = useState<BankOption[]>([])
+  const banksFetchedRef = useRef(false)
+
   // Effects
   useEffect(() => {
     if (!open) return
@@ -230,6 +236,11 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     setPayLoading(false)
     setPayError(null)
     setPayData(null)
+    // reset bank fetch state
+    setBanksLoading(false)
+    setBanksError(null)
+    setBankOptions([])
+    banksFetchedRef.current = false
   }, [open])
 
   useEffect(() => {
@@ -252,27 +263,47 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const deposit = initData?.deposit
   const { text: countdown, expired } = useCountdown(quote?.expiresAt ?? null)
 
-  // Normalize banks into objects [{name, code}]
-  const bankOptions: BankOption[] = React.useMemo(() => {
-    const raw = (initData as any)?.banks ?? []
-    if (!Array.isArray(raw)) return []
-    const items: BankOption[] = raw.map((b: any) => ({
-      name: String(b?.name ?? ''),
-      code: String(b?.code ?? '')
-    })).filter(b => b.name && b.code)
-    return items.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
-  }, [initData])
-
-  // When banks arrive, preselect the first one
+  // Fetch banks once when entering Step 2
   useEffect(() => {
-    if (bankOptions.length > 0) {
-      setBankName(bankOptions[0].name)
-      setBankCode(bankOptions[0].code)
-    } else {
-      setBankName('')
-      setBankCode('')
-    }
-  }, [bankOptions])
+    if (!open || step !== 2 || banksFetchedRef.current) return
+    banksFetchedRef.current = true
+    ;(async () => {
+      setBanksLoading(true)
+      setBanksError(null)
+      try {
+        const res = await fetch(`${API_BASE}/fetchnaira/naira-accounts?t=${Date.now()}`, {
+          method: 'GET',
+          headers: getHeaders(),
+          cache: 'no-store',
+        })
+        const json = await res.json()
+        if (!res.ok || json?.success === false) {
+          throw new Error(json?.message || `HTTP ${res.status}`)
+        }
+        // accept {banks:[...]} or {data:{data:[...]}}
+        const raw = Array.isArray(json?.banks) ? json.banks : (json?.data?.data || [])
+        const opts: BankOption[] = (Array.isArray(raw) ? raw : [])
+          .map((b: any) => ({ name: String(b?.name || ''), code: String(b?.code || '') }))
+          .filter(b => b.name && b.code)
+          .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+        setBankOptions(opts)
+        if (opts.length) {
+          setBankName(opts[0].name)
+          setBankCode(opts[0].code)
+        } else {
+          setBankName('')
+          setBankCode('')
+        }
+      } catch (e: any) {
+        setBanksError(e?.message || 'Failed to load banks')
+        setBankOptions([])
+        setBankName('')
+        setBankCode('')
+      } finally {
+        setBanksLoading(false)
+      }
+    })()
+  }, [open, step])
 
   async function submitInitiate(e: React.FormEvent) {
     e.preventDefault()
@@ -318,7 +349,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         body: JSON.stringify({
           paymentId: initData.paymentId,
           bankName,
-          bankCode, // ⬅️ always send code now
+          bankCode, // always send code along with the name
           accountNumber,
           accountName,
         }),
@@ -547,35 +578,28 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   {/* Bank dropdown + account fields */}
                   <form onSubmit={submitPayout} style={gridForm}>
                     <label style={inputWrap}>
-                      <span style={labelText}>Bank Name</span>
-                      {bankOptions.length > 0 ? (
-                        <select
-                          ref={firstInputRef as any}
-                          style={inputBase}
-                          value={bankCode}
-                          onChange={e => {
-                            const code = e.target.value
-                            const hit = bankOptions.find(b => b.code === code)
-                            if (hit) {
-                              setBankCode(hit.code)
-                              setBankName(hit.name)
-                            }
-                          }}
-                        >
-                          {bankOptions.map(b => (
-                            <option key={b.code} value={b.code}>
-                              {b.name}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <input
-                          ref={firstInputRef as any}
-                          style={inputBase}
-                          value={bankName}
-                          onChange={e => { setBankName(e.target.value); setBankCode('') }}
-                          placeholder="Type bank name"
-                        />
+                      <span style={labelText}>Bank</span>
+                      <select
+                        ref={firstInputRef as any}
+                        style={inputBase}
+                        value={bankCode}
+                        disabled={banksLoading || bankOptions.length === 0}
+                        onChange={e => {
+                          const code = e.target.value
+                          const hit = bankOptions.find(b => b.code === code)
+                          if (hit) {
+                            setBankCode(hit.code)
+                            setBankName(hit.name)
+                          }
+                        }}
+                      >
+                        {bankOptions.map(b => (
+                          <option key={b.code} value={b.code}>{b.name}</option>
+                        ))}
+                      </select>
+                      {banksLoading && <span style={smallMuted}>Loading banks…</span>}
+                      {!banksLoading && banksError && (
+                        <span style={{ ...smallMuted, color: '#ffaaaa' }}>Failed: {banksError}</span>
                       )}
                     </label>
 
@@ -600,7 +624,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     </label>
 
                     <div style={{ gridColumn: '1 / span 2', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-                      <button style={btnPrimary} disabled={payLoading || !bankCode}>
+                      <button style={btnPrimary} disabled={payLoading || !bankCode || banksLoading}>
                         {payLoading ? 'Saving…' : 'Save Payout Details'}
                       </button>
                     </div>
@@ -643,7 +667,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     </div>
                     <div>
                       <div style={kStyle}>Bank</div>
-                      <div style={vStyle}>{payData.payout.bankName} ({payData.payout.bankCode})</div>
+                      <div style={vStyle}>{payData.payout.bankName}</div>
                     </div>
                     <div>
                       <div style={kStyle}>Account</div>
