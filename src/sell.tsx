@@ -12,7 +12,7 @@ type InitiateSellRes = {
   token?: string
   network?: string
   sellAmount?: number
-  banks?: any                 // backend may send string[] or object[]
+  banks?: unknown                 // backend sends string[] (bank names)
   deposit: {
     address: string
     memo?: string | null
@@ -109,7 +109,7 @@ function useCountdown(expiryIso?: string | null) {
       const left = Math.max(0, new Date(expiryIso).getTime() - Date.now())
       setMsLeft(left)
     }, 250)
-    return () => clearInterval(t)
+  return () => clearInterval(t)
   }, [expiryIso])
   const mm = Math.floor(msLeft / 60000)
   const ss = Math.floor((msLeft % 60000) / 1000)
@@ -395,35 +395,36 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const deposit = initData?.deposit
   const { text: countdown, expired } = useCountdown(quote?.expiresAt ?? null)
 
-  // ---- Robust bank names extraction (strings OR objects, shallow OR nested) ----
-  const bankNames = React.useMemo(() => {
-    const rawCandidates: any[] = []
-    const pushIfArray = (v: any) => { if (Array.isArray(v)) rawCandidates.push(v) }
+  // --- Extract bank names exactly from initData.banks, with safe fallbacks ---
+  const bankNames: string[] = React.useMemo(() => {
+    const raw = (initData as any)?.banks
 
-    const src: any = initData ?? {}
+    // Most common: array of strings
+    if (Array.isArray(raw)) {
+      // strings or objects with name property
+      const names = raw.map((b: any) =>
+        typeof b === 'string' ? b : (b?.name ?? b?.bankName ?? b?.label ?? '')
+      ).filter(Boolean)
+      return [...new Set(names.map((s: string) => s.trim()))].sort((a,b) => a.localeCompare(b, undefined, {sensitivity:'base'}))
+    }
 
-    // likely shapes
-    pushIfArray(src.banks)
-    pushIfArray(src?.data?.banks)
-    pushIfArray(src?.banks?.data)
-    pushIfArray(src?.data) // in case backend did {..., banks: { data: [...] }} and we bubbled wrongly
+    // Stringified JSON array (just in case)
+    if (typeof raw === 'string') {
+      try {
+        const parsed = JSON.parse(raw)
+        if (Array.isArray(parsed)) {
+          const names = parsed.map((b: any) =>
+            typeof b === 'string' ? b : (b?.name ?? b?.bankName ?? b?.label ?? '')
+          ).filter(Boolean)
+          return [...new Set(names.map((s: string) => s.trim()))].sort((a,b) => a.localeCompare(b, undefined, {sensitivity:'base'}))
+        }
+      } catch {}
+      // Comma-separated string fallback
+      const names = raw.split(',').map(s => s.trim()).filter(Boolean)
+      return [...new Set(names)].sort((a,b) => a.localeCompare(b, undefined, {sensitivity:'base'}))
+    }
 
-    // flatten one that actually has content
-    const raw = rawCandidates.find(a => Array.isArray(a) && a.length) ?? []
-
-    const names = raw
-      .map((b: any) =>
-        typeof b === 'string'
-          ? b
-          : (b?.name ?? b?.bankName ?? b?.label ?? '')
-      )
-      .filter((s: string) => typeof s === 'string' && s.trim().length > 0)
-      .map((s: string) => s.trim())
-
-    // unique + sorted (case-insensitive)
-    return [...new Set(names)].sort((a, b) =>
-      a.localeCompare(b, undefined, { sensitivity: 'base' })
-    )
+    return []
   }, [initData])
 
   async function submitInitiate(e: React.FormEvent) {
@@ -469,7 +470,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         headers: getHeaders(),
         body: JSON.stringify({
           paymentId: initData.paymentId,
-          bankName,               // server maps name -> code using cache
+          bankName,               // server maps name -> code
           accountNumber,
           accountName,
         }),
@@ -591,25 +592,25 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   <div style={kvGrid}>
                     <div>
                       <div style={kStyle}>Send to Address</div>
-                      <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{initData.deposit?.address}</div>
+                      <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{deposit?.address}</div>
                       <div style={row}>
                         <button
                           style={btn}
-                          onClick={() => initData.deposit?.address && copyToClipboard(initData.deposit.address, 'addr')}
+                          onClick={() => deposit?.address && copyToClipboard(deposit.address, 'addr')}
                         >
                           {copiedKey === 'addr' ? 'Copied ✓' : 'Copy Address'}
                         </button>
                       </div>
                     </div>
 
-                    {!!initData.deposit?.memo && (
+                    {!!deposit?.memo && (
                       <div>
                         <div style={kStyle}>Memo / Tag</div>
-                        <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{initData.deposit.memo}</div>
+                        <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{deposit.memo}</div>
                         <div style={row}>
                           <button
                             style={btn}
-                            onClick={() => copyToClipboard(initData.deposit!.memo!, 'memo')}
+                            onClick={() => copyToClipboard(deposit!.memo!, 'memo')}
                           >
                             {copiedKey === 'memo' ? 'Copied ✓' : 'Copy Memo'}
                           </button>
@@ -620,21 +621,21 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     <div>
                       <div style={kStyle}>You Receive</div>
                       <div style={vStyle}>
-                        {prettyNgn(initData.quote?.receiveAmount || 0)}&nbsp;
+                        {prettyNgn(quote?.receiveAmount || 0)}&nbsp;
                         <span style={{ color: 'var(--muted)', fontWeight: 500 }}>
-                          at {prettyAmount(initData.quote?.rate || 0)} NGN/{initData.deposit?.token || token}
+                          at {prettyAmount(quote?.rate || 0)} NGN/{deposit?.token || token}
                         </span>
                       </div>
                     </div>
 
                     <div>
                       <div style={kStyle}>Network</div>
-                      <div style={vStyle}>{toNetworkLabel(initData.deposit?.token || token, initData.deposit?.network || network)}</div>
+                      <div style={vStyle}>{toNetworkLabel(deposit?.token || token, deposit?.network || network)}</div>
                     </div>
                   </div>
 
                   <div style={{ ...smallMuted, ...badgeWarn }}>
-                    ⚠️ Only send {initData.deposit?.token || token} on the selected network. Wrong-network deposits can be lost.
+                    ⚠️ Only send {deposit?.token || token} on the selected network. Wrong-network deposits can be lost.
                   </div>
 
                   <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
@@ -689,7 +690,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     </div>
                   </div>
 
-                  {/* Error if any */}
                   {!!payError && (
                     <div role="alert" style={errorBanner}>
                       <strong style={{ color: '#ffaaaa' }}>Error:</strong> {payError}
@@ -700,27 +700,18 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   <form onSubmit={submitPayout} style={gridForm}>
                     <label style={inputWrap}>
                       <span style={labelText}>Bank Name</span>
-                      {bankNames.length > 0 ? (
-                        <select
-                          ref={firstInputRef as any}
-                          style={inputBase}
-                          value={bankName}
-                          onChange={e => setBankName(e.target.value)}
-                        >
-                          <option value="" disabled>Select your bank</option>
-                          {bankNames.map(name => (
-                            <option key={name} value={name}>{name}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <input
-                          ref={firstInputRef as any}
-                          style={inputBase}
-                          value={bankName}
-                          onChange={e => setBankName(e.target.value)}
-                          placeholder="Type bank name"
-                        />
-                      )}
+                      <select
+                        ref={firstInputRef as any}
+                        style={inputBase}
+                        value={bankName}
+                        onChange={e => setBankName(e.target.value)}
+                        disabled={bankNames.length === 0}
+                      >
+                        <option value="">{bankNames.length ? 'Select your bank' : 'No banks available'}</option>
+                        {bankNames.map(name => (
+                          <option key={name} value={name}>{name}</option>
+                        ))}
+                      </select>
                     </label>
 
                     <label style={inputWrap}>
