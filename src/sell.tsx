@@ -619,7 +619,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                         style={inputBase}
                         value={accountName}
                         onChange={e => setAccountName(e.target.value)}
-                        placeholder="e.g. Chibuike Nwogbo Emmanuel"
+                        placeholder="e.g. Aduke Oslo Okoro"
                       />
                     </label>
 
