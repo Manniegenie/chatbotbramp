@@ -1,5 +1,5 @@
 // src/sell.tsx
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { tokenStore } from './lib/secureStore'
 
@@ -12,7 +12,7 @@ type InitiateSellRes = {
   token?: string
   network?: string
   sellAmount?: number
-  banks?: string[]              // ⬅️ bank names from backend
+  banks?: any                // backend may send string[] or object[]
   deposit: {
     address: string
     memo?: string | null
@@ -160,7 +160,7 @@ function buildPayoutRecap(init: InitiateSellRes | null, p: PayoutRes) {
 }
 
 /* =========================
-   Polished Modal UI Styles
+   Polished Modal UI Styles (unchanged)
    ========================= */
 const overlayStyle: React.CSSProperties = {
   position: 'fixed',
@@ -350,7 +350,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [initData, setInitData] = useState<InitiateSellRes | null>(null)
 
   // Step 2 state
-  const [bankName, setBankName] = useState('')      // will come from dropdown
+  const [bankName, setBankName] = useState('')      // from dropdown
   const [accountNumber, setAccountNumber] = useState('')
   const [accountName, setAccountName] = useState('')
   const [payLoading, setPayLoading] = useState(false)
@@ -393,8 +393,28 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
   const quote = initData?.quote
   const deposit = initData?.deposit
-  const banks = initData?.banks ?? []            // ⬅️ names from backend
   const { text: countdown, expired } = useCountdown(quote?.expiresAt ?? null)
+
+  // ---- Normalize bank names no matter how backend sends it (strings or objects, possibly nested) ----
+  const bankNames = React.useMemo(() => {
+    const raw =
+      (initData as any)?.banks ??
+      (initData as any)?.data?.banks ??
+      [];
+
+    const arr = Array.isArray(raw) ? raw : [];
+    const names = arr
+      .map((b: any) =>
+        typeof b === 'string'
+          ? b
+          : (b?.name ?? b?.bankName ?? b?.label ?? '')
+      )
+      .filter(Boolean);
+
+    return [...new Set(names)].sort((a, b) =>
+      a.localeCompare(b, undefined, { sensitivity: 'base' })
+    );
+  }, [initData]);
 
   async function submitInitiate(e: React.FormEvent) {
     e.preventDefault()
@@ -424,7 +444,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   async function submitPayout(e: React.FormEvent) {
     e.preventDefault()
     setPayError(null)
-    // bankCode is resolved server-side; we only need bankName + account details here
     if (!bankName || !accountNumber || !accountName) {
       setPayError('Fill in all bank fields')
       return
@@ -440,7 +459,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         headers: getHeaders(),
         body: JSON.stringify({
           paymentId: initData.paymentId,
-          bankName,               // ⬅️ only name sent; server maps to code
+          bankName,               // server maps name -> code using cache
           accountNumber,
           accountName,
         }),
@@ -468,8 +487,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
   const canContinue = !!initData && !expired
   const headerTitle = step === 1 ? 'Start a Sell' : 'Payout Details'
-
-  // Final summary visibility (after payout saved)
   const showFinalSummary = !!payData
 
   return createPortal(
@@ -672,7 +689,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   <form onSubmit={submitPayout} style={gridForm}>
                     <label style={inputWrap}>
                       <span style={labelText}>Bank Name</span>
-                      {banks.length > 0 ? (
+                      {bankNames.length > 0 ? (
                         <select
                           ref={firstInputRef as any}
                           style={inputBase}
@@ -680,7 +697,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                           onChange={e => setBankName(e.target.value)}
                         >
                           <option value="" disabled>Select your bank</option>
-                          {banks.map(name => (
+                          {bankNames.map(name => (
                             <option key={name} value={name}>{name}</option>
                           ))}
                         </select>
@@ -694,8 +711,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                         />
                       )}
                     </label>
-
-                    {/* Bank code is no longer needed on client; resolved server-side */}
 
                     <label style={inputWrap}>
                       <span style={labelText}>Account Number</span>
