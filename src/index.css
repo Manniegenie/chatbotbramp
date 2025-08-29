@@ -1,4 +1,9 @@
+/* ========= Global Theme & Font ========= */
 :root{
+  /* Font stack */
+  --font-sans: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+
+  /* Colors */
   --bg:#0b0b10;        /* dark background */
   --card:#12121a;      /* chat bubble background */
   --muted:#ffffffcc;   /* muted text = semi-white */
@@ -12,21 +17,50 @@
 
 *{ box-sizing:border-box }
 html,body,#root{ height:100% }
+
 body{
   margin:0;
   background:var(--bg);
   color:var(--txt);
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial;
+
+  /* Use Geist by default (loaded via <link> in main.tsx) */
+  font-family: var(--font-sans);
+  /* Let variable font auto-optical size */
+  font-optical-sizing: auto;
+
   font-size: 17px; /* ChatGPT-like readability */
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color-scheme: dark;
 }
 
-/* Generic link styles */
+/* ====== Geist utility classes ====== */
+/* Your "geist-<uniquifier>" — pick any suffix; using 'brand' */
+.geist-brand{
+  font-family: "Geist", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+  font-weight: 400; /* change per use (100..900) */
+}
+
+/* Optional helpers for quick weights */
+.geist-100{ font-family:"Geist",sans-serif; font-optical-sizing:auto; font-weight:100; }
+.geist-200{ font-family:"Geist",sans-serif; font-optical-sizing:auto; font-weight:200; }
+.geist-300{ font-family:"Geist",sans-serif; font-optical-sizing:auto; font-weight:300; }
+.geist-400{ font-family:"Geist",sans-serif; font-optical-sizing:auto; font-weight:400; }
+.geist-500{ font-family:"Geist",sans-serif; font-optical-sizing:auto; font-weight:500; }
+.geist-600{ font-family:"Geist",sans-serif; font-optical-sizing:auto; font-weight:600; }
+.geist-700{ font-family:"Geist",sans-serif; font-optical-sizing:auto; font-weight:700; }
+.geist-800{ font-family:"Geist",sans-serif; font-optical-sizing:auto; font-weight:800; }
+.geist-900{ font-family:"Geist",sans-serif; font-optical-sizing:auto; font-weight:900; }
+.geist-italic{ font-style: italic; }
+
+/* ========= Generic link styles ========= */
 a{ color:var(--accent) }
 a:hover{ opacity:.9 }
 
-/* Page shell */
+/* ========= Page shell ========= */
 .page{ min-height:100%; display:flex; flex-direction:column }
 .header{
   position:sticky; top:0; z-index:10;
@@ -45,7 +79,7 @@ a:hover{ opacity:.9 }
 }
 .tag{ margin:0; color:var(--muted); font-size:13px }
 
-/* Buttons */
+/* ========= Buttons ========= */
 .btn{
   appearance:none; border:0; cursor:pointer; text-decoration:none;
   background:var(--accent); color:#fff; padding:12px 16px; border-radius:10px; font-weight:600;
@@ -57,7 +91,7 @@ a:hover{ opacity:.9 }
 .btn:active{ transform: translateY(1px) }
 .btn[disabled]{ opacity:.6; cursor:not-allowed }
 
-/* Main chat area */
+/* ========= Main chat area ========= */
 .chat{
   max-width:860px; width:100%;
   margin:0 auto; padding:20px;
@@ -78,7 +112,7 @@ a:hover{ opacity:.9 }
   .messages{ scrollbar-color:#242433 transparent; scrollbar-width:thin; }
 }
 
-/* Bubbles */
+/* ========= Bubbles ========= */
 .bubble{
   background:var(--card); border:1px solid var(--border);
   padding:14px 16px; border-radius:14px; max-width:80%;
@@ -109,7 +143,7 @@ a:hover{ opacity:.9 }
   border-color:var(--border);
 }
 
-/* Typing… */
+/* ========= Typing… ========= */
 .typing{ color:var(--muted); font-size:14px; padding:6px 2px }
 .typing-bubble{ background:var(--card); border:1px solid var(--border); padding:12px 14px; border-radius:14px; max-width:60% }
 .typing-dots{ display:inline-flex; align-items:center; gap:6px; height:18px }
@@ -124,7 +158,7 @@ a:hover{ opacity:.9 }
   40% { opacity:1; transform: translateY(-2px) }
 }
 
-/* Composer */
+/* ========= Composer ========= */
 .composer{
   margin-top:auto; display:flex; gap:10px; padding-top:10px;
   border-top:1px solid var(--border);
@@ -140,7 +174,7 @@ a:hover{ opacity:.9 }
   box-shadow:0 0 0 3px rgba(0,115,55,.18);
 }
 
-/* Quick hints */
+/* ========= Quick hints ========= */
 .hints{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px }
 .hint{
   font-size:14px; color:var(--muted);
@@ -149,7 +183,7 @@ a:hover{ opacity:.9 }
 }
 .hint:hover{ border-style:solid; color:var(--accent); background:#111218 }
 
-/* Footer */
+/* ========= Footer ========= */
 .footer{
   display:flex; gap:12px; justify-content:center;
   padding:24px 10px; border-top:1px solid var(--border); color:var(--muted);
@@ -158,16 +192,16 @@ a:hover{ opacity:.9 }
 .footer a{ color:var(--muted); text-decoration:none }
 .footer a:hover{ color:var(--accent) }
 
-/* Selection */
+/* ========= Selection ========= */
 ::selection{ background:rgba(0,115,55,.35) }
 
-/* Reduce motion */
+/* ========= Reduce motion ========= */
 @media (prefers-reduced-motion: reduce){
   .messages{ scroll-behavior:auto }
   .btn, .composer input{ transition:none }
 }
 
-/* Responsiveness */
+/* ========= Responsiveness ========= */
 @media (max-width: 640px){
   .header{ padding:12px 14px }
   .chat{ padding:14px }
