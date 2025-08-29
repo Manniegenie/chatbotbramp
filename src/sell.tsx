@@ -14,7 +14,7 @@ type InitiateSellRes = {
   token?: string
   network?: string
   sellAmount?: number
-  banks?: (BankOption | string)[]
+  banks?: BankOption[]
   deposit: {
     address: string
     memo?: string | null
@@ -205,8 +205,8 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [initData, setInitData] = useState<InitiateSellRes | null>(null)
 
   // Step 2 state
-  const [bankName, setBankName] = useState('')      // from dropdown
-  const [bankCode, setBankCode] = useState('')      // now captured from dropdown too
+  const [bankName, setBankName] = useState('')
+  const [bankCode, setBankCode] = useState('')
   const [accountNumber, setAccountNumber] = useState('')
   const [accountName, setAccountName] = useState('')
   const [payLoading, setPayLoading] = useState(false)
@@ -256,21 +256,23 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const bankOptions: BankOption[] = React.useMemo(() => {
     const raw = (initData as any)?.banks ?? []
     if (!Array.isArray(raw)) return []
-    const items: BankOption[] = raw.map((b: any) => {
-      if (typeof b === 'string') return { name: b, code: '' }
-      return { name: String(b?.name ?? ''), code: String(b?.code ?? '') }
-    }).filter(b => b.name)
-    // sort by name (case-insensitive)
+    const items: BankOption[] = raw.map((b: any) => ({
+      name: String(b?.name ?? ''),
+      code: String(b?.code ?? '')
+    })).filter(b => b.name && b.code)
     return items.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
   }, [initData])
 
   // When banks arrive, preselect the first one
   useEffect(() => {
-    if (bankOptions.length > 0 && !bankName) {
+    if (bankOptions.length > 0) {
       setBankName(bankOptions[0].name)
-      setBankCode(bankOptions[0].code || '')
+      setBankCode(bankOptions[0].code)
+    } else {
+      setBankName('')
+      setBankCode('')
     }
-  }, [bankOptions, bankName])
+  }, [bankOptions])
 
   async function submitInitiate(e: React.FormEvent) {
     e.preventDefault()
@@ -300,7 +302,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   async function submitPayout(e: React.FormEvent) {
     e.preventDefault()
     setPayError(null)
-    if (!bankName || !accountNumber || !accountName) {
+    if (!bankName || !bankCode || !accountNumber || !accountName) {
       setPayError('Fill in all bank fields')
       return
     }
@@ -316,7 +318,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         body: JSON.stringify({
           paymentId: initData.paymentId,
           bankName,
-          bankCode: bankCode || undefined, // send bankCode if we have it
+          bankCode, // ⬅️ always send code now
           accountNumber,
           accountName,
         }),
@@ -550,27 +552,18 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                         <select
                           ref={firstInputRef as any}
                           style={inputBase}
-                          value={bankCode || bankName /* keep a value to avoid empty */}
+                          value={bankCode}
                           onChange={e => {
-                            const value = e.target.value
-                            // value might be the code if present, or the name (legacy)
-                            const byCode = bankOptions.find(b => b.code && b.code === value)
-                            if (byCode) {
-                              setBankCode(byCode.code)
-                              setBankName(byCode.name)
-                            } else {
-                              // legacy path if backend sent only strings
-                              const byName = bankOptions.find(b => b.name === value)
-                              setBankName(byName?.name || value)
-                              setBankCode(byName?.code || '')
+                            const code = e.target.value
+                            const hit = bankOptions.find(b => b.code === code)
+                            if (hit) {
+                              setBankCode(hit.code)
+                              setBankName(hit.name)
                             }
                           }}
                         >
                           {bankOptions.map(b => (
-                            <option
-                              key={b.code || b.name}
-                              value={b.code || b.name}
-                            >
+                            <option key={b.code} value={b.code}>
                               {b.name}
                             </option>
                           ))}
@@ -607,7 +600,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     </label>
 
                     <div style={{ gridColumn: '1 / span 2', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-                      <button style={btnPrimary} disabled={payLoading}>
+                      <button style={btnPrimary} disabled={payLoading || !bankCode}>
                         {payLoading ? 'Saving…' : 'Save Payout Details'}
                       </button>
                     </div>
