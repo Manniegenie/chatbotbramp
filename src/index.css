@@ -18,6 +18,12 @@
 *{ box-sizing:border-box }
 html,body,#root{ height:100% }
 
+/* Prevent text auto-zooming on iOS while preserving accessibility */
+html{
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
 body{
   margin:0;
   background:var(--bg);
@@ -81,11 +87,15 @@ a:hover{ opacity:.9 }
 
 /* ========= Buttons ========= */
 .btn{
-  appearance:none; border:0; cursor:pointer; text-decoration:none;
+  appearance:none;
+  -webkit-appearance: none;
+  cursor:pointer; text-decoration:none;
   background:var(--accent); color:#fff; padding:12px 16px; border-radius:10px; font-weight:600;
   font-size:16px;
   transition: box-shadow .2s ease, transform .05s ease, opacity .2s ease, background .2s ease;
   box-shadow: 0 0 0 0 rgba(0,115,55,0);
+  border:0;
+  touch-action: manipulation; /* faster taps on mobile */
 }
 .btn:hover{ box-shadow:0 0 0 4px rgba(0,115,55,.18) }
 .btn:active{ transform: translateY(1px) }
@@ -194,6 +204,30 @@ a:hover{ opacity:.9 }
 
 /* ========= Selection ========= */
 ::selection{ background:rgba(0,115,55,.35) }
+
+/* ========= Form element normalizations (mobile-friendly) ========= */
+/* Ensure form controls are ≥16px so iOS Safari doesn’t zoom on focus */
+input, select, textarea, button {
+  font-size: 16px;
+  line-height: 1.35;
+  font-family: inherit;
+  color: inherit;
+}
+
+/* Remove number input spinners for a cleaner look (with standard appearance to satisfy linters) */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;   /* ← standard property */
+  margin: 0;
+}
+input[type="number"]{
+  -moz-appearance: textfield;
+  appearance: textfield; /* ← standard property */
+}
+
+/* Make tap targets feel snappy on mobile */
+button, a, label { touch-action: manipulation; }
 
 /* ========= Reduce motion ========= */
 @media (prefers-reduced-motion: reduce){
