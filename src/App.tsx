@@ -317,7 +317,7 @@ export default function App() {
 
       <footer className="footer">
         <a
-          href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link"
+          href="https://drive.google.com/file/d/1UuUI8WBzxIu9X9aYxtcmB3PxyDW6Haj7/view?usp=sharing"
           target="_blank"
           rel="noopener noreferrer"
         >
