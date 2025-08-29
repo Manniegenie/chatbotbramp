@@ -12,7 +12,7 @@ type InitiateSellRes = {
   token?: string
   network?: string
   sellAmount?: number
-  banks?: any                // backend may send string[] or object[]
+  banks?: any                 // backend may send string[] or object[]
   deposit: {
     address: string
     memo?: string | null
@@ -395,26 +395,36 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const deposit = initData?.deposit
   const { text: countdown, expired } = useCountdown(quote?.expiresAt ?? null)
 
-  // ---- Normalize bank names no matter how backend sends it (strings or objects, possibly nested) ----
+  // ---- Robust bank names extraction (strings OR objects, shallow OR nested) ----
   const bankNames = React.useMemo(() => {
-    const raw =
-      (initData as any)?.banks ??
-      (initData as any)?.data?.banks ??
-      [];
+    const rawCandidates: any[] = []
+    const pushIfArray = (v: any) => { if (Array.isArray(v)) rawCandidates.push(v) }
 
-    const arr = Array.isArray(raw) ? raw : [];
-    const names = arr
+    const src: any = initData ?? {}
+
+    // likely shapes
+    pushIfArray(src.banks)
+    pushIfArray(src?.data?.banks)
+    pushIfArray(src?.banks?.data)
+    pushIfArray(src?.data) // in case backend did {..., banks: { data: [...] }} and we bubbled wrongly
+
+    // flatten one that actually has content
+    const raw = rawCandidates.find(a => Array.isArray(a) && a.length) ?? []
+
+    const names = raw
       .map((b: any) =>
         typeof b === 'string'
           ? b
           : (b?.name ?? b?.bankName ?? b?.label ?? '')
       )
-      .filter(Boolean);
+      .filter((s: string) => typeof s === 'string' && s.trim().length > 0)
+      .map((s: string) => s.trim())
 
+    // unique + sorted (case-insensitive)
     return [...new Set(names)].sort((a, b) =>
       a.localeCompare(b, undefined, { sensitivity: 'base' })
-    );
-  }, [initData]);
+    )
+  }, [initData])
 
   async function submitInitiate(e: React.FormEvent) {
     e.preventDefault()
@@ -581,25 +591,25 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   <div style={kvGrid}>
                     <div>
                       <div style={kStyle}>Send to Address</div>
-                      <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{deposit?.address}</div>
+                      <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{initData.deposit?.address}</div>
                       <div style={row}>
                         <button
                           style={btn}
-                          onClick={() => deposit?.address && copyToClipboard(deposit.address, 'addr')}
+                          onClick={() => initData.deposit?.address && copyToClipboard(initData.deposit.address, 'addr')}
                         >
                           {copiedKey === 'addr' ? 'Copied ✓' : 'Copy Address'}
                         </button>
                       </div>
                     </div>
 
-                    {!!deposit?.memo && (
+                    {!!initData.deposit?.memo && (
                       <div>
                         <div style={kStyle}>Memo / Tag</div>
-                        <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{deposit.memo}</div>
+                        <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{initData.deposit.memo}</div>
                         <div style={row}>
                           <button
                             style={btn}
-                            onClick={() => copyToClipboard(deposit!.memo!, 'memo')}
+                            onClick={() => copyToClipboard(initData.deposit!.memo!, 'memo')}
                           >
                             {copiedKey === 'memo' ? 'Copied ✓' : 'Copy Memo'}
                           </button>
@@ -610,21 +620,21 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     <div>
                       <div style={kStyle}>You Receive</div>
                       <div style={vStyle}>
-                        {prettyNgn(quote?.receiveAmount || 0)}&nbsp;
+                        {prettyNgn(initData.quote?.receiveAmount || 0)}&nbsp;
                         <span style={{ color: 'var(--muted)', fontWeight: 500 }}>
-                          at {prettyAmount(quote?.rate || 0)} NGN/{deposit?.token || token}
+                          at {prettyAmount(initData.quote?.rate || 0)} NGN/{initData.deposit?.token || token}
                         </span>
                       </div>
                     </div>
 
                     <div>
                       <div style={kStyle}>Network</div>
-                      <div style={vStyle}>{toNetworkLabel(deposit?.token || token, deposit?.network || network)}</div>
+                      <div style={vStyle}>{toNetworkLabel(initData.deposit?.token || token, initData.deposit?.network || network)}</div>
                     </div>
                   </div>
 
                   <div style={{ ...smallMuted, ...badgeWarn }}>
-                    ⚠️ Only send {deposit?.token || token} on the selected network. Wrong-network deposits can be lost.
+                    ⚠️ Only send {initData.deposit?.token || token} on the selected network. Wrong-network deposits can be lost.
                   </div>
 
                   <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
@@ -679,6 +689,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     </div>
                   </div>
 
+                  {/* Error if any */}
                   {!!payError && (
                     <div role="alert" style={errorBanner}>
                       <strong style={{ color: '#ffaaaa' }}>Error:</strong> {payError}
@@ -741,7 +752,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                 </>
               )}
 
-              {/* FINAL SUMMARY (after payout saved) */}
+              {/* FINAL SUMMARY */}
               {initData && showFinalSummary && payData && (
                 <div style={successCard}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
