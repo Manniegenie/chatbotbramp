@@ -5,8 +5,7 @@ import { tokenStore } from './lib/secureStore'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
-// If your banks route is different, update this constant
-const NAIRA_BANKS_PATHS = ['/fetchnaira/naira-accounts'] as const
+type BankOption = { name: string; code: string }
 
 type InitiateSellRes = {
   success: boolean
@@ -15,7 +14,7 @@ type InitiateSellRes = {
   token?: string
   network?: string
   sellAmount?: number
-  banks?: any                // backend may send string[] or object[]
+  banks?: (BankOption | string)[]
   deposit: {
     address: string
     memo?: string | null
@@ -162,166 +161,34 @@ function buildPayoutRecap(init: InitiateSellRes | null, p: PayoutRes) {
   ].join('\n')
 }
 
-/* =========================
-   Styles (unchanged)
-   ========================= */
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  background: 'rgba(0,0,0,.55)',
-  display: 'grid',
-  placeItems: 'center',
-  padding: 16,
-  zIndex: 1000,
-}
-const sheetStyle: React.CSSProperties = {
-  width: '100%',
-  maxWidth: 760,
-  background: 'var(--card)',
-  color: 'var(--txt)',
-  border: '1px solid var(--border)',
-  borderRadius: 16,
-  boxShadow: 'var(--shadow)',
-  overflow: 'hidden',
-  display: 'grid',
-  gridTemplateRows: 'auto 1fr auto',
-  animation: 'scaleIn 120ms ease-out',
-}
-const headerStyle: React.CSSProperties = {
-  padding: '16px 18px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  borderBottom: '1px solid var(--border)',
-}
-const titleRowStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 10,
-}
-const stepperStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 8,
-  fontSize: 12,
-  color: 'var(--muted)',
-}
-const dot = (active: boolean): React.CSSProperties => ({
-  width: 8,
-  height: 8,
-  borderRadius: 999,
-  background: active ? 'var(--accent)' : 'var(--border)',
-})
+/* ===== Styles (unchanged) ===== */
+const overlayStyle: React.CSSProperties = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', display: 'grid', placeItems: 'center', padding: 16, zIndex: 1000 }
+const sheetStyle: React.CSSProperties = { width: '100%', maxWidth: 760, background: 'var(--card)', color: 'var(--txt)', border: '1px solid var(--border)', borderRadius: 16, boxShadow: 'var(--shadow)', overflow: 'hidden', display: 'grid', gridTemplateRows: 'auto 1fr auto', animation: 'scaleIn 120ms ease-out' }
+const headerStyle: React.CSSProperties = { padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }
+const titleRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10 }
+const stepperStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--muted)' }
+const dot = (active: boolean): React.CSSProperties => ({ width: 8, height: 8, borderRadius: 999, background: active ? 'var(--accent)' : 'var(--border)' })
 const bodyStyle: React.CSSProperties = { padding: 18, overflow: 'auto' }
-const footerStyle: React.CSSProperties = {
-  padding: 16,
-  display: 'flex',
-  justifyContent: 'space-between',
-  gap: 12,
-  borderTop: '1px solid var(--border)',
-  background: 'linear-gradient(180deg, transparent, rgba(0,0,0,.05))',
-}
-const btn: React.CSSProperties = {
-  appearance: 'none',
-  border: '1px solid var(--border)',
-  background: 'transparent',
-  color: 'var(--txt)',
-  padding: '10px 14px',
-  borderRadius: 10,
-  cursor: 'pointer',
-}
+const footerStyle: React.CSSProperties = { padding: 16, display: 'flex', justifyContent: 'space-between', gap: 12, borderTop: '1px solid var(--border)', background: 'linear-gradient(180deg, transparent, rgba(0,0,0,.05))' }
+const btn: React.CSSProperties = { appearance: 'none', border: '1px solid var(--border)', background: 'transparent', color: 'var(--txt)', padding: '10px 14px', borderRadius: 10, cursor: 'pointer' }
 const btnPrimary: React.CSSProperties = { ...btn, border: 'none', background: 'var(--accent)', color: 'white' }
 const btnDangerGhost: React.CSSProperties = { ...btn, borderColor: 'var(--border)', color: 'var(--muted)' }
 const gridForm: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }
 const inputWrap: React.CSSProperties = { display: 'grid', gap: 6 }
 const labelText: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' }
-const inputBase: React.CSSProperties = {
-  background: '#0f1117',
-  color: 'var(--txt)',
-  border: '1px solid var(--border)',
-  borderRadius: 10,
-  padding: '10px 12px',
-  outline: 'none',
-}
+const inputBase: React.CSSProperties = { background: '#0f1117', color: 'var(--txt)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 12px', outline: 'none' }
 const singleColForm: React.CSSProperties = { display: 'grid', gap: 12 }
-const card: React.CSSProperties = {
-  border: '1px solid var(--border)',
-  borderRadius: 12,
-  padding: 14,
-  background: '#0e0f15',
-  display: 'grid',
-  gap: 10,
-}
+const card: React.CSSProperties = { border: '1px solid var(--border)', borderRadius: 12, padding: 14, background: '#0e0f15', display: 'grid', gap: 10 }
 const kvGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }
 const kStyle: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' }
 const vStyle: React.CSSProperties = { fontWeight: 600 }
 const mono: React.CSSProperties = { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace' }
 const smallMuted: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' }
 const row: React.CSSProperties = { display: 'flex', gap: 10, flexWrap: 'wrap' }
-const badge: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 8,
-  fontSize: 12,
-  padding: '6px 10px',
-  borderRadius: 999,
-  border: '1px solid var(--border)',
-  background: '#0d1210',
-}
-const badgeWarn: React.CSSProperties = {
-  ...badge,
-  background: 'rgba(255, 170, 0, .08)',
-  borderColor: 'rgba(255, 170, 0, .25)',
-}
+const badge: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 12, padding: '6px 10px', borderRadius: 999, border: '1px solid var(--border)', background: '#0d1210' }
+const badgeWarn: React.CSSProperties = { ...badge, background: 'rgba(255, 170, 0, .08)', borderColor: 'rgba(255, 170, 0, .25)' }
 const errorBanner: React.CSSProperties = { ...card, background: 'rgba(220, 50, 50, .1)', borderColor: 'rgba(220, 50, 50, .25)' }
 const successCard: React.CSSProperties = { ...card, background: 'rgba(0, 115, 55, .12)', borderColor: 'rgba(0, 115, 55, .35)' }
-
-/* =========================
-   Helpers: normalize banks to string[]
-   ========================= */
-function normalizeBankNames(raw: any): string[] {
-  try {
-    if (Array.isArray(raw)) {
-      const names = raw
-        .map((b: any) => (typeof b === 'string' ? b : (b?.name ?? b?.bankName ?? b?.label ?? '')))
-        .filter(Boolean)
-        .map((s: string) => s.trim())
-      return [...new Set(names)].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-    }
-    if (typeof raw === 'string') {
-      try {
-        const parsed = JSON.parse(raw)
-        if (Array.isArray(parsed)) return normalizeBankNames(parsed)
-      } catch {}
-      const names = raw.split(',').map(s => s.trim()).filter(Boolean)
-      return [...new Set(names)].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-    }
-  } catch {}
-  return []
-}
-
-// Fallback fetch if /sell/initiate didn't include banks
-async function fetchBanksFallback(): Promise<string[]> {
-  for (const path of NAIRA_BANKS_PATHS) {
-    try {
-      const res = await fetch(`${API_BASE}${path}`, { headers: getHeaders() })
-      if (!res.ok) continue
-      const json = await res.json()
-      // Support shapes: { data: [{name,code}...] } or { data: { data: [...] } }
-      const raw = json?.data?.data ?? json?.data ?? json
-      const list = Array.isArray(raw) ? raw : []
-      const names = list
-        .map((b: any) => (typeof b === 'string' ? b : (b?.name ?? b?.bankName ?? b?.label ?? '')))
-        .filter(Boolean)
-        .map((s: string) => s.trim())
-      const uniq = [...new Set(names)].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-      if (uniq.length) return uniq
-    } catch {
-      // try next path
-    }
-  }
-  return []
-}
 
 /* =========================
    Component
@@ -339,13 +206,14 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
   // Step 2 state
   const [bankName, setBankName] = useState('')      // from dropdown
+  const [bankCode, setBankCode] = useState('')      // now captured from dropdown too
   const [accountNumber, setAccountNumber] = useState('')
   const [accountName, setAccountName] = useState('')
   const [payLoading, setPayLoading] = useState(false)
   const [payError, setPayError] = useState<string | null>(null)
   const [payData, setPayData] = useState<PayoutRes | null>(null)
 
-  // Reset when modal opens
+  // Effects
   useEffect(() => {
     if (!open) return
     setStep(1)
@@ -356,6 +224,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     setInitError(null)
     setInitData(null)
     setBankName('')
+    setBankCode('')
     setAccountNumber('')
     setAccountName('')
     setPayLoading(false)
@@ -363,13 +232,11 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     setPayData(null)
   }, [open])
 
-  // Keep network valid for token
   useEffect(() => {
     const list = NETWORKS_BY_TOKEN[token]
     if (!list.find(n => n.code === network)) setNetwork(list[0].code)
   }, [token])
 
-  // Close on ESC
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -384,6 +251,26 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const quote = initData?.quote
   const deposit = initData?.deposit
   const { text: countdown, expired } = useCountdown(quote?.expiresAt ?? null)
+
+  // Normalize banks into objects [{name, code}]
+  const bankOptions: BankOption[] = React.useMemo(() => {
+    const raw = (initData as any)?.banks ?? []
+    if (!Array.isArray(raw)) return []
+    const items: BankOption[] = raw.map((b: any) => {
+      if (typeof b === 'string') return { name: b, code: '' }
+      return { name: String(b?.name ?? ''), code: String(b?.code ?? '') }
+    }).filter(b => b.name)
+    // sort by name (case-insensitive)
+    return items.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+  }, [initData])
+
+  // When banks arrive, preselect the first one
+  useEffect(() => {
+    if (bankOptions.length > 0 && !bankName) {
+      setBankName(bankOptions[0].name)
+      setBankCode(bankOptions[0].code || '')
+    }
+  }, [bankOptions, bankName])
 
   async function submitInitiate(e: React.FormEvent) {
     e.preventDefault()
@@ -401,25 +288,8 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       })
       const data: InitiateSellRes = await res.json()
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
-
-      // Normalize banks from the sell endpoint
-      let names = normalizeBankNames((data as any)?.banks)
-
-      // Hard fallback: if empty, fetch directly from banks endpoint
-      if (names.length === 0) {
-        const fallback = await fetchBanksFallback()
-        if (fallback.length) {
-          names = fallback
-        }
-      }
-
-      // Write back normalized banks and preselect first for UX
-      const fixed: InitiateSellRes = { ...(data as any), banks: names }
-      setInitData(fixed)
-      if (!bankName && names.length) setBankName(names[0])
-
-      console.log('sell.init: raw banks=', (data as any)?.banks, 'normalized=', names)
-      onChatEcho?.(buildInitiateRecap(fixed))
+      setInitData(data)
+      onChatEcho?.(buildInitiateRecap(data))
     } catch (err: any) {
       setInitError(err.message || 'Failed to initiate sell')
     } finally {
@@ -445,7 +315,8 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         headers: getHeaders(),
         body: JSON.stringify({
           paymentId: initData.paymentId,
-          bankName,               // server maps name -> code using cache
+          bankName,
+          bankCode: bankCode || undefined, // send bankCode if we have it
           accountNumber,
           accountName,
         }),
@@ -474,9 +345,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const canContinue = !!initData && !expired
   const headerTitle = step === 1 ? 'Start a Sell' : 'Payout Details'
   const showFinalSummary = !!payData
-
-  // Always use normalized banks from state
-  const bankNames: string[] = (initData?.banks as string[]) ?? []
 
   return createPortal(
     <div style={overlayStyle} role="dialog" aria-modal="true" aria-labelledby="sell-title" onClick={onClose}>
@@ -674,24 +542,48 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     </div>
                   )}
 
-                  {/* Bank Name dropdown + account fields */}
+                  {/* Bank dropdown + account fields */}
                   <form onSubmit={submitPayout} style={gridForm}>
                     <label style={inputWrap}>
                       <span style={labelText}>Bank Name</span>
-                      <select
-                        ref={firstInputRef as any}
-                        style={inputBase}
-                        value={bankName}
-                        onChange={e => setBankName(e.target.value)}
-                        disabled={bankNames.length === 0}
-                      >
-                        <option value="">
-                          {bankNames.length ? 'Select your bank' : 'No banks available'}
-                        </option>
-                        {bankNames.map(name => (
-                          <option key={name} value={name}>{name}</option>
-                        ))}
-                      </select>
+                      {bankOptions.length > 0 ? (
+                        <select
+                          ref={firstInputRef as any}
+                          style={inputBase}
+                          value={bankCode || bankName /* keep a value to avoid empty */}
+                          onChange={e => {
+                            const value = e.target.value
+                            // value might be the code if present, or the name (legacy)
+                            const byCode = bankOptions.find(b => b.code && b.code === value)
+                            if (byCode) {
+                              setBankCode(byCode.code)
+                              setBankName(byCode.name)
+                            } else {
+                              // legacy path if backend sent only strings
+                              const byName = bankOptions.find(b => b.name === value)
+                              setBankName(byName?.name || value)
+                              setBankCode(byName?.code || '')
+                            }
+                          }}
+                        >
+                          {bankOptions.map(b => (
+                            <option
+                              key={b.code || b.name}
+                              value={b.code || b.name}
+                            >
+                              {b.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          ref={firstInputRef as any}
+                          style={inputBase}
+                          value={bankName}
+                          onChange={e => { setBankName(e.target.value); setBankCode('') }}
+                          placeholder="Type bank name"
+                        />
+                      )}
                     </label>
 
                     <label style={inputWrap}>
@@ -723,7 +615,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                 </>
               )}
 
-              {/* FINAL SUMMARY (after payout saved) */}
+              {/* FINAL SUMMARY */}
               {initData && showFinalSummary && payData && (
                 <div style={successCard}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
