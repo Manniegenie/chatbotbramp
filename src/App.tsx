@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import SignIn, { SignInResult } from './signin'
 import { tokenStore } from './lib/secureStore'
+import logo from './assets/logo.jpeg'
 import SellModal from './sell'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
@@ -39,7 +40,7 @@ export default function App() {
   const [messages, setMessages] = useState<ChatMessage[]>([{
     id: crypto.randomUUID(),
     role: 'assistant',
-    text: "bramp-ai ready. try 'sell 200 usdt' or 'balance'",
+    text: "Hi, I'm Bramp AI. You can say things like 'Sell 200 USDT to NGN' or 'Show my balance'.",
     ts: Date.now()
   }])
 
@@ -58,7 +59,7 @@ export default function App() {
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, loading])
+  }, [messages, loading, showSignIn, showSell])
 
   async function sendMessage(e?: React.FormEvent) {
     e?.preventDefault()
@@ -83,7 +84,7 @@ export default function App() {
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
-      const botText = data?.reply ?? 'error: could not process'
+      const botText = data?.reply ?? 'Sorry, I could not process that.'
 
       const botMsg: ChatMessage = {
         id: crypto.randomUUID(),
@@ -97,7 +98,7 @@ export default function App() {
       const errMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        text: `error: ${err.message}`,
+        text: `⚠️ Error reaching server: ${err.message}. Check API_BASE and CORS.`,
         ts: Date.now()
       }
       setMessages(prev => [...prev, errMsg])
@@ -112,35 +113,60 @@ export default function App() {
     setShowSell(false)
   }
 
+  // Enhanced Sell CTA detector with better debugging
   function isSellCTA(btn: CTAButton): boolean {
-    if (!btn) return false
-    
-    if (btn.id === 'start_sell') return true
-    
+    if (!btn) {
+      console.log('❌ No button provided to isSellCTA')
+      return false
+    }
+
+    console.log('🔍 Checking button:', { id: btn.id, title: btn.title, url: btn.url })
+
+    // Primary check: button ID is "start_sell"
+    if (btn.id === 'start_sell') {
+      console.log('✅ Matched by ID: start_sell')
+      return true
+    }
+
+    // Secondary check: URL contains sell-related patterns
     const url = String(btn.url || '').toLowerCase()
+    console.log('🔍 Checking URL patterns for:', url)
+
     const sellPatterns = [
-      /\/sell($|\/|\?|#)/,
-      /chatbramp\.com\/sell/,
-      /localhost.*\/sell/,
-      /sell\.html?$/,
-      /\bsell\b/
+      /\/sell($|\/|\?|#)/,           // /sell at path boundary
+      /chatbramp\.com\/sell/,        // specific domain sell page
+      /localhost.*\/sell/,           // local dev sell page
+      /sell\.html?$/,                // sell.html page
+      /\bsell\b/                     // any standalone "sell" word
     ]
 
-    return sellPatterns.some(pattern => pattern.test(url))
+    for (const pattern of sellPatterns) {
+      if (pattern.test(url)) {
+        console.log('✅ Matched URL pattern:', pattern.source)
+        return true
+      }
+    }
+
+    console.log('❌ No sell patterns matched for button')
+    return false
   }
 
   function handleSellClick(event?: React.MouseEvent) {
-    event?.preventDefault()
+    console.log('🔥 Sell button clicked!')
+    event?.preventDefault() // Prevent any default link behavior
     
     if (!auth) {
+      console.log('📝 User not authenticated, showing sign-in')
       setOpenSellAfterAuth(true)
       setShowSignIn(true)
       return
     }
     
+    console.log('🎯 Opening sell modal')
     setShowSell(true)
   }
 
+  // Allow the Sell modal to push friendly recap messages into chat
   function echoFromModalToChat(text: string) {
     if (!text) return
     setMessages(prev => [
@@ -155,55 +181,27 @@ export default function App() {
   }
 
   return (
-    <div style={{
-      background: '#000',
-      color: '#00ff00',
-      fontFamily: 'Monaco, "Lucida Console", monospace',
-      fontSize: '14px',
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
-      {/* Minimal header */}
-      <header style={{
-        padding: '8px 16px',
-        borderBottom: '1px solid #333',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <span>bramp-ai terminal</span>
+    <div className="page">
+      <header className="header">
+        <div className="brand">
+          <img src={logo} alt="Bramp AI logo" className="logo" />
+          <div>
+            <h1>Bramp AI</h1>
+            <p className="tag">Secure access to digital assets & payments — via licensed partners.</p>
+          </div>
+        </div>
+
         {!auth ? (
-          <button 
-            style={{
-              background: 'transparent',
-              color: '#00ff00',
-              border: '1px solid #333',
-              padding: '4px 8px',
-              cursor: 'pointer',
-              fontFamily: 'inherit'
-            }}
-            onClick={() => setShowSignIn(true)}
-          >
-            login
-          </button>
+          <button className="btn" onClick={() => setShowSignIn(true)}>Sign in</button>
         ) : (
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <span style={{ color: '#666' }}>
-              {auth.user?.username || 'user'}@bramp
-            </span>
+            <span className="tag">Signed in{auth.user?.username ? ` as ${auth.user.username}` : ''}</span>
             <button
-              style={{
-                background: 'transparent',
-                color: '#666',
-                border: '1px solid #333',
-                padding: '4px 8px',
-                cursor: 'pointer',
-                fontFamily: 'inherit'
-              }}
+              className="btn"
+              style={{ background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border)' }}
               onClick={signOut}
             >
-              logout
+              Sign out
             </button>
           </div>
         )}
@@ -221,7 +219,7 @@ export default function App() {
             setMessages(prev => [...prev, {
               id: crypto.randomUUID(),
               role: 'assistant',
-              text: `authenticated as ${res.user.username || res.user.firstname || 'user'}`,
+              text: `You're in, ${res.user.username || res.user.firstname || 'there'} ✅`,
               ts: Date.now()
             }])
             if (openSellAfterAuth) {
@@ -231,143 +229,98 @@ export default function App() {
           }}
         />
       ) : (
-        <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          {/* Terminal messages */}
-          <div style={{
-            flex: 1,
-            padding: '16px',
-            overflowY: 'auto',
-            lineHeight: '1.4'
-          }}>
+        <main className="chat">
+          <div className="messages">
             {messages.map(m => (
-              <div key={m.id} style={{ marginBottom: '8px' }}>
-                <div style={{ color: m.role === 'user' ? '#0099ff' : '#00ff00' }}>
-                  {m.role === 'user' ? '>' : '$'} {m.text}
-                </div>
-                
-                {/* CTA buttons as terminal commands */}
-                {m.role === 'assistant' && m.cta?.type === 'button' && m.cta.buttons?.length > 0 && (
-                  <div style={{ marginTop: '4px', marginLeft: '16px' }}>
-                    {m.cta.buttons.map((btn, index) => {
-                      const isSell = isSellCTA(btn)
-                      
-                      if (isSell) {
-                        return (
-                          <div key={btn.id || index} style={{ marginBottom: '2px' }}>
-                            <span
-                              style={{
-                                color: '#ffff00',
-                                cursor: 'pointer',
-                                textDecoration: 'underline'
-                              }}
+              <div key={m.id} className={`bubble ${m.role}`}>
+                <div className="role">{m.role === 'user' ? 'You' : 'Bramp AI'}</div>
+                <div className="text">
+                  {m.text}
+                  {m.role === 'assistant' && m.cta?.type === 'button' && m.cta.buttons?.length > 0 && (
+                    <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {m.cta.buttons.map((btn, index) => {
+                        const isSell = isSellCTA(btn)
+                        console.log('🎨 Rendering button:', { 
+                          index, 
+                          id: btn.id, 
+                          title: btn.title, 
+                          isSell,
+                          url: btn.url 
+                        })
+
+                        if (isSell) {
+                          return (
+                            <button
+                              key={btn.id || btn.title || index}
+                              className="btn"
                               onClick={handleSellClick}
+                              style={btn.style === 'primary'
+                                ? undefined
+                                : { background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }}
                             >
-                              [{btn.title}]
-                            </span>
-                          </div>
-                        )
-                      }
-                      
-                      return (
-                        <div key={btn.id || index} style={{ marginBottom: '2px' }}>
+                              {btn.title}
+                            </button>
+                          )
+                        }
+
+                        // Non-sell buttons remain as links
+                        return (
                           <a
+                            key={btn.id || btn.title || index}
+                            className="btn"
                             href={btn.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            style={{
-                              color: '#ffff00',
-                              textDecoration: 'underline'
-                            }}
+                            style={btn.style === 'primary'
+                              ? undefined
+                              : { background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }}
                           >
-                            [{btn.title}]
+                            {btn.title}
                           </a>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
-            
-            {loading && (
-              <div style={{ color: '#666' }}>
-                $ processing...
-              </div>
-            )}
+            {loading && <div className="typing">Bramp AI is thinking…</div>}
             <div ref={endRef} />
           </div>
 
-          {/* Terminal input */}
-          <form 
-            onSubmit={sendMessage}
-            style={{
-              padding: '16px',
-              borderTop: '1px solid #333',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}
-          >
-            <span style={{ color: '#0099ff' }}>{'>'}</span>
+          <form className="composer" onSubmit={sendMessage}>
             <input
               value={input}
               onChange={e => setInput(e.target.value)}
-              placeholder="enter command..."
+              placeholder="Try: Sell 100 USDT to NGN"
               autoFocus
-              style={{
-                flex: 1,
-                background: 'transparent',
-                border: 'none',
-                color: '#00ff00',
-                fontFamily: 'inherit',
-                fontSize: 'inherit',
-                outline: 'none'
-              }}
             />
-            <button 
-              disabled={loading || !input.trim()}
-              style={{
-                background: 'transparent',
-                color: loading ? '#666' : '#00ff00',
-                border: 'none',
-                cursor: loading ? 'default' : 'pointer',
-                fontFamily: 'inherit',
-                padding: '0'
-              }}
-            >
-              {loading ? '...' : '[enter]'}
+            <button className="btn" disabled={loading || !input.trim()}>
+              {loading ? 'Sending…' : 'Send'}
             </button>
           </form>
 
-          {/* Quick commands */}
-          <div style={{
-            padding: '0 16px 16px',
-            display: 'flex',
-            gap: '16px',
-            flexWrap: 'wrap'
-          }}>
-            {['sell 100 usdt', 'balance', 'withdraw 50k'].map(cmd => (
-              <span
-                key={cmd}
-                onClick={() => setInput(cmd)}
-                style={{
-                  color: '#666',
-                  cursor: 'pointer',
-                  fontSize: '12px'
-                }}
-              >
-                {cmd}
-              </span>
-            ))}
+          <div className="hints">
+            <span className="hint" onClick={() => setInput('Sell 100 USDT to NGN')}>Sell 100 USDT to NGN</span>
+            <span className="hint" onClick={() => setInput('Show my portfolio balance')}>Show my portfolio balance</span>
+            <span className="hint" onClick={() => setInput('Withdraw ₦50,000 to GTBank')}>Withdraw ₦50,000 to GTBank</span>
           </div>
         </main>
       )}
 
+      {/* Sell modal */}
       <SellModal
         open={showSell}
         onClose={() => setShowSell(false)}
         onChatEcho={echoFromModalToChat}
       />
+
+      <footer className="footer">
+        <a href="/aml" target="_blank">AML/CFT Policy</a>
+        <a href="/risk" target="_blank">Risk Disclaimer</a>
+        <a href="/privacy" target="_blank">Privacy</a>
+        <a href="/terms" target="_blank">Terms</a>
+      </footer>
     </div>
   )
 }
