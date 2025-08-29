@@ -5,6 +5,9 @@ import { tokenStore } from './lib/secureStore'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
+// If your banks route is different, update this constant
+const NAIRA_BANKS_PATHS = ['/fetchnaira/naira-accounts'] as const
+
 type InitiateSellRes = {
   success: boolean
   paymentId: string
@@ -160,7 +163,7 @@ function buildPayoutRecap(init: InitiateSellRes | null, p: PayoutRes) {
 }
 
 /* =========================
-   Polished Modal UI Styles (unchanged)
+   Styles (unchanged)
    ========================= */
 const overlayStyle: React.CSSProperties = {
   position: 'fixed',
@@ -171,7 +174,6 @@ const overlayStyle: React.CSSProperties = {
   padding: 16,
   zIndex: 1000,
 }
-
 const sheetStyle: React.CSSProperties = {
   width: '100%',
   maxWidth: 760,
@@ -185,7 +187,6 @@ const sheetStyle: React.CSSProperties = {
   gridTemplateRows: 'auto 1fr auto',
   animation: 'scaleIn 120ms ease-out',
 }
-
 const headerStyle: React.CSSProperties = {
   padding: '16px 18px',
   display: 'flex',
@@ -193,13 +194,11 @@ const headerStyle: React.CSSProperties = {
   justifyContent: 'space-between',
   borderBottom: '1px solid var(--border)',
 }
-
 const titleRowStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: 10,
 }
-
 const stepperStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
@@ -207,19 +206,13 @@ const stepperStyle: React.CSSProperties = {
   fontSize: 12,
   color: 'var(--muted)',
 }
-
 const dot = (active: boolean): React.CSSProperties => ({
   width: 8,
   height: 8,
   borderRadius: 999,
   background: active ? 'var(--accent)' : 'var(--border)',
 })
-
-const bodyStyle: React.CSSProperties = {
-  padding: 18,
-  overflow: 'auto',
-}
-
+const bodyStyle: React.CSSProperties = { padding: 18, overflow: 'auto' }
 const footerStyle: React.CSSProperties = {
   padding: 16,
   display: 'flex',
@@ -228,7 +221,6 @@ const footerStyle: React.CSSProperties = {
   borderTop: '1px solid var(--border)',
   background: 'linear-gradient(180deg, transparent, rgba(0,0,0,.05))',
 }
-
 const btn: React.CSSProperties = {
   appearance: 'none',
   border: '1px solid var(--border)',
@@ -238,36 +230,11 @@ const btn: React.CSSProperties = {
   borderRadius: 10,
   cursor: 'pointer',
 }
-
-const btnPrimary: React.CSSProperties = {
-  ...btn,
-  border: 'none',
-  background: 'var(--accent)',
-  color: 'white',
-}
-
-const btnDangerGhost: React.CSSProperties = {
-  ...btn,
-  borderColor: 'var(--border)',
-  color: 'var(--muted)',
-}
-
-const gridForm: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: '1fr 1fr',
-  gap: 12,
-}
-
-const inputWrap: React.CSSProperties = {
-  display: 'grid',
-  gap: 6,
-}
-
-const labelText: React.CSSProperties = {
-  fontSize: 12,
-  color: 'var(--muted)',
-}
-
+const btnPrimary: React.CSSProperties = { ...btn, border: 'none', background: 'var(--accent)', color: 'white' }
+const btnDangerGhost: React.CSSProperties = { ...btn, borderColor: 'var(--border)', color: 'var(--muted)' }
+const gridForm: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }
+const inputWrap: React.CSSProperties = { display: 'grid', gap: 6 }
+const labelText: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' }
 const inputBase: React.CSSProperties = {
   background: '#0f1117',
   color: 'var(--txt)',
@@ -276,12 +243,7 @@ const inputBase: React.CSSProperties = {
   padding: '10px 12px',
   outline: 'none',
 }
-
-const singleColForm: React.CSSProperties = {
-  display: 'grid',
-  gap: 12,
-}
-
+const singleColForm: React.CSSProperties = { display: 'grid', gap: 12 }
 const card: React.CSSProperties = {
   border: '1px solid var(--border)',
   borderRadius: 12,
@@ -290,22 +252,12 @@ const card: React.CSSProperties = {
   display: 'grid',
   gap: 10,
 }
-
-const kvGrid: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: '1fr 1fr',
-  gap: 12,
-}
-
+const kvGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }
 const kStyle: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' }
 const vStyle: React.CSSProperties = { fontWeight: 600 }
-
 const mono: React.CSSProperties = { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace' }
-
 const smallMuted: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' }
-
 const row: React.CSSProperties = { display: 'flex', gap: 10, flexWrap: 'wrap' }
-
 const badge: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
@@ -316,31 +268,19 @@ const badge: React.CSSProperties = {
   border: '1px solid var(--border)',
   background: '#0d1210',
 }
-
 const badgeWarn: React.CSSProperties = {
   ...badge,
   background: 'rgba(255, 170, 0, .08)',
   borderColor: 'rgba(255, 170, 0, .25)',
 }
-
-const errorBanner: React.CSSProperties = {
-  ...card,
-  background: 'rgba(220, 50, 50, .1)',
-  borderColor: 'rgba(220, 50, 50, .25)',
-}
-
-const successCard: React.CSSProperties = {
-  ...card,
-  background: 'rgba(0, 115, 55, .12)',
-  borderColor: 'rgba(0, 115, 55, .35)',
-}
+const errorBanner: React.CSSProperties = { ...card, background: 'rgba(220, 50, 50, .1)', borderColor: 'rgba(220, 50, 50, .25)' }
+const successCard: React.CSSProperties = { ...card, background: 'rgba(0, 115, 55, .12)', borderColor: 'rgba(0, 115, 55, .35)' }
 
 /* =========================
-   Helpers (NEW): normalize banks into a clean string[]
+   Helpers: normalize banks to string[]
    ========================= */
 function normalizeBankNames(raw: any): string[] {
   try {
-    // If backend sent { banks: [...] } as strings
     if (Array.isArray(raw)) {
       const names = raw
         .map((b: any) => (typeof b === 'string' ? b : (b?.name ?? b?.bankName ?? b?.label ?? '')))
@@ -348,17 +288,38 @@ function normalizeBankNames(raw: any): string[] {
         .map((s: string) => s.trim())
       return [...new Set(names)].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
     }
-    // If it sent a JSON string (rare)
     if (typeof raw === 'string') {
       try {
         const parsed = JSON.parse(raw)
         if (Array.isArray(parsed)) return normalizeBankNames(parsed)
       } catch {}
-      // Comma-separated fallback
       const names = raw.split(',').map(s => s.trim()).filter(Boolean)
       return [...new Set(names)].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
     }
   } catch {}
+  return []
+}
+
+// Fallback fetch if /sell/initiate didn't include banks
+async function fetchBanksFallback(): Promise<string[]> {
+  for (const path of NAIRA_BANKS_PATHS) {
+    try {
+      const res = await fetch(`${API_BASE}${path}`, { headers: getHeaders() })
+      if (!res.ok) continue
+      const json = await res.json()
+      // Support shapes: { data: [{name,code}...] } or { data: { data: [...] } }
+      const raw = json?.data?.data ?? json?.data ?? json
+      const list = Array.isArray(raw) ? raw : []
+      const names = list
+        .map((b: any) => (typeof b === 'string' ? b : (b?.name ?? b?.bankName ?? b?.label ?? '')))
+        .filter(Boolean)
+        .map((s: string) => s.trim())
+      const uniq = [...new Set(names)].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+      if (uniq.length) return uniq
+    } catch {
+      // try next path
+    }
+  }
   return []
 }
 
@@ -384,7 +345,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [payError, setPayError] = useState<string | null>(null)
   const [payData, setPayData] = useState<PayoutRes | null>(null)
 
-  // Effects
+  // Reset when modal opens
   useEffect(() => {
     if (!open) return
     setStep(1)
@@ -402,11 +363,13 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     setPayData(null)
   }, [open])
 
+  // Keep network valid for token
   useEffect(() => {
     const list = NETWORKS_BY_TOKEN[token]
     if (!list.find(n => n.code === network)) setNetwork(list[0].code)
   }, [token])
 
+  // Close on ESC
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -437,16 +400,26 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         body: JSON.stringify({ token, network, sellAmount: +amount }),
       })
       const data: InitiateSellRes = await res.json()
-
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
 
-      // 🔑 Normalize banks RIGHT HERE and store as string[]
-      const names = normalizeBankNames((data as any)?.banks)
-      const dataFixed: InitiateSellRes = { ...(data as any), banks: names }
-      console.log('sell.init → banks received:', (data as any)?.banks, '→ normalized:', names)
+      // Normalize banks from the sell endpoint
+      let names = normalizeBankNames((data as any)?.banks)
 
-      setInitData(dataFixed)
-      onChatEcho?.(buildInitiateRecap(dataFixed))
+      // Hard fallback: if empty, fetch directly from banks endpoint
+      if (names.length === 0) {
+        const fallback = await fetchBanksFallback()
+        if (fallback.length) {
+          names = fallback
+        }
+      }
+
+      // Write back normalized banks and preselect first for UX
+      const fixed: InitiateSellRes = { ...(data as any), banks: names }
+      setInitData(fixed)
+      if (!bankName && names.length) setBankName(names[0])
+
+      console.log('sell.init: raw banks=', (data as any)?.banks, 'normalized=', names)
+      onChatEcho?.(buildInitiateRecap(fixed))
     } catch (err: any) {
       setInitError(err.message || 'Failed to initiate sell')
     } finally {
@@ -502,7 +475,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const headerTitle = step === 1 ? 'Start a Sell' : 'Payout Details'
   const showFinalSummary = !!payData
 
-  // Use the already-normalized banks from state
+  // Always use normalized banks from state
   const bankNames: string[] = (initData?.banks as string[]) ?? []
 
   return createPortal(
@@ -710,12 +683,12 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                         style={inputBase}
                         value={bankName}
                         onChange={e => setBankName(e.target.value)}
-                        disabled={(bankNames ?? []).length === 0}
+                        disabled={bankNames.length === 0}
                       >
                         <option value="">
-                          {(bankNames ?? []).length ? 'Select your bank' : 'No banks available'}
+                          {bankNames.length ? 'Select your bank' : 'No banks available'}
                         </option>
-                        {(bankNames ?? []).map(name => (
+                        {bankNames.map(name => (
                           <option key={name} value={name}>{name}</option>
                         ))}
                       </select>
