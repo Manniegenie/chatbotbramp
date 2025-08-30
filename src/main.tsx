@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client'
 
 // 👉 lazy-load the two roots
 const DesktopApp = React.lazy(() => import('./App'))
-const MobileApp  = React.lazy(() => import('./mobile'))
+const MobileApp  = React.lazy(() => import('./Screen'))
 
 // 👇 choose your breakpoint (px)
 const MOBILE_MAX_WIDTH = 768
