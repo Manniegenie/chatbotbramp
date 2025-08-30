@@ -233,3 +233,104 @@ button, .hint { -webkit-tap-highlight-color: transparent; }
 @media (min-width: 768px) {
   .chat, .composer, .footer { max-width: 860px; margin: 0 auto; }
 }
+
+/* === Bold Mobile Mode (iPhone-friendly) — add at the END of your CSS === */
+@media (max-width: 480px) {
+  :root {
+    --appbar-h: 68px;         /* taller header */
+    --composer-h: 76px;       /* bigger composer */
+  }
+
+  html, body {
+    /* Bigger base type, never below 17px */
+    font-size: clamp(17px, 2.2vw + 14px, 19px);
+    line-height: 1.6;
+  }
+
+  .header {
+    padding: calc(12px + var(--sa-top)) 16px 12px;
+  }
+
+  .logo { width: 34px; height: 34px; }
+
+  .chat {
+    padding: 12px 14px 0;
+    max-width: 680px;       /* feels more “stacked” */
+  }
+
+  .messages {
+    gap: 16px;
+    padding-bottom: calc(var(--composer-h) + var(--sa-bottom) + 20px);
+  }
+
+  .bubble {
+    max-width: 96%;
+    padding: 16px 18px;
+    border-radius: 16px;
+    font-size: 17px !important;   /* bigger message text */
+    line-height: 1.65;
+  }
+
+  .bubble .role {
+    font-size: 14.5px;
+    margin-bottom: 6px;
+  }
+
+  .btn {
+    min-height: 48px;
+    padding: 12px 18px;
+    font-size: 17px !important;
+    border-radius: 12px;
+    font-weight: 700;
+  }
+
+  .cta-buttons {
+    gap: 12px;
+  }
+
+  .composer {
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    padding: 12px 14px calc(12px + var(--sa-bottom));
+  }
+
+  .composer input {
+    height: 52px;
+    min-height: 52px;                 /* ≥44px prevents iOS focus zoom */
+    padding: 0 16px;
+    border-radius: 14px;
+    font-size: 18px !important;       /* force bigger input text */
+    line-height: 1.45;
+  }
+
+  .composer .btn {
+    height: 52px;
+    padding: 0 20px;
+    font-size: 17px !important;
+    border-radius: 14px;
+  }
+
+  .hints {
+    gap: 10px;
+    padding: 10px 14px 12px;
+  }
+
+  .hint {
+    font-size: 14.5px;
+    padding: 8px 12px;
+    border-radius: 999px;
+  }
+
+  .footer {
+    font-size: 14.5px;
+    padding: 18px 14px calc(14px + var(--sa-bottom));
+  }
+}
+
+/* Extra nudge just for iOS Safari to avoid any focus-zoom edge cases */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea, button {
+    font-size: 18px !important;
+    min-height: 48px;
+  }
+}
