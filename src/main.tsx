@@ -1,5 +1,6 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
+// src/main.tsx
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
 import App from './App'
 import './index.css'
 
@@ -73,16 +74,18 @@ window.addEventListener('focusout', onFocusOut)
 if (isEditable(document.activeElement)) setViewportNoZoom(true)
 
 // HMR cleanup (Vite)
-if ((import.meta as any).hot) {
-  ;(import.meta as any).hot.dispose(() => {
+const hot = (import.meta as any).hot as { dispose(cb: () => void): void } | undefined
+if (hot) {
+  hot.dispose(() => {
     window.removeEventListener('focusin', onFocusIn)
     window.removeEventListener('focusout', onFocusOut)
     setViewportNoZoom(false)
   })
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
+const root = document.getElementById('root')!
+createRoot(root).render(
+  <StrictMode>
     <App />
-  </React.StrictMode>
+  </StrictMode>
 )
