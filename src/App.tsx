@@ -186,7 +186,7 @@ export default function App() {
         <div className="brand">
           <img src={logo} alt="Bramp AI logo" className="logo" />
         <div>
-            <h1>Bramp AI</h1>
+            <h1>Chatbramp</h1>
             <p className="tag">Secure access to digital assets & payments — via licensed partners.</p>
           </div>
         </div>
