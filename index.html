@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <title>Bramp AI — Chat</title>
   </head>
@@ -12,7 +12,7 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
-      // Prevent pinch-to-zoom and gesture zooming on iOS
+      // Prevent pinch-to-zoom and double-tap zoom on iOS
       document.addEventListener('touchstart', function (event) {
         if (event.touches.length > 1) {
           event.preventDefault();
