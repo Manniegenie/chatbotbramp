@@ -255,6 +255,12 @@ input, select, textarea, button {
   select, option { font-size: 16px !important; }
 }
 
+/* Ensure iOS doesn’t auto-adjust text sizes inside controls */
+input, select, textarea {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 /* Remove number input spinners; include standard appearance to satisfy linters */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
@@ -268,7 +274,7 @@ input[type="number"]{
 }
 
 /* Make tap targets feel snappy on mobile */
-button, a, label { touch-action: manipulation }
+button, a, label, input { touch-action: manipulation }
 
 /* ========= Reduce motion ========= */
 @media (prefers-reduced-motion: reduce){
