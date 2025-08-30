@@ -1,10 +1,10 @@
-// App.tsx
+// src/mobile.tsx
 import React, { useEffect, useRef, useState } from 'react'
 import SignIn, { SignInResult } from './signin'
 import { tokenStore } from './lib/secureStore'
 import logo from './assets/logo.jpeg'
 import SellModal from './sell'
-import './mobile.css' // ⬅️ new mobile-first styles
+import './mobile.css' // mobile-first styles only
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -37,7 +37,7 @@ async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
   return fetch(input, { ...init, headers })
 }
 
-// utility: ensure 100vh works nicely on mobile browsers (esp. iOS)
+// ensure 100vh works nicely on mobile browsers (esp. iOS)
 function useViewportHeightVar() {
   useEffect(() => {
     const setVH = () => {
@@ -54,7 +54,7 @@ function useViewportHeightVar() {
   }, [])
 }
 
-export default function App() {
+export default function MobileApp() {
   useViewportHeightVar()
 
   const [messages, setMessages] = useState<ChatMessage[]>([{
@@ -94,7 +94,7 @@ export default function App() {
       text: trimmed,
       ts: Date.now()
     }
-    setMessages(prev => [...prev, userMsg])
+    setMessages((prev: ChatMessage[]) => [...prev, userMsg])
     setInput('')
     setLoading(true)
 
@@ -115,7 +115,7 @@ export default function App() {
         ts: Date.now(),
         cta: data?.cta || null,
       }
-      setMessages(prev => [...prev, botMsg])
+      setMessages((prev: ChatMessage[]) => [...prev, botMsg])
     } catch (err: any) {
       const errMsg: ChatMessage = {
         id: crypto.randomUUID(),
@@ -123,7 +123,7 @@ export default function App() {
         text: `⚠️ Error reaching server: ${err.message}. Check API_BASE and CORS.`,
         ts: Date.now()
       }
-      setMessages(prev => [...prev, errMsg])
+      setMessages((prev: ChatMessage[]) => [...prev, errMsg])
     } finally {
       setLoading(false)
       inputRef.current?.focus()
@@ -134,15 +134,12 @@ export default function App() {
     tokenStore.clear()
     setAuth(null)
     setShowSell(false)
-    setMessages(prev => [...prev, {
-      id: crypto.randomUUID(),
-      role: 'assistant',
-      text: 'You’ve been signed out.',
-      ts: Date.now()
-    }])
+    setMessages((prev: ChatMessage[]) => [
+      ...prev,
+      { id: crypto.randomUUID(), role: 'assistant', text: 'You’ve been signed out.', ts: Date.now() }
+    ])
   }
 
-  // Enhanced Sell CTA detector with better debugging
   function isSellCTA(btn: CTAButton): boolean {
     if (!btn) return false
     if (btn.id === 'start_sell') return true
@@ -157,7 +154,7 @@ export default function App() {
     return sellPatterns.some((p) => p.test(url))
   }
 
-  function handleSellClick(event?: React.MouseEvent) {
+  function handleSellClick(event?: React.MouseEvent<HTMLElement>) {
     event?.preventDefault()
     if (!auth) {
       setOpenSellAfterAuth(true)
@@ -167,10 +164,9 @@ export default function App() {
     setShowSell(true)
   }
 
-  // Let the Sell modal push friendly recap messages into chat
   function echoFromModalToChat(text: string) {
     if (!text) return
-    setMessages(prev => [
+    setMessages((prev: ChatMessage[]) => [
       ...prev,
       { id: crypto.randomUUID(), role: 'assistant', text, ts: Date.now() }
     ])
@@ -191,7 +187,6 @@ export default function App() {
 
   return (
     <div className="page">
-      {/* Sticky, compact app bar for phones */}
       <header className="appbar" role="banner">
         <div className="brand">
           <img src={logo} alt="Bramp AI" className="logo" />
@@ -213,7 +208,6 @@ export default function App() {
         )}
       </header>
 
-      {/* Chat area is a scroll container; composer is sticky at the bottom */}
       {showSignIn ? (
         <SignIn
           onCancel={() => {
@@ -223,7 +217,7 @@ export default function App() {
           onSuccess={(res) => {
             setAuth(res)
             setShowSignIn(false)
-            setMessages(prev => [...prev, {
+            setMessages((prev: ChatMessage[]) => [...prev, {
               id: crypto.randomUUID(),
               role: 'assistant',
               text: `You're in, ${res.user.username || res.user.firstname || 'there'} ✅`,
@@ -239,7 +233,7 @@ export default function App() {
         <>
           <main className="chat" role="log" aria-live="polite" aria-relevant="additions text">
             <ul className="thread">
-              {messages.map(m => (
+              {messages.map((m: ChatMessage) => (
                 <li key={m.id} className={`bubble ${m.role === 'user' ? 'from-user' : 'from-assistant'}`}>
                   <div className="bubble-meta">
                     <span className="role">{m.role === 'user' ? 'You' : 'Bramp AI'}</span>
@@ -248,7 +242,7 @@ export default function App() {
                     {m.text}
                     {m.role === 'assistant' && m.cta?.type === 'button' && m.cta.buttons?.length > 0 && (
                       <div className="cta-buttons" role="group" aria-label="Actions">
-                        {m.cta.buttons.map((btn, index) => {
+                        {m.cta.buttons.map((btn: CTAButton, index: number) => {
                           const isSell = isSellCTA(btn)
                           if (isSell) {
                             return (
@@ -290,7 +284,6 @@ export default function App() {
             </ul>
           </main>
 
-          {/* Sticky quick hints just above the composer (horizontal scroll) */}
           <div className="quick-hints" role="tablist" aria-label="Quick suggestions">
             <div className="chips">
               {quickHints.map((hint) => (
@@ -308,7 +301,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Bottom composer (sticky) with safe-area padding */}
           <form className="composer" onSubmit={sendMessage}>
             <input
               ref={inputRef}
@@ -330,7 +322,6 @@ export default function App() {
         </>
       )}
 
-      {/* Floating Sell action for mobile reachability */}
       {!showSignIn && (
         <button
           className="fab"
@@ -342,14 +333,12 @@ export default function App() {
         </button>
       )}
 
-      {/* Sell modal */}
       <SellModal
         open={showSell}
         onClose={() => setShowSell(false)}
         onChatEcho={echoFromModalToChat}
       />
 
-      {/* Compact footer */}
       <footer className="footer">
         <a
           href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link"
