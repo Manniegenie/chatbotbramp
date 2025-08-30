@@ -13,6 +13,9 @@
   --sa-bottom: env(safe-area-inset-bottom, 0px);
   --appbar-h: 56px;
   --composer-h: 64px;
+
+  /* Manual zoom (default = no zoom) */
+  --zoom: 1;
 }
 
 * { box-sizing: border-box; touch-action: manipulation; }
@@ -51,6 +54,12 @@ a:hover { opacity: .9; }
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  /* Manual zoom engine (activated by breakpoints at the end) */
+  transform: scale(var(--zoom));
+  transform-origin: top left;
+  width: calc(100% / var(--zoom));
+  height: calc(100dvh / var(--zoom));
+  will-change: transform;
 }
 
 .header {
@@ -221,7 +230,12 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 .chat, .bubble { touch-action: manipulation; }
 button, .hint { -webkit-tap-highlight-color: transparent; }
 
-/* ===== Responsive tweaks ===== */
+/* ===== Desktop/tablet container width ===== */
+@media (min-width: 768px) {
+  .chat, .composer, .footer { max-width: 860px; margin: 0 auto; }
+}
+
+/* ===== Bold defaults for small tablets/phones ===== */
 @media (max-width: 640px) {
   :root { --appbar-h: 64px; --composer-h: 72px; }
   .header { padding: calc(12px + var(--sa-top)) 14px 12px; }
@@ -230,18 +244,22 @@ button, .hint { -webkit-tap-highlight-color: transparent; }
   .logo { width: 32px; height: 32px; }
 }
 
-@media (min-width: 768px) {
-  .chat, .composer, .footer { max-width: 860px; margin: 0 auto; }
-}
+/* ===== Manual Zoom Ladder (scales entire app) =====
+   These steps increase visual size as screens get narrower.
+   Tune the numbers to your taste. */
+@media (max-width: 540px) { :root { --zoom: 1.06; } }
+@media (max-width: 480px) { :root { --zoom: 1.12; } }
+@media (max-width: 420px) { :root { --zoom: 1.18; } }
+@media (max-width: 380px) { :root { --zoom: 1.24; } }
+@media (max-width: 340px) { :root { --zoom: 1.30; } }
 
-/* ===== Ultra-Bold Mobile Mode (iPhone) — FINAL OVERRIDES ===== */
+/* ===== Ultra-Bold Mobile Type on the smallest phones ===== */
 @media (max-width: 480px) {
   :root {
     --appbar-h: 72px;   /* taller header */
     --composer-h: 84px; /* taller composer */
   }
 
-  /* Bigger base type across the board */
   html, body {
     font-size: clamp(18px, 2.6vw + 15px, 20px) !important;
     line-height: 1.68;
@@ -254,17 +272,12 @@ button, .hint { -webkit-tap-highlight-color: transparent; }
   .logo { width: 36px; height: 36px; }
   .tag  { font-size: 15px; }
 
-  .chat {
-    padding: 14px 16px 0;
-  }
-
   .messages {
     gap: 18px;
     padding-bottom: calc(var(--composer-h) + var(--sa-bottom) + 22px);
   }
 
   .bubble {
-    max-width: 96%;
     padding: 18px 20px;
     border-radius: 18px;
     font-size: 18px !important;
@@ -285,8 +298,6 @@ button, .hint { -webkit-tap-highlight-color: transparent; }
     font-weight: 700;
   }
 
-  .cta-buttons { gap: 14px; }
-
   .composer {
     grid-template-columns: 1fr auto;
     gap: 12px;
@@ -295,7 +306,7 @@ button, .hint { -webkit-tap-highlight-color: transparent; }
 
   .composer input {
     height: 56px !important;
-    min-height: 56px !important;   /* ≥44px prevents iOS focus zoom */
+    min-height: 56px !important;
     padding: 0 18px !important;
     border-radius: 16px !important;
     font-size: 19px !important;
@@ -311,7 +322,6 @@ button, .hint { -webkit-tap-highlight-color: transparent; }
 
   .hints { gap: 12px; padding: 12px 16px 14px; }
   .hint  { font-size: 15px; padding: 9px 14px; }
-
   .typing { font-size: 15px; }
 }
 
