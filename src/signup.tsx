@@ -125,7 +125,7 @@ export default function SignUp({
 
       const ok = data as ServerSuccess
       setUserId(ok.userId || null)
-      setShowOtpModal(true) // Show OTP modal on successful signup
+      setShowOtpModal(true)
     } catch (err: any) {
       setError(`Network error: ${err.message}`)
     } finally {
@@ -182,7 +182,7 @@ export default function SignUp({
           bvn: bvn.trim(),
         },
       })
-      setShowOtpModal(false) // Close modal on success
+      setShowOtpModal(false)
     } catch (err: any) {
       setOtpError(`Network error: ${err.message}`)
     } finally {
@@ -227,72 +227,89 @@ export default function SignUp({
   }
 
   return (
-    <div className="chat" role="dialog" aria-modal="true" aria-labelledby="signup-title">
+    <div
+      className="chat"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="signup-title"
+      style={{
+        width: '100%',
+        maxWidth: '100vw',
+        padding: '8px 10px 0',
+      }}
+    >
       <div className="messages" style={{ paddingTop: 0 }}>
-        <div className="bubble" style={{ maxWidth: 560 }}>
+        <div className="bubble" style={{ maxWidth: '95%' }}>
           <div className="role">Security</div>
           <div className="text">
-            <h2 id="signup-title" style={{ marginTop: 0, marginBottom: 8 }}>Sign up</h2>
-            <p style={{ marginTop: 0, color: 'var(--muted)' }}>
+            <h2 id="signup-title" style={{ marginTop: 0, marginBottom: 6, fontSize: '1.2rem' }}>
+              Sign up
+            </h2>
+            <p style={{ marginTop: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>
               Create your account to continue. We’ll send an OTP to verify.
             </p>
 
             <form onSubmit={submit}>
-              <label style={{ fontSize: 12, color: 'var(--muted)' }}>First name</label>
+              <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>First name</label>
               <input
                 placeholder="Chibuike"
                 value={firstname}
                 onChange={(e) => setFirstname(e.target.value)}
                 autoFocus
                 style={inputStyle}
+                className="no-zoom"
               />
 
-              <div style={{ height: 10 }} />
+              <div style={{ height: 8 }} />
 
-              <label style={{ fontSize: 12, color: 'var(--muted)' }}>Surname</label>
+              <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Surname</label>
               <input
                 placeholder="Nwogbo"
                 value={lastname}
                 onChange={(e) => setLastname(e.target.value)}
                 style={inputStyle}
+                className="no-zoom"
               />
 
-              <div style={{ height: 10 }} />
+              <div style={{ height: 8 }} />
 
-              <label style={{ fontSize: 12, color: 'var(--muted)' }}>Phone number</label>
+              <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Phone number</label>
               <input
                 placeholder="+2348100000000"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 inputMode="tel"
                 style={inputStyle}
+                className="no-zoom"
               />
 
-              <div style={{ height: 10 }} />
+              <div style={{ height: 8 }} />
 
-              <label style={{ fontSize: 12, color: 'var(--muted)' }}>Email address</label>
+              <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Email address</label>
               <input
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 type="email"
                 style={inputStyle}
+                className="no-zoom"
               />
 
-              <div style={{ height: 10 }} />
+              <div style={{ height: 8 }} />
 
-              <label style={{ fontSize: 12, color: 'var(--muted)' }}>Date of birth</label>
+              <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Date of birth</label>
               <input
                 value={dob}
                 onChange={(e) => setDob(e.target.value)}
                 type="date"
                 max={new Date().toISOString().slice(0, 10)}
                 style={inputStyle}
+                className="no-zoom"
               />
 
-              <div style={{ height: 10 }} />
+              <div style={{ height: 8 }} />
 
-              <label style={{ fontSize: 12, color: 'var(--muted)' }}>BVN (11 digits)</label>
+              <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>BVN (11 digits)</label>
               <input
                 placeholder="12345678901"
                 value={bvn}
@@ -300,22 +317,22 @@ export default function SignUp({
                 inputMode="numeric"
                 maxLength={11}
                 style={inputStyle}
+                className="no-zoom"
               />
 
               {error && (
-                <div style={{ color: '#fda4af', marginTop: 10, fontSize: 13 }}>
+                <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
                   ⚠️ {error}
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                 <button className="btn" type="submit" disabled={loading}>
                   {loading ? 'Creating…' : 'Create account'}
                 </button>
                 <button
                   type="button"
-                  className="btn"
-                  style={{ background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border)' }}
+                  className="btn btn-outline"
                   onClick={onCancel}
                   disabled={loading}
                 >
@@ -324,7 +341,7 @@ export default function SignUp({
               </div>
             </form>
 
-            <p style={{ marginTop: 14, fontSize: 12, color: 'var(--muted)' }}>
+            <p style={{ marginTop: 12, fontSize: '0.8rem', color: 'var(--muted)' }}>
               We’ll verify your details with OTP. Keep your phone handy.
             </p>
           </div>
@@ -344,17 +361,21 @@ export default function SignUp({
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: 1000,
+            padding: '0 10px',
+            touchAction: 'manipulation',
           }}
         >
-          <div className="bubble" style={{ maxWidth: 560, background: 'var(--card)', padding: '20px', borderRadius: 10 }}>
+          <div className="bubble" style={{ maxWidth: '95%', padding: '12px 14px' }}>
             <div className="text">
-              <h2 style={{ marginTop: 0, marginBottom: 8 }}>Verify OTP</h2>
-              <p style={{ marginTop: 0, color: 'var(--muted)' }}>
+              <h2 style={{ marginTop: 0, marginBottom: 6, fontSize: '1.2rem' }}>
+                Verify OTP
+              </h2>
+              <p style={{ marginTop: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>
                 Enter the 6-digit OTP sent to your phone or email.
               </p>
 
               <form onSubmit={verifyOtp}>
-                <label style={{ fontSize: 12, color: 'var(--muted)' }}>OTP</label>
+                <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>OTP</label>
                 <input
                   placeholder="123456"
                   value={otp}
@@ -363,22 +384,22 @@ export default function SignUp({
                   maxLength={6}
                   autoFocus
                   style={inputStyle}
+                  className="no-zoom"
                 />
 
                 {otpError && (
-                  <div style={{ color: '#fda4af', marginTop: 10, fontSize: 13 }}>
+                  <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
                     ⚠️ {otpError}
                   </div>
                 )}
 
-                <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                   <button className="btn" type="submit" disabled={loading}>
                     {loading ? 'Verifying…' : 'Verify OTP'}
                   </button>
                   <button
                     type="button"
-                    className="btn"
-                    style={{ background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border)' }}
+                    className="btn btn-outline"
                     onClick={resendOtp}
                     disabled={loading}
                   >
@@ -386,8 +407,7 @@ export default function SignUp({
                   </button>
                   <button
                     type="button"
-                    className="btn"
-                    style={{ background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border)' }}
+                    className="btn btn-outline"
                     onClick={() => setShowOtpModal(false)}
                     disabled={loading}
                   >
@@ -408,8 +428,11 @@ const inputStyle: React.CSSProperties = {
   background: 'var(--card)',
   border: '1px solid var(--border)',
   color: 'var(--txt)',
-  padding: '12px 14px',
-  borderRadius: 10,
+  padding: '10px 12px',
+  borderRadius: 8,
   outline: 'none',
-  fontSize: '16px', // Prevent iOS zoom
+  fontSize: '16px !important',
+  WebkitTextSizeAdjust: '100%',
+  minHeight: '40px',
+  lineHeight: '1.35',
 }

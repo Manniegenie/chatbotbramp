@@ -1,20 +1,14 @@
 /* ========= Global Theme & Font ========= */
 :root {
-  /* Font stack */
   --font-sans: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", Arial, "Apple Color Emoji", "Segoe UI Emoji";
-
-  /* Colors */
-  --bg: #0b0b10;        /* dark background */
-  --card: #12121a;      /* chat bubble background */
-  --muted: #ffffffcc;   /* muted text = semi-white */
-  --accent: #007337;    /* primary green */
-  --border: #1f2330;    /* borders */
-  --txt: #ffffff;       /* main text all white */
-
+  --bg: #0b0b10;
+  --card: #12121a;
+  --muted: #ffffffcc;
+  --accent: #007337;
+  --border: #1f2330;
+  --txt: #ffffff;
   --shadow: 0 8px 24px rgba(0,0,0,.35);
   --glow: 0 0 0 4px rgba(0,115,55,.35);
-
-  /* Safe areas + layout */
   --sa-top: env(safe-area-inset-top, 0px);
   --sa-bottom: env(safe-area-inset-bottom, 0px);
   --appbar-h: 56px;
@@ -23,7 +17,7 @@
 
 * {
   box-sizing: border-box;
-  touch-action: manipulation; /* Prevent pinch-zoom gestures */
+  touch-action: manipulation;
 }
 
 html, body, #root {
@@ -31,7 +25,6 @@ html, body, #root {
   margin: 0;
 }
 
-/* Prevent text auto-zooming on iOS */
 html {
   text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
@@ -42,14 +35,13 @@ body {
   color: var(--txt);
   font-family: var(--font-sans);
   font-optical-sizing: auto;
-  font-size: 15px; /* Slightly smaller base for mobile */
+  font-size: 15px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color-scheme: dark;
 }
 
-/* Ensure 14px base on mobile for compact feel, inputs remain 16px */
 @media (max-width: 640px) {
   html, body {
     font-size: 14px;
@@ -69,7 +61,6 @@ body {
 .geist-900 { font-family: "Geist", sans-serif; font-optical-sizing: auto; font-weight: 900; }
 .geist-italic { font-style: italic; }
 
-/* ========= Generic link styles ========= */
 a {
   color: var(--accent);
   text-decoration: none;
@@ -78,12 +69,12 @@ a:hover {
   opacity: .9;
 }
 
-/* ========= Page shell ========= */
 .page {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
+
 .header {
   position: sticky;
   top: 0;
@@ -91,36 +82,38 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: calc(8px + var(--sa-top)) 16px 8px; /* Reduced for mobile */
+  padding: calc(8px + var(--sa-top)) 16px 8px;
   min-height: calc(var(--appbar-h) + var(--sa-top));
   border-bottom: 1px solid var(--border);
   background: linear-gradient(180deg, rgba(18,18,26,.95), rgba(18,18,26,.6) 60%, transparent);
   backdrop-filter: saturate(120%) blur(6px);
   -webkit-backdrop-filter: saturate(120%) blur(6px);
 }
+
 .brand {
   display: flex;
   gap: 10px;
   align-items: center;
   min-width: 0;
 }
+
 .logo {
-  width: 32px; /* Smaller for mobile */
+  width: 32px;
   height: 32px;
   object-fit: contain;
   border-radius: 8px;
   box-shadow: var(--glow);
 }
+
 .tag {
   margin: 0;
   color: var(--muted);
-  font-size: 12px; /* Smaller for mobile */
+  font-size: 12px;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
 }
 
-/* ========= Buttons ========= */
 .btn {
   appearance: none;
   -webkit-appearance: none;
@@ -128,16 +121,16 @@ a:hover {
   text-decoration: none;
   background: var(--accent);
   color: #fff;
-  padding: 10px 14px; /* Slightly smaller padding */
+  padding: 10px 14px;
   border-radius: 8px;
   font-weight: 600;
-  font-size: 16px !important; /* Prevent input zoom */
+  font-size: 16px !important;
   line-height: 1.35;
   transition: box-shadow .2s ease, transform .05s ease, opacity .2s ease, background .2s ease, border-color .2s ease;
   box-shadow: 0 0 0 0 rgba(0,115,55,0);
   border: 0;
   touch-action: manipulation;
-  min-height: 40px; /* Slightly smaller but still accessible */
+  min-height: 40px;
 }
 .btn:hover {
   box-shadow: 0 0 0 4px rgba(0,115,55,.18);
@@ -150,45 +143,45 @@ a:hover {
   cursor: not-allowed;
 }
 
-/* Variants for CTAs */
 .btn-outline {
   background: transparent;
   color: var(--txt);
   border: 1px solid var(--border);
   box-shadow: none;
 }
+
 .btn-ghost {
   background: transparent;
   color: var(--muted);
   border: 1px solid var(--border);
 }
+
 .btn-block {
   width: 100%;
 }
 
-/* ========= Main chat area ========= */
 .chat {
   max-width: 860px;
   width: 100%;
   margin: 0 auto;
-  padding: 8px 12px 0; /* Reduced for mobile */
+  padding: 8px 12px 0;
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
+
 .messages {
   display: flex;
   flex-direction: column;
-  gap: 12px; /* Slightly smaller gap */
+  gap: 12px;
   padding: 8px 0;
   overflow: auto;
   overscroll-behavior: contain;
   scroll-behavior: smooth;
-  padding-bottom: calc(var(--composer-h) + var(--sa-bottom) + 16px); /* Reduced padding */
+  padding-bottom: calc(var(--composer-h) + var(--sa-bottom) + 16px);
 }
 
-/* Scrollbar (WebKit) */
 .messages::-webkit-scrollbar {
   height: 10px;
   width: 10px;
@@ -212,56 +205,60 @@ a:hover {
   }
 }
 
-/* ========= Bubbles ========= */
 .bubble {
   background: var(--card);
   border: 1px solid var(--border);
-  padding: 12px 14px; /* Slightly smaller */
+  padding: 12px 14px;
   border-radius: 12px;
-  max-width: 90%; /* More room on mobile */
+  max-width: 90%;
   box-shadow: var(--shadow);
-  font-size: 15px !important; /* Slightly smaller but safe */
+  font-size: 15px !important;
 }
+
 .bubble.user {
   align-self: flex-end;
   background: #0d2b1b;
   border-color: #1a4d2f;
 }
+
 .bubble .role {
-  font-size: 13px; /* Smaller for mobile */
+  font-size: 13px;
   margin-bottom: 5px;
 }
+
 .bubble.user .role {
   color: var(--muted);
 }
+
 .bubble.assistant .role {
   color: var(--accent);
   font-weight: 600;
 }
+
 .bubble .text {
   white-space: pre-wrap;
   line-height: 1.5;
   word-wrap: break-word;
 }
+
 .bubble.assistant {
   align-self: flex-start;
   background: var(--card);
   border-color: var(--border);
 }
 
-/* CTA buttons inside assistant messages */
 .cta-buttons {
   display: grid;
   gap: 8px;
   margin-top: 10px;
 }
 
-/* ========= Typing… ========= */
 .typing {
   color: var(--muted);
   font-size: 13px;
   padding: 6px 2px;
 }
+
 .typing-bubble {
   background: var(--card);
   border: 1px solid var(--border);
@@ -269,12 +266,14 @@ a:hover {
   border-radius: 12px;
   max-width: 60%;
 }
+
 .typing-dots {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   height: 16px;
 }
+
 .typing-dots .dot {
   width: 5px;
   height: 5px;
@@ -283,18 +282,20 @@ a:hover {
   opacity: .3;
   animation: blink 1.3s infinite ease-in-out both;
 }
+
 .typing-dots .dot:nth-child(2) {
   animation-delay: .2s;
 }
+
 .typing-dots .dot:nth-child(3) {
   animation-delay: .4s;
 }
+
 @keyframes blink {
   0%, 80%, 100% { opacity: .3; transform: translateY(0); }
   40% { opacity: 1; transform: translateY(-2px); }
 }
 
-/* ========= Composer (sticky bottom + safe area) ========= */
 .composer {
   position: sticky;
   bottom: 0;
@@ -308,34 +309,37 @@ a:hover {
   backdrop-filter: saturate(120%) blur(6px);
   -webkit-backdrop-filter: saturate(120%) blur(6px);
 }
+
 .composer input {
   flex: 1;
   background: var(--card);
   border: 1px solid var(--border);
   color: var(--txt);
-  height: 40px; /* Smaller for mobile */
+  height: 40px;
   padding: 0 12px;
   border-radius: 8px;
   outline: none;
-  font-size: 16px !important; /* Prevent input zoom */
+  font-size: 16px !important;
   line-height: 1.35;
   transition: border-color .15s ease, box-shadow .15s ease;
   touch-action: manipulation;
   min-height: 40px;
 }
+
 .composer input::placeholder {
   color: #7b8391;
 }
+
 .composer input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(0,115,55,.18);
 }
+
 .composer .btn {
   height: 40px;
   padding: 0 14px;
 }
 
-/* ========= Quick hints ========= */
 .hints {
   display: flex;
   gap: 8px;
@@ -343,6 +347,7 @@ a:hover {
   overflow-x: auto;
   padding: 8px 12px 10px;
 }
+
 .hint {
   font-size: 13px;
   color: var(--muted);
@@ -354,13 +359,13 @@ a:hover {
   transition: border-color .15s ease, color .15s ease, background .15s ease;
   background: var(--card);
 }
+
 .hint:hover {
   border-style: solid;
   color: var(--accent);
   background: #111218;
 }
 
-/* ========= Footer ========= */
 .footer {
   display: flex;
   gap: 10px;
@@ -372,20 +377,20 @@ a:hover {
   font-size: 13px;
   background: #0c0c12;
 }
+
 .footer a {
   color: var(--muted);
   text-decoration: none;
 }
+
 .footer a:hover {
   color: var(--accent);
 }
 
-/* ========= Selection ========= */
 ::selection {
   background: rgba(0,115,55,.35);
 }
 
-/* ========= Form element normalizations (mobile-friendly) ========= */
 input, select, textarea, button {
   font-size: 16px !important;
   line-height: 1.35;
@@ -395,43 +400,46 @@ input, select, textarea, button {
   text-size-adjust: 100%;
   -webkit-appearance: none;
   appearance: none;
-  min-height: 40px; /* Smaller but accessible */
+  min-height: 40px;
   touch-action: manipulation;
 }
 
-/* Extra iOS-specific safeguard */
+/* Extra iOS-specific safeguards */
 @supports (-webkit-touch-callout: none) {
   input, select, textarea, button, option {
     font-size: 16px !important;
     -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
     min-height: 40px;
+  }
+  /* Explicitly target input focus */
+  input:focus, select:focus, textarea:focus {
+    font-size: 16px !important;
+    -webkit-text-size-adjust: 100%;
   }
 }
 
-/* Remove number input spinners */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   appearance: none;
   margin: 0;
 }
+
 input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
 }
 
-/* Ensure modal and form containers are responsive */
 .chat, .bubble {
   touch-action: manipulation;
 }
 
-/* ========= Reduce motion ========= */
 @media (prefers-reduced-motion: reduce) {
   .messages { scroll-behavior: auto; }
   .btn, .composer input { transition: none; }
 }
 
-/* ========= Responsiveness ========= */
 @media (max-width: 640px) {
   .header { padding: calc(6px + var(--sa-top)) 12px 8px; }
   .chat { padding: 8px 10px 0; }
@@ -439,7 +447,6 @@ input[type="number"] {
   .logo { width: 28px; height: 28px; }
 }
 
-/* Wider screens: center content nicely */
 @media (min-width: 768px) {
   .chat, .composer, .footer { max-width: 860px; margin: 0 auto; }
 }
