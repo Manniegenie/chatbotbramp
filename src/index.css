@@ -234,103 +234,91 @@ button, .hint { -webkit-tap-highlight-color: transparent; }
   .chat, .composer, .footer { max-width: 860px; margin: 0 auto; }
 }
 
-/* === Bold Mobile Mode (iPhone-friendly) — add at the END of your CSS === */
+/* ===== Ultra-Bold Mobile Mode (iPhone) — FINAL OVERRIDES ===== */
 @media (max-width: 480px) {
   :root {
-    --appbar-h: 68px;         /* taller header */
-    --composer-h: 76px;       /* bigger composer */
+    --appbar-h: 72px;   /* taller header */
+    --composer-h: 84px; /* taller composer */
   }
 
+  /* Bigger base type across the board */
   html, body {
-    /* Bigger base type, never below 17px */
-    font-size: clamp(17px, 2.2vw + 14px, 19px);
-    line-height: 1.6;
+    font-size: clamp(18px, 2.6vw + 15px, 20px) !important;
+    line-height: 1.68;
   }
 
   .header {
-    padding: calc(12px + var(--sa-top)) 16px 12px;
+    padding: calc(14px + var(--sa-top)) 16px 14px;
   }
 
-  .logo { width: 34px; height: 34px; }
+  .logo { width: 36px; height: 36px; }
+  .tag  { font-size: 15px; }
 
   .chat {
-    padding: 12px 14px 0;
-    max-width: 680px;       /* feels more “stacked” */
+    padding: 14px 16px 0;
   }
 
   .messages {
-    gap: 16px;
-    padding-bottom: calc(var(--composer-h) + var(--sa-bottom) + 20px);
+    gap: 18px;
+    padding-bottom: calc(var(--composer-h) + var(--sa-bottom) + 22px);
   }
 
   .bubble {
     max-width: 96%;
-    padding: 16px 18px;
-    border-radius: 16px;
-    font-size: 17px !important;   /* bigger message text */
-    line-height: 1.65;
+    padding: 18px 20px;
+    border-radius: 18px;
+    font-size: 18px !important;
+    line-height: 1.72;
   }
 
   .bubble .role {
-    font-size: 14.5px;
-    margin-bottom: 6px;
+    font-size: 15px;
+    margin-bottom: 8px;
+    opacity: .9;
   }
 
   .btn {
-    min-height: 48px;
-    padding: 12px 18px;
-    font-size: 17px !important;
-    border-radius: 12px;
+    min-height: 56px;
+    padding: 0 20px;
+    font-size: 18px !important;
+    border-radius: 14px;
     font-weight: 700;
   }
 
-  .cta-buttons {
-    gap: 12px;
-  }
+  .cta-buttons { gap: 14px; }
 
   .composer {
     grid-template-columns: 1fr auto;
     gap: 12px;
-    padding: 12px 14px calc(12px + var(--sa-bottom));
+    padding: 14px 16px calc(14px + var(--sa-bottom));
   }
 
   .composer input {
-    height: 52px;
-    min-height: 52px;                 /* ≥44px prevents iOS focus zoom */
-    padding: 0 16px;
-    border-radius: 14px;
-    font-size: 18px !important;       /* force bigger input text */
-    line-height: 1.45;
+    height: 56px !important;
+    min-height: 56px !important;   /* ≥44px prevents iOS focus zoom */
+    padding: 0 18px !important;
+    border-radius: 16px !important;
+    font-size: 19px !important;
+    line-height: 1.5;
   }
 
   .composer .btn {
-    height: 52px;
-    padding: 0 20px;
-    font-size: 17px !important;
-    border-radius: 14px;
+    height: 56px !important;
+    padding: 0 22px !important;
+    font-size: 18px !important;
+    border-radius: 16px !important;
   }
 
-  .hints {
-    gap: 10px;
-    padding: 10px 14px 12px;
-  }
+  .hints { gap: 12px; padding: 12px 16px 14px; }
+  .hint  { font-size: 15px; padding: 9px 14px; }
 
-  .hint {
-    font-size: 14.5px;
-    padding: 8px 12px;
-    border-radius: 999px;
-  }
-
-  .footer {
-    font-size: 14.5px;
-    padding: 18px 14px calc(14px + var(--sa-bottom));
-  }
+  .typing { font-size: 15px; }
 }
 
-/* Extra nudge just for iOS Safari to avoid any focus-zoom edge cases */
+/* iOS-only safety net to squash any last-minute focus-zoom */
 @supports (-webkit-touch-callout: none) {
   input, select, textarea, button {
-    font-size: 18px !important;
-    min-height: 48px;
+    font-size: 19px !important;
+    min-height: 56px !important;
   }
 }
