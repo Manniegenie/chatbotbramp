@@ -1,22 +1,23 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "useDefineForClassFields": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "moduleResolution": "Node",          
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "esModuleInterop": true,             
-    "skipLibCheck": true,
-    "noEmit": true,
-    "strict": true,
+    "moduleResolution": "Bundler",
     "jsx": "react-jsx",
-    "typeRoots": [
-      "./node_modules/@types",
-      "./src/types"        // 👈 picks up your custom .d.ts files
-    ]
+
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "useDefineForClassFields": true,
+    "isolatedModules": true,
+
+    "types": ["vite/client"],
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": ["src", "src/types"],       // 👈 ensure custom types included
+  "include": ["src", "src/types"],
   "exclude": ["node_modules", "dist"]
 }
