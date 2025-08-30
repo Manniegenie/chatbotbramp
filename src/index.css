@@ -13,9 +13,6 @@
   --sa-bottom: env(safe-area-inset-bottom, 0px);
   --appbar-h: 56px;
   --composer-h: 64px;
-
-  /* Manual zoom (default = no zoom) */
-  --zoom: 1;
 }
 
 * { box-sizing: border-box; touch-action: manipulation; }
@@ -54,12 +51,6 @@ a:hover { opacity: .9; }
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  /* Manual zoom engine (activated by breakpoints at the end) */
-  transform: scale(var(--zoom));
-  transform-origin: top left;
-  width: calc(100% / var(--zoom));
-  height: calc(100dvh / var(--zoom));
-  will-change: transform;
 }
 
 .header {
@@ -230,12 +221,7 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 .chat, .bubble { touch-action: manipulation; }
 button, .hint { -webkit-tap-highlight-color: transparent; }
 
-/* ===== Desktop/tablet container width ===== */
-@media (min-width: 768px) {
-  .chat, .composer, .footer { max-width: 860px; margin: 0 auto; }
-}
-
-/* ===== Bold defaults for small tablets/phones ===== */
+/* ===== Responsive tweaks ===== */
 @media (max-width: 640px) {
   :root { --appbar-h: 64px; --composer-h: 72px; }
   .header { padding: calc(12px + var(--sa-top)) 14px 12px; }
@@ -244,91 +230,107 @@ button, .hint { -webkit-tap-highlight-color: transparent; }
   .logo { width: 32px; height: 32px; }
 }
 
-/* ===== Manual Zoom Ladder (scales entire app) =====
-   These steps increase visual size as screens get narrower.
-   Tune the numbers to your taste. */
-@media (max-width: 540px) { :root { --zoom: 1.06; } }
-@media (max-width: 480px) { :root { --zoom: 1.12; } }
-@media (max-width: 420px) { :root { --zoom: 1.18; } }
-@media (max-width: 380px) { :root { --zoom: 1.24; } }
-@media (max-width: 340px) { :root { --zoom: 1.30; } }
+@media (min-width: 768px) {
+  .chat, .composer, .footer { max-width: 860px; margin: 0 auto; }
+}
 
-/* ===== Ultra-Bold Mobile Type on the smallest phones ===== */
+/* === Bold Mobile Mode (iPhone-friendly) — add at the END of your CSS === */
 @media (max-width: 480px) {
   :root {
-    --appbar-h: 72px;   /* taller header */
-    --composer-h: 84px; /* taller composer */
+    --appbar-h: 68px;         /* taller header */
+    --composer-h: 76px;       /* bigger composer */
   }
 
   html, body {
-    font-size: clamp(18px, 2.6vw + 15px, 20px) !important;
-    line-height: 1.68;
+    /* Bigger base type, never below 17px */
+    font-size: clamp(17px, 2.2vw + 14px, 19px);
+    line-height: 1.6;
   }
 
   .header {
-    padding: calc(14px + var(--sa-top)) 16px 14px;
+    padding: calc(12px + var(--sa-top)) 16px 12px;
   }
 
-  .logo { width: 36px; height: 36px; }
-  .tag  { font-size: 15px; }
+  .logo { width: 34px; height: 34px; }
+
+  .chat {
+    padding: 12px 14px 0;
+    max-width: 680px;       /* feels more “stacked” */
+  }
 
   .messages {
-    gap: 18px;
-    padding-bottom: calc(var(--composer-h) + var(--sa-bottom) + 22px);
+    gap: 16px;
+    padding-bottom: calc(var(--composer-h) + var(--sa-bottom) + 20px);
   }
 
   .bubble {
-    padding: 18px 20px;
-    border-radius: 18px;
-    font-size: 18px !important;
-    line-height: 1.72;
+    max-width: 96%;
+    padding: 16px 18px;
+    border-radius: 16px;
+    font-size: 17px !important;   /* bigger message text */
+    line-height: 1.65;
   }
 
   .bubble .role {
-    font-size: 15px;
-    margin-bottom: 8px;
-    opacity: .9;
+    font-size: 14.5px;
+    margin-bottom: 6px;
   }
 
   .btn {
-    min-height: 56px;
-    padding: 0 20px;
-    font-size: 18px !important;
-    border-radius: 14px;
+    min-height: 48px;
+    padding: 12px 18px;
+    font-size: 17px !important;
+    border-radius: 12px;
     font-weight: 700;
+  }
+
+  .cta-buttons {
+    gap: 12px;
   }
 
   .composer {
     grid-template-columns: 1fr auto;
     gap: 12px;
-    padding: 14px 16px calc(14px + var(--sa-bottom));
+    padding: 12px 14px calc(12px + var(--sa-bottom));
   }
 
   .composer input {
-    height: 56px !important;
-    min-height: 56px !important;
-    padding: 0 18px !important;
-    border-radius: 16px !important;
-    font-size: 19px !important;
-    line-height: 1.5;
+    height: 52px;
+    min-height: 52px;                 /* ≥44px prevents iOS focus zoom */
+    padding: 0 16px;
+    border-radius: 14px;
+    font-size: 18px !important;       /* force bigger input text */
+    line-height: 1.45;
   }
 
   .composer .btn {
-    height: 56px !important;
-    padding: 0 22px !important;
-    font-size: 18px !important;
-    border-radius: 16px !important;
+    height: 52px;
+    padding: 0 20px;
+    font-size: 17px !important;
+    border-radius: 14px;
   }
 
-  .hints { gap: 12px; padding: 12px 16px 14px; }
-  .hint  { font-size: 15px; padding: 9px 14px; }
-  .typing { font-size: 15px; }
+  .hints {
+    gap: 10px;
+    padding: 10px 14px 12px;
+  }
+
+  .hint {
+    font-size: 14.5px;
+    padding: 8px 12px;
+    border-radius: 999px;
+  }
+
+  .footer {
+    font-size: 14.5px;
+    padding: 18px 14px calc(14px + var(--sa-bottom));
+  }
 }
 
-/* iOS-only safety net to squash any last-minute focus-zoom */
+/* Extra nudge just for iOS Safari to avoid any focus-zoom edge cases */
 @supports (-webkit-touch-callout: none) {
   input, select, textarea, button {
-    font-size: 19px !important;
-    min-height: 56px !important;
+    font-size: 18px !important;
+    min-height: 48px;
   }
 }
