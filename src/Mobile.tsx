@@ -4,7 +4,7 @@ import SignIn, { SignInResult } from './signin'
 import { tokenStore } from './lib/secureStore'
 import logo from './assets/logo.jpeg'
 import SellModal from './sell'
-import './index.css' // ⬅️ new mobile-first styles
+import './mobile.css' // ⬅️ new mobile-first styles
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
