@@ -4,31 +4,16 @@ import SignIn, { SignInResult } from './signin'
 import { tokenStore } from './lib/secureStore'
 import logo from './assets/logo.jpeg'
 import SellModal from './sell'
-import './mobile.css' // mobile-first styles only
+import './mobile.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
-type CTAButton = {
-  id: string
-  title: string
-  style?: 'primary' | 'secondary' | string
-  url: string
-}
-type CTA = {
-  type: 'button'
-  body: string
-  buttons: CTAButton[]
-}
-
+type CTAButton = { id: string; title: string; style?: 'primary' | 'secondary' | string; url: string }
+type CTA = { type: 'button'; body: string; buttons: CTAButton[] }
 export type ChatMessage = {
-  id: string
-  role: 'user' | 'assistant' | 'system'
-  text: string
-  ts: number
-  cta?: CTA | null
+  id: string; role: 'user' | 'assistant' | 'system'; text: string; ts: number; cta?: CTA | null
 }
 
-// Always read the freshest token from secure storage
 async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
   const { access } = tokenStore.getTokens()
   const headers = new Headers(init.headers || {})
@@ -37,7 +22,6 @@ async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
   return fetch(input, { ...init, headers })
 }
 
-// ensure 100vh works nicely on mobile browsers (esp. iOS)
 function useViewportHeightVar() {
   useEffect(() => {
     const setVH = () => {
@@ -58,8 +42,7 @@ export default function MobileApp() {
   useViewportHeightVar()
 
   const [messages, setMessages] = useState<ChatMessage[]>([{
-    id: crypto.randomUUID(),
-    role: 'assistant',
+    id: crypto.randomUUID(), role: 'assistant',
     text: "Hi, I'm Bramp AI. You can say things like “Sell 200 USDT to NGN” or “Show my balance.”",
     ts: Date.now()
   }])
@@ -88,12 +71,7 @@ export default function MobileApp() {
     const trimmed = input.trim()
     if (!trimmed || loading) return
 
-    const userMsg: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: 'user',
-      text: trimmed,
-      ts: Date.now()
-    }
+    const userMsg: ChatMessage = { id: crypto.randomUUID(), role: 'user', text: trimmed, ts: Date.now() }
     setMessages((prev: ChatMessage[]) => [...prev, userMsg])
     setInput('')
     setLoading(true)
@@ -103,23 +81,16 @@ export default function MobileApp() {
         method: 'POST',
         body: JSON.stringify({ message: trimmed, history: messages.slice(-10) })
       })
-
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
-      const botText = data?.reply ?? 'Sorry, I could not process that.'
-
       const botMsg: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        text: botText,
-        ts: Date.now(),
-        cta: data?.cta || null,
+        id: crypto.randomUUID(), role: 'assistant', text: data?.reply ?? 'Sorry, I could not process that.',
+        ts: Date.now(), cta: data?.cta || null
       }
       setMessages((prev: ChatMessage[]) => [...prev, botMsg])
     } catch (err: any) {
       const errMsg: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: 'assistant',
+        id: crypto.randomUUID(), role: 'assistant',
         text: `⚠️ Error reaching server: ${err.message}. Check API_BASE and CORS.`,
         ts: Date.now()
       }
@@ -144,23 +115,13 @@ export default function MobileApp() {
     if (!btn) return false
     if (btn.id === 'start_sell') return true
     const url = String(btn.url || '').toLowerCase()
-    const sellPatterns = [
-      /\/sell($|\/|\?|#)/,
-      /chatbramp\.com\/sell/,
-      /localhost.*\/sell/,
-      /sell\.html?$/,
-      /\bsell\b/
-    ]
-    return sellPatterns.some((p) => p.test(url))
+    return [ /\/sell($|\/|\?|#)/, /chatbramp\.com\/sell/, /localhost.*\/sell/, /sell\.html?$/, /\bsell\b/ ]
+      .some((p) => p.test(url))
   }
 
   function handleSellClick(event?: React.MouseEvent<HTMLElement>) {
     event?.preventDefault()
-    if (!auth) {
-      setOpenSellAfterAuth(true)
-      setShowSignIn(true)
-      return
-    }
+    if (!auth) { setOpenSellAfterAuth(true); setShowSignIn(true); return }
     setShowSell(true)
   }
 
@@ -179,11 +140,7 @@ export default function MobileApp() {
     }
   }
 
-  const quickHints = [
-    'Sell 100 USDT to NGN',
-    'Show my portfolio balance',
-    'Withdraw ₦50,000 to GTBank'
-  ]
+  const quickHints = ['Sell 100 USDT to NGN','Show my portfolio balance','Withdraw ₦50,000 to GTBank']
 
   return (
     <div className="page">
@@ -197,9 +154,7 @@ export default function MobileApp() {
         </div>
 
         {!auth ? (
-          <button className="btn btn-ghost" onClick={() => setShowSignIn(true)} aria-label="Sign in">
-            Sign in
-          </button>
+          <button className="btn btn-ghost" onClick={() => setShowSignIn(true)} aria-label="Sign in">Sign in</button>
         ) : (
           <div className="signed-in">
             <span className="signed-as">Signed in{auth.user?.username ? ` as ${auth.user.username}` : ''}</span>
@@ -210,23 +165,14 @@ export default function MobileApp() {
 
       {showSignIn ? (
         <SignIn
-          onCancel={() => {
-            setShowSignIn(false)
-            setOpenSellAfterAuth(false)
-          }}
+          onCancel={() => { setShowSignIn(false); setOpenSellAfterAuth(false) }}
           onSuccess={(res) => {
-            setAuth(res)
-            setShowSignIn(false)
+            setAuth(res); setShowSignIn(false)
             setMessages((prev: ChatMessage[]) => [...prev, {
-              id: crypto.randomUUID(),
-              role: 'assistant',
-              text: `You're in, ${res.user.username || res.user.firstname || 'there'} ✅`,
-              ts: Date.now()
+              id: crypto.randomUUID(), role: 'assistant',
+              text: `You're in, ${res.user.username || res.user.firstname || 'there'} ✅`, ts: Date.now()
             }])
-            if (openSellAfterAuth) {
-              setOpenSellAfterAuth(false)
-              setShowSell(true)
-            }
+            if (openSellAfterAuth) { setOpenSellAfterAuth(false); setShowSell(true) }
           }}
         />
       ) : (
@@ -235,34 +181,23 @@ export default function MobileApp() {
             <ul className="thread">
               {messages.map((m: ChatMessage) => (
                 <li key={m.id} className={`bubble ${m.role === 'user' ? 'from-user' : 'from-assistant'}`}>
-                  <div className="bubble-meta">
-                    <span className="role">{m.role === 'user' ? 'You' : 'Bramp AI'}</span>
-                  </div>
+                  <div className="bubble-meta"><span className="role">{m.role === 'user' ? 'You' : 'Bramp AI'}</span></div>
                   <div className="bubble-text">
                     {m.text}
                     {m.role === 'assistant' && m.cta?.type === 'button' && m.cta.buttons?.length > 0 && (
                       <div className="cta-buttons" role="group" aria-label="Actions">
                         {m.cta.buttons.map((btn: CTAButton, index: number) => {
                           const isSell = isSellCTA(btn)
-                          if (isSell) {
-                            return (
-                              <button
-                                key={btn.id || btn.title || index}
-                                className={`btn ${btn.style === 'primary' ? '' : 'btn-outline'} btn-block`}
-                                onClick={handleSellClick}
-                              >
-                                {btn.title}
-                              </button>
-                            )
-                          }
-                          return (
-                            <a
-                              key={btn.id || btn.title || index}
+                          return isSell ? (
+                            <button key={btn.id || btn.title || index}
                               className={`btn ${btn.style === 'primary' ? '' : 'btn-outline'} btn-block`}
-                              href={btn.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
+                              onClick={handleSellClick}>
+                              {btn.title}
+                            </button>
+                          ) : (
+                            <a key={btn.id || btn.title || index}
+                              className={`btn ${btn.style === 'primary' ? '' : 'btn-outline'} btn-block`}
+                              href={btn.url} target="_blank" rel="noopener noreferrer">
                               {btn.title}
                             </a>
                           )
@@ -274,9 +209,7 @@ export default function MobileApp() {
               ))}
               {loading && (
                 <li className="typing">
-                  <span className="dot" />
-                  <span className="dot" />
-                  <span className="dot" />
+                  <span className="dot" /><span className="dot" /><span className="dot" />
                   <span className="sr-only">Bramp AI is typing…</span>
                 </li>
               )}
@@ -287,14 +220,7 @@ export default function MobileApp() {
           <div className="quick-hints" role="tablist" aria-label="Quick suggestions">
             <div className="chips">
               {quickHints.map((hint) => (
-                <button
-                  key={hint}
-                  className="chip"
-                  onClick={() => {
-                    setInput(hint)
-                    inputRef.current?.focus()
-                  }}
-                >
+                <button key={hint} className="chip" onClick={() => { setInput(hint); inputRef.current?.focus() }}>
                   {hint}
                 </button>
               ))}
@@ -303,17 +229,12 @@ export default function MobileApp() {
 
           <form className="composer" onSubmit={sendMessage}>
             <input
-              ref={inputRef}
-              value={input}
+              ref={inputRef} value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleComposerKeyDown}
-              placeholder="Try: Sell 100 USDT to NGN"
-              autoFocus
-              aria-label="Message Bramp AI"
-              inputMode="text"
-              autoCapitalize="sentences"
-              autoComplete="off"
-              autoCorrect="on"
+              placeholder="Try: Sell 100 USDT to NGN" autoFocus
+              aria-label="Message Bramp AI" inputMode="text" autoCapitalize="sentences"
+              autoComplete="off" autoCorrect="on"
             />
             <button className="btn btn-send" disabled={loading || !input.trim()} aria-label="Send message">
               {loading ? 'Sending…' : 'Send'}
@@ -323,44 +244,15 @@ export default function MobileApp() {
       )}
 
       {!showSignIn && (
-        <button
-          className="fab"
-          onClick={handleSellClick}
-          aria-label="Start a sell"
-          title="Start a sell"
-        >
-          Sell
-        </button>
+        <button className="fab" onClick={handleSellClick} aria-label="Start a sell" title="Start a sell">Sell</button>
       )}
 
-      <SellModal
-        open={showSell}
-        onClose={() => setShowSell(false)}
-        onChatEcho={echoFromModalToChat}
-      />
+      <SellModal open={showSell} onClose={() => setShowSell(false)} onChatEcho={echoFromModalToChat} />
 
       <footer className="footer">
-        <a
-          href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          AML/CFT Policy
-        </a>
-        <a
-          href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Risk Disclaimer
-        </a>
-        <a
-          href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Privacy
-        </a>
+        <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
+        <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
+        <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
         <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
       </footer>
     </div>
