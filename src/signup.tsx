@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 export type SignUpResult = {
   success: boolean
   message?: string
+  userId?: string
   user?: {
     firstname?: string
     lastname?: string
@@ -33,7 +34,9 @@ export default function SignUp({
   onCancel: () => void
 }) {
   const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
-  const ENDPOINT = `${API_BASE}/signup/add-user`
+  const SIGNUP_ENDPOINT = `${API_BASE}/signup/add-user`
+  const VERIFY_OTP_ENDPOINT = `${API_BASE}/signup/verify-otp`
+  const RESEND_OTP_ENDPOINT = `${API_BASE}/signup/resend-otp`
 
   const [firstname, setFirstname] = useState('')
   const [lastname, setLastname] = useState('')
@@ -43,6 +46,10 @@ export default function SignUp({
   const [bvn, setBvn] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showOtpModal, setShowOtpModal] = useState(false)
+  const [otp, setOtp] = useState('')
+  const [otpError, setOtpError] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
 
   function normalizePhone(input: string) {
     const d = input.replace(/[^\d+]/g, '')
@@ -92,12 +99,12 @@ export default function SignUp({
         lastname: lastname.trim(),
         phonenumber,
         email: email.trim().toLowerCase(),
-        dob,                // YYYY-MM-DD
-        dateOfBirth: dob,   // alias for backend compatibility
+        dob,
+        dateOfBirth: dob,
         bvn: bvn.trim(),
       }
 
-      const res = await fetch(ENDPOINT, {
+      const res = await fetch(SIGNUP_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -117,13 +124,103 @@ export default function SignUp({
       }
 
       const ok = data as ServerSuccess
-      onSuccess({
-        success: true,
-        message: ok.message || 'Account created. Please verify OTP to complete your signup.',
-        user: payload,
-      })
+      setUserId(ok.userId || null)
+      setShowOtpModal(true) // Show OTP modal on successful signup
     } catch (err: any) {
       setError(`Network error: ${err.message}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function verifyOtp(e?: React.FormEvent) {
+    e?.preventDefault()
+    setOtpError(null)
+
+    if (!/^\d{6}$/.test(otp)) {
+      setOtpError('OTP must be a 6-digit number.')
+      return
+    }
+
+    if (!userId) {
+      setOtpError('User ID not found. Please try signing up again.')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const res = await fetch(VERIFY_OTP_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, otp }),
+      })
+
+      const data: ServerSuccess | ServerError = await res.json().catch(
+        () =>
+          ({
+            success: false,
+            message: 'Unexpected server response.',
+          }) as ServerError
+      )
+
+      if (!res.ok || !('success' in data) || data.success === false) {
+        setOtpError((data as any).message || `OTP verification failed (HTTP ${res.status}).`)
+        return
+      }
+
+      const ok = data as ServerSuccess
+      onSuccess({
+        success: true,
+        message: ok.message || 'OTP verified successfully.',
+        userId: userId,
+        user: {
+          firstname: firstname.trim(),
+          lastname: lastname.trim(),
+          phonenumber: normalizePhone(phone),
+          email: email.trim().toLowerCase(),
+          dob,
+          bvn: bvn.trim(),
+        },
+      })
+      setShowOtpModal(false) // Close modal on success
+    } catch (err: any) {
+      setOtpError(`Network error: ${err.message}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function resendOtp() {
+    if (!userId) {
+      setOtpError('User ID not found. Please try signing up again.')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const res = await fetch(RESEND_OTP_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      })
+
+      const data: ServerSuccess | ServerError = await res.json().catch(
+        () =>
+          ({
+            success: false,
+            message: 'Unexpected server response.',
+          }) as ServerError
+      )
+
+      if (!res.ok || !('success' in data) || data.success === false) {
+        setOtpError((data as any).message || `Failed to resend OTP (HTTP ${res.status}).`)
+        return
+      }
+
+      setOtpError(null)
+      alert('OTP resent successfully. Check your phone or email.')
+    } catch (err: any) {
+      setOtpError(`Network error: ${err.message}`)
     } finally {
       setLoading(false)
     }
@@ -233,6 +330,75 @@ export default function SignUp({
           </div>
         </div>
       </div>
+
+      {showOtpModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+        >
+          <div className="bubble" style={{ maxWidth: 560, background: 'var(--card)', padding: '20px', borderRadius: 10 }}>
+            <div className="text">
+              <h2 style={{ marginTop: 0, marginBottom: 8 }}>Verify OTP</h2>
+              <p style={{ marginTop: 0, color: 'var(--muted)' }}>
+                Enter the 6-digit OTP sent to your phone or email.
+              </p>
+
+              <form onSubmit={verifyOtp}>
+                <label style={{ fontSize: 12, color: 'var(--muted)' }}>OTP</label>
+                <input
+                  placeholder="123456"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
+                  inputMode="numeric"
+                  maxLength={6}
+                  autoFocus
+                  style={inputStyle}
+                />
+
+                {otpError && (
+                  <div style={{ color: '#fda4af', marginTop: 10, fontSize: 13 }}>
+                    ⚠️ {otpError}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                  <button className="btn" type="submit" disabled={loading}>
+                    {loading ? 'Verifying…' : 'Verify OTP'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn"
+                    style={{ background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border)' }}
+                    onClick={resendOtp}
+                    disabled={loading}
+                  >
+                    Resend OTP
+                  </button>
+                  <button
+                    type="button"
+                    className="btn"
+                    style={{ background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border)' }}
+                    onClick={() => setShowOtpModal(false)}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -245,4 +411,5 @@ const inputStyle: React.CSSProperties = {
   padding: '12px 14px',
   borderRadius: 10,
   outline: 'none',
+  fontSize: '16px', // Prevent iOS zoom
 }
