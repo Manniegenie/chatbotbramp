@@ -35,7 +35,7 @@ export default function SignUp({
 }) {
   const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
   const SIGNUP_ENDPOINT = `${API_BASE}/signup/add-user`
-  const VERIFY_OTP_ENDPOINT = `${API_BASE}/signup/verify-otp`
+  const VERIFY_OTP_ENDPOINT = `${API_BASE}/verify-otp/verify-otp`
   const RESEND_OTP_ENDPOINT = `${API_BASE}/signup/resend-otp`
 
   const [firstname, setFirstname] = useState('')

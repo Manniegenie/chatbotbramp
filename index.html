@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <title>Bramp AI — Chat</title>
@@ -12,42 +12,5 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script>
-      // Prevent pinch-to-zoom and double-tap zoom on iOS
-      document.addEventListener('touchstart', function (event) {
-        if (event.touches.length > 1) {
-          event.preventDefault();
-        }
-      }, { passive: false });
-      document.addEventListener('gesturestart', function (event) {
-        event.preventDefault();
-      });
-      // Prevent double-tap zoom
-      let lastTouchEnd = 0;
-      document.addEventListener('touchend', function (event) {
-        const now = Date.now();
-        if (now - lastTouchEnd <= 300) {
-          event.preventDefault();
-        }
-        lastTouchEnd = now;
-      }, { passive: false });
-      // Prevent zoom on input focus
-      document.addEventListener('focusin', function (event) {
-        if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
-          document.querySelector('meta[name="viewport"]').setAttribute(
-            'content',
-            'width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover'
-          );
-        }
-      });
-      document.addEventListener('focusout', function (event) {
-        if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
-          document.querySelector('meta[name="viewport"]').setAttribute(
-            'content',
-            'width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover'
-          );
-        }
-      });
-    </script>
   </body>
 </html>
