@@ -39,11 +39,16 @@ body{
   font-family: var(--font-sans);
   font-optical-sizing: auto;
 
-  font-size: 17px; /* ChatGPT-like readability */
+  font-size: 17px; /* desktop/base */
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color-scheme: dark;
+}
+
+/* --- Mobile base typography: ensure 16px on phones --- */
+@media (max-width: 640px){
+  html, body { font-size: 16px; }
 }
 
 /* ====== Geist utility classes ====== */
@@ -201,7 +206,7 @@ a:hover{ opacity:.9 }
 .composer input{
   flex:1; background:var(--card); border:1px solid var(--border); color:var(--txt);
   height: 48px;
-  padding: 0 14px; border-radius:10px; outline:none; font-size:16px;
+  padding: 0 14px; border-radius:10px; outline:none; font-size:16px !important; /* ensure 16px to avoid iOS zoom */
   transition: border-color .15s ease, box-shadow .15s ease;
 }
 .composer input::placeholder{ color:#7b8391 }
@@ -236,23 +241,30 @@ a:hover{ opacity:.9 }
 ::selection{ background:rgba(0,115,55,.35) }
 
 /* ========= Form element normalizations (mobile-friendly) ========= */
+/* Ensure all controls are 16px to prevent iOS zoom on focus (incl. Tab) */
 input, select, textarea, button {
-  font-size: 16px;
+  font-size: 16px !important;
   line-height: 1.35;
   font-family: inherit;
   color: inherit;
 }
 
-/* Remove number input spinners for a cleaner look (with standard appearance to satisfy linters) */
+/* Extra iOS-specific safeguard */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea, button { font-size: 16px !important; }
+  select, option { font-size: 16px !important; }
+}
+
+/* Remove number input spinners; include standard appearance to satisfy linters */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
-  appearance: none;   /* ← standard property */
+  appearance: none;   /* standard property */
   margin: 0;
 }
 input[type="number"]{
   -moz-appearance: textfield;
-  appearance: textfield; /* ← standard property */
+  appearance: textfield; /* standard property */
 }
 
 /* Make tap targets feel snappy on mobile */
@@ -270,5 +282,9 @@ button, a, label { touch-action: manipulation }
   .chat{ padding:12px 12px 0 }
   .bubble{ max-width: 92% }
   .logo{ width:32px; height:32px }
-  body{ font-size:16px }
+}
+
+/* Wider screens: center content nicely */
+@media (min-width: 768px){
+  .chat, .composer, .footer{ max-width: 860px; margin: 0 auto; }
 }
