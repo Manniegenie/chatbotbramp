@@ -1,6 +1,6 @@
-// App.tsx
 import React, { useEffect, useRef, useState } from 'react'
 import SignIn, { SignInResult } from './signin'
+import SignUp, { SignUpResult } from './signup'
 import { tokenStore } from './lib/secureStore'
 import logo from './assets/logo.jpeg'
 import SellModal from './sell'
@@ -47,6 +47,7 @@ export default function App() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [showSignIn, setShowSignIn] = useState(false)
+  const [showSignUp, setShowSignUp] = useState(false)
   const [showSell, setShowSell] = useState(false)
   const [openSellAfterAuth, setOpenSellAfterAuth] = useState(false)
 
@@ -59,7 +60,7 @@ export default function App() {
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, loading, showSignIn, showSell])
+  }, [messages, loading, showSignIn, showSignUp, showSell])
 
   async function sendMessage(e?: React.FormEvent) {
     e?.preventDefault()
@@ -153,15 +154,13 @@ export default function App() {
 
   function handleSellClick(event?: React.MouseEvent) {
     console.log('🔥 Sell button clicked!')
-    event?.preventDefault() // Prevent any default link behavior
-    
+    event?.preventDefault()
     if (!auth) {
       console.log('📝 User not authenticated, showing sign-in')
       setOpenSellAfterAuth(true)
       setShowSignIn(true)
       return
     }
-    
     console.log('🎯 Opening sell modal')
     setShowSell(true)
   }
@@ -185,14 +184,23 @@ export default function App() {
       <header className="header">
         <div className="brand">
           <img src={logo} alt="Bramp AI logo" className="logo" />
-        <div>
+          <div>
             <h1>Chatbramp</h1>
             <p className="tag">Secure access to digital assets & payments — via licensed partners.</p>
           </div>
         </div>
 
         {!auth ? (
-          <button className="btn" onClick={() => setShowSignIn(true)}>Sign in</button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn" onClick={() => setShowSignIn(true)}>Sign in</button>
+            <button
+              className="btn"
+              style={{ background: 'transparent', color: 'var(--txt)', border: '1px solid var(--border)' }}
+              onClick={() => setShowSignUp(true)}
+            >
+              Sign up
+            </button>
+          </div>
         ) : (
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <span className="tag">Signed in{auth.user?.username ? ` as ${auth.user.username}` : ''}</span>
@@ -228,6 +236,26 @@ export default function App() {
             }
           }}
         />
+      ) : showSignUp ? (
+        <SignUp
+          onCancel={() => setShowSignUp(false)}
+          onSuccess={(res: SignUpResult) => {
+            setShowSignUp(false)
+            setMessages(prev => [
+              ...prev,
+              {
+                id: crypto.randomUUID(),
+                role: 'assistant',
+                text:
+                  res.message ||
+                  'Account created. Please verify OTP to complete your signup.',
+                ts: Date.now(),
+              },
+            ])
+            // After signup, guide them to sign in to continue.
+            setShowSignIn(true)
+          }}
+        />
       ) : (
         <main className="chat">
           <div className="messages">
@@ -240,12 +268,12 @@ export default function App() {
                     <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       {m.cta.buttons.map((btn, index) => {
                         const isSell = isSellCTA(btn)
-                        console.log('🎨 Rendering button:', { 
-                          index, 
-                          id: btn.id, 
-                          title: btn.title, 
+                        console.log('🎨 Rendering button:', {
+                          index,
+                          id: btn.id,
+                          title: btn.title,
                           isSell,
-                          url: btn.url 
+                          url: btn.url
                         })
 
                         if (isSell) {
