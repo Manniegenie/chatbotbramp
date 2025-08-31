@@ -75,12 +75,12 @@ export default function SignUp({
   const RESEND_OTP_ENDPOINT = `${API_BASE}/signup/resend-otp`             // { phonenumber }
   const PASSWORD_PIN_ENDPOINT = `${API_BASE}/passwordpin/password-pin`    // { newPin, renewPin, pendingUserId }
 
-  // Final redirect after successful PIN save
+  // Use the latest link you showed in your snippet
   const KYC_REDIRECT_URL =
-    'https://links.sandbox.usesmileid.com/7932/7675c604-fd18-424a-a61e-a0052eb5bcbf'
+    'https://links.sandbox.usesmileid.com/7932/6a92ec20-8ddb-435b-86b0-9b87439a7173'
 
-  const [stepIndex, setStepIndex] = useState<number>(0)
   const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'bvn', 'otp', 'pin']
+  const [stepIndex, setStepIndex] = useState<number>(0)
 
   const [firstname, setFirstname] = useState('')
   const [lastname, setLastname] = useState('')
@@ -98,8 +98,11 @@ export default function SignUp({
   const [pin2, setPin2] = useState('')
   const [pinError, setPinError] = useState<string | null>(null)
 
-  const [pendingUserId, setPendingUserId] = useState<string | null>(null) // from signup/verify
+  const [pendingUserId, setPendingUserId] = useState<string | null>(null)
 
+  const currentStepId = steps[stepIndex]
+
+  // ---------- Utils ----------
   function normalizePhone(input: string) {
     const d = input.replace(/[^\d+]/g, '')
     if (/^0\d{10}$/.test(d)) return '+234' + d.slice(1)
@@ -118,13 +121,11 @@ export default function SignUp({
         return null
       case 'phone': {
         const phonenumber = normalizePhone(phone)
-        if (!/^\+?\d{10,15}$/.test(phonenumber))
-          return 'Enter a valid phone number (e.g. +2348100000000).'
+        if (!/^\+?\d{10,15}$/.test(phonenumber)) return 'Enter a valid phone number (e.g. +2348100000000).'
         return null
       }
       case 'email':
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim().toLowerCase()))
-          return 'Enter a valid email address.'
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim().toLowerCase())) return 'Enter a valid email address.'
         return null
       case 'bvn':
         if (!/^\d{11}$/.test(bvn)) return 'BVN must be exactly 11 digits.'
@@ -142,8 +143,7 @@ export default function SignUp({
 
   function validateAllUpTo(index: number): string | null {
     for (let i = 0; i <= index; i++) {
-      const s = steps[i]
-      const v = validateField(s)
+      const v = validateField(steps[i])
       if (v) return v
     }
     return null
@@ -151,12 +151,8 @@ export default function SignUp({
 
   function goNext() {
     setError(null)
-    const currentStep = steps[stepIndex]
-    const invalid = validateField(currentStep)
-    if (invalid) {
-      setError(invalid)
-      return
-    }
+    const invalid = validateField(currentStepId)
+    if (invalid) return setError(invalid)
     setStepIndex((i) => Math.min(i + 1, steps.length - 1))
   }
 
@@ -165,14 +161,11 @@ export default function SignUp({
     setStepIndex((i) => Math.max(i - 1, 0))
   }
 
-  // --- Handlers per step ---
+  // ---------- Submit router ----------
   async function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault()
     setError(null)
 
-    const current = steps[stepIndex]
-
-    // Validate current step (and all previous)
     const invalid = validateAllUpTo(stepIndex)
     if (invalid) {
       setError(invalid)
@@ -181,14 +174,19 @@ export default function SignUp({
       return
     }
 
-    if (current === 'bvn') return doSignup()
-    if (current === 'otp') return doVerifyOtp()
-    if (current === 'pin') return doSetPin()
-
-    // For non-submit steps, just advance
-    goNext()
+    switch (currentStepId) {
+      case 'bvn':
+        return doSignup()
+      case 'otp':
+        return doVerifyOtp()
+      case 'pin':
+        return doSetPin()
+      default:
+        return goNext()
+    }
   }
 
+  // ---------- API handlers ----------
   async function doSignup() {
     setLoading(true)
     try {
@@ -223,7 +221,7 @@ export default function SignUp({
       const ok = data as ServerSuccess
       if (ok.userId) setPendingUserId(ok.userId)
 
-      // Move to OTP page
+      // move to OTP page
       setStepIndex(steps.indexOf('otp'))
     } catch (err: any) {
       setError(`Network error: ${err.message}`)
@@ -234,6 +232,7 @@ export default function SignUp({
 
   async function doVerifyOtp() {
     setOtpError(null)
+
     const phonenumber = normalizePhone(phone)
     if (!/^\+?\d{10,15}$/.test(phonenumber)) {
       setOtpError('Invalid phone number format.')
@@ -257,7 +256,7 @@ export default function SignUp({
       const ok: VerifySuccess = await res.json()
       setPendingUserId(ok.pendingUserId)
 
-      // Move to PIN page
+      // move to PIN page
       setStepIndex(steps.indexOf('pin'))
     } catch (err: any) {
       setOtpError(`Network error: ${err.message}`)
@@ -305,7 +304,7 @@ export default function SignUp({
         },
       })
 
-      // Redirect to Smile ID
+      // final redirect
       window.location.replace(KYC_REDIRECT_URL)
     } catch (err: any) {
       setPinError(`Network error: ${err.message}`)
@@ -314,9 +313,26 @@ export default function SignUp({
     }
   }
 
-  // --- UI helpers ---
-  const totalSteps = steps.length
-  const currentStepId = steps[stepIndex]
+  // ---------- UI ----------
+  function ProgressDots() {
+    return (
+      <div style={{ display: 'flex', gap: 6, margin: '6px 0 10px' }} aria-hidden>
+        {steps.map((_, i) => (
+          <span
+            key={i}
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: i === stepIndex ? 'var(--accent)' : '#242433',
+              display: 'inline-block',
+              opacity: i === stepIndex ? 1 : 0.7,
+            }}
+          />
+        ))}
+      </div>
+    )
+  }
 
   function renderStep() {
     switch (currentStepId) {
@@ -402,7 +418,7 @@ export default function SignUp({
       case 'otp':
         return (
           <>
-            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>OTP</label>
+            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Enter OTP</label>
             <input
               key="otp"
               placeholder="123456"
@@ -477,12 +493,7 @@ export default function SignUp({
               </div>
             )}
             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              <button
-                type="button"
-                className="btn btn-outline"
-                onClick={goBack}
-                disabled={loading}
-              >
+              <button type="button" className="btn btn-outline" onClick={goBack} disabled={loading}>
                 Back
               </button>
               <button className="btn" type="submit" disabled={loading}>
@@ -494,43 +505,25 @@ export default function SignUp({
     }
   }
 
-  function ProgressDots() {
-    return (
-      <div style={{ display: 'flex', gap: 6, margin: '6px 0 10px' }} aria-hidden>
-        {steps.map((_, i) => (
-          <span
-            key={i}
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              background: i === stepIndex ? 'var(--accent)' : '#242433',
-              display: 'inline-block',
-              opacity: i === stepIndex ? 1 : 0.7,
-            }}
-          />
-        ))}
-      </div>
-    )
-  }
-
   return (
-    <div
-      className="chat"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="signup-title"
-      style={{ width: '100%', maxWidth: '100vw', padding: '8px 10px 0' }}
-    >
+    <div className="chat" style={{ width: '100%', maxWidth: '100vw', padding: '8px 10px 0' }}>
       <div className="messages" style={{ paddingTop: 0 }}>
         <div className="bubble" style={{ maxWidth: '95%' }}>
           <div className="role">Security</div>
           <div className="text">
             <h2 id="signup-title" style={{ marginTop: 0, marginBottom: 6, fontSize: '1.2rem' }}>
-              Create your account
+              {currentStepId === 'otp'
+                ? 'Verify OTP'
+                : currentStepId === 'pin'
+                ? 'Set your PIN'
+                : 'Create your account'}
             </h2>
             <p style={{ marginTop: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>
-              We’ll collect a few details. One step at a time.
+              {currentStepId === 'otp'
+                ? 'Enter the 6-digit OTP sent to your phone.'
+                : currentStepId === 'pin'
+                ? 'Create a 6-digit PIN for sign-in and transactions.'
+                : 'We’ll collect a few details. One step at a time.'}
             </p>
 
             <ProgressDots />
@@ -538,7 +531,7 @@ export default function SignUp({
             <form onSubmit={handleSubmit}>
               {renderStep()}
 
-              {/* Default nav for the first 5 steps */}
+              {/* Default nav + error for the first 5 steps */}
               {['firstname', 'lastname', 'phone', 'email', 'bvn'].includes(currentStepId) && (
                 <>
                   {error && (
@@ -567,15 +560,14 @@ export default function SignUp({
                       </button>
                     )}
 
-                    {/* For steps before 'bvn', the submit just advances; at 'bvn' it hits doSignup */}
                     <button type="submit" className="btn" disabled={loading}>
                       {loading
                         ? currentStepId === 'bvn'
                           ? 'Creating…'
                           : 'Please wait…'
                         : currentStepId === 'bvn'
-                          ? 'Create account'
-                          : 'Next'}
+                        ? 'Create account'
+                        : 'Next'}
                     </button>
                   </div>
                 </>
