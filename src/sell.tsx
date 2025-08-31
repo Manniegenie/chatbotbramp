@@ -124,24 +124,6 @@ function toNetworkLabel(token: string, code: string) {
   return hit?.label || code
 }
 
-function buildInitiateRecap(d: InitiateSellRes) {
-  const t = (d.deposit?.token || d.token || '').toUpperCase()
-  const netLabel = toNetworkLabel(t, d.deposit?.network || d.network || '')
-  const payAmount = d.deposit?.amount ?? d.sellAmount
-  const addr = d.deposit?.address
-  const memo = d.deposit?.memo
-  const recv = d.quote?.receiveAmount
-  const rate = d.quote?.rate
-
-  return [
-    `Sell started ✅`,
-    `Pay in: **${prettyAmount(Number(payAmount || 0))} ${t}** on **${netLabel}** (within 10 minutes).`,
-    `Deposit address: ${addr}${memo ? ` (Memo/Tag: ${memo})` : ''}.`,
-    `You’ll receive: **${prettyNgn(Number(recv || 0))}** at **${prettyAmount(Number(rate || 0))} NGN/${t}**.`,
-    `⚠️ Please send the **exact amount** shown. Different amounts can delay or void processing.`,
-  ].join('\n')
-}
-
 function buildPayoutRecap(init: InitiateSellRes | null, p: PayoutRes) {
   const t = (init?.deposit?.token || init?.token || '').toUpperCase()
   const netLabel = toNetworkLabel(t, init?.deposit?.network || init?.network || '')
@@ -189,9 +171,10 @@ const errorBanner: React.CSSProperties = { ...card, background: 'rgba(220, 50, 5
 const successCard: React.CSSProperties = { ...card, background: 'rgba(0, 115, 55, .12)', borderColor: 'rgba(0, 115, 55, .35)' }
 
 export default function SellModal({ open, onClose, onChatEcho }: SellModalProps) {
+  // Steps: 1 = Start Sell, 2 = Payout. Final summary is a sub-state of step 2.
   const [step, setStep] = useState<1 | 2>(1)
 
-  // Step 1
+  // Step 1 (Start Sell)
   const [token, setToken] = useState<TokenSym>('USDT')
   const [network, setNetwork] = useState(NETWORKS_BY_TOKEN['USDT'][0].code)
   const [amount, setAmount] = useState<string>('100')
@@ -199,7 +182,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [initError, setInitError] = useState<string | null>(null)
   const [initData, setInitData] = useState<InitiateSellRes | null>(null)
 
-  // Step 2
+  // Step 2 (Payout + Summary)
   const [bankName, setBankName] = useState('')
   const [bankCode, setBankCode] = useState('')
   const [accountNumber, setAccountNumber] = useState('')
@@ -207,6 +190,10 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [payLoading, setPayLoading] = useState(false)
   const [payError, setPayError] = useState<string | null>(null)
   const [payData, setPayData] = useState<PayoutRes | null>(null)
+
+  // Countdown should start only AFTER payout is saved (local 10:00 window)
+  const [summaryExpiresAt, setSummaryExpiresAt] = useState<string | null>(null)
+  const { text: countdown, expired } = useCountdown(summaryExpiresAt)
 
   // Banks
   const [banksLoading, setBanksLoading] = useState(false)
@@ -234,6 +221,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     setBanksLoading(false)
     setBanksError(null)
     setBankOptions([])
+    setSummaryExpiresAt(null)
     banksFetchedRef.current = false
   }, [open])
 
@@ -255,10 +243,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const firstInputRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null)
   useEffect(() => { firstInputRef.current?.focus() }, [step])
 
-  const quote = initData?.quote
-  const deposit = initData?.deposit
-  const { text: countdown, expired } = useCountdown(quote?.expiresAt ?? null)
-
   // Fetch banks once when entering Step 2
   useEffect(() => {
     if (!open || step !== 2 || banksFetchedRef.current) return
@@ -267,15 +251,11 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       setBanksLoading(true)
       setBanksError(null)
       try {
-        const res = await fetch(`${API_BASE}/fetchnaira/naira-accounts`, {
-          method: 'GET',
-          cache: 'no-store',
-        })
+        const res = await fetch(`${API_BASE}/fetchnaira/naira-accounts`, { method: 'GET', cache: 'no-store' })
         const json = await res.json()
         if (!res.ok) throw new Error(json?.error || `HTTP ${res.status}`)
 
         const list: BankOption[] = Array.isArray(json?.banks) ? json.banks : []
-        // Ensure structure + sort
         const opts: BankOption[] = (list as BankOption[])
           .map((b: BankOption) => ({ name: String(b.name || '').trim(), code: String(b.code || '').trim() }))
           .filter((b: BankOption) => b.name.length > 0 && b.code.length > 0)
@@ -317,7 +297,8 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       const data: InitiateSellRes = await res.json()
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
       setInitData(data)
-      onChatEcho?.(buildInitiateRecap(data))
+      // 🚀 Go straight to payout (no deposit-details screen)
+      setStep(2)
     } catch (err: any) {
       setInitError(err.message || 'Failed to initiate sell')
     } finally {
@@ -353,6 +334,8 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
       setPayData(data)
       onChatEcho?.(buildPayoutRecap(initData, data))
+      // ⏱ Start a fresh local 10:00 window AFTER payout is captured
+      setSummaryExpiresAt(new Date(Date.now() + 10 * 60 * 1000).toISOString())
     } catch (err: any) {
       setPayError(err.message || 'Failed to save payout details')
     } finally {
@@ -370,8 +353,10 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
   if (!open) return null
 
-  const canContinue = !!initData && !expired
-  const headerTitle = step === 1 ? 'Start a Sell' : 'Payout Details'
+  const headerTitle =
+    step === 1 ? 'Start a Sell'
+    : (!payData ? 'Payout Details' : 'Transaction Summary')
+
   const showFinalSummary = !!payData
 
   return createPortal(
@@ -386,7 +371,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
             <div>
               <div id="sell-title" style={{ fontWeight: 700 }}>{headerTitle}</div>
               <div style={stepperStyle}>
-                <span style={dot(step === 1)}></span> Step 1 — Deposit
+                <span style={dot(step === 1)}></span> Step 1 — Start
                 <span style={{ opacity: .4, padding: '0 6px' }}>•</span>
                 <span style={dot(step === 2)}></span> Step 2 — Payout
               </div>
@@ -397,11 +382,11 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
         {/* Body */}
         <div style={bodyStyle}>
-          {/* STEP 1 */}
+          {/* STEP 1 — Start a Sell (no deposit-details screen; goes straight to payout on success) */}
           {step === 1 && (
             <div style={{ display: 'grid', gap: 14 }}>
               <p style={{ margin: 0, color: 'var(--muted)' }}>
-                Choose token, network, and amount. You’ll get a single deposit address and a 10-minute window.
+                Choose token, network, and amount. We’ll capture payout next.
               </p>
 
               {!!initError && (
@@ -449,87 +434,14 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
                 <div style={{ gridColumn: '1 / span 2', display: 'flex', justifyContent: 'flex-end' }}>
                   <button style={btnPrimary} disabled={initLoading}>
-                    {initLoading ? 'Starting…' : 'Get Deposit Details'}
+                    {initLoading ? 'Starting…' : 'Start & Continue to Payout'}
                   </button>
                 </div>
               </form>
-
-              {initData && (
-                <div style={card}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                    <h3 style={{ margin: 0, fontSize: 16 }}>Deposit Details</h3>
-                    <div style={badge}>
-                      ⏱ {expired ? 'Expired' : countdown} <span style={{ opacity: .6 }}>of 10:00</span>
-                    </div>
-                  </div>
-
-                  <div style={kvGrid}>
-                    <div>
-                      <div style={kStyle}>Send to Address</div>
-                      <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{deposit?.address}</div>
-                      <div style={row}>
-                        <button
-                          style={btn}
-                          onClick={() => deposit?.address && copyToClipboard(deposit.address, 'addr')}
-                        >
-                          {copiedKey === 'addr' ? 'Copied ✓' : 'Copy Address'}
-                        </button>
-                      </div>
-                    </div>
-
-                    {!!deposit?.memo && (
-                      <div>
-                        <div style={kStyle}>Memo / Tag</div>
-                        <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{deposit.memo}</div>
-                        <div style={row}>
-                          <button
-                            style={btn}
-                            onClick={() => copyToClipboard(deposit!.memo!, 'memo')}
-                          >
-                            {copiedKey === 'memo' ? 'Copied ✓' : 'Copy Memo'}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    <div>
-                      <div style={kStyle}>You Receive</div>
-                      <div style={vStyle}>
-                        {prettyNgn(quote?.receiveAmount || 0)}&nbsp;
-                        <span style={{ color: 'var(--muted)', fontWeight: 500 }}>
-                          at {prettyAmount(quote?.rate || 0)} NGN/{deposit?.token || token}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div>
-                      <div style={kStyle}>Network</div>
-                      <div style={vStyle}>{toNetworkLabel(deposit?.token || token, deposit?.network || network)}</div>
-                    </div>
-                  </div>
-
-                  <div style={{ ...smallMuted, ...badgeWarn }}>
-                    ⚠️ Only send {deposit?.token || token} on the selected network. Wrong-network deposits can be lost.
-                  </div>
-
-                  <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-                    <button
-                      style={btn}
-                      onClick={() => setInitData(null)}
-                      title="Restart the sell setup"
-                    >
-                      Restart
-                    </button>
-                    <button style={btnPrimary} onClick={() => setStep(2)} disabled={!canContinue}>
-                      Continue to Payout
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
-          {/* STEP 2 */}
+          {/* STEP 2 — Payout (then Summary with countdown) */}
           {step === 2 && (
             <div style={{ display: 'grid', gap: 14 }}>
               {!initData && (
@@ -541,7 +453,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
               {initData && !showFinalSummary && (
                 <>
                   <div style={card}>
-                    <h3 style={{ margin: 0, fontSize: 16 }}>Summary</h3>
+                    <h3 style={{ margin: 0, fontSize: 16 }}>Sell Summary</h3>
                     <div style={kvGrid}>
                       <div>
                         <div style={kStyle}>Payment ID</div>
@@ -622,14 +534,14 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                         style={btnPrimary}
                         disabled={payLoading || !bankCode || banksLoading}
                       >
-                        {payLoading ? 'Saving…' : 'Save Payout Details'}
+                        {payLoading ? 'Saving…' : 'Save Payout & Show Summary'}
                       </button>
                     </div>
                   </form>
                 </>
               )}
 
-              {/* FINAL SUMMARY */}
+              {/* FINAL SUMMARY (countdown starts here) */}
               {initData && showFinalSummary && payData && (
                 <div style={successCard}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
@@ -715,9 +627,9 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         <div style={footerStyle}>
           <div style={smallMuted}>
             {step === 1
-              ? 'Send the exact amount within the window for smooth processing.'
+              ? 'We’ll capture your payout next.'
               : (showFinalSummary
-                  ? 'You can close this modal anytime after copying the details.'
+                  ? 'Copy the deposit details and send the exact amount within the window.'
                   : 'Ensure your bank details match your account name.')}
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
@@ -729,11 +641,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
               )
             ) : (
               <button style={btn} onClick={onClose}>Cancel</button>
-            )}
-            {step === 1 && (
-              <button style={{ ...btnPrimary, opacity: initData && !expired ? 1 : .6 }} onClick={() => setStep(2)} disabled={!canContinue}>
-                Continue
-              </button>
             )}
           </div>
         </div>
