@@ -5,12 +5,15 @@ export type SignUpResult = {
   success: boolean
   message?: string
   userId?: string
+  accessToken?: string
+  refreshToken?: string
   user?: {
     firstname?: string
     lastname?: string
     email?: string
     phonenumber?: string
     bvn?: string
+    username?: string
   }
 }
 
@@ -27,7 +30,7 @@ type ServerSuccess = {
   success: true
   message: string
   otpSent?: boolean
-  userId?: string
+  userId?: string              // pending user id
   user?: {
     email: string
     phonenumber: string
@@ -35,6 +38,22 @@ type ServerSuccess = {
     lastname: string
     bvn?: string
   }
+}
+
+type PinSuccess = {
+  message: string
+  user: {
+    id: string
+    email: string
+    phonenumber: string
+    firstname: string
+    lastname: string
+    username: string
+    kycLevel: number
+    kycStatus: string
+  }
+  accessToken: string
+  refreshToken: string
 }
 
 type ServerError =
@@ -52,8 +71,9 @@ export default function SignUp({
 }) {
   const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
   const SIGNUP_ENDPOINT = `${API_BASE}/chatsignup/add-user`
-  const VERIFY_OTP_ENDPOINT = `${API_BASE}/verify-otp/verify-otp` // expects { phonenumber, code }
-  const RESEND_OTP_ENDPOINT = `${API_BASE}/signup/resend-otp`     // we’ll send { phonenumber }
+  const VERIFY_OTP_ENDPOINT = `${API_BASE}/verify-otp/verify-otp`         // expects { phonenumber, code }
+  const RESEND_OTP_ENDPOINT = `${API_BASE}/signup/resend-otp`             // expects { phonenumber }
+  const PASSWORD_PIN_ENDPOINT = `${API_BASE}/passwordpin/password-pin`    // expects { newPin, renewPin, pendingUserId }
 
   const [stepIndex, setStepIndex] = useState<number>(0)
   const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'bvn']
@@ -70,7 +90,13 @@ export default function SignUp({
   const [showOtpModal, setShowOtpModal] = useState(false)
   const [otp, setOtp] = useState('')
   const [otpError, setOtpError] = useState<string | null>(null)
-  const [userId, setUserId] = useState<string | null>(null)
+
+  const [showPinModal, setShowPinModal] = useState(false)
+  const [pin, setPin] = useState('')
+  const [pin2, setPin2] = useState('')
+  const [pinError, setPinError] = useState<string | null>(null)
+
+  const [pendingUserId, setPendingUserId] = useState<string | null>(null) // from signup/verify
 
   function normalizePhone(input: string) {
     const d = input.replace(/[^\d+]/g, '')
@@ -135,7 +161,6 @@ export default function SignUp({
     const invalid = validateAll()
     if (invalid) {
       setError(invalid)
-      // Jump to the first invalid step for better UX
       const firstBadIndex = steps.findIndex((s) => validateField(s))
       if (firstBadIndex >= 0) setStepIndex(firstBadIndex)
       return
@@ -172,7 +197,8 @@ export default function SignUp({
       }
 
       const ok = data as ServerSuccess
-      setUserId(ok.userId || null)
+      // Keep pending user id if your backend returns it here (optional)
+      if (ok.userId) setPendingUserId(ok.userId)
       setShowOtpModal(true)
     } catch (err: any) {
       setError(`Network error: ${err.message}`)
@@ -211,19 +237,11 @@ export default function SignUp({
       }
 
       const ok: VerifySuccess = await res.json()
-      onSuccess({
-        success: true,
-        message: ok.message || 'OTP verified successfully.',
-        userId: ok.pendingUserId,
-        user: {
-          firstname: ok.firstname,
-          lastname: ok.lastname,
-          phonenumber,
-          email: ok.email,
-          bvn: bvn.trim(),
-        },
-      })
+
+      // Save pending id from verify (authoritative) and move to PIN step
+      setPendingUserId(ok.pendingUserId)
       setShowOtpModal(false)
+      setShowPinModal(true)
     } catch (err: any) {
       setOtpError(`Network error: ${err.message}`)
     } finally {
@@ -256,6 +274,67 @@ export default function SignUp({
       alert('OTP resent successfully. Check your phone.')
     } catch (err: any) {
       setOtpError(`Network error: ${err.message}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ====== PIN ======
+  function validatePinFields(): string | null {
+    if (!/^\d{6}$/.test(pin)) return 'PIN must be exactly 6 digits.'
+    if (pin !== pin2) return 'PINs do not match.'
+    if (!pendingUserId) return 'Missing pending user ID. Please repeat verification.'
+    return null
+  }
+
+  async function setPasswordPin(e?: React.FormEvent) {
+    e?.preventDefault()
+    setPinError(null)
+
+    const invalid = validatePinFields()
+    if (invalid) {
+      setPinError(invalid)
+      return
+    }
+
+    setLoading(true)
+    try {
+      const res = await fetch(PASSWORD_PIN_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          newPin: pin,
+          renewPin: pin2,
+          pendingUserId,
+        }),
+      })
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}))
+        setPinError(errJson?.message || `Failed to set PIN (HTTP ${res.status}).`)
+        return
+      }
+
+      const ok: PinSuccess = await res.json()
+
+      onSuccess({
+        success: true,
+        message: ok.message,
+        userId: ok.user?.id,
+        accessToken: ok.accessToken,
+        refreshToken: ok.refreshToken,
+        user: {
+          firstname: ok.user?.firstname,
+          lastname: ok.user?.lastname,
+          email: ok.user?.email,
+          phonenumber: ok.user?.phonenumber,
+          bvn: bvn.trim(),
+          username: ok.user?.username,
+        },
+      })
+      setShowPinModal(false)
+    } catch (err: any) {
+      setPinError(`Network error: ${err.message}`)
     } finally {
       setLoading(false)
     }
@@ -439,6 +518,7 @@ export default function SignUp({
         </div>
       </div>
 
+      {/* OTP Modal */}
       {showOtpModal && (
         <div
           style={{
@@ -496,6 +576,79 @@ export default function SignUp({
                     disabled={loading}
                   >
                     Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Set PIN Modal */}
+      {showPinModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 1000, padding: '0 10px', touchAction: 'manipulation',
+          }}
+        >
+          <div className="bubble" style={{ maxWidth: '95%', padding: '12px 14px' }}>
+            <div className="text">
+              <h2 style={{ marginTop: 0, marginBottom: 6, fontSize: '1.2rem' }}>
+                Set your PIN
+              </h2>
+              <p style={{ marginTop: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>
+                Create a 6-digit PIN for sign-in and transactions.
+              </p>
+
+              <form onSubmit={setPasswordPin}>
+                <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>PIN (6 digits)</label>
+                <input
+                  placeholder="••••••"
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
+                  inputMode="numeric"
+                  maxLength={6}
+                  type="password"
+                  autoFocus
+                  style={inputStyle}
+                  className="no-zoom"
+                />
+
+                <div style={{ height: 8 }} />
+
+                <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Confirm PIN</label>
+                <input
+                  placeholder="••••••"
+                  value={pin2}
+                  onChange={(e) => setPin2(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
+                  inputMode="numeric"
+                  maxLength={6}
+                  type="password"
+                  style={inputStyle}
+                  className="no-zoom"
+                />
+
+                {pinError && (
+                  <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
+                    ⚠️ {pinError}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={() => setShowPinModal(false)}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </button>
+                  <button className="btn" type="submit" disabled={loading}>
+                    {loading ? 'Saving…' : 'Save PIN & Finish'}
                   </button>
                 </div>
               </form>
