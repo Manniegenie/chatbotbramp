@@ -72,10 +72,9 @@ export default function SignUp({
   const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
   const SIGNUP_ENDPOINT = `${API_BASE}/chatsignup/add-user`
   const VERIFY_OTP_ENDPOINT = `${API_BASE}/verify-otp/verify-otp`         // { phonenumber, code }
-  const RESEND_OTP_ENDPOINT = `${API_BASE}/signup/resend-otp`             // { phonenumber }
   const PASSWORD_PIN_ENDPOINT = `${API_BASE}/passwordpin/password-pin`    // { newPin, renewPin, pendingUserId }
 
-  // Use the latest link you showed in your snippet
+  // Use the latest link from your snippet
   const KYC_REDIRECT_URL =
     'https://links.sandbox.usesmileid.com/7932/6a92ec20-8ddb-435b-86b0-9b87439a7173'
 
@@ -439,6 +438,8 @@ export default function SignUp({
               <button className="btn" type="submit" disabled={loading}>
                 {loading ? 'Verifying…' : 'Verify OTP'}
               </button>
+
+              {/* Temporarily disabled to avoid missing function error
               <button
                 type="button"
                 className="btn btn-outline"
@@ -447,6 +448,8 @@ export default function SignUp({
               >
                 Resend OTP
               </button>
+              */}
+
               <button
                 type="button"
                 className="btn btn-outline"
