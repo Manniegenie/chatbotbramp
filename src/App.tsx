@@ -35,65 +35,109 @@ async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
   return fetch(input, { ...init, headers })
 }
 
-/** ---------- Linkify helpers (shorten + hyperlink like AI terminals) ---------- */
+/* ----------------------- Linkify + Markdown-lite helpers ----------------------- */
 
 const URL_REGEX = /https?:\/\/[^\s<>"')]+/gi
+const MD_LINK = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g
 
 function shortenUrlForDisplay(raw: string) {
   try {
     const u = new URL(raw)
-    // Build a compact label: domain + condensed path
     const host = u.host.replace(/^www\./, '')
     let path = u.pathname || ''
-    // Collapse long paths => /a/.../last
     if (path.length > 20) {
       const segs = path.split('/').filter(Boolean)
       if (segs.length > 2) path = `/${segs[0]}/…/${segs[segs.length - 1]}`
     }
     let label = host + (path === '/' ? '' : path)
-    // Indicate query/fragment existence without noise
-    if (u.search) label += '…'
-    if (u.hash && !u.search) label += '…'
-    // Hard cap
+    if (u.search || u.hash) label += '…'
     return label.length > 48 ? label.slice(0, 45) + '…' : label
   } catch {
     return raw.length > 48 ? raw.slice(0, 45) + '…' : raw
   }
 }
 
-function linkifyText(text: string): React.ReactNode[] {
+function inlineRender(text: string, keyPrefix: string): React.ReactNode[] {
+  // First, render markdown links [label](url)
   const nodes: React.ReactNode[] = []
-  // Preserve newlines
-  const lines = text.split(/\r?\n/)
-  lines.forEach((line, li) => {
-    let lastIdx = 0
-    line.replace(URL_REGEX, (match, offset: number) => {
-      // Exclude trailing punctuation from the link
-      const trimmed = match.replace(/[),.;!?]+$/g, '')
-      const trailing = match.slice(trimmed.length)
+  let last = 0
+  text.replace(MD_LINK, (match, label: string, url: string, offset: number) => {
+    if (offset > last) nodes.push(text.slice(last, offset))
+    nodes.push(
+      <a key={`${keyPrefix}-md-${offset}`} href={url} target="_blank" rel="noopener noreferrer">
+        {label}
+      </a>
+    )
+    last = offset + match.length
+    return match
+  })
+  if (last < text.length) nodes.push(text.slice(last))
 
-      if (offset > lastIdx) nodes.push(line.slice(lastIdx, offset))
-
-      nodes.push(
-        <a
-          key={`${match}-${offset}-${li}`}
-          href={trimmed}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+  // Then, linkify any remaining bare URLs inside existing nodes
+  const finalNodes: React.ReactNode[] = []
+  nodes.forEach((node, i) => {
+    if (typeof node !== 'string') {
+      finalNodes.push(node)
+      return
+    }
+    let idx = 0
+    node.replace(URL_REGEX, (url: string, offset: number) => {
+      const trimmed = url.replace(/[),.;!?]+$/g, '')
+      const trailing = url.slice(trimmed.length)
+      if (offset > idx) finalNodes.push(node.slice(idx, offset))
+      finalNodes.push(
+        <a key={`${keyPrefix}-url-${i}-${offset}`} href={trimmed} target="_blank" rel="noopener noreferrer">
           {shortenUrlForDisplay(trimmed)}
         </a>
       )
-
-      if (trailing) nodes.push(trailing)
-      lastIdx = offset + match.length
-      return match
+      if (trailing) finalNodes.push(trailing)
+      idx = offset + url.length
+      return url
     })
-    if (lastIdx < line.length) nodes.push(line.slice(lastIdx))
-    if (li < lines.length - 1) nodes.push(<br key={`br-${li}`} />)
+    if (idx < node.length) finalNodes.push(node.slice(idx))
   })
-  return nodes
+
+  return finalNodes
 }
+
+function renderMessageText(text: string): React.ReactNode {
+  // Split into paragraphs by blank line
+  const paragraphs = text.split(/\r?\n\s*\r?\n/)
+  const rendered: React.ReactNode[] = []
+
+  paragraphs.forEach((para, pi) => {
+    // Is this a bullet list block?
+    const lines = para.split(/\r?\n/)
+    const isListBlock = lines.every(l => l.trim().startsWith('- '))
+    if (isListBlock) {
+      rendered.push(
+        <ul key={`ul-${pi}`} style={{ margin: '8px 0', paddingLeft: 18 }}>
+          {lines.map((l, li) => {
+            const item = l.replace(/^\s*-\s*/, '')
+            return <li key={`li-${pi}-${li}`} style={{ margin: '4px 0' }}>{inlineRender(item, `li-${pi}-${li}`)}</li>
+          })}
+        </ul>
+      )
+    } else {
+      // Normal paragraph; preserve single newlines
+      const pieces = para.split(/\r?\n/)
+      rendered.push(
+        <p key={`p-${pi}`} style={{ margin: '8px 0' }}>
+          {pieces.map((line, li) => (
+            <React.Fragment key={`p-${pi}-line-${li}`}>
+              {inlineRender(line, `p-${pi}-line-${li}`)}
+              {li < pieces.length - 1 && <br />}
+            </React.Fragment>
+          ))}
+        </p>
+      )
+    }
+  })
+
+  return rendered
+}
+
+/* ----------------------------------- App ----------------------------------- */
 
 export default function App() {
   const [messages, setMessages] = useState<ChatMessage[]>([{
@@ -105,7 +149,11 @@ export default function App() {
 
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [thinkingPhase, setThinkingPhase] = useState<'thinking' | 'browsing'>('thinking') // 👈 phase switch
+
+  // typing indicator phases + emoji ticker
+  const [thinkingPhase, setThinkingPhase] = useState<'thinking' | 'browsing'>('thinking')
+  const [emojiTick, setEmojiTick] = useState(0)
+
   const [showSignIn, setShowSignIn] = useState(false)
   const [showSignUp, setShowSignUp] = useState(false)
   const [showSell, setShowSell] = useState(false)
@@ -118,7 +166,7 @@ export default function App() {
   })
   const endRef = useRef<HTMLDivElement>(null)
 
-  // 🔒 Scrub sensitive URL params on load (no user_id in URL)
+  // Scrub sensitive URL params on load
   useEffect(() => {
     try {
       const url = new URL(window.location.href)
@@ -127,24 +175,32 @@ export default function App() {
         const clean = url.pathname + (url.searchParams.toString() ? `?${url.searchParams.toString()}` : '') + url.hash
         window.history.replaceState({}, '', clean)
       }
-    } catch {
-      // ignore if URL parsing fails
-    }
+    } catch { /* ignore */ }
   }, [])
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading, showSignIn, showSignUp, showSell])
 
-  // ⏲️ Switch "thinking" → "browsing" after ~2.5s if still loading
+  // Flip thinking → browsing after ~2.5s if still loading
   useEffect(() => {
-    let timer: number | undefined
+    let phaseTimer: number | undefined
+    let emojiTimer: number | undefined
+
     if (loading) {
       setThinkingPhase('thinking')
-      timer = window.setTimeout(() => setThinkingPhase('browsing'), 2500)
+      setEmojiTick(0)
+      phaseTimer = window.setTimeout(() => setThinkingPhase('browsing'), 2500)
+
+      // While browsing, alternate 🌍 / 🪙 every ~600ms to show activity
+      emojiTimer = window.setInterval(() => {
+        setEmojiTick(t => (t + 1) % 2)
+      }, 600)
     }
+
     return () => {
-      if (timer) window.clearTimeout(timer)
+      if (phaseTimer) window.clearTimeout(phaseTimer)
+      if (emojiTimer) window.clearInterval(emojiTimer)
     }
   }, [loading])
 
@@ -200,25 +256,11 @@ export default function App() {
     setShowSell(false)
   }
 
-  // Enhanced Sell CTA detector with better debugging
+  // Enhanced Sell CTA detector
   function isSellCTA(btn: CTAButton): boolean {
-    if (!btn) {
-      console.log('❌ No button provided to isSellCTA')
-      return false
-    }
-
-    console.log('🔍 Checking button:', { id: btn.id, title: btn.title, url: btn.url })
-
-    // Primary check: button ID is "start_sell"
-    if (btn.id === 'start_sell') {
-      console.log('✅ Matched by ID: start_sell')
-      return true
-    }
-
-    // Secondary check: URL contains sell-related patterns
+    if (!btn) return false
+    if (btn.id === 'start_sell') return true
     const url = String(btn.url || '').toLowerCase()
-    console.log('🔍 Checking URL patterns for:', url)
-
     const sellPatterns = [
       /\/sell($|\/|\?|#)/,
       /chatbramp\.com\/sell/,
@@ -226,28 +268,16 @@ export default function App() {
       /sell\.html?$/,
       /\bsell\b/
     ]
-
-    for (const pattern of sellPatterns) {
-      if (pattern.test(url)) {
-        console.log('✅ Matched URL pattern:', pattern.source)
-        return true
-      }
-    }
-
-    console.log('❌ No sell patterns matched for button')
-    return false
+    return sellPatterns.some(rx => rx.test(url))
   }
 
   function handleSellClick(event?: React.MouseEvent) {
-    console.log('🔥 Sell button clicked!')
     event?.preventDefault()
     if (!auth) {
-      console.log('📝 User not authenticated, showing sign-in')
       setOpenSellAfterAuth(true)
       setShowSignIn(true)
       return
     }
-    console.log('🎯 Opening sell modal')
     setShowSell(true)
   }
 
@@ -265,11 +295,13 @@ export default function App() {
     ])
   }
 
+  // Emoji to show while "browsing"
+  const browsingEmoji = emojiTick % 2 === 0 ? '🌍' : '🪙'
+
   return (
     <div className="page">
       <header className="header">
         <div className="brand">
-          {/* Strapline only — removed logo and title */}
           <p className="tag">Secure access to digital assets & payments — via licensed partners.</p>
         </div>
 
@@ -335,7 +367,6 @@ export default function App() {
                 ts: Date.now(),
               },
             ])
-            // After signup, guide them to sign in to continue.
             setShowSignIn(true)
           }}
         />
@@ -346,21 +377,12 @@ export default function App() {
               <div key={m.id} className={`bubble ${m.role}`}>
                 <div className="role">{m.role === 'user' ? 'You' : 'Bramp AI'}</div>
                 <div className="text">
-                  {/* 🔗 Linkify + shorten URLs in message text */}
-                  {linkifyText(m.text)}
+                  {renderMessageText(m.text)}
 
                   {m.role === 'assistant' && m.cta?.type === 'button' && m.cta.buttons?.length > 0 && (
                     <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       {m.cta.buttons.map((btn, index) => {
                         const isSell = isSellCTA(btn)
-                        console.log('🎨 Rendering button:', {
-                          index,
-                          id: btn.id,
-                          title: btn.title,
-                          isSell,
-                          url: btn.url
-                        })
-
                         if (isSell) {
                           return (
                             <button
@@ -375,8 +397,6 @@ export default function App() {
                             </button>
                           )
                         }
-
-                        // Non-sell buttons remain as links
                         return (
                           <a
                             key={btn.id || btn.title || index}
@@ -399,7 +419,9 @@ export default function App() {
             ))}
             {loading && (
               <div className="typing">
-                {thinkingPhase === 'thinking' ? 'Bramp AI is thinking…' : 'Bramp AI is browsing…'}
+                {thinkingPhase === 'thinking'
+                  ? 'Bramp AI is thinking…'
+                  : `Bramp AI is browsing… ${browsingEmoji}`}
               </div>
             )}
             <div ref={endRef} />
@@ -425,7 +447,6 @@ export default function App() {
         </main>
       )}
 
-      {/* Sell modal */}
       <SellModal
         open={showSell}
         onClose={() => setShowSell(false)}
