@@ -1,0 +1,30 @@
+:root{ --bg:#0b0b10; --card:#12121a; --muted:#9aa3af; --accent:#7c3aed; --border:#1f2330; --txt:#e5e7eb }
+*{ box-sizing:border-box }
+html,body,#root{ height:100% }
+body{ margin:0; background:var(--bg); color:var(--txt); font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji" }
+
+.page{ min-height:100%; display:flex; flex-direction:column }
+.header{ position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); background:linear-gradient(180deg, rgba(18,18,26,.9), rgba(18,18,26,.4) 60%, transparent) }
+.brand{ display:flex; gap:12px; align-items:center }
+.logo{ width:36px; height:36px; border-radius:10px; background:var(--accent); display:grid; place-items:center; box-shadow:0 8px 24px rgba(124,58,237,.35) }
+.tag{ margin:0; color:var(--muted); font-size:12px }
+.btn{ appearance:none; background:var(--accent); color:white; border:0; padding:10px 14px; border-radius:10px; font-weight:600; text-decoration:none; cursor:pointer }
+.btn[disabled]{ opacity:.6; cursor:not-allowed }
+
+.chat{ max-width:860px; margin:0 auto; padding:20px; flex:1; width:100%; display:flex; flex-direction:column }
+.messages{ display:flex; flex-direction:column; gap:12px; padding:8px 0; overflow:auto }
+.bubble{ background:var(--card); border:1px solid var(--border); padding:12px 14px; border-radius:14px; max-width:80% }
+.bubble.user{ align-self:flex-end; background:#1a1428; border-color:#2a1f3d }
+.bubble .role{ font-size:11px; color:var(--muted); margin-bottom:6px }
+.bubble .text{ white-space:pre-wrap; line-height:1.5 }
+.typing{ color:var(--muted); font-size:13px; padding:6px 2px }
+
+.composer{ margin-top:auto; display:flex; gap:10px; padding-top:10px; border-top:1px solid var(--border) }
+.composer input{ flex:1; background:var(--card); border:1px solid var(--border); color:var(--txt); padding:12px 14px; border-radius:10px }
+
+.hints{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px }
+.hint{ font-size:12px; color:var(--muted); border:1px dashed var(--border); padding:6px 8px; border-radius:8px; cursor:pointer }
+.hint:hover{ border-style:solid }
+
+.footer{ display:flex; gap:12px; justify-content:center; padding:24px 10px; border-top:1px solid var(--border); color:var(--muted) }
+.footer a{ color:var(--muted); text-decoration:none }
