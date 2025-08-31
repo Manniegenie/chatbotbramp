@@ -1,5 +1,5 @@
 // src/SignUp.tsx
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 export type SignUpResult = {
   success: boolean
@@ -62,6 +62,79 @@ type ServerError =
 
 type StepId = 'firstname' | 'lastname' | 'phone' | 'email' | 'bvn'
 
+// Reusable, consistent modal component (no backdrop-dismiss!)
+function Modal({
+  open,
+  titleId,
+  children,
+}: {
+  open: boolean
+  titleId?: string
+  children: React.ReactNode
+}) {
+  // Lock background scroll while open (mobile-friendly)
+  useEffect(() => {
+    if (!open) return
+    const { overflow, position, width } = document.body.style
+    const scrollBarComp = window.innerWidth - document.documentElement.clientWidth
+    document.body.style.overflow = 'hidden'
+    document.body.style.position = 'fixed'
+    document.body.style.width = `calc(100% - ${scrollBarComp}px)`
+    return () => {
+      document.body.style.overflow = overflow
+      document.body.style.position = position
+      document.body.style.width = width
+    }
+  }, [open])
+
+  if (!open) return null
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      // Backdrop: keep visible, but DO NOT close on tap.
+      // We also stop pointer/touch events from bubbling to any parent.
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
+      onTouchMove={(e) => {
+        // prevent rubber-band scrolling on iOS within the backdrop
+        e.preventDefault()
+      }}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+        padding: '0 10px',
+        touchAction: 'none', // avoid accidental double-tap zoom & gestures
+      }}
+    >
+      <div
+        // Inner container styled like your “details entry” bubble
+        className="bubble"
+        style={{
+          maxWidth: '95%',
+          width: '100%',
+          padding: '12px 14px',
+          // Prevent clicks leaking out
+          pointerEvents: 'auto',
+        }}
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+      >
+        <div className="text">{children}</div>
+      </div>
+    </div>
+  )
+}
+
 export default function SignUp({
   onSuccess,
   onCancel,
@@ -75,7 +148,7 @@ export default function SignUp({
   const RESEND_OTP_ENDPOINT = `${API_BASE}/signup/resend-otp`             // expects { phonenumber }
   const PASSWORD_PIN_ENDPOINT = `${API_BASE}/passwordpin/password-pin`    // expects { newPin, renewPin, pendingUserId }  
 
-  // ✅ Redirect target after full signup completion (PIN saved)
+  // Redirect after full signup completion (PIN saved)
   const KYC_REDIRECT_URL =
     'https://links.sandbox.usesmileid.com/7932/7675c604-fd18-424a-a61e-a0052eb5bcbf'
 
@@ -318,7 +391,6 @@ export default function SignUp({
 
       const ok: PinSuccess = await res.json()
 
-      // Notify parent (if needed by your app)
       onSuccess({
         success: true,
         message: ok.message,
@@ -335,11 +407,7 @@ export default function SignUp({
         },
       })
 
-      // Close modal locally (optional; page will navigate immediately after)
       setShowPinModal(false)
-
-      // ✅ Final step: redirect to Smile ID flow
-      // Using replace() prevents navigating back to the PIN screen
       window.location.replace(KYC_REDIRECT_URL)
     } catch (err: any) {
       setPinError(`Network error: ${err.message}`)
@@ -526,144 +594,116 @@ export default function SignUp({
         </div>
       </div>
 
-      {/* OTP Modal */}
-      {showOtpModal && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 1000, padding: '0 10px', touchAction: 'manipulation',
-          }}
-        >
-          <div className="bubble" style={{ maxWidth: '95%', padding: '12px 14px' }}>
-            <div className="text">
-              <h2 style={{ marginTop: 0, marginBottom: 6, fontSize: '1.2rem' }}>
-                Verify OTP
-              </h2>
-              <p style={{ marginTop: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>
-                Enter the 6-digit OTP sent to your phone.
-              </p>
+      {/* OTP Modal — consistent look, no backdrop-dismiss */}
+      <Modal open={showOtpModal} titleId="otp-title">
+        <h2 id="otp-title" style={{ marginTop: 0, marginBottom: 6, fontSize: '1.2rem' }}>
+          Verify OTP
+        </h2>
+        <p style={{ marginTop: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>
+          Enter the 6-digit OTP sent to your phone.
+        </p>
 
-              <form onSubmit={verifyOtp}>
-                <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>OTP</label>
-                <input
-                  placeholder="123456"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
-                  inputMode="numeric"
-                  maxLength={6}
-                  autoFocus
-                  style={inputStyle}
-                  className="no-zoom"
-                />
+        <form onSubmit={verifyOtp}>
+          <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>OTP</label>
+          <input
+            placeholder="123456"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
+            inputMode="numeric"
+            maxLength={6}
+            autoFocus
+            style={inputStyle}
+            className="no-zoom"
+          />
 
-                {otpError && (
-                  <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
-                    ⚠️ {otpError}
-                  </div>
-                )}
-
-                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                  <button className="btn" type="submit" disabled={loading}>
-                    {loading ? 'Verifying…' : 'Verify OTP'}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-outline"
-                    onClick={resendOtp}
-                    disabled={loading}
-                  >
-                    Resend OTP
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-outline"
-                    onClick={() => setShowOtpModal(false)}
-                    disabled={loading}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
+          {otpError && (
+            <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
+              ⚠️ {otpError}
             </div>
+          )}
+
+          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+            <button className="btn" type="submit" disabled={loading}>
+              {loading ? 'Verifying…' : 'Verify OTP'}
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={resendOtp}
+              disabled={loading}
+            >
+              Resend OTP
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => setShowOtpModal(false)}
+              disabled={loading}
+            >
+              Cancel
+            </button>
           </div>
-        </div>
-      )}
+        </form>
+      </Modal>
 
-      {/* Set PIN Modal */}
-      {showPinModal && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 1000, padding: '0 10px', touchAction: 'manipulation',
-          }}
-        >
-          <div className="bubble" style={{ maxWidth: '95%', padding: '12px 14px' }}>
-            <div className="text">
-              <h2 style={{ marginTop: 0, marginBottom: 6, fontSize: '1.2rem' }}>
-                Set your PIN
-              </h2>
-              <p style={{ marginTop: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>
-                Create a 6-digit PIN for sign-in and transactions.
-              </p>
+      {/* Set PIN Modal — consistent look, no backdrop-dismiss */}
+      <Modal open={showPinModal} titleId="pin-title">
+        <h2 id="pin-title" style={{ marginTop: 0, marginBottom: 6, fontSize: '1.2rem' }}>
+          Set your PIN
+        </h2>
+        <p style={{ marginTop: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>
+          Create a 6-digit PIN for sign-in and transactions.
+        </p>
 
-              <form onSubmit={setPasswordPin}>
-                <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>PIN (6 digits)</label>
-                <input
-                  placeholder="••••••"
-                  value={pin}
-                  onChange={(e) => setPin(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
-                  inputMode="numeric"
-                  maxLength={6}
-                  type="password"
-                  autoFocus
-                  style={inputStyle}
-                  className="no-zoom"
-                />
+        <form onSubmit={setPasswordPin}>
+          <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>PIN (6 digits)</label>
+          <input
+            placeholder="••••••"
+            value={pin}
+            onChange={(e) => setPin(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
+            inputMode="numeric"
+            maxLength={6}
+            type="password"
+            autoFocus
+            style={inputStyle}
+            className="no-zoom"
+          />
 
-                <div style={{ height: 8 }} />
+          <div style={{ height: 8 }} />
 
-                <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Confirm PIN</label>
-                <input
-                  placeholder="••••••"
-                  value={pin2}
-                  onChange={(e) => setPin2(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
-                  inputMode="numeric"
-                  maxLength={6}
-                  type="password"
-                  style={inputStyle}
-                  className="no-zoom"
-                />
+          <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Confirm PIN</label>
+          <input
+            placeholder="••••••"
+            value={pin2}
+            onChange={(e) => setPin2(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
+            inputMode="numeric"
+            maxLength={6}
+            type="password"
+            style={inputStyle}
+            className="no-zoom"
+          />
 
-                {pinError && (
-                  <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
-                    ⚠️ {pinError}
-                  </div>
-                )}
-
-                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                  <button
-                    type="button"
-                    className="btn btn-outline"
-                    onClick={() => setShowPinModal(false)}
-                    disabled={loading}
-                  >
-                    Cancel
-                  </button>
-                  <button className="btn" type="submit" disabled={loading}>
-                    {loading ? 'Saving…' : 'Save PIN & Finish'}
-                  </button>
-                </div>
-              </form>
+          {pinError && (
+            <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
+              ⚠️ {pinError}
             </div>
+          )}
+
+          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => setShowPinModal(false)}
+              disabled={loading}
+            >
+              Cancel
+            </button>
+            <button className="btn" type="submit" disabled={loading}>
+              {loading ? 'Saving…' : 'Save PIN & Finish'}
+            </button>
           </div>
-        </div>
-      )}
+        </form>
+      </Modal>
     </div>
   )
 }
