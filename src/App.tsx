@@ -57,6 +57,20 @@ export default function App() {
   })
   const endRef = useRef<HTMLDivElement>(null)
 
+  // 🔒 Scrub sensitive URL params on load (no user_id in URL)
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href)
+      if (url.searchParams.has('user_id')) {
+        url.searchParams.delete('user_id')
+        const clean = url.pathname + (url.searchParams.toString() ? `?${url.searchParams.toString()}` : '') + url.hash
+        window.history.replaceState({}, '', clean)
+      }
+    } catch {
+      // ignore if URL parsing fails
+    }
+  }, [])
+
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading, showSignIn, showSignUp, showSell])
