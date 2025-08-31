@@ -1,5 +1,5 @@
 // src/SignUp.tsx
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 
 export type SignUpResult = {
   success: boolean
@@ -60,80 +60,7 @@ type ServerError =
   | { success: false; message: string; errors?: any[] }
   | { success: false; message: string }
 
-type StepId = 'firstname' | 'lastname' | 'phone' | 'email' | 'bvn'
-
-// Reusable, consistent modal component (no backdrop-dismiss!)
-function Modal({
-  open,
-  titleId,
-  children,
-}: {
-  open: boolean
-  titleId?: string
-  children: React.ReactNode
-}) {
-  // Lock background scroll while open (mobile-friendly)
-  useEffect(() => {
-    if (!open) return
-    const { overflow, position, width } = document.body.style
-    const scrollBarComp = window.innerWidth - document.documentElement.clientWidth
-    document.body.style.overflow = 'hidden'
-    document.body.style.position = 'fixed'
-    document.body.style.width = `calc(100% - ${scrollBarComp}px)`
-    return () => {
-      document.body.style.overflow = overflow
-      document.body.style.position = position
-      document.body.style.width = width
-    }
-  }, [open])
-
-  if (!open) return null
-
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={titleId}
-      // Backdrop: keep visible, but DO NOT close on tap.
-      // We also stop pointer/touch events from bubbling to any parent.
-      onMouseDown={(e) => e.stopPropagation()}
-      onClick={(e) => e.stopPropagation()}
-      onTouchStart={(e) => e.stopPropagation()}
-      onTouchMove={(e) => {
-        // prevent rubber-band scrolling on iOS within the backdrop
-        e.preventDefault()
-      }}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-        padding: '0 10px',
-        touchAction: 'none', // avoid accidental double-tap zoom & gestures
-      }}
-    >
-      <div
-        // Inner container styled like your “details entry” bubble
-        className="bubble"
-        style={{
-          maxWidth: '95%',
-          width: '100%',
-          padding: '12px 14px',
-          // Prevent clicks leaking out
-          pointerEvents: 'auto',
-        }}
-        onMouseDown={(e) => e.stopPropagation()}
-        onClick={(e) => e.stopPropagation()}
-        onTouchStart={(e) => e.stopPropagation()}
-      >
-        <div className="text">{children}</div>
-      </div>
-    </div>
-  )
-}
+type StepId = 'firstname' | 'lastname' | 'phone' | 'email' | 'bvn' | 'otp' | 'pin'
 
 export default function SignUp({
   onSuccess,
@@ -144,16 +71,16 @@ export default function SignUp({
 }) {
   const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
   const SIGNUP_ENDPOINT = `${API_BASE}/chatsignup/add-user`
-  const VERIFY_OTP_ENDPOINT = `${API_BASE}/verify-otp/verify-otp`         // expects { phonenumber, code }
-  const RESEND_OTP_ENDPOINT = `${API_BASE}/signup/resend-otp`             // expects { phonenumber }
-  const PASSWORD_PIN_ENDPOINT = `${API_BASE}/passwordpin/password-pin`    // expects { newPin, renewPin, pendingUserId }  
+  const VERIFY_OTP_ENDPOINT = `${API_BASE}/verify-otp/verify-otp`         // { phonenumber, code }
+  const RESEND_OTP_ENDPOINT = `${API_BASE}/signup/resend-otp`             // { phonenumber }
+  const PASSWORD_PIN_ENDPOINT = `${API_BASE}/passwordpin/password-pin`    // { newPin, renewPin, pendingUserId }
 
-  // Redirect after full signup completion (PIN saved)
+  // Final redirect after successful PIN save
   const KYC_REDIRECT_URL =
-    'https://links.sandbox.usesmileid.com/7932/6a92ec20-8ddb-435b-86b0-9b87439a7173'
+    'https://links.sandbox.usesmileid.com/7932/7675c604-fd18-424a-a61e-a0052eb5bcbf'
 
   const [stepIndex, setStepIndex] = useState<number>(0)
-  const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'bvn']
+  const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'bvn', 'otp', 'pin']
 
   const [firstname, setFirstname] = useState('')
   const [lastname, setLastname] = useState('')
@@ -164,11 +91,9 @@ export default function SignUp({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const [showOtpModal, setShowOtpModal] = useState(false)
   const [otp, setOtp] = useState('')
   const [otpError, setOtpError] = useState<string | null>(null)
 
-  const [showPinModal, setShowPinModal] = useState(false)
   const [pin, setPin] = useState('')
   const [pin2, setPin2] = useState('')
   const [pinError, setPinError] = useState<string | null>(null)
@@ -204,11 +129,20 @@ export default function SignUp({
       case 'bvn':
         if (!/^\d{11}$/.test(bvn)) return 'BVN must be exactly 11 digits.'
         return null
+      case 'otp':
+        if (!/^\d{6}$/.test(otp)) return 'OTP must be a 6-digit number.'
+        return null
+      case 'pin':
+        if (!/^\d{6}$/.test(pin)) return 'PIN must be exactly 6 digits.'
+        if (pin !== pin2) return 'PINs do not match.'
+        if (!pendingUserId) return 'Missing pending user ID. Please repeat verification.'
+        return null
     }
   }
 
-  function validateAll(): string | null {
-    for (const s of steps) {
+  function validateAllUpTo(index: number): string | null {
+    for (let i = 0; i <= index; i++) {
+      const s = steps[i]
       const v = validateField(s)
       if (v) return v
     }
@@ -231,21 +165,34 @@ export default function SignUp({
     setStepIndex((i) => Math.max(i - 1, 0))
   }
 
-  async function submit(e?: React.FormEvent) {
+  // --- Handlers per step ---
+  async function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault()
     setError(null)
 
-    const invalid = validateAll()
+    const current = steps[stepIndex]
+
+    // Validate current step (and all previous)
+    const invalid = validateAllUpTo(stepIndex)
     if (invalid) {
       setError(invalid)
-      const firstBadIndex = steps.findIndex((s) => validateField(s))
-      if (firstBadIndex >= 0) setStepIndex(firstBadIndex)
+      const firstBad = steps.slice(0, stepIndex + 1).findIndex((s) => validateField(s))
+      if (firstBad >= 0) setStepIndex(firstBad)
       return
     }
 
-    const phonenumber = normalizePhone(phone)
+    if (current === 'bvn') return doSignup()
+    if (current === 'otp') return doVerifyOtp()
+    if (current === 'pin') return doSetPin()
+
+    // For non-submit steps, just advance
+    goNext()
+  }
+
+  async function doSignup() {
     setLoading(true)
     try {
+      const phonenumber = normalizePhone(phone)
       const payload = {
         email: email.trim().toLowerCase(),
         firstname: firstname.trim(),
@@ -275,7 +222,9 @@ export default function SignUp({
 
       const ok = data as ServerSuccess
       if (ok.userId) setPendingUserId(ok.userId)
-      setShowOtpModal(true)
+
+      // Move to OTP page
+      setStepIndex(steps.indexOf('otp'))
     } catch (err: any) {
       setError(`Network error: ${err.message}`)
     } finally {
@@ -283,15 +232,8 @@ export default function SignUp({
     }
   }
 
-  async function verifyOtp(e?: React.FormEvent) {
-    e?.preventDefault()
+  async function doVerifyOtp() {
     setOtpError(null)
-
-    if (!/^\d{6}$/.test(otp)) {
-      setOtpError('OTP must be a 6-digit number.')
-      return
-    }
-
     const phonenumber = normalizePhone(phone)
     if (!/^\+?\d{10,15}$/.test(phonenumber)) {
       setOtpError('Invalid phone number format.')
@@ -314,8 +256,9 @@ export default function SignUp({
 
       const ok: VerifySuccess = await res.json()
       setPendingUserId(ok.pendingUserId)
-      setShowOtpModal(false)
-      setShowPinModal(true)
+
+      // Move to PIN page
+      setStepIndex(steps.indexOf('pin'))
     } catch (err: any) {
       setOtpError(`Network error: ${err.message}`)
     } finally {
@@ -323,53 +266,8 @@ export default function SignUp({
     }
   }
 
-  async function resendOtp() {
-    const phonenumber = normalizePhone(phone)
-    if (!/^\+?\d{10,15}$/.test(phonenumber)) {
-      setOtpError('Invalid phone number format.')
-      return
-    }
-
-    setLoading(true)
-    try {
-      const res = await fetch(RESEND_OTP_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phonenumber }),
-      })
-
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        setOtpError(data?.message || `Failed to resend OTP (HTTP ${res.status}).`)
-        return
-      }
-
-      setOtpError(null)
-      alert('OTP resent successfully. Check your phone.')
-    } catch (err: any) {
-      setOtpError(`Network error: ${err.message}`)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // ====== PIN ======
-  function validatePinFields(): string | null {
-    if (!/^\d{6}$/.test(pin)) return 'PIN must be exactly 6 digits.'
-    if (pin !== pin2) return 'PINs do not match.'
-    if (!pendingUserId) return 'Missing pending user ID. Please repeat verification.'
-    return null
-  }
-
-  async function setPasswordPin(e?: React.FormEvent) {
-    e?.preventDefault()
+  async function doSetPin() {
     setPinError(null)
-
-    const invalid = validatePinFields()
-    if (invalid) {
-      setPinError(invalid)
-      return
-    }
 
     setLoading(true)
     try {
@@ -407,7 +305,7 @@ export default function SignUp({
         },
       })
 
-      setShowPinModal(false)
+      // Redirect to Smile ID
       window.location.replace(KYC_REDIRECT_URL)
     } catch (err: any) {
       setPinError(`Network error: ${err.message}`)
@@ -501,6 +399,98 @@ export default function SignUp({
             />
           </>
         )
+      case 'otp':
+        return (
+          <>
+            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>OTP</label>
+            <input
+              key="otp"
+              placeholder="123456"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
+              inputMode="numeric"
+              maxLength={6}
+              autoFocus
+              style={inputStyle}
+              className="no-zoom"
+            />
+            {otpError && (
+              <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
+                ⚠️ {otpError}
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <button className="btn" type="submit" disabled={loading}>
+                {loading ? 'Verifying…' : 'Verify OTP'}
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={resendOtp}
+                disabled={loading}
+              >
+                Resend OTP
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={goBack}
+                disabled={loading}
+              >
+                Back
+              </button>
+            </div>
+          </>
+        )
+      case 'pin':
+        return (
+          <>
+            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>PIN (6 digits)</label>
+            <input
+              key="pin1"
+              placeholder="••••••"
+              value={pin}
+              onChange={(e) => setPin(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
+              inputMode="numeric"
+              maxLength={6}
+              type="password"
+              autoFocus
+              style={inputStyle}
+              className="no-zoom"
+            />
+            <div style={{ height: 8 }} />
+            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Confirm PIN</label>
+            <input
+              key="pin2"
+              placeholder="••••••"
+              value={pin2}
+              onChange={(e) => setPin2(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
+              inputMode="numeric"
+              maxLength={6}
+              type="password"
+              style={inputStyle}
+              className="no-zoom"
+            />
+            {pinError && (
+              <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
+                ⚠️ {pinError}
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={goBack}
+                disabled={loading}
+              >
+                Back
+              </button>
+              <button className="btn" type="submit" disabled={loading}>
+                {loading ? 'Saving…' : 'Save PIN & Finish'}
+              </button>
+            </div>
+          </>
+        )
     }
   }
 
@@ -545,165 +535,61 @@ export default function SignUp({
 
             <ProgressDots />
 
-            <form onSubmit={(e) => (currentStepId === 'bvn' ? submit(e) : (e.preventDefault(), goNext()))}>
+            <form onSubmit={handleSubmit}>
               {renderStep()}
 
-              {error && (
-                <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
-                  ⚠️ {error}
-                </div>
+              {/* Default nav for the first 5 steps */}
+              {['firstname', 'lastname', 'phone', 'email', 'bvn'].includes(currentStepId) && (
+                <>
+                  {error && (
+                    <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
+                      ⚠️ {error}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                    {stepIndex > 0 ? (
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        onClick={goBack}
+                        disabled={loading}
+                      >
+                        Back
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        onClick={onCancel}
+                        disabled={loading}
+                      >
+                        Cancel
+                      </button>
+                    )}
+
+                    {/* For steps before 'bvn', the submit just advances; at 'bvn' it hits doSignup */}
+                    <button type="submit" className="btn" disabled={loading}>
+                      {loading
+                        ? currentStepId === 'bvn'
+                          ? 'Creating…'
+                          : 'Please wait…'
+                        : currentStepId === 'bvn'
+                          ? 'Create account'
+                          : 'Next'}
+                    </button>
+                  </div>
+                </>
               )}
-
-              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                {stepIndex > 0 ? (
-                  <button
-                    type="button"
-                    className="btn btn-outline"
-                    onClick={goBack}
-                    disabled={loading}
-                  >
-                    Back
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="btn btn-outline"
-                    onClick={onCancel}
-                    disabled={loading}
-                  >
-                    Cancel
-                  </button>
-                )}
-
-                {stepIndex < totalSteps - 1 ? (
-                  <button type="submit" className="btn" disabled={loading}>
-                    {loading ? 'Please wait…' : 'Next'}
-                  </button>
-                ) : (
-                  <button type="submit" className="btn" disabled={loading}>
-                    {loading ? 'Creating…' : 'Create account'}
-                  </button>
-                )}
-              </div>
             </form>
 
-            <p style={{ marginTop: 12, fontSize: '0.8rem', color: 'var(--muted)' }}>
-              We’ll send an OTP to verify your phone.
-            </p>
+            {currentStepId === 'firstname' && (
+              <p style={{ marginTop: 12, fontSize: '0.8rem', color: 'var(--muted)' }}>
+                We’ll send an OTP to verify your phone.
+              </p>
+            )}
           </div>
         </div>
       </div>
-
-      {/* OTP Modal — consistent look, no backdrop-dismiss */}
-      <Modal open={showOtpModal} titleId="otp-title">
-        <h2 id="otp-title" style={{ marginTop: 0, marginBottom: 6, fontSize: '1.2rem' }}>
-          Verify OTP
-        </h2>
-        <p style={{ marginTop: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>
-          Enter the 6-digit OTP sent to your phone.
-        </p>
-
-        <form onSubmit={verifyOtp}>
-          <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>OTP</label>
-          <input
-            placeholder="123456"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
-            inputMode="numeric"
-            maxLength={6}
-            autoFocus
-            style={inputStyle}
-            className="no-zoom"
-          />
-
-          {otpError && (
-            <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
-              ⚠️ {otpError}
-            </div>
-          )}
-
-          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-            <button className="btn" type="submit" disabled={loading}>
-              {loading ? 'Verifying…' : 'Verify OTP'}
-            </button>
-            <button
-              type="button"
-              className="btn btn-outline"
-              onClick={resendOtp}
-              disabled={loading}
-            >
-              Resend OTP
-            </button>
-            <button
-              type="button"
-              className="btn btn-outline"
-              onClick={() => setShowOtpModal(false)}
-              disabled={loading}
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* Set PIN Modal — consistent look, no backdrop-dismiss */}
-      <Modal open={showPinModal} titleId="pin-title">
-        <h2 id="pin-title" style={{ marginTop: 0, marginBottom: 6, fontSize: '1.2rem' }}>
-          Set your PIN
-        </h2>
-        <p style={{ marginTop: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>
-          Create a 6-digit PIN for sign-in and transactions.
-        </p>
-
-        <form onSubmit={setPasswordPin}>
-          <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>PIN (6 digits)</label>
-          <input
-            placeholder="••••••"
-            value={pin}
-            onChange={(e) => setPin(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
-            inputMode="numeric"
-            maxLength={6}
-            type="password"
-            autoFocus
-            style={inputStyle}
-            className="no-zoom"
-          />
-
-          <div style={{ height: 8 }} />
-
-          <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Confirm PIN</label>
-          <input
-            placeholder="••••••"
-            value={pin2}
-            onChange={(e) => setPin2(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
-            inputMode="numeric"
-            maxLength={6}
-            type="password"
-            style={inputStyle}
-            className="no-zoom"
-          />
-
-          {pinError && (
-            <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
-              ⚠️ {pinError}
-            </div>
-          )}
-
-          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-            <button
-              type="button"
-              className="btn btn-outline"
-              onClick={() => setShowPinModal(false)}
-              disabled={loading}
-            >
-              Cancel
-            </button>
-            <button className="btn" type="submit" disabled={loading}>
-              {loading ? 'Saving…' : 'Save PIN & Finish'}
-            </button>
-          </div>
-        </form>
-      </Modal>
     </div>
   )
 }
