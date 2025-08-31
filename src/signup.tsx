@@ -11,7 +11,6 @@ export type SignUpResult = {
     email?: string
     phonenumber?: string
     bvn?: string
-    dob?: string
   }
 }
 
@@ -34,14 +33,15 @@ type ServerSuccess = {
     phonenumber: string
     firstname: string
     lastname: string
-    bvn: string
-    dateOfBirth: string
+    bvn?: string
   }
 }
 
 type ServerError =
   | { success: false; message: string; errors?: any[] }
   | { success: false; message: string }
+
+type StepId = 'firstname' | 'lastname' | 'phone' | 'email' | 'bvn'
 
 export default function SignUp({
   onSuccess,
@@ -55,18 +55,22 @@ export default function SignUp({
   const VERIFY_OTP_ENDPOINT = `${API_BASE}/verify-otp/verify-otp` // expects { phonenumber, code }
   const RESEND_OTP_ENDPOINT = `${API_BASE}/signup/resend-otp`     // we’ll send { phonenumber }
 
+  const [stepIndex, setStepIndex] = useState<number>(0)
+  const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'bvn']
+
   const [firstname, setFirstname] = useState('')
   const [lastname, setLastname] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
-  const [dob, setDob] = useState('')
   const [bvn, setBvn] = useState('')
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
   const [showOtpModal, setShowOtpModal] = useState(false)
   const [otp, setOtp] = useState('')
   const [otpError, setOtpError] = useState<string | null>(null)
-  const [userId, setUserId] = useState<string | null>(null) // still captured from signup (optional)
+  const [userId, setUserId] = useState<string | null>(null)
 
   function normalizePhone(input: string) {
     const d = input.replace(/[^\d+]/g, '')
@@ -76,36 +80,64 @@ export default function SignUp({
     return d
   }
 
-  function isAdult(iso: string) {
-    if (!iso) return false
-    const d = new Date(iso)
-    if (Number.isNaN(d.getTime())) return false
-    const now = new Date()
-    const hadBirthdayThisYear = now >= new Date(now.getFullYear(), d.getMonth(), d.getDate())
-    const age = now.getFullYear() - d.getFullYear() - (hadBirthdayThisYear ? 0 : 1)
-    return age >= 18
+  function validateField(step: StepId): string | null {
+    switch (step) {
+      case 'firstname':
+        if (firstname.trim().length < 2) return 'Enter a valid first name.'
+        return null
+      case 'lastname':
+        if (lastname.trim().length < 2) return 'Enter a valid surname.'
+        return null
+      case 'phone': {
+        const phonenumber = normalizePhone(phone)
+        if (!/^\+?\d{10,15}$/.test(phonenumber))
+          return 'Enter a valid phone number (e.g. +2348100000000).'
+        return null
+      }
+      case 'email':
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim().toLowerCase()))
+          return 'Enter a valid email address.'
+        return null
+      case 'bvn':
+        if (!/^\d{11}$/.test(bvn)) return 'BVN must be exactly 11 digits.'
+        return null
+    }
   }
 
-  function validate(): string | null {
-    if (firstname.trim().length < 2) return 'Enter a valid first name.'
-    if (lastname.trim().length < 2) return 'Enter a valid surname.'
-    const phonenumber = normalizePhone(phone)
-    if (!/^\+?\d{10,15}$/.test(phonenumber))
-      return 'Enter a valid phone number (e.g. +2348100000000).'
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim().toLowerCase()))
-      return 'Enter a valid email address.'
-    if (!isAdult(dob)) return 'You must be at least 18 years old.'
-    if (!/^\d{11}$/.test(bvn)) return 'BVN must be exactly 11 digits.'
+  function validateAll(): string | null {
+    for (const s of steps) {
+      const v = validateField(s)
+      if (v) return v
+    }
     return null
+  }
+
+  function goNext() {
+    setError(null)
+    const currentStep = steps[stepIndex]
+    const invalid = validateField(currentStep)
+    if (invalid) {
+      setError(invalid)
+      return
+    }
+    setStepIndex((i) => Math.min(i + 1, steps.length - 1))
+  }
+
+  function goBack() {
+    setError(null)
+    setStepIndex((i) => Math.max(i - 1, 0))
   }
 
   async function submit(e?: React.FormEvent) {
     e?.preventDefault()
     setError(null)
 
-    const invalid = validate()
+    const invalid = validateAll()
     if (invalid) {
       setError(invalid)
+      // Jump to the first invalid step for better UX
+      const firstBadIndex = steps.findIndex((s) => validateField(s))
+      if (firstBadIndex >= 0) setStepIndex(firstBadIndex)
       return
     }
 
@@ -118,7 +150,6 @@ export default function SignUp({
         lastname: lastname.trim(),
         phonenumber,
         bvn: bvn.trim(),
-        dateOfBirth: dob,
       }
 
       const res = await fetch(SIGNUP_ENDPOINT, {
@@ -141,7 +172,7 @@ export default function SignUp({
       }
 
       const ok = data as ServerSuccess
-      setUserId(ok.userId || null) // optional; verify doesn’t need it
+      setUserId(ok.userId || null)
       setShowOtpModal(true)
     } catch (err: any) {
       setError(`Network error: ${err.message}`)
@@ -150,7 +181,6 @@ export default function SignUp({
     }
   }
 
-  // ✅ Updated to send { phonenumber, code } to match your route
   async function verifyOtp(e?: React.FormEvent) {
     e?.preventDefault()
     setOtpError(null)
@@ -171,10 +201,9 @@ export default function SignUp({
       const res = await fetch(VERIFY_OTP_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phonenumber, code: otp }), // 👈 EXACTLY what backend expects
+        body: JSON.stringify({ phonenumber, code: otp }), // matches your backend
       })
 
-      // Your verify route doesn’t set `success`, so parse generically
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}))
         setOtpError(errJson?.message || `OTP verification failed (HTTP ${res.status}).`)
@@ -185,13 +214,12 @@ export default function SignUp({
       onSuccess({
         success: true,
         message: ok.message || 'OTP verified successfully.',
-        userId: ok.pendingUserId, // carry forward for next steps
+        userId: ok.pendingUserId,
         user: {
           firstname: ok.firstname,
           lastname: ok.lastname,
           phonenumber,
           email: ok.email,
-          dob,
           bvn: bvn.trim(),
         },
       })
@@ -203,7 +231,6 @@ export default function SignUp({
     }
   }
 
-  // Send { phonenumber } for resend to be consistent; keep if your route also accepts userId
   async function resendOtp() {
     const phonenumber = normalizePhone(phone)
     if (!/^\+?\d{10,15}$/.test(phonenumber)) {
@@ -234,6 +261,114 @@ export default function SignUp({
     }
   }
 
+  // --- UI helpers ---
+  const totalSteps = steps.length
+  const currentStepId = steps[stepIndex]
+
+  function renderStep() {
+    switch (currentStepId) {
+      case 'firstname':
+        return (
+          <>
+            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>First name</label>
+            <input
+              key="fn"
+              placeholder="Chibuike"
+              value={firstname}
+              onChange={(e) => setFirstname(e.target.value)}
+              autoFocus
+              style={inputStyle}
+              className="no-zoom"
+            />
+          </>
+        )
+      case 'lastname':
+        return (
+          <>
+            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Surname</label>
+            <input
+              key="ln"
+              placeholder="Nwogbo"
+              value={lastname}
+              onChange={(e) => setLastname(e.target.value)}
+              autoFocus
+              style={inputStyle}
+              className="no-zoom"
+            />
+          </>
+        )
+      case 'phone':
+        return (
+          <>
+            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Phone number</label>
+            <input
+              key="ph"
+              placeholder="+2348100000000"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              inputMode="tel"
+              autoFocus
+              style={inputStyle}
+              className="no-zoom"
+            />
+          </>
+        )
+      case 'email':
+        return (
+          <>
+            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Email address</label>
+            <input
+              key="em"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              type="email"
+              autoFocus
+              style={inputStyle}
+              className="no-zoom"
+            />
+          </>
+        )
+      case 'bvn':
+        return (
+          <>
+            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>BVN (11 digits)</label>
+            <input
+              key="bvn"
+              placeholder="12345678901"
+              value={bvn}
+              onChange={(e) => setBvn(e.target.value.replace(/[^\d]/g, '').slice(0, 11))}
+              inputMode="numeric"
+              maxLength={11}
+              autoFocus
+              style={inputStyle}
+              className="no-zoom"
+            />
+          </>
+        )
+    }
+  }
+
+  function ProgressDots() {
+    return (
+      <div style={{ display: 'flex', gap: 6, margin: '6px 0 10px' }} aria-hidden>
+        {steps.map((_, i) => (
+          <span
+            key={i}
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: i === stepIndex ? 'var(--accent)' : '#242433',
+              display: 'inline-block',
+              opacity: i === stepIndex ? 1 : 0.7,
+            }}
+          />
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div
       className="chat"
@@ -247,82 +382,16 @@ export default function SignUp({
           <div className="role">Security</div>
           <div className="text">
             <h2 id="signup-title" style={{ marginTop: 0, marginBottom: 6, fontSize: '1.2rem' }}>
-              Sign up
+              Create your account
             </h2>
             <p style={{ marginTop: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>
-              Create your account to continue. We’ll send an OTP to verify.
+              We’ll collect a few details. One step at a time.
             </p>
 
-            <form onSubmit={submit}>
-              <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>First name</label>
-              <input
-                placeholder="Chibuike"
-                value={firstname}
-                onChange={(e) => setFirstname(e.target.value)}
-                autoFocus
-                style={inputStyle}
-                className="no-zoom"
-              />
+            <ProgressDots />
 
-              <div style={{ height: 8 }} />
-
-              <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Surname</label>
-              <input
-                placeholder="Nwogbo"
-                value={lastname}
-                onChange={(e) => setLastname(e.target.value)}
-                style={inputStyle}
-                className="no-zoom"
-              />
-
-              <div style={{ height: 8 }} />
-
-              <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Phone number</label>
-              <input
-                placeholder="+2348100000000"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                inputMode="tel"
-                style={inputStyle}
-                className="no-zoom"
-              />
-
-              <div style={{ height: 8 }} />
-
-              <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Email address</label>
-              <input
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                type="email"
-                style={inputStyle}
-                className="no-zoom"
-              />
-
-              <div style={{ height: 8 }} />
-
-              <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Date of birth</label>
-              <input
-                value={dob}
-                onChange={(e) => setDob(e.target.value)}
-                type="date"
-                max={new Date().toISOString().slice(0, 10)}
-                style={inputStyle}
-                className="no-zoom"
-              />
-
-              <div style={{ height: 8 }} />
-
-              <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>BVN (11 digits)</label>
-              <input
-                placeholder="12345678901"
-                value={bvn}
-                onChange={(e) => setBvn(e.target.value.replace(/[^\d]/g, '').slice(0, 11))}
-                inputMode="numeric"
-                maxLength={11}
-                style={inputStyle}
-                className="no-zoom"
-              />
+            <form onSubmit={(e) => (currentStepId === 'bvn' ? submit(e) : (e.preventDefault(), goNext()))}>
+              {renderStep()}
 
               {error && (
                 <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
@@ -331,22 +400,40 @@ export default function SignUp({
               )}
 
               <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                <button className="btn" type="submit" disabled={loading}>
-                  {loading ? 'Creating…' : 'Create account'}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-outline"
-                  onClick={onCancel}
-                  disabled={loading}
-                >
-                  Cancel
-                </button>
+                {stepIndex > 0 ? (
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={goBack}
+                    disabled={loading}
+                  >
+                    Back
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={onCancel}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </button>
+                )}
+
+                {stepIndex < totalSteps - 1 ? (
+                  <button type="submit" className="btn" disabled={loading}>
+                    {loading ? 'Please wait…' : 'Next'}
+                  </button>
+                ) : (
+                  <button type="submit" className="btn" disabled={loading}>
+                    {loading ? 'Creating…' : 'Create account'}
+                  </button>
+                )}
               </div>
             </form>
 
             <p style={{ marginTop: 12, fontSize: '0.8rem', color: 'var(--muted)' }}>
-              We’ll verify your details with OTP. Keep your phone handy.
+              We’ll send an OTP to verify your phone.
             </p>
           </div>
         </div>
@@ -356,17 +443,10 @@ export default function SignUp({
         <div
           style={{
             position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
+            top: 0, left: 0, right: 0, bottom: 0,
             background: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '0 10px',
-            touchAction: 'manipulation',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 1000, padding: '0 10px', touchAction: 'manipulation',
           }}
         >
           <div className="bubble" style={{ maxWidth: '95%', padding: '12px 14px' }}>
