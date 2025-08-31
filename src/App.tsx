@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react'
 import SignIn, { SignInResult } from './signin'
 import SignUp, { SignUpResult } from './signup'
 import { tokenStore } from './lib/secureStore'
-import logo from './assets/logo.jpeg'
 import SellModal from './sell'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
@@ -134,11 +133,11 @@ export default function App() {
     console.log('🔍 Checking URL patterns for:', url)
 
     const sellPatterns = [
-      /\/sell($|\/|\?|#)/,           // /sell at path boundary
-      /chatbramp\.com\/sell/,        // specific domain sell page
-      /localhost.*\/sell/,           // local dev sell page
-      /sell\.html?$/,                // sell.html page
-      /\bsell\b/                     // any standalone "sell" word
+      /\/sell($|\/|\?|#)/,
+      /chatbramp\.com\/sell/,
+      /localhost.*\/sell/,
+      /sell\.html?$/,
+      /\bsell\b/
     ]
 
     for (const pattern of sellPatterns) {
@@ -183,11 +182,8 @@ export default function App() {
     <div className="page">
       <header className="header">
         <div className="brand">
-          <img src={logo} alt="Bramp AI logo" className="logo" />
-          <div>
-            <h1>Chatbramp</h1>
-            <p className="tag">Secure access to digital assets & payments — via licensed partners.</p>
-          </div>
+          {/* Strapline only — removed logo and title */}
+          <p className="tag">Secure access to digital assets & payments — via licensed partners.</p>
         </div>
 
         {!auth ? (
