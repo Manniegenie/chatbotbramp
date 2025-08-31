@@ -39,7 +39,7 @@ export default function App() {
   const [messages, setMessages] = useState<ChatMessage[]>([{
     id: crypto.randomUUID(),
     role: 'assistant',
-    text: "Hi, I'm Bramp AI. You can really chat with me about anything crypto, sell or buy assets quickly with a chat. I'm here for you.",
+    text: "Hey! I’m Bramp AI 🤖🇳🇬 Buy/sell crypto, see rates, and cash out to NGN—right here in chat. Try: ‘Sell 100 USDT to NGN’ 💸",
     ts: Date.now()
   }])
 
