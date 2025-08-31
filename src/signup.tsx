@@ -150,7 +150,7 @@ export default function SignUp({
 
   // Redirect after full signup completion (PIN saved)
   const KYC_REDIRECT_URL =
-    'https://links.sandbox.usesmileid.com/7932/7675c604-fd18-424a-a61e-a0052eb5bcbf'
+    'https://links.sandbox.usesmileid.com/7932/6a92ec20-8ddb-435b-86b0-9b87439a7173'
 
   const [stepIndex, setStepIndex] = useState<number>(0)
   const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'bvn']
