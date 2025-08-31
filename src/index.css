@@ -334,3 +334,54 @@ button, .hint { -webkit-tap-highlight-color: transparent; }
     min-height: 48px;
   }
 }
+
+/* === Mobile: collapse header chromes, keep auth buttons visible (FINAL OVERRIDE) === */
+@media (max-width: 640px) {
+  .header {
+    justify-content: flex-end;          /* push buttons to the right */
+    gap: 8px;
+    padding: calc(8px + var(--sa-top)) 12px 8px;
+    min-height: auto;
+    border-bottom: 0;
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+  }
+
+  /* Hide brand/logo/tag/titles/nav bits */
+  .header .brand,
+  .header .logo,
+  .header .tag,
+  .header .nav,
+  .header .links,
+  .header .title,
+  .header h1,
+  .header h2 {
+    display: none !important;
+  }
+
+  /* Ensure the auth buttons area is visible */
+  .header .auth,
+  .header .actions,
+  .header .auth-buttons {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Style the visible header buttons (Sign in / Sign up) */
+  .header .btn,
+  .header button.btn {
+    min-height: 40px;
+    padding: 10px 12px;
+    font-size: 15.5px !important;
+    border-radius: 10px;
+    box-shadow: none;
+  }
+
+  .header .btn-outline {
+    border-color: #2a2f3e;
+    color: var(--txt);
+  }
+}
