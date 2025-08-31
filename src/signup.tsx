@@ -15,10 +15,18 @@ export type SignUpResult = {
   }
 }
 
+type VerifySuccess = {
+  message: string
+  pendingUserId: string
+  email: string
+  firstname: string
+  lastname: string
+  phonenumber: string
+}
+
 type ServerSuccess = {
   success: true
   message: string
-  emailSent?: boolean
   otpSent?: boolean
   userId?: string
   user?: {
@@ -43,11 +51,9 @@ export default function SignUp({
   onCancel: () => void
 }) {
   const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
-  // ✅ match your backend
-  const SIGNUP_ENDPOINT = `${API_BASE}/chatsignup/add-user`
-  // ✅ leave your existing verify/resend routes as-is (you said not to move them)
-  const VERIFY_OTP_ENDPOINT = `${API_BASE}/verify-otp/verify-otp`
-  const RESEND_OTP_ENDPOINT = `${API_BASE}/signup/resend-otp`
+  const SIGNUP_ENDPOINT = `${API_BASE}/signup/add-user`
+  const VERIFY_OTP_ENDPOINT = `${API_BASE}/verify-otp/verify-otp` // expects { phonenumber, code }
+  const RESEND_OTP_ENDPOINT = `${API_BASE}/signup/resend-otp`     // we’ll send { phonenumber }
 
   const [firstname, setFirstname] = useState('')
   const [lastname, setLastname] = useState('')
@@ -60,7 +66,7 @@ export default function SignUp({
   const [showOtpModal, setShowOtpModal] = useState(false)
   const [otp, setOtp] = useState('')
   const [otpError, setOtpError] = useState<string | null>(null)
-  const [userId, setUserId] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null) // still captured from signup (optional)
 
   function normalizePhone(input: string) {
     const d = input.replace(/[^\d+]/g, '')
@@ -84,8 +90,10 @@ export default function SignUp({
     if (firstname.trim().length < 2) return 'Enter a valid first name.'
     if (lastname.trim().length < 2) return 'Enter a valid surname.'
     const phonenumber = normalizePhone(phone)
-    if (!/^\+?\d{10,15}$/.test(phonenumber)) return 'Enter a valid phone number (e.g. +2348100000000).'
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim().toLowerCase())) return 'Enter a valid email address.'
+    if (!/^\+?\d{10,15}$/.test(phonenumber))
+      return 'Enter a valid phone number (e.g. +2348100000000).'
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim().toLowerCase()))
+      return 'Enter a valid email address.'
     if (!isAdult(dob)) return 'You must be at least 18 years old.'
     if (!/^\d{11}$/.test(bvn)) return 'BVN must be exactly 11 digits.'
     return null
@@ -110,7 +118,7 @@ export default function SignUp({
         lastname: lastname.trim(),
         phonenumber,
         bvn: bvn.trim(),
-        dateOfBirth: dob, // backend expects dateOfBirth
+        dateOfBirth: dob,
       }
 
       const res = await fetch(SIGNUP_ENDPOINT, {
@@ -133,7 +141,7 @@ export default function SignUp({
       }
 
       const ok = data as ServerSuccess
-      setUserId(ok.userId || null)
+      setUserId(ok.userId || null) // optional; verify doesn’t need it
       setShowOtpModal(true)
     } catch (err: any) {
       setError(`Network error: ${err.message}`)
@@ -142,6 +150,7 @@ export default function SignUp({
     }
   }
 
+  // ✅ Updated to send { phonenumber, code } to match your route
   async function verifyOtp(e?: React.FormEvent) {
     e?.preventDefault()
     setOtpError(null)
@@ -150,8 +159,10 @@ export default function SignUp({
       setOtpError('OTP must be a 6-digit number.')
       return
     }
-    if (!userId) {
-      setOtpError('User ID not found. Please try signing up again.')
+
+    const phonenumber = normalizePhone(phone)
+    if (!/^\+?\d{10,15}$/.test(phonenumber)) {
+      setOtpError('Invalid phone number format.')
       return
     }
 
@@ -160,28 +171,26 @@ export default function SignUp({
       const res = await fetch(VERIFY_OTP_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, otp, email: email.trim().toLowerCase() }),
+        body: JSON.stringify({ phonenumber, code: otp }), // 👈 EXACTLY what backend expects
       })
 
-      const data: ServerSuccess | ServerError = await res.json().catch(
-        () => ({ success: false, message: 'Unexpected server response.' }) as ServerError
-      )
-
-      if (!res.ok || !('success' in data) || data.success === false) {
-        setOtpError((data as any)?.message || `OTP verification failed (HTTP ${res.status}).`)
+      // Your verify route doesn’t set `success`, so parse generically
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}))
+        setOtpError(errJson?.message || `OTP verification failed (HTTP ${res.status}).`)
         return
       }
 
-      const ok = data as ServerSuccess
+      const ok: VerifySuccess = await res.json()
       onSuccess({
         success: true,
         message: ok.message || 'OTP verified successfully.',
-        userId,
+        userId: ok.pendingUserId, // carry forward for next steps
         user: {
-          firstname: firstname.trim(),
-          lastname: lastname.trim(),
-          phonenumber: normalizePhone(phone),
-          email: email.trim().toLowerCase(),
+          firstname: ok.firstname,
+          lastname: ok.lastname,
+          phonenumber,
+          email: ok.email,
           dob,
           bvn: bvn.trim(),
         },
@@ -194,30 +203,30 @@ export default function SignUp({
     }
   }
 
+  // Send { phonenumber } for resend to be consistent; keep if your route also accepts userId
   async function resendOtp() {
-    if (!userId) {
-      setOtpError('User ID not found. Please try signing up again.')
+    const phonenumber = normalizePhone(phone)
+    if (!/^\+?\d{10,15}$/.test(phonenumber)) {
+      setOtpError('Invalid phone number format.')
       return
     }
+
     setLoading(true)
     try {
       const res = await fetch(RESEND_OTP_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, email: email.trim().toLowerCase() }),
+        body: JSON.stringify({ phonenumber }),
       })
 
-      const data: ServerSuccess | ServerError = await res.json().catch(
-        () => ({ success: false, message: 'Unexpected server response.' }) as ServerError
-      )
-
-      if (!res.ok || !('success' in data) || data.success === false) {
-        setOtpError((data as any)?.message || `Failed to resend OTP (HTTP ${res.status}).`)
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setOtpError(data?.message || `Failed to resend OTP (HTTP ${res.status}).`)
         return
       }
 
       setOtpError(null)
-      alert('OTP resent successfully. Check your phone or email.')
+      alert('OTP resent successfully. Check your phone.')
     } catch (err: any) {
       setOtpError(`Network error: ${err.message}`)
     } finally {
@@ -366,7 +375,7 @@ export default function SignUp({
                 Verify OTP
               </h2>
               <p style={{ marginTop: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>
-                Enter the 6-digit OTP sent to your phone or email.
+                Enter the 6-digit OTP sent to your phone.
               </p>
 
               <form onSubmit={verifyOtp}>
@@ -421,12 +430,12 @@ export default function SignUp({
 const inputStyle: React.CSSProperties = {
   width: '100%',
   background: 'var(--card)',
-  border: '1px solid ' + (typeof window !== 'undefined' ? getComputedStyle(document.documentElement).getPropertyValue('--border') || '#1f2330' : '#1f2330'),
+  border: '1px solid var(--border)',
   color: 'var(--txt)',
   padding: '10px 12px',
   borderRadius: 8,
   outline: 'none',
-  fontSize: 16, // inline cannot use !important
+  fontSize: 16,
   WebkitTextSizeAdjust: '100%',
   minHeight: '40px',
   lineHeight: '1.35',
