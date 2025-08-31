@@ -1,3 +1,4 @@
+// src/SignUp.tsx
 import React, { useState } from 'react'
 
 export type SignUpResult = {
@@ -20,6 +21,14 @@ type ServerSuccess = {
   emailSent?: boolean
   otpSent?: boolean
   userId?: string
+  user?: {
+    email: string
+    phonenumber: string
+    firstname: string
+    lastname: string
+    bvn: string
+    dateOfBirth: string
+  }
 }
 
 type ServerError =
@@ -34,7 +43,9 @@ export default function SignUp({
   onCancel: () => void
 }) {
   const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
+  // ✅ match your backend
   const SIGNUP_ENDPOINT = `${API_BASE}/chatsignup/add-user`
+  // ✅ leave your existing verify/resend routes as-is (you said not to move them)
   const VERIFY_OTP_ENDPOINT = `${API_BASE}/verify-otp/verify-otp`
   const RESEND_OTP_ENDPOINT = `${API_BASE}/signup/resend-otp`
 
@@ -91,17 +102,15 @@ export default function SignUp({
     }
 
     const phonenumber = normalizePhone(phone)
-
     setLoading(true)
     try {
       const payload = {
+        email: email.trim().toLowerCase(),
         firstname: firstname.trim(),
         lastname: lastname.trim(),
         phonenumber,
-        email: email.trim().toLowerCase(),
-        dob,
-        dateOfBirth: dob,
         bvn: bvn.trim(),
+        dateOfBirth: dob, // backend expects dateOfBirth
       }
 
       const res = await fetch(SIGNUP_ENDPOINT, {
@@ -111,15 +120,15 @@ export default function SignUp({
       })
 
       const data: ServerSuccess | ServerError = await res.json().catch(
-        () =>
-          ({
-            success: false,
-            message: 'Unexpected server response.',
-          }) as ServerError
+        () => ({ success: false, message: 'Unexpected server response.' }) as ServerError
       )
 
       if (!res.ok || !('success' in data) || data.success === false) {
-        setError((data as any).message || `Signup failed (HTTP ${res.status}).`)
+        const msg =
+          (data as any)?.message ||
+          (Array.isArray((data as any)?.errors) ? (data as any).errors[0]?.msg : null) ||
+          `Signup failed (HTTP ${res.status}).`
+        setError(msg)
         return
       }
 
@@ -141,7 +150,6 @@ export default function SignUp({
       setOtpError('OTP must be a 6-digit number.')
       return
     }
-
     if (!userId) {
       setOtpError('User ID not found. Please try signing up again.')
       return
@@ -152,19 +160,15 @@ export default function SignUp({
       const res = await fetch(VERIFY_OTP_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, otp }),
+        body: JSON.stringify({ userId, otp, email: email.trim().toLowerCase() }),
       })
 
       const data: ServerSuccess | ServerError = await res.json().catch(
-        () =>
-          ({
-            success: false,
-            message: 'Unexpected server response.',
-          }) as ServerError
+        () => ({ success: false, message: 'Unexpected server response.' }) as ServerError
       )
 
       if (!res.ok || !('success' in data) || data.success === false) {
-        setOtpError((data as any).message || `OTP verification failed (HTTP ${res.status}).`)
+        setOtpError((data as any)?.message || `OTP verification failed (HTTP ${res.status}).`)
         return
       }
 
@@ -172,7 +176,7 @@ export default function SignUp({
       onSuccess({
         success: true,
         message: ok.message || 'OTP verified successfully.',
-        userId: userId,
+        userId,
         user: {
           firstname: firstname.trim(),
           lastname: lastname.trim(),
@@ -195,25 +199,20 @@ export default function SignUp({
       setOtpError('User ID not found. Please try signing up again.')
       return
     }
-
     setLoading(true)
     try {
       const res = await fetch(RESEND_OTP_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ userId, email: email.trim().toLowerCase() }),
       })
 
       const data: ServerSuccess | ServerError = await res.json().catch(
-        () =>
-          ({
-            success: false,
-            message: 'Unexpected server response.',
-          }) as ServerError
+        () => ({ success: false, message: 'Unexpected server response.' }) as ServerError
       )
 
       if (!res.ok || !('success' in data) || data.success === false) {
-        setOtpError((data as any).message || `Failed to resend OTP (HTTP ${res.status}).`)
+        setOtpError((data as any)?.message || `Failed to resend OTP (HTTP ${res.status}).`)
         return
       }
 
@@ -232,11 +231,7 @@ export default function SignUp({
       role="dialog"
       aria-modal="true"
       aria-labelledby="signup-title"
-      style={{
-        width: '100%',
-        maxWidth: '100vw',
-        padding: '8px 10px 0',
-      }}
+      style={{ width: '100%', maxWidth: '100vw', padding: '8px 10px 0' }}
     >
       <div className="messages" style={{ paddingTop: 0 }}>
         <div className="bubble" style={{ maxWidth: '95%' }}>
@@ -426,12 +421,12 @@ export default function SignUp({
 const inputStyle: React.CSSProperties = {
   width: '100%',
   background: 'var(--card)',
-  border: '1px solid var(--border)',
+  border: '1px solid ' + (typeof window !== 'undefined' ? getComputedStyle(document.documentElement).getPropertyValue('--border') || '#1f2330' : '#1f2330'),
   color: 'var(--txt)',
   padding: '10px 12px',
   borderRadius: 8,
   outline: 'none',
-  fontSize: '16px !important',
+  fontSize: 16, // inline cannot use !important
   WebkitTextSizeAdjust: '100%',
   minHeight: '40px',
   lineHeight: '1.35',
