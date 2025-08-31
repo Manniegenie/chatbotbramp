@@ -73,7 +73,11 @@ export default function SignUp({
   const SIGNUP_ENDPOINT = `${API_BASE}/chatsignup/add-user`
   const VERIFY_OTP_ENDPOINT = `${API_BASE}/verify-otp/verify-otp`         // expects { phonenumber, code }
   const RESEND_OTP_ENDPOINT = `${API_BASE}/signup/resend-otp`             // expects { phonenumber }
-  const PASSWORD_PIN_ENDPOINT = `${API_BASE}/passwordpin/password-pin`    // expects { newPin, renewPin, pendingUserId }
+  const PASSWORD_PIN_ENDPOINT = `${API_BASE}/passwordpin/password-pin`    // expects { newPin, renewPin, pendingUserId }  
+
+  // ✅ Redirect target after full signup completion (PIN saved)
+  const KYC_REDIRECT_URL =
+    'https://links.sandbox.usesmileid.com/7932/7675c604-fd18-424a-a61e-a0052eb5bcbf'
 
   const [stepIndex, setStepIndex] = useState<number>(0)
   const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'bvn']
@@ -197,7 +201,6 @@ export default function SignUp({
       }
 
       const ok = data as ServerSuccess
-      // Keep pending user id if your backend returns it here (optional)
       if (ok.userId) setPendingUserId(ok.userId)
       setShowOtpModal(true)
     } catch (err: any) {
@@ -227,7 +230,7 @@ export default function SignUp({
       const res = await fetch(VERIFY_OTP_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phonenumber, code: otp }), // matches your backend
+        body: JSON.stringify({ phonenumber, code: otp }),
       })
 
       if (!res.ok) {
@@ -237,8 +240,6 @@ export default function SignUp({
       }
 
       const ok: VerifySuccess = await res.json()
-
-      // Save pending id from verify (authoritative) and move to PIN step
       setPendingUserId(ok.pendingUserId)
       setShowOtpModal(false)
       setShowPinModal(true)
@@ -317,6 +318,7 @@ export default function SignUp({
 
       const ok: PinSuccess = await res.json()
 
+      // Notify parent (if needed by your app)
       onSuccess({
         success: true,
         message: ok.message,
@@ -332,7 +334,13 @@ export default function SignUp({
           username: ok.user?.username,
         },
       })
+
+      // Close modal locally (optional; page will navigate immediately after)
       setShowPinModal(false)
+
+      // ✅ Final step: redirect to Smile ID flow
+      // Using replace() prevents navigating back to the PIN screen
+      window.location.replace(KYC_REDIRECT_URL)
     } catch (err: any) {
       setPinError(`Network error: ${err.message}`)
     } finally {
