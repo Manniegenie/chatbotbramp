@@ -35,6 +35,66 @@ async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
   return fetch(input, { ...init, headers })
 }
 
+/** ---------- Linkify helpers (shorten + hyperlink like AI terminals) ---------- */
+
+const URL_REGEX = /https?:\/\/[^\s<>"')]+/gi
+
+function shortenUrlForDisplay(raw: string) {
+  try {
+    const u = new URL(raw)
+    // Build a compact label: domain + condensed path
+    const host = u.host.replace(/^www\./, '')
+    let path = u.pathname || ''
+    // Collapse long paths => /a/.../last
+    if (path.length > 20) {
+      const segs = path.split('/').filter(Boolean)
+      if (segs.length > 2) path = `/${segs[0]}/…/${segs[segs.length - 1]}`
+    }
+    let label = host + (path === '/' ? '' : path)
+    // Indicate query/fragment existence without noise
+    if (u.search) label += '…'
+    if (u.hash && !u.search) label += '…'
+    // Hard cap
+    return label.length > 48 ? label.slice(0, 45) + '…' : label
+  } catch {
+    return raw.length > 48 ? raw.slice(0, 45) + '…' : raw
+  }
+}
+
+function linkifyText(text: string): React.ReactNode[] {
+  const nodes: React.ReactNode[] = []
+  // Preserve newlines
+  const lines = text.split(/\r?\n/)
+  lines.forEach((line, li) => {
+    let lastIdx = 0
+    line.replace(URL_REGEX, (match, offset: number) => {
+      // Exclude trailing punctuation from the link
+      const trimmed = match.replace(/[),.;!?]+$/g, '')
+      const trailing = match.slice(trimmed.length)
+
+      if (offset > lastIdx) nodes.push(line.slice(lastIdx, offset))
+
+      nodes.push(
+        <a
+          key={`${match}-${offset}-${li}`}
+          href={trimmed}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {shortenUrlForDisplay(trimmed)}
+        </a>
+      )
+
+      if (trailing) nodes.push(trailing)
+      lastIdx = offset + match.length
+      return match
+    })
+    if (lastIdx < line.length) nodes.push(line.slice(lastIdx))
+    if (li < lines.length - 1) nodes.push(<br key={`br-${li}`} />)
+  })
+  return nodes
+}
+
 export default function App() {
   const [messages, setMessages] = useState<ChatMessage[]>([{
     id: crypto.randomUUID(),
@@ -45,6 +105,7 @@ export default function App() {
 
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [thinkingPhase, setThinkingPhase] = useState<'thinking' | 'browsing'>('thinking') // 👈 phase switch
   const [showSignIn, setShowSignIn] = useState(false)
   const [showSignUp, setShowSignUp] = useState(false)
   const [showSell, setShowSell] = useState(false)
@@ -74,6 +135,18 @@ export default function App() {
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading, showSignIn, showSignUp, showSell])
+
+  // ⏲️ Switch "thinking" → "browsing" after ~2.5s if still loading
+  useEffect(() => {
+    let timer: number | undefined
+    if (loading) {
+      setThinkingPhase('thinking')
+      timer = window.setTimeout(() => setThinkingPhase('browsing'), 2500)
+    }
+    return () => {
+      if (timer) window.clearTimeout(timer)
+    }
+  }, [loading])
 
   async function sendMessage(e?: React.FormEvent) {
     e?.preventDefault()
@@ -273,7 +346,9 @@ export default function App() {
               <div key={m.id} className={`bubble ${m.role}`}>
                 <div className="role">{m.role === 'user' ? 'You' : 'Bramp AI'}</div>
                 <div className="text">
-                  {m.text}
+                  {/* 🔗 Linkify + shorten URLs in message text */}
+                  {linkifyText(m.text)}
+
                   {m.role === 'assistant' && m.cta?.type === 'button' && m.cta.buttons?.length > 0 && (
                     <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       {m.cta.buttons.map((btn, index) => {
@@ -322,7 +397,11 @@ export default function App() {
                 </div>
               </div>
             ))}
-            {loading && <div className="typing">Bramp AI is thinking…</div>}
+            {loading && (
+              <div className="typing">
+                {thinkingPhase === 'thinking' ? 'Bramp AI is thinking…' : 'Bramp AI is browsing…'}
+              </div>
+            )}
             <div ref={endRef} />
           </div>
 
