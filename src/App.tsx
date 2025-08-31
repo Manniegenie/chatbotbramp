@@ -40,7 +40,7 @@ export default function App() {
   const [messages, setMessages] = useState<ChatMessage[]>([{
     id: crypto.randomUUID(),
     role: 'assistant',
-    text: "Hi, I'm Bramp AI. You can say things like 'Sell 200 USDT to NGN' or 'Show my balance'.",
+    text: "Hi, I'm Bramp AI. You can really chat with me about anything crypto, sell or buy assets quickly with a chat. I'm here for you.",
     ts: Date.now()
   }])
 
@@ -99,7 +99,7 @@ export default function App() {
       const errMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        text: `⚠️ Error reaching server: ${err.message}. Check API_BASE and CORS.`,
+        text: `⚠️ Error reaching server: ${err.message}. Network Error.`,
         ts: Date.now()
       }
       setMessages(prev => [...prev, errMsg])
