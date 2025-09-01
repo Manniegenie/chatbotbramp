@@ -24,6 +24,7 @@ export type ChatMessage = {
   text: string
   ts: number
   cta?: CTA | null
+  isStreaming?: boolean // Add streaming indicator
 }
 
 // Always read the freshest token from secure storage
@@ -33,6 +34,78 @@ async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
   if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json')
   if (access) headers.set('Authorization', `Bearer ${access}`)
   return fetch(input, { ...init, headers })
+}
+
+// Simple streaming client
+async function sendStreamingMessage(message: string, history: ChatMessage[], onChunk: (text: string) => void): Promise<any> {
+  const response = await authFetch(`${API_BASE}/api/chat/stream`, {
+    method: 'POST',
+    headers: {
+      'Accept': 'text/event-stream',
+      'Cache-Control': 'no-cache'
+    },
+    body: JSON.stringify({ 
+      message, 
+      history: history.slice(-10).map(m => ({ role: m.role, text: m.text })),
+      sessionId: crypto.randomUUID()
+    })
+  })
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+  }
+
+  if (!response.body) {
+    throw new Error('No response body for streaming')
+  }
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  let fullText = ''
+  let metadata = {}
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+
+    buffer += decoder.decode(value, { stream: true })
+    const lines = buffer.split('\n')
+    buffer = lines.pop() || ''
+
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        const dataStr = line.slice(6)
+        if (dataStr === '[DONE]') return { reply: fullText, ...metadata }
+
+        try {
+          const data = JSON.parse(dataStr)
+          
+          if (data.error) {
+            throw new Error(data.error)
+          }
+
+          if (data.text && data.isStream) {
+            fullText += data.text
+            onChunk(fullText)
+          }
+
+          if (data.complete) {
+            return { 
+              reply: fullText, 
+              cta: data.cta,
+              metadata: data.metadata 
+            }
+          }
+
+        } catch (parseError) {
+          console.warn('Failed to parse SSE data:', dataStr)
+        }
+      }
+    }
+  }
+
+  return { reply: fullText, ...metadata }
 }
 
 /* ----------------------- Linkify + Markdown-lite helpers ----------------------- */
@@ -143,16 +216,17 @@ export default function App() {
   const [messages, setMessages] = useState<ChatMessage[]>([{
     id: crypto.randomUUID(),
     role: 'assistant',
-    text: "Hey! I’m Bramp AI 🤖🇳🇬 Buy/sell crypto, see rates, and cash out to NGN—right here in chat. Try: ‘Sell 100 USDT to NGN’ 💸",
+    text: "Hey! I'm Bramp AI 🤖🇳🇬 Buy/sell crypto, see rates, and cash out to NGN—right here in chat. Try: 'Sell 100 USDT to NGN' 💸",
     ts: Date.now()
   }])
 
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // typing indicator phases + emoji ticker
-  const [thinkingPhase, setThinkingPhase] = useState<'thinking' | 'browsing'>('thinking')
+  // Enhanced typing indicator with streaming support
+  const [thinkingPhase, setThinkingPhase] = useState<'thinking' | 'browsing' | 'streaming'>('thinking')
   const [emojiTick, setEmojiTick] = useState(0)
+  const [isStreaming, setIsStreaming] = useState(false) // Add streaming state
 
   const [showSignIn, setShowSignIn] = useState(false)
   const [showSignUp, setShowSignUp] = useState(false)
@@ -182,32 +256,43 @@ export default function App() {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading, showSignIn, showSignUp, showSell])
 
-  // Flip thinking → browsing after ~2.5s if still loading
+  // Enhanced thinking phases with streaming support
   useEffect(() => {
     let phaseTimer: number | undefined
     let emojiTimer: number | undefined
 
-    if (loading) {
+    if (loading && !isStreaming) {
       setThinkingPhase('thinking')
       setEmojiTick(0)
       phaseTimer = window.setTimeout(() => setThinkingPhase('browsing'), 2500)
 
-      // While browsing, alternate 🌍 / 🪙 every ~600ms to show activity
+      // While browsing, alternate emojis
       emojiTimer = window.setInterval(() => {
         setEmojiTick(t => (t + 1) % 2)
       }, 600)
+    } else if (isStreaming) {
+      setThinkingPhase('streaming')
     }
 
     return () => {
       if (phaseTimer) window.clearTimeout(phaseTimer)
       if (emojiTimer) window.clearInterval(emojiTimer)
     }
-  }, [loading])
+  }, [loading, isStreaming])
+
+  // Update streaming message content
+  function updateStreamingMessage(messageId: string, text: string, isComplete = false) {
+    setMessages(prev => prev.map(msg => 
+      msg.id === messageId 
+        ? { ...msg, text, isStreaming: !isComplete }
+        : msg
+    ))
+  }
 
   async function sendMessage(e?: React.FormEvent) {
     e?.preventDefault()
     const trimmed = input.trim()
-    if (!trimmed || loading) return
+    if (!trimmed || loading || isStreaming) return
 
     const userMsg: ChatMessage = {
       id: crypto.randomUUID(),
@@ -219,34 +304,71 @@ export default function App() {
     setInput('')
     setLoading(true)
 
+    // Create placeholder for AI response
+    const aiMessageId = crypto.randomUUID()
+    const aiMsg: ChatMessage = {
+      id: aiMessageId,
+      role: 'assistant',
+      text: '',
+      ts: Date.now(),
+      isStreaming: true
+    }
+    setMessages(prev => [...prev, aiMsg])
+
     try {
-      const res = await authFetch(`${API_BASE}/chatbot/chat`, {
-        method: 'POST',
-        body: JSON.stringify({ message: trimmed, history: messages.slice(-10) })
+      // Try streaming first
+      setIsStreaming(true)
+      const data = await sendStreamingMessage(trimmed, messages, (text) => {
+        updateStreamingMessage(aiMessageId, text)
       })
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const data = await res.json()
-      const botText = data?.reply ?? 'Sorry, I could not process that.'
+      // Complete the streaming message
+      updateStreamingMessage(aiMessageId, data.reply, true)
+      
+      if (data.cta) {
+        setMessages(prev => prev.map(msg => 
+          msg.id === aiMessageId 
+            ? { ...msg, cta: data.cta }
+            : msg
+        ))
+      }
 
-      const botMsg: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        text: botText,
-        ts: Date.now(),
-        cta: data?.cta || null,
+    } catch (streamError) {
+      console.error('Streaming failed, falling back to regular chat:', streamError)
+      
+      // Fallback to regular chat
+      try {
+        updateStreamingMessage(aiMessageId, 'Connecting...', false)
+        
+        const res = await authFetch(`${API_BASE}/api/chat`, {
+          method: 'POST',
+          body: JSON.stringify({ 
+            message: trimmed, 
+            history: messages.slice(-10).map(m => ({ role: m.role, text: m.text })),
+            sessionId: crypto.randomUUID()
+          })
+        })
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        const botText = data?.reply ?? 'Sorry, I could not process that.'
+
+        updateStreamingMessage(aiMessageId, botText, true)
+        
+        if (data.cta) {
+          setMessages(prev => prev.map(msg => 
+            msg.id === aiMessageId 
+              ? { ...msg, cta: data.cta }
+              : msg
+          ))
+        }
+
+      } catch (err: any) {
+        updateStreamingMessage(aiMessageId, `⚠️ Error reaching server: ${err.message}. Network Error.`, true)
       }
-      setMessages(prev => [...prev, botMsg])
-    } catch (err: any) {
-      const errMsg: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        text: `⚠️ Error reaching server: ${err.message}. Network Error.`,
-        ts: Date.now()
-      }
-      setMessages(prev => [...prev, errMsg])
     } finally {
       setLoading(false)
+      setIsStreaming(false)
     }
   }
 
@@ -295,8 +417,13 @@ export default function App() {
     ])
   }
 
-  // Emoji to show while "browsing"
-  const browsingEmoji = emojiTick % 2 === 0 ? '🌍' : '🪙'
+  // Enhanced emoji display for different phases
+  const getLoadingText = () => {
+    if (isStreaming) return 'Bramp AI is responding…'
+    if (thinkingPhase === 'thinking') return 'Bramp AI is thinking…'
+    const browsingEmoji = emojiTick % 2 === 0 ? '🌍' : '🪙'
+    return `Bramp AI is browsing… ${browsingEmoji}`
+  }
 
   return (
     <div className="page">
@@ -375,7 +502,20 @@ export default function App() {
           <div className="messages">
             {messages.map(m => (
               <div key={m.id} className={`bubble ${m.role}`}>
-                <div className="role">{m.role === 'user' ? 'You' : 'Bramp AI'}</div>
+                <div className="role">
+                  {m.role === 'user' ? 'You' : 'Bramp AI'}
+                  {/* Add typing indicator for streaming messages */}
+                  {m.isStreaming && (
+                    <span style={{ 
+                      marginLeft: '8px', 
+                      fontSize: '12px', 
+                      opacity: 0.6,
+                      fontStyle: 'italic'
+                    }}>
+                      typing…
+                    </span>
+                  )}
+                </div>
                 <div className="text">
                   {renderMessageText(m.text)}
 
@@ -417,11 +557,9 @@ export default function App() {
                 </div>
               </div>
             ))}
-            {loading && (
+            {(loading || isStreaming) && (
               <div className="typing">
-                {thinkingPhase === 'thinking'
-                  ? 'Bramp AI is thinking…'
-                  : `Bramp AI is browsing… ${browsingEmoji}`}
+                {getLoadingText()}
               </div>
             )}
             <div ref={endRef} />
@@ -431,18 +569,34 @@ export default function App() {
             <input
               value={input}
               onChange={e => setInput(e.target.value)}
-              placeholder="Try: Sell 100 USDT to NGN"
+              placeholder={isStreaming ? "Please wait…" : "Try: Sell 100 USDT to NGN"}
               autoFocus
+              disabled={isStreaming} // Disable input during streaming
             />
-            <button className="btn" disabled={loading || !input.trim()}>
-              {loading ? 'Sending…' : 'Send'}
+            <button className="btn" disabled={loading || isStreaming || !input.trim()}>
+              {isStreaming ? 'Streaming…' : loading ? 'Sending…' : 'Send'}
             </button>
           </form>
 
           <div className="hints">
-            <span className="hint" onClick={() => setInput('Sell 100 USDT to NGN')}>Sell 100 USDT to NGN</span>
-            <span className="hint" onClick={() => setInput('Show my portfolio balance')}>Show my portfolio balance</span>
-            <span className="hint" onClick={() => setInput('Withdraw ₦50,000 to GTBank')}>Withdraw ₦50,000 to GTBank</span>
+            <span 
+              className="hint" 
+              onClick={() => !isStreaming && setInput('Sell 100 USDT to NGN')}
+            >
+              Sell 100 USDT to NGN
+            </span>
+            <span 
+              className="hint" 
+              onClick={() => !isStreaming && setInput('Show my portfolio balance')}
+            >
+              Show my portfolio balance
+            </span>
+            <span 
+              className="hint" 
+              onClick={() => !isStreaming && setInput('Withdraw ₦50,000 to GTBank')}
+            >
+              Withdraw ₦50,000 to GTBank
+            </span>
           </div>
         </main>
       )}
@@ -463,7 +617,7 @@ export default function App() {
         </a>
         <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank">Risk Disclaimer</a>
         <a
-          href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link"
+          href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp/drive_link"
           target="_blank"
           rel="noopener noreferrer"
         >
