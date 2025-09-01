@@ -40,11 +40,19 @@ function getSessionId(): string {
 }
 
 // Always read the freshest token from secure storage
+function isExpiredJwt(token: string): boolean {
+  try {
+    const [, payloadB64] = token.split('.')
+    const json = atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/'))
+    const { exp } = JSON.parse(json)
+    return !exp || Date.now() >= exp * 1000
+  } catch { return true }
+}
 async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
   const { access } = tokenStore.getTokens()
   const headers = new Headers(init.headers || {})
   if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json')
-  if (access) headers.set('Authorization', `Bearer ${access}`)
+  if (access && !isExpiredJwt(access)) headers.set('Authorization', `Bearer ${access}`)
   return fetch(input, { ...init, headers })
 }
 
@@ -67,62 +75,48 @@ async function sendStreamingMessage(
     }),
   })
 
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-  }
+  if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`)
   if (!response.body) throw new Error('No response body for streaming')
 
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
   let fullText = ''
-  let lastEmit = '' // to avoid re-emitting identical chunks
+  let lastEmit = ''
   let cta: CTA | null | undefined = null
   let metadata: any = undefined
 
   while (true) {
     const { done, value } = await reader.read()
     if (done) break
-
     buffer += decoder.decode(value, { stream: true })
     const lines = buffer.split('\n')
     buffer = lines.pop() || ''
 
     for (const raw of lines) {
       const line = raw.trim()
-      if (!line) continue
-      if (!line.startsWith('data:')) continue
-
+      if (!line || !line.startsWith('data:')) continue
       const dataStr = line.slice(5).trim()
       if (!dataStr) continue
       if (dataStr === '[DONE]') break
-
       try {
         const payload = JSON.parse(dataStr)
-
-        // Backend may send { typing: true } first
         if (payload.error) throw new Error(payload.error)
-
         if (payload.isStream && typeof payload.text === 'string') {
-          // server sends chunks already concatenated OR slice; we replace with latest
           fullText += payload.text
           if (fullText !== lastEmit) {
             lastEmit = fullText
             onChunk(fullText)
           }
         }
-
         if (payload.complete) {
           cta = payload.cta
           metadata = payload.metadata
           return { reply: fullText || '', cta, metadata }
         }
-      } catch {
-        // ignore non-JSON or partial lines
-      }
+      } catch { /* ignore partials */ }
     }
   }
-
   return { reply: fullText || '', cta, metadata }
 }
 
@@ -165,10 +159,7 @@ function inlineRender(text: string, keyPrefix: string): React.ReactNode[] {
 
   const finalNodes: React.ReactNode[] = []
   nodes.forEach((node, i) => {
-    if (typeof node !== 'string') {
-      finalNodes.push(node)
-      return
-    }
+    if (typeof node !== 'string') { finalNodes.push(node); return }
     let idx = 0
     node.replace(URL_REGEX, (url: string, offset: number) => {
       const trimmed = url.replace(/[),.;!?]+$/g, '')
@@ -235,7 +226,9 @@ export default function App() {
       id: crypto.randomUUID(),
       role: 'assistant',
       text:
-        "Hey! I'm Bramp AI 🤖🇳🇬 Buy/sell crypto, see rates, and cash out to NGN—right here in chat. Try: 'Sell 100 USDT to NGN' 💸",
+        "Hey! I’m Bramp AI 🤖🇳🇬—your fast lane from crypto to NGN. " +
+        "Sign in to unlock live rates, instant quotes, and one-tap cashouts. " +
+        "Try: 'Sell 100 USDT to NGN' 💸",
       ts: Date.now(),
     },
   ])
@@ -243,7 +236,6 @@ export default function App() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // thinking / browsing / streaming indicator
   const [thinkingPhase, setThinkingPhase] = useState<'thinking' | 'browsing' | 'streaming'>('thinking')
   const [emojiTick, setEmojiTick] = useState(0)
   const [isStreaming, setIsStreaming] = useState(false)
@@ -267,49 +259,37 @@ export default function App() {
       const url = new URL(window.location.href)
       let changed = false
       for (const p of ['user_id', 'token', 'code']) {
-        if (url.searchParams.has(p)) {
-          url.searchParams.delete(p)
-          changed = true
-        }
+        if (url.searchParams.has(p)) { url.searchParams.delete(p); changed = true }
       }
       if (changed) {
-        const clean =
-          url.pathname + (url.searchParams.toString() ? `?${url.searchParams.toString()}` : '') + url.hash
+        const clean = url.pathname + (url.searchParams.toString() ? `?${url.searchParams.toString()}` : '') + url.hash
         window.history.replaceState({}, '', clean)
       }
-    } catch {
-      /* noop */
-    }
+    } catch { /* noop */ }
   }, [])
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading, showSignIn, showSignUp, showSell])
 
-  // Enhanced thinking phases with streaming support
+  // thinking phases
   useEffect(() => {
     let phaseTimer: number | undefined
     let emojiTimer: number | undefined
-
     if (loading && !isStreaming) {
       setThinkingPhase('thinking')
       setEmojiTick(0)
       phaseTimer = window.setTimeout(() => setThinkingPhase('browsing'), 2500)
-
-      emojiTimer = window.setInterval(() => {
-        setEmojiTick((t) => (t + 1) % 2)
-      }, 600)
+      emojiTimer = window.setInterval(() => setEmojiTick((t) => (t + 1) % 2), 600)
     } else if (isStreaming) {
       setThinkingPhase('streaming')
     }
-
     return () => {
       if (phaseTimer) window.clearTimeout(phaseTimer)
       if (emojiTimer) window.clearInterval(emojiTimer)
     }
   }, [loading, isStreaming])
 
-  // Update streaming message content
   function updateStreamingMessage(messageId: string, text: string, isComplete = false) {
     setMessages((prev) =>
       prev.map((msg) => (msg.id === messageId ? { ...msg, text, isStreaming: !isComplete } : msg))
@@ -331,7 +311,6 @@ export default function App() {
     setInput('')
     setLoading(true)
 
-    // Placeholder for AI response
     const aiMessageId = crypto.randomUUID()
     const aiMsg: ChatMessage = {
       id: aiMessageId,
@@ -343,7 +322,6 @@ export default function App() {
     setMessages((prev) => [...prev, aiMsg])
 
     try {
-      // Try streaming first
       setIsStreaming(true)
       const data = await sendStreamingMessage(trimmed, messages, (text) => {
         updateStreamingMessage(aiMessageId, text)
@@ -373,7 +351,6 @@ export default function App() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const data = await res.json()
         const botText = data?.reply ?? 'Sorry, I could not process that.'
-
         updateStreamingMessage(aiMessageId, botText, true)
 
         if (data.cta) {
@@ -400,7 +377,6 @@ export default function App() {
     setShowSell(false)
   }
 
-  // Enhanced Sell CTA detector (button OR URL hint)
   function isSellCTA(btn: CTAButton): boolean {
     if (!btn) return false
     if (btn.id === 'start_sell') return true
@@ -419,21 +395,14 @@ export default function App() {
     setShowSell(true)
   }
 
-  // Allow the Sell modal to push friendly recap messages into chat
   function echoFromModalToChat(text: string) {
     if (!text) return
     setMessages((prev) => [
       ...prev,
-      {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        text,
-        ts: Date.now(),
-      },
+      { id: crypto.randomUUID(), role: 'assistant', text, ts: Date.now() },
     ])
   }
 
-  // Phase text
   const getLoadingText = () => {
     if (isStreaming) return 'Bramp AI is responding…'
     if (thinkingPhase === 'thinking') return 'Bramp AI is thinking…'
@@ -450,9 +419,7 @@ export default function App() {
 
         {!auth ? (
           <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn" onClick={() => setShowSignIn(true)}>
-              Sign in
-            </button>
+            <button className="btn" onClick={() => setShowSignIn(true)}>Sign in</button>
             <button
               className="btn"
               style={{ background: 'transparent', color: 'var(--txt)', border: '1px solid var(--border)' }}
@@ -477,26 +444,17 @@ export default function App() {
 
       {showSignIn ? (
         <SignIn
-          onCancel={() => {
-            setShowSignIn(false)
-            setOpenSellAfterAuth(false)
-          }}
+          onCancel={() => { setShowSignIn(false); setOpenSellAfterAuth(false) }}
           onSuccess={(res) => {
             setAuth(res)
             setShowSignIn(false)
-            setMessages((prev) => [
-              ...prev,
-              {
-                id: crypto.randomUUID(),
-                role: 'assistant',
-                text: `You're in, ${res.user.username || res.user.firstname || 'there'} ✅`,
-                ts: Date.now(),
-              },
-            ])
-            if (openSellAfterAuth) {
-              setOpenSellAfterAuth(false)
-              setShowSell(true)
-            }
+            setMessages((prev) => [...prev, {
+              id: crypto.randomUUID(),
+              role: 'assistant',
+              text: `You're in, ${res.user.username || res.user.firstname || 'there'} ✅`,
+              ts: Date.now(),
+            }])
+            if (openSellAfterAuth) { setOpenSellAfterAuth(false); setShowSell(true) }
           }}
         />
       ) : showSignUp ? (
@@ -504,15 +462,12 @@ export default function App() {
           onCancel={() => setShowSignUp(false)}
           onSuccess={(res: SignUpResult) => {
             setShowSignUp(false)
-            setMessages((prev) => [
-              ...prev,
-              {
-                id: crypto.randomUUID(),
-                role: 'assistant',
-                text: res.message || 'Account created. Please verify OTP to complete your signup.',
-                ts: Date.now(),
-              },
-            ])
+            setMessages((prev) => [...prev, {
+              id: crypto.randomUUID(),
+              role: 'assistant',
+              text: res.message || 'Account created. Please verify OTP to complete your signup.',
+              ts: Date.now(),
+            }])
             setShowSignIn(true)
           }}
         />
@@ -591,15 +546,9 @@ export default function App() {
           </form>
 
           <div className="hints">
-            <span className="hint" onClick={() => !isStreaming && setInput('Sell 100 USDT to NGN')}>
-              Sell 100 USDT to NGN
-            </span>
-            <span className="hint" onClick={() => !isStreaming && setInput('Show my portfolio balance')}>
-              Show my portfolio balance
-            </span>
-            <span className="hint" onClick={() => !isStreaming && setInput('Withdraw ₦50,000 to GTBank')}>
-              Withdraw ₦50,000 to GTBank
-            </span>
+            <span className="hint" onClick={() => !isStreaming && setInput('Sell 100 USDT to NGN')}>Sell 100 USDT to NGN</span>
+            <span className="hint" onClick={() => !isStreaming && setInput('Show my portfolio balance')}>Show my portfolio balance</span>
+            <span className="hint" onClick={() => !isStreaming && setInput('Withdraw ₦50,000 to GTBank')}>Withdraw ₦50,000 to GTBank</span>
           </div>
         </main>
       )}
@@ -607,30 +556,10 @@ export default function App() {
       <SellModal open={showSell} onClose={() => setShowSell(false)} onChatEcho={echoFromModalToChat} />
 
       <footer className="footer">
-        <a
-          href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          AML/CFT Policy
-        </a>
-        <a
-          href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Risk Disclaimer
-        </a>
-        <a
-          href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp/drive_link"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Privacy
-        </a>
-        <a href="/terms" target="_blank" rel="noopener noreferrer">
-          Terms
-        </a>
+        <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
+        <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
+        <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp/drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
+        <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
       </footer>
     </div>
   )
