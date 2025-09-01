@@ -1,3 +1,4 @@
+// src/App.tsx
 import React, { useEffect, useRef, useState } from 'react'
 import SignIn, { SignInResult } from './signin'
 import SignUp, { SignUpResult } from './signup'
@@ -24,7 +25,18 @@ export type ChatMessage = {
   text: string
   ts: number
   cta?: CTA | null
-  isStreaming?: boolean // Add streaming indicator
+  isStreaming?: boolean
+}
+
+// --- session id (stable across page loads) ---
+function getSessionId(): string {
+  const key = 'bramp__session_id'
+  let sid = localStorage.getItem(key)
+  if (!sid) {
+    sid = crypto.randomUUID()
+    localStorage.setItem(key, sid)
+  }
+  return sid
 }
 
 // Always read the freshest token from secure storage
@@ -36,34 +48,37 @@ async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
   return fetch(input, { ...init, headers })
 }
 
-// Simple streaming client
-async function sendStreamingMessage(message: string, history: ChatMessage[], onChunk: (text: string) => void): Promise<any> {
+// --- SSE client that matches /chatbot/chat/stream payloads ---
+async function sendStreamingMessage(
+  message: string,
+  history: ChatMessage[],
+  onChunk: (text: string) => void
+): Promise<{ reply: string; cta?: CTA | null; metadata?: any }> {
   const response = await authFetch(`${API_BASE}/chatbot/chat/stream`, {
     method: 'POST',
     headers: {
-      'Accept': 'text/event-stream',
-      'Cache-Control': 'no-cache'
+      Accept: 'text/event-stream',
+      'Cache-Control': 'no-cache',
     },
-    body: JSON.stringify({ 
-      message, 
-      history: history.slice(-10).map(m => ({ role: m.role, text: m.text })),
-      sessionId: crypto.randomUUID()
-    })
+    body: JSON.stringify({
+      message,
+      history: history.slice(-10).map((m) => ({ role: m.role, text: m.text })),
+      sessionId: getSessionId(),
+    }),
   })
 
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}: ${response.statusText}`)
   }
-
-  if (!response.body) {
-    throw new Error('No response body for streaming')
-  }
+  if (!response.body) throw new Error('No response body for streaming')
 
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
   let fullText = ''
-  let metadata = {}
+  let lastEmit = '' // to avoid re-emitting identical chunks
+  let cta: CTA | null | undefined = null
+  let metadata: any = undefined
 
   while (true) {
     const { done, value } = await reader.read()
@@ -73,39 +88,42 @@ async function sendStreamingMessage(message: string, history: ChatMessage[], onC
     const lines = buffer.split('\n')
     buffer = lines.pop() || ''
 
-    for (const line of lines) {
-      if (line.startsWith('data: ')) {
-        const dataStr = line.slice(6)
-        if (dataStr === '[DONE]') return { reply: fullText, ...metadata }
+    for (const raw of lines) {
+      const line = raw.trim()
+      if (!line) continue
+      if (!line.startsWith('data:')) continue
 
-        try {
-          const data = JSON.parse(dataStr)
-          
-          if (data.error) {
-            throw new Error(data.error)
-          }
+      const dataStr = line.slice(5).trim()
+      if (!dataStr) continue
+      if (dataStr === '[DONE]') break
 
-          if (data.text && data.isStream) {
-            fullText += data.text
+      try {
+        const payload = JSON.parse(dataStr)
+
+        // Backend may send { typing: true } first
+        if (payload.error) throw new Error(payload.error)
+
+        if (payload.isStream && typeof payload.text === 'string') {
+          // server sends chunks already concatenated OR slice; we replace with latest
+          fullText += payload.text
+          if (fullText !== lastEmit) {
+            lastEmit = fullText
             onChunk(fullText)
           }
-
-          if (data.complete) {
-            return { 
-              reply: fullText, 
-              cta: data.cta,
-              metadata: data.metadata 
-            }
-          }
-
-        } catch (parseError) {
-          console.warn('Failed to parse SSE data:', dataStr)
         }
+
+        if (payload.complete) {
+          cta = payload.cta
+          metadata = payload.metadata
+          return { reply: fullText || '', cta, metadata }
+        }
+      } catch {
+        // ignore non-JSON or partial lines
       }
     }
   }
 
-  return { reply: fullText, ...metadata }
+  return { reply: fullText || '', cta, metadata }
 }
 
 /* ----------------------- Linkify + Markdown-lite helpers ----------------------- */
@@ -131,7 +149,6 @@ function shortenUrlForDisplay(raw: string) {
 }
 
 function inlineRender(text: string, keyPrefix: string): React.ReactNode[] {
-  // First, render markdown links [label](url)
   const nodes: React.ReactNode[] = []
   let last = 0
   text.replace(MD_LINK, (match, label: string, url: string, offset: number) => {
@@ -146,7 +163,6 @@ function inlineRender(text: string, keyPrefix: string): React.ReactNode[] {
   })
   if (last < text.length) nodes.push(text.slice(last))
 
-  // Then, linkify any remaining bare URLs inside existing nodes
   const finalNodes: React.ReactNode[] = []
   nodes.forEach((node, i) => {
     if (typeof node !== 'string') {
@@ -174,25 +190,26 @@ function inlineRender(text: string, keyPrefix: string): React.ReactNode[] {
 }
 
 function renderMessageText(text: string): React.ReactNode {
-  // Split into paragraphs by blank line
   const paragraphs = text.split(/\r?\n\s*\r?\n/)
   const rendered: React.ReactNode[] = []
 
   paragraphs.forEach((para, pi) => {
-    // Is this a bullet list block?
     const lines = para.split(/\r?\n/)
-    const isListBlock = lines.every(l => l.trim().startsWith('- '))
+    const isListBlock = lines.length > 1 && lines.every((l) => l.trim().startsWith('- '))
     if (isListBlock) {
       rendered.push(
         <ul key={`ul-${pi}`} style={{ margin: '8px 0', paddingLeft: 18 }}>
           {lines.map((l, li) => {
             const item = l.replace(/^\s*-\s*/, '')
-            return <li key={`li-${pi}-${li}`} style={{ margin: '4px 0' }}>{inlineRender(item, `li-${pi}-${li}`)}</li>
+            return (
+              <li key={`li-${pi}-${li}`} style={{ margin: '4px 0' }}>
+                {inlineRender(item, `li-${pi}-${li}`)}
+              </li>
+            )
           })}
         </ul>
       )
     } else {
-      // Normal paragraph; preserve single newlines
       const pieces = para.split(/\r?\n/)
       rendered.push(
         <p key={`p-${pi}`} style={{ margin: '8px 0' }}>
@@ -213,20 +230,23 @@ function renderMessageText(text: string): React.ReactNode {
 /* ----------------------------------- App ----------------------------------- */
 
 export default function App() {
-  const [messages, setMessages] = useState<ChatMessage[]>([{
-    id: crypto.randomUUID(),
-    role: 'assistant',
-    text: "Hey! I'm Bramp AI 🤖🇳🇬 Buy/sell crypto, see rates, and cash out to NGN—right here in chat. Try: 'Sell 100 USDT to NGN' 💸",
-    ts: Date.now()
-  }])
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: crypto.randomUUID(),
+      role: 'assistant',
+      text:
+        "Hey! I'm Bramp AI 🤖🇳🇬 Buy/sell crypto, see rates, and cash out to NGN—right here in chat. Try: 'Sell 100 USDT to NGN' 💸",
+      ts: Date.now(),
+    },
+  ])
 
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // Enhanced typing indicator with streaming support
+  // thinking / browsing / streaming indicator
   const [thinkingPhase, setThinkingPhase] = useState<'thinking' | 'browsing' | 'streaming'>('thinking')
   const [emojiTick, setEmojiTick] = useState(0)
-  const [isStreaming, setIsStreaming] = useState(false) // Add streaming state
+  const [isStreaming, setIsStreaming] = useState(false)
 
   const [showSignIn, setShowSignIn] = useState(false)
   const [showSignUp, setShowSignUp] = useState(false)
@@ -238,18 +258,28 @@ export default function App() {
     const user = tokenStore.getUser()
     return access && refresh && user ? { accessToken: access, refreshToken: refresh, user } : null
   })
+
   const endRef = useRef<HTMLDivElement>(null)
 
   // Scrub sensitive URL params on load
   useEffect(() => {
     try {
       const url = new URL(window.location.href)
-      if (url.searchParams.has('user_id')) {
-        url.searchParams.delete('user_id')
-        const clean = url.pathname + (url.searchParams.toString() ? `?${url.searchParams.toString()}` : '') + url.hash
+      let changed = false
+      for (const p of ['user_id', 'token', 'code']) {
+        if (url.searchParams.has(p)) {
+          url.searchParams.delete(p)
+          changed = true
+        }
+      }
+      if (changed) {
+        const clean =
+          url.pathname + (url.searchParams.toString() ? `?${url.searchParams.toString()}` : '') + url.hash
         window.history.replaceState({}, '', clean)
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* noop */
+    }
   }, [])
 
   useEffect(() => {
@@ -266,9 +296,8 @@ export default function App() {
       setEmojiTick(0)
       phaseTimer = window.setTimeout(() => setThinkingPhase('browsing'), 2500)
 
-      // While browsing, alternate emojis
       emojiTimer = window.setInterval(() => {
-        setEmojiTick(t => (t + 1) % 2)
+        setEmojiTick((t) => (t + 1) % 2)
       }, 600)
     } else if (isStreaming) {
       setThinkingPhase('streaming')
@@ -282,11 +311,9 @@ export default function App() {
 
   // Update streaming message content
   function updateStreamingMessage(messageId: string, text: string, isComplete = false) {
-    setMessages(prev => prev.map(msg => 
-      msg.id === messageId 
-        ? { ...msg, text, isStreaming: !isComplete }
-        : msg
-    ))
+    setMessages((prev) =>
+      prev.map((msg) => (msg.id === messageId ? { ...msg, text, isStreaming: !isComplete } : msg))
+    )
   }
 
   async function sendMessage(e?: React.FormEvent) {
@@ -298,22 +325,22 @@ export default function App() {
       id: crypto.randomUUID(),
       role: 'user',
       text: trimmed,
-      ts: Date.now()
+      ts: Date.now(),
     }
-    setMessages(prev => [...prev, userMsg])
+    setMessages((prev) => [...prev, userMsg])
     setInput('')
     setLoading(true)
 
-    // Create placeholder for AI response
+    // Placeholder for AI response
     const aiMessageId = crypto.randomUUID()
     const aiMsg: ChatMessage = {
       id: aiMessageId,
       role: 'assistant',
       text: '',
       ts: Date.now(),
-      isStreaming: true
+      isStreaming: true,
     }
-    setMessages(prev => [...prev, aiMsg])
+    setMessages((prev) => [...prev, aiMsg])
 
     try {
       // Try streaming first
@@ -322,31 +349,25 @@ export default function App() {
         updateStreamingMessage(aiMessageId, text)
       })
 
-      // Complete the streaming message
       updateStreamingMessage(aiMessageId, data.reply, true)
-      
-      if (data.cta) {
-        setMessages(prev => prev.map(msg => 
-          msg.id === aiMessageId 
-            ? { ...msg, cta: data.cta }
-            : msg
-        ))
-      }
 
+      if (data.cta) {
+        setMessages((prev) =>
+          prev.map((msg) => (msg.id === aiMessageId ? { ...msg, cta: data.cta || null } : msg))
+        )
+      }
     } catch (streamError) {
-      console.error('Streaming failed, falling back to regular chat:', streamError)
-      
-      // Fallback to regular chat
+      console.error('Streaming failed, falling back to /chatbot/chat:', streamError)
       try {
         updateStreamingMessage(aiMessageId, 'Connecting...', false)
-        
+
         const res = await authFetch(`${API_BASE}/chatbot/chat`, {
           method: 'POST',
-          body: JSON.stringify({ 
-            message: trimmed, 
-            history: messages.slice(-10).map(m => ({ role: m.role, text: m.text })),
-            sessionId: crypto.randomUUID()
-          })
+          body: JSON.stringify({
+            message: trimmed,
+            history: messages.slice(-10).map((m) => ({ role: m.role, text: m.text })),
+            sessionId: getSessionId(),
+          }),
         })
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -354,17 +375,18 @@ export default function App() {
         const botText = data?.reply ?? 'Sorry, I could not process that.'
 
         updateStreamingMessage(aiMessageId, botText, true)
-        
-        if (data.cta) {
-          setMessages(prev => prev.map(msg => 
-            msg.id === aiMessageId 
-              ? { ...msg, cta: data.cta }
-              : msg
-          ))
-        }
 
+        if (data.cta) {
+          setMessages((prev) =>
+            prev.map((msg) => (msg.id === aiMessageId ? { ...msg, cta: data.cta || null } : msg))
+          )
+        }
       } catch (err: any) {
-        updateStreamingMessage(aiMessageId, `⚠️ Error reaching server: ${err.message}. Network Error.`, true)
+        updateStreamingMessage(
+          aiMessageId,
+          `⚠️ Error reaching server: ${err?.message || 'Network Error.'}`,
+          true
+        )
       }
     } finally {
       setLoading(false)
@@ -378,19 +400,13 @@ export default function App() {
     setShowSell(false)
   }
 
-  // Enhanced Sell CTA detector
+  // Enhanced Sell CTA detector (button OR URL hint)
   function isSellCTA(btn: CTAButton): boolean {
     if (!btn) return false
     if (btn.id === 'start_sell') return true
     const url = String(btn.url || '').toLowerCase()
-    const sellPatterns = [
-      /\/sell($|\/|\?|#)/,
-      /chatbramp\.com\/sell/,
-      /localhost.*\/sell/,
-      /sell\.html?$/,
-      /\bsell\b/
-    ]
-    return sellPatterns.some(rx => rx.test(url))
+    const sellPatterns = [/\/sell($|\/|\?|#)/, /chatbramp\.com\/sell/, /localhost.*\/sell/, /sell\.html?$/, /\bsell\b/]
+    return sellPatterns.some((rx) => rx.test(url))
   }
 
   function handleSellClick(event?: React.MouseEvent) {
@@ -406,7 +422,7 @@ export default function App() {
   // Allow the Sell modal to push friendly recap messages into chat
   function echoFromModalToChat(text: string) {
     if (!text) return
-    setMessages(prev => [
+    setMessages((prev) => [
       ...prev,
       {
         id: crypto.randomUUID(),
@@ -417,7 +433,7 @@ export default function App() {
     ])
   }
 
-  // Enhanced emoji display for different phases
+  // Phase text
   const getLoadingText = () => {
     if (isStreaming) return 'Bramp AI is responding…'
     if (thinkingPhase === 'thinking') return 'Bramp AI is thinking…'
@@ -434,7 +450,9 @@ export default function App() {
 
         {!auth ? (
           <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn" onClick={() => setShowSignIn(true)}>Sign in</button>
+            <button className="btn" onClick={() => setShowSignIn(true)}>
+              Sign in
+            </button>
             <button
               className="btn"
               style={{ background: 'transparent', color: 'var(--txt)', border: '1px solid var(--border)' }}
@@ -466,12 +484,15 @@ export default function App() {
           onSuccess={(res) => {
             setAuth(res)
             setShowSignIn(false)
-            setMessages(prev => [...prev, {
-              id: crypto.randomUUID(),
-              role: 'assistant',
-              text: `You're in, ${res.user.username || res.user.firstname || 'there'} ✅`,
-              ts: Date.now()
-            }])
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: crypto.randomUUID(),
+                role: 'assistant',
+                text: `You're in, ${res.user.username || res.user.firstname || 'there'} ✅`,
+                ts: Date.now(),
+              },
+            ])
             if (openSellAfterAuth) {
               setOpenSellAfterAuth(false)
               setShowSell(true)
@@ -483,14 +504,12 @@ export default function App() {
           onCancel={() => setShowSignUp(false)}
           onSuccess={(res: SignUpResult) => {
             setShowSignUp(false)
-            setMessages(prev => [
+            setMessages((prev) => [
               ...prev,
               {
                 id: crypto.randomUUID(),
                 role: 'assistant',
-                text:
-                  res.message ||
-                  'Account created. Please verify OTP to complete your signup.',
+                text: res.message || 'Account created. Please verify OTP to complete your signup.',
                 ts: Date.now(),
               },
             ])
@@ -500,20 +519,12 @@ export default function App() {
       ) : (
         <main className="chat">
           <div className="messages">
-            {messages.map(m => (
+            {messages.map((m) => (
               <div key={m.id} className={`bubble ${m.role}`}>
                 <div className="role">
                   {m.role === 'user' ? 'You' : 'Bramp AI'}
-                  {/* Add typing indicator for streaming messages */}
                   {m.isStreaming && (
-                    <span style={{ 
-                      marginLeft: '8px', 
-                      fontSize: '12px', 
-                      opacity: 0.6,
-                      fontStyle: 'italic'
-                    }}>
-                      typing…
-                    </span>
+                    <span style={{ marginLeft: 8, fontSize: 12, opacity: 0.6, fontStyle: 'italic' }}>typing…</span>
                   )}
                 </div>
                 <div className="text">
@@ -529,9 +540,11 @@ export default function App() {
                               key={btn.id || btn.title || index}
                               className="btn"
                               onClick={handleSellClick}
-                              style={btn.style === 'primary'
-                                ? undefined
-                                : { background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }}
+                              style={
+                                btn.style === 'primary'
+                                  ? undefined
+                                  : { background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }
+                              }
                             >
                               {btn.title}
                             </button>
@@ -544,9 +557,11 @@ export default function App() {
                             href={btn.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            style={btn.style === 'primary'
-                              ? undefined
-                              : { background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }}
+                            style={
+                              btn.style === 'primary'
+                                ? undefined
+                                : { background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }
+                            }
                           >
                             {btn.title}
                           </a>
@@ -557,21 +572,18 @@ export default function App() {
                 </div>
               </div>
             ))}
-            {(loading || isStreaming) && (
-              <div className="typing">
-                {getLoadingText()}
-              </div>
-            )}
+
+            {(loading || isStreaming) && <div className="typing">{getLoadingText()}</div>}
             <div ref={endRef} />
           </div>
 
           <form className="composer" onSubmit={sendMessage}>
             <input
               value={input}
-              onChange={e => setInput(e.target.value)}
-              placeholder={isStreaming ? "Please wait…" : "Try: Sell 100 USDT to NGN"}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={isStreaming ? 'Please wait…' : 'Try: Sell 100 USDT to NGN'}
               autoFocus
-              disabled={isStreaming} // Disable input during streaming
+              disabled={isStreaming}
             />
             <button className="btn" disabled={loading || isStreaming || !input.trim()}>
               {isStreaming ? 'Streaming…' : loading ? 'Sending…' : 'Send'}
@@ -579,33 +591,20 @@ export default function App() {
           </form>
 
           <div className="hints">
-            <span 
-              className="hint" 
-              onClick={() => !isStreaming && setInput('Sell 100 USDT to NGN')}
-            >
+            <span className="hint" onClick={() => !isStreaming && setInput('Sell 100 USDT to NGN')}>
               Sell 100 USDT to NGN
             </span>
-            <span 
-              className="hint" 
-              onClick={() => !isStreaming && setInput('Show my portfolio balance')}
-            >
+            <span className="hint" onClick={() => !isStreaming && setInput('Show my portfolio balance')}>
               Show my portfolio balance
             </span>
-            <span 
-              className="hint" 
-              onClick={() => !isStreaming && setInput('Withdraw ₦50,000 to GTBank')}
-            >
+            <span className="hint" onClick={() => !isStreaming && setInput('Withdraw ₦50,000 to GTBank')}>
               Withdraw ₦50,000 to GTBank
             </span>
           </div>
         </main>
       )}
 
-      <SellModal
-        open={showSell}
-        onClose={() => setShowSell(false)}
-        onChatEcho={echoFromModalToChat}
-      />
+      <SellModal open={showSell} onClose={() => setShowSell(false)} onChatEcho={echoFromModalToChat} />
 
       <footer className="footer">
         <a
@@ -615,7 +614,13 @@ export default function App() {
         >
           AML/CFT Policy
         </a>
-        <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank">Risk Disclaimer</a>
+        <a
+          href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Risk Disclaimer
+        </a>
         <a
           href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp/drive_link"
           target="_blank"
@@ -623,7 +628,9 @@ export default function App() {
         >
           Privacy
         </a>
-        <a href="/terms" target="_blank">Terms</a>
+        <a href="/terms" target="_blank" rel="noopener noreferrer">
+          Terms
+        </a>
       </footer>
     </div>
   )
