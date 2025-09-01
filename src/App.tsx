@@ -38,7 +38,7 @@ async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
 
 // Simple streaming client
 async function sendStreamingMessage(message: string, history: ChatMessage[], onChunk: (text: string) => void): Promise<any> {
-  const response = await authFetch(`${API_BASE}/api/chat/stream`, {
+  const response = await authFetch(`${API_BASE}/chatbot/chat/stream`, {
     method: 'POST',
     headers: {
       'Accept': 'text/event-stream',
@@ -340,7 +340,7 @@ export default function App() {
       try {
         updateStreamingMessage(aiMessageId, 'Connecting...', false)
         
-        const res = await authFetch(`${API_BASE}/api/chat`, {
+        const res = await authFetch(`${API_BASE}/chatbot/chat`, {
           method: 'POST',
           body: JSON.stringify({ 
             message: trimmed, 
