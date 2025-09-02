@@ -48,6 +48,7 @@ function isExpiredJwt(token: string): boolean {
     return !exp || Date.now() >= exp * 1000
   } catch { return true }
 }
+
 async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
   const { access } = tokenStore.getTokens()
   const headers = new Headers(init.headers || {})
@@ -56,18 +57,27 @@ async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
   return fetch(input, { ...init, headers })
 }
 
-// --- SSE client that matches /chatbot/chat/stream payloads ---
+// --- Updated SSE client that matches your backend streaming format ---
 async function sendStreamingMessage(
   message: string,
   history: ChatMessage[],
-  onChunk: (text: string) => void
+  onChunk: (text: string) => void,
+  onTyping?: (isTyping: boolean) => void
 ): Promise<{ reply: string; cta?: CTA | null; metadata?: any }> {
-  const response = await authFetch(`${API_BASE}/chatbot/chat/stream`, {
+  const { access } = tokenStore.getTokens()
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Accept': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+  }
+  
+  if (access && !isExpiredJwt(access)) {
+    headers['Authorization'] = `Bearer ${access}`
+  }
+
+  const response = await fetch(`${API_BASE}/chatbot/chat/stream`, {
     method: 'POST',
-    headers: {
-      Accept: 'text/event-stream',
-      'Cache-Control': 'no-cache',
-    },
+    headers,
     body: JSON.stringify({
       message,
       history: history.slice(-10).map((m) => ({ role: m.role, text: m.text })),
@@ -75,48 +85,73 @@ async function sendStreamingMessage(
     }),
   })
 
-  if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-  if (!response.body) throw new Error('No response body for streaming')
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+  }
+  
+  if (!response.body) {
+    throw new Error('No response body for streaming')
+  }
 
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
   let fullText = ''
-  let lastEmit = ''
   let cta: CTA | null | undefined = null
   let metadata: any = undefined
 
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-    buffer += decoder.decode(value, { stream: true })
-    const lines = buffer.split('\n')
-    buffer = lines.pop() || ''
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
 
-    for (const raw of lines) {
-      const line = raw.trim()
-      if (!line || !line.startsWith('data:')) continue
-      const dataStr = line.slice(5).trim()
-      if (!dataStr) continue
-      if (dataStr === '[DONE]') break
-      try {
-        const payload = JSON.parse(dataStr)
-        if (payload.error) throw new Error(payload.error)
-        if (payload.isStream && typeof payload.text === 'string') {
-          fullText += payload.text
-          if (fullText !== lastEmit) {
-            lastEmit = fullText
-            onChunk(fullText)
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() || ''
+
+      for (const line of lines) {
+        const trimmed = line.trim()
+        if (!trimmed || !trimmed.startsWith('data:')) continue
+        
+        const dataStr = trimmed.slice(5).trim()
+        if (!dataStr) continue
+
+        try {
+          const payload = JSON.parse(dataStr)
+          
+          // Handle different payload types from your backend
+          if (payload.error) {
+            throw new Error(payload.error)
           }
+          
+          if (payload.typing) {
+            onTyping?.(true)
+            continue
+          }
+          
+          if (payload.isStream && typeof payload.text === 'string') {
+            fullText += payload.text
+            onChunk(fullText)
+            continue
+          }
+          
+          if (payload.complete) {
+            onTyping?.(false)
+            cta = payload.cta
+            metadata = payload.metadata
+            return { reply: fullText || '', cta, metadata }
+          }
+          
+        } catch (parseError) {
+          // Ignore malformed JSON - common with SSE streams
+          console.debug('Failed to parse SSE data:', dataStr)
         }
-        if (payload.complete) {
-          cta = payload.cta
-          metadata = payload.metadata
-          return { reply: fullText || '', cta, metadata }
-        }
-      } catch { /* ignore partials */ }
+      }
     }
+  } finally {
+    reader.releaseLock()
   }
+
   return { reply: fullText || '', cta, metadata }
 }
 
@@ -226,19 +261,21 @@ export default function App() {
       id: crypto.randomUUID(),
       role: 'assistant',
       text:
-        "Hey! I’m Bramp AI 🤖🇳🇬—your fast lane from crypto to NGN. " +
+        "Hey! I'm Bramp AI—your fast lane from crypto to NGN. " +
         "Sign in to unlock live rates, instant quotes, and one-tap cashouts. " +
-        "Try: 'Sell 100 USDT to NGN' 💸",
+        "Try: 'Sell 100 USDT to NGN'",
       ts: Date.now(),
     },
   ])
 
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [isStreaming, setIsStreaming] = useState(false)
+  const [isTyping, setIsTyping] = useState(false)
 
+  // Updated loading states to match your backend behavior
   const [thinkingPhase, setThinkingPhase] = useState<'thinking' | 'browsing' | 'streaming'>('thinking')
   const [emojiTick, setEmojiTick] = useState(0)
-  const [isStreaming, setIsStreaming] = useState(false)
 
   const [showSignIn, setShowSignIn] = useState(false)
   const [showSignUp, setShowSignUp] = useState(false)
@@ -272,23 +309,25 @@ export default function App() {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading, showSignIn, showSignUp, showSell])
 
-  // thinking phases
+  // Updated thinking phases to match your backend metadata
   useEffect(() => {
     let phaseTimer: number | undefined
     let emojiTimer: number | undefined
-    if (loading && !isStreaming) {
+    
+    if (loading && !isStreaming && !isTyping) {
       setThinkingPhase('thinking')
       setEmojiTick(0)
       phaseTimer = window.setTimeout(() => setThinkingPhase('browsing'), 2500)
       emojiTimer = window.setInterval(() => setEmojiTick((t) => (t + 1) % 2), 600)
-    } else if (isStreaming) {
+    } else if (isTyping || isStreaming) {
       setThinkingPhase('streaming')
     }
+    
     return () => {
       if (phaseTimer) window.clearTimeout(phaseTimer)
       if (emojiTimer) window.clearInterval(emojiTimer)
     }
-  }, [loading, isStreaming])
+  }, [loading, isStreaming, isTyping])
 
   function updateStreamingMessage(messageId: string, text: string, isComplete = false) {
     setMessages((prev) =>
@@ -323,9 +362,17 @@ export default function App() {
 
     try {
       setIsStreaming(true)
-      const data = await sendStreamingMessage(trimmed, messages, (text) => {
-        updateStreamingMessage(aiMessageId, text)
-      })
+      
+      const data = await sendStreamingMessage(
+        trimmed, 
+        messages, 
+        (text) => {
+          updateStreamingMessage(aiMessageId, text)
+        },
+        (typing) => {
+          setIsTyping(typing)
+        }
+      )
 
       updateStreamingMessage(aiMessageId, data.reply, true)
 
@@ -334,8 +381,10 @@ export default function App() {
           prev.map((msg) => (msg.id === aiMessageId ? { ...msg, cta: data.cta || null } : msg))
         )
       }
+
     } catch (streamError) {
       console.error('Streaming failed, falling back to /chatbot/chat:', streamError)
+      
       try {
         updateStreamingMessage(aiMessageId, 'Connecting...', false)
 
@@ -361,13 +410,14 @@ export default function App() {
       } catch (err: any) {
         updateStreamingMessage(
           aiMessageId,
-          `⚠️ Error reaching server: ${err?.message || 'Network Error.'}`,
+          `Error reaching server: ${err?.message || 'Network Error.'}`,
           true
         )
       }
     } finally {
       setLoading(false)
       setIsStreaming(false)
+      setIsTyping(false)
     }
   }
 
@@ -403,7 +453,9 @@ export default function App() {
     ])
   }
 
+  // Updated loading text to reflect actual backend states
   const getLoadingText = () => {
+    if (isTyping) return 'Bramp AI is typing…'
     if (isStreaming) return 'Bramp AI is responding…'
     if (thinkingPhase === 'thinking') return 'Bramp AI is thinking…'
     const browsingEmoji = emojiTick % 2 === 0 ? '🌍' : '🪙'
@@ -451,7 +503,7 @@ export default function App() {
             setMessages((prev) => [...prev, {
               id: crypto.randomUUID(),
               role: 'assistant',
-              text: `You're in, ${res.user.username || res.user.firstname || 'there'} ✅`,
+              text: `You're in, ${res.user.username || res.user.firstname || 'there'}!`,
               ts: Date.now(),
             }])
             if (openSellAfterAuth) { setOpenSellAfterAuth(false); setShowSell(true) }
@@ -528,7 +580,7 @@ export default function App() {
               </div>
             ))}
 
-            {(loading || isStreaming) && <div className="typing">{getLoadingText()}</div>}
+            {(loading || isStreaming || isTyping) && <div className="typing">{getLoadingText()}</div>}
             <div ref={endRef} />
           </div>
 
@@ -536,19 +588,19 @@ export default function App() {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={isStreaming ? 'Please wait…' : 'Try: Sell 100 USDT to NGN'}
+              placeholder={isStreaming || isTyping ? 'Please wait…' : 'Try: Sell 100 USDT to NGN'}
               autoFocus
-              disabled={isStreaming}
+              disabled={isStreaming || isTyping}
             />
-            <button className="btn" disabled={loading || isStreaming || !input.trim()}>
-              {isStreaming ? 'Streaming…' : loading ? 'Sending…' : 'Send'}
+            <button className="btn" disabled={loading || isStreaming || isTyping || !input.trim()}>
+              {isTyping ? 'AI typing…' : isStreaming ? 'Streaming…' : loading ? 'Sending…' : 'Send'}
             </button>
           </form>
 
           <div className="hints">
-            <span className="hint" onClick={() => !isStreaming && setInput('Sell 100 USDT to NGN')}>Sell 100 USDT to NGN</span>
-            <span className="hint" onClick={() => !isStreaming && setInput('Show my portfolio balance')}>Show my portfolio balance</span>
-            <span className="hint" onClick={() => !isStreaming && setInput('Withdraw ₦50,000 to GTBank')}>Withdraw ₦50,000 to GTBank</span>
+            <span className="hint" onClick={() => !(isStreaming || isTyping) && setInput('Sell 100 USDT to NGN')}>Sell 100 USDT to NGN</span>
+            <span className="hint" onClick={() => !(isStreaming || isTyping) && setInput('Show my portfolio balance')}>Show my portfolio balance</span>
+            <span className="hint" onClick={() => !(isStreaming || isTyping) && setInput('Current NGN rates')}>Current NGN rates</span>
           </div>
         </main>
       )}
