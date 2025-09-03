@@ -343,6 +343,15 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     }
   }
 
+  // 🔔 Auto-close when the countdown expires on the final summary
+  const showFinalSummary = !!payData
+  useEffect(() => {
+    if (!open) return
+    if (showFinalSummary && expired) {
+      onClose()
+    }
+  }, [open, showFinalSummary, expired, onClose])
+
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
   function copyToClipboard(text: string, key: string) {
     navigator.clipboard?.writeText(text).then(() => {
@@ -356,8 +365,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const headerTitle =
     step === 1 ? 'Start a Sell'
     : (!payData ? 'Payout Details' : 'Transaction Summary')
-
-  const showFinalSummary = !!payData
 
   return createPortal(
     <div style={overlayStyle} role="dialog" aria-modal="true" aria-labelledby="sell-title" onClick={onClose}>
@@ -382,7 +389,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
         {/* Body */}
         <div style={bodyStyle}>
-          {/* STEP 1 — Start a Sell (no deposit-details screen; goes straight to payout on success) */}
+          {/* STEP 1 — Start a Sell */}
           {step === 1 && (
             <div style={{ display: 'grid', gap: 14 }}>
               <p style={{ margin: 0, color: 'var(--muted)' }}>
@@ -566,8 +573,14 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     </div>
                     <div>
                       <div style={kStyle}>You Receive</div>
-                      <div style={vStyle}>
-                        {prettyNgn((initData.quote.receiveAmount) || 0)} ({initData.quote.receiveCurrency})
+                      <div>
+                        <div style={vStyle}>
+                          {prettyNgn((initData.quote.receiveAmount) || 0)} ({initData.quote.receiveCurrency})
+                        </div>
+                        {/* 👇 Fixed transaction fee directly under "You Receive" */}
+                        <div style={{ ...smallMuted, marginTop: 4 }}>
+                          Transaction fee (fixed): <strong>70&nbsp;NGNB</strong>
+                        </div>
                       </div>
                     </div>
                     <div>
