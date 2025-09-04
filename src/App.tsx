@@ -445,6 +445,16 @@ export default function App() {
     setShowSell(true)
   }
 
+  function handleBuyClick(event?: React.MouseEvent) {
+    event?.preventDefault()
+    // For now, just add a message to chat indicating buy functionality
+    // You can implement the buy modal/functionality similar to sell
+    setMessages((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), role: 'assistant', text: 'Buy functionality coming soon! For now, you can ask me about current rates or selling crypto.', ts: Date.now() },
+    ])
+  }
+
   function echoFromModalToChat(text: string) {
     if (!text) return
     setMessages((prev) => [
@@ -483,6 +493,20 @@ export default function App() {
         ) : (
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <span className="tag">Signed in{auth.user?.username ? ` as ${auth.user.username}` : ''}</span>
+            <button
+              className="btn"
+              onClick={handleBuyClick}
+              style={{ background: 'var(--primary)', color: 'white' }}
+            >
+              Buy
+            </button>
+            <button
+              className="btn"
+              onClick={handleSellClick}
+              style={{ background: 'var(--primary)', color: 'white' }}
+            >
+              Sell
+            </button>
             <button
               className="btn"
               style={{ background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border)' }}
