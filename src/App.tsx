@@ -58,6 +58,13 @@ async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
   return fetch(input, { ...init, headers })
 }
 
+/* ----------------------- Error helper (fixes TS2339) ----------------------- */
+function getErrorMessage(e: unknown): string {
+  if (e instanceof Error) return e.message
+  if (typeof e === 'string') return e
+  try { return JSON.stringify(e) } catch { return String(e) }
+}
+
 // ===== Simulated Streaming Implementation =====
 
 // Helper function to simulate typing effect
@@ -107,12 +114,8 @@ async function sendSimulatedStreamingMessage(
 ): Promise<{ reply: string; cta?: CTA | null; metadata?: any }> {
   const { access } = tokenStore.getTokens()
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  }
-  if (access && !isExpiredJwt(access)) {
-    headers['Authorization'] = `Bearer ${access}`
-  }
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (access && !isExpiredJwt(access)) headers['Authorization'] = `Bearer ${access}`
 
   // Show typing indicator
   onTyping?.(true)
@@ -360,7 +363,7 @@ export default function App() {
       // Use simulated streaming instead of real SSE
       const data = await sendSimulatedStreamingMessage(
         trimmed, 
-        messages, 
+        [...messages, userMsg], // include the just-sent user message in history
         (text) => { updateStreamingMessage(aiMessageId, text) },
         (typing) => { setIsTyping(typing) }
       )
@@ -373,7 +376,7 @@ export default function App() {
       
     } catch (error) {
       console.error('Simulated streaming failed:', error)
-      updateStreamingMessage(aiMessageId, `Error reaching server: ${error?.message || 'Network Error.'}`, true)
+      updateStreamingMessage(aiMessageId, `Error reaching server: ${getErrorMessage(error)}`, true)
     } finally {
       setLoading(false)
       setIsStreaming(false)
@@ -476,7 +479,7 @@ export default function App() {
             setMessages((prev) => [...prev, {
               id: crypto.randomUUID(),
               role: 'assistant',
-              text: `You're in, ${res.user.username || res.user.firstname || 'there'}!`,
+              text: `You're in, ${res.user.username || (res.user as any).firstname || 'there'}!`,
               ts: Date.now(),
             }])
             if (openSellAfterAuth) { setOpenSellAfterAuth(false); setShowSell(true) }
@@ -486,12 +489,12 @@ export default function App() {
       ) : showSignUp ? (
         <SignUp
           onCancel={() => setShowSignUp(false)}
-          onSuccess={(res: SignUpResult) => {
+          onSuccess={(_res: SignUpResult) => {
             setShowSignUp(false)
             setMessages((prev) => [...prev, {
               id: crypto.randomUUID(),
               role: 'assistant',
-              text: res.message || 'Account created. Please verify OTP to complete your signup.',
+              text: 'Account created. Please verify OTP to complete your signup.',
               ts: Date.now(),
             }])
             setShowSignIn(true)
