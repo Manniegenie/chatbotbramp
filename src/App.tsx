@@ -4,6 +4,7 @@ import SignIn, { SignInResult } from './signin'
 import SignUp, { SignUpResult } from './signup'
 import { tokenStore } from './lib/secureStore'
 import SellModal from './sell'
+import BuyModal from './buy'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -57,7 +58,7 @@ async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
   return fetch(input, { ...init, headers })
 }
 
-// --- Updated SSE client that matches your backend streaming format ---
+// --- SSE client (robust) ---
 async function sendStreamingMessage(
   message: string,
   history: ChatMessage[],
@@ -65,15 +66,19 @@ async function sendStreamingMessage(
   onTyping?: (isTyping: boolean) => void
 ): Promise<{ reply: string; cta?: CTA | null; metadata?: any }> {
   const { access } = tokenStore.getTokens()
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'Accept': 'text/event-stream',
     'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache',
   }
-  
   if (access && !isExpiredJwt(access)) {
     headers['Authorization'] = `Bearer ${access}`
   }
+
+  const ac = new AbortController()
+  const timeout = setTimeout(() => ac.abort('stream-timeout'), 120_000)
 
   const response = await fetch(`${API_BASE}/chatbot/chat/stream`, {
     method: 'POST',
@@ -83,13 +88,18 @@ async function sendStreamingMessage(
       history: history.slice(-10).map((m) => ({ role: m.role, text: m.text })),
       sessionId: getSessionId(),
     }),
+    mode: 'cors',
+    cache: 'no-store',
+    referrerPolicy: 'no-referrer',
+    signal: ac.signal,
   })
 
   if (!response.ok) {
+    clearTimeout(timeout)
     throw new Error(`HTTP ${response.status}: ${response.statusText}`)
   }
-  
   if (!response.body) {
+    clearTimeout(timeout)
     throw new Error('No response body for streaming')
   }
 
@@ -105,51 +115,52 @@ async function sendStreamingMessage(
       const { done, value } = await reader.read()
       if (done) break
 
-      buffer += decoder.decode(value, { stream: true })
+      const chunk = decoder.decode(value, { stream: true })
+      // Helps confirm chunks really stream in DevTools
+      // console.log('[SSE chunk]', chunk.length, 'bytes')
+
+      buffer += chunk
       const lines = buffer.split('\n')
       buffer = lines.pop() || ''
 
       for (const line of lines) {
         const trimmed = line.trim()
         if (!trimmed || !trimmed.startsWith('data:')) continue
-        
+
         const dataStr = trimmed.slice(5).trim()
         if (!dataStr) continue
 
         try {
           const payload = JSON.parse(dataStr)
-          
-          // Handle different payload types from your backend
+
           if (payload.error) {
             throw new Error(payload.error)
           }
-          
           if (payload.typing) {
             onTyping?.(true)
             continue
           }
-          
           if (payload.isStream && typeof payload.text === 'string') {
-            fullText += payload.text
-            onChunk(fullText)
+            fullText += payload.text // append delta
+            onChunk(fullText)        // render cumulatively
             continue
           }
-          
           if (payload.complete) {
             onTyping?.(false)
             cta = payload.cta
             metadata = payload.metadata
+            clearTimeout(timeout)
             return { reply: fullText || '', cta, metadata }
           }
-          
         } catch (parseError) {
-          // Ignore malformed JSON - common with SSE streams
-          console.debug('Failed to parse SSE data:', dataStr)
+          // Ignore malformed JSON - sometimes partial lines
+          // console.debug('Failed to parse SSE data:', dataStr)
         }
       }
     }
   } finally {
-    reader.releaseLock()
+    clearTimeout(timeout)
+    try { reader.releaseLock() } catch {}
   }
 
   return { reply: fullText || '', cta, metadata }
@@ -273,14 +284,16 @@ export default function App() {
   const [isStreaming, setIsStreaming] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
 
-  // Updated loading states to match your backend behavior
   const [thinkingPhase, setThinkingPhase] = useState<'thinking' | 'browsing' | 'streaming'>('thinking')
   const [emojiTick, setEmojiTick] = useState(0)
 
   const [showSignIn, setShowSignIn] = useState(false)
   const [showSignUp, setShowSignUp] = useState(false)
   const [showSell, setShowSell] = useState(false)
+  const [showBuy, setShowBuy] = useState(false)
+
   const [openSellAfterAuth, setOpenSellAfterAuth] = useState(false)
+  const [openBuyAfterAuth, setOpenBuyAfterAuth] = useState(false)
 
   const [auth, setAuth] = useState<SignInResult | null>(() => {
     const { access, refresh } = tokenStore.getTokens()
@@ -307,13 +320,11 @@ export default function App() {
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, loading, showSignIn, showSignUp, showSell])
+  }, [messages, loading, showSignIn, showSignUp, showSell, showBuy])
 
-  // Updated thinking phases to match your backend metadata
   useEffect(() => {
     let phaseTimer: number | undefined
     let emojiTimer: number | undefined
-    
     if (loading && !isStreaming && !isTyping) {
       setThinkingPhase('thinking')
       setEmojiTick(0)
@@ -322,7 +333,6 @@ export default function App() {
     } else if (isTyping || isStreaming) {
       setThinkingPhase('streaming')
     }
-    
     return () => {
       if (phaseTimer) window.clearTimeout(phaseTimer)
       if (emojiTimer) window.clearInterval(emojiTimer)
@@ -340,54 +350,31 @@ export default function App() {
     const trimmed = input.trim()
     if (!trimmed || loading || isStreaming) return
 
-    const userMsg: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: 'user',
-      text: trimmed,
-      ts: Date.now(),
-    }
+    const userMsg: ChatMessage = { id: crypto.randomUUID(), role: 'user', text: trimmed, ts: Date.now() }
     setMessages((prev) => [...prev, userMsg])
     setInput('')
     setLoading(true)
 
     const aiMessageId = crypto.randomUUID()
-    const aiMsg: ChatMessage = {
-      id: aiMessageId,
-      role: 'assistant',
-      text: '',
-      ts: Date.now(),
-      isStreaming: true,
-    }
+    const aiMsg: ChatMessage = { id: aiMessageId, role: 'assistant', text: '', ts: Date.now(), isStreaming: true }
     setMessages((prev) => [...prev, aiMsg])
 
     try {
       setIsStreaming(true)
-      
       const data = await sendStreamingMessage(
         trimmed, 
         messages, 
-        (text) => {
-          updateStreamingMessage(aiMessageId, text)
-        },
-        (typing) => {
-          setIsTyping(typing)
-        }
+        (text) => { updateStreamingMessage(aiMessageId, text) },
+        (typing) => { setIsTyping(typing) }
       )
-
       updateStreamingMessage(aiMessageId, data.reply, true)
-
       if (data.cta) {
-        setMessages((prev) =>
-          prev.map((msg) => (msg.id === aiMessageId ? { ...msg, cta: data.cta || null } : msg))
-        )
+        setMessages((prev) => prev.map((msg) => (msg.id === aiMessageId ? { ...msg, cta: data.cta || null } : msg)))
       }
-
     } catch (streamError) {
       console.error('Streaming failed, falling back to /chatbot/chat:', streamError)
-      
       try {
         updateStreamingMessage(aiMessageId, 'Connecting...', false)
-
         const res = await authFetch(`${API_BASE}/chatbot/chat`, {
           method: 'POST',
           body: JSON.stringify({
@@ -396,23 +383,15 @@ export default function App() {
             sessionId: getSessionId(),
           }),
         })
-
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const data = await res.json()
         const botText = data?.reply ?? 'Sorry, I could not process that.'
         updateStreamingMessage(aiMessageId, botText, true)
-
         if (data.cta) {
-          setMessages((prev) =>
-            prev.map((msg) => (msg.id === aiMessageId ? { ...msg, cta: data.cta || null } : msg))
-          )
+          setMessages((prev) => prev.map((msg) => (msg.id === aiMessageId ? { ...msg, cta: data.cta || null } : msg)))
         }
       } catch (err: any) {
-        updateStreamingMessage(
-          aiMessageId,
-          `Error reaching server: ${err?.message || 'Network Error.'}`,
-          true
-        )
+        updateStreamingMessage(aiMessageId, `Error reaching server: ${err?.message || 'Network Error.'}`, true)
       }
     } finally {
       setLoading(false)
@@ -425,6 +404,7 @@ export default function App() {
     tokenStore.clear()
     setAuth(null)
     setShowSell(false)
+    setShowBuy(false)
   }
 
   function isSellCTA(btn: CTAButton): boolean {
@@ -447,23 +427,19 @@ export default function App() {
 
   function handleBuyClick(event?: React.MouseEvent) {
     event?.preventDefault()
-    // For now, just add a message to chat indicating buy functionality
-    // You can implement the buy modal/functionality similar to sell
-    setMessages((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), role: 'assistant', text: 'Buy functionality coming soon! For now, you can ask me about current rates or selling crypto.', ts: Date.now() },
-    ])
+    if (!auth) {
+      setOpenBuyAfterAuth(true)
+      setShowSignIn(true)
+      return
+    }
+    setShowBuy(true)
   }
 
   function echoFromModalToChat(text: string) {
     if (!text) return
-    setMessages((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), role: 'assistant', text, ts: Date.now() },
-    ])
+    setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'assistant', text, ts: Date.now() }])
   }
 
-  // Updated loading text to reflect actual backend states
   const getLoadingText = () => {
     if (isTyping) return 'Bramp AI is typing…'
     if (isStreaming) return 'Bramp AI is responding…'
@@ -493,18 +469,10 @@ export default function App() {
         ) : (
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <span className="tag">Signed in{auth.user?.username ? ` as ${auth.user.username}` : ''}</span>
-            <button
-              className="btn"
-              onClick={handleBuyClick}
-              style={{ background: 'var(--primary)', color: 'white' }}
-            >
+            <button className="btn" onClick={handleBuyClick} style={{ background: 'var(--primary)', color: 'white' }}>
               Buy
             </button>
-            <button
-              className="btn"
-              onClick={handleSellClick}
-              style={{ background: 'var(--primary)', color: 'white' }}
-            >
+            <button className="btn" onClick={handleSellClick} style={{ background: 'var(--primary)', color: 'white' }}>
               Sell
             </button>
             <button
@@ -520,7 +488,7 @@ export default function App() {
 
       {showSignIn ? (
         <SignIn
-          onCancel={() => { setShowSignIn(false); setOpenSellAfterAuth(false) }}
+          onCancel={() => { setShowSignIn(false); setOpenSellAfterAuth(false); setOpenBuyAfterAuth(false) }}
           onSuccess={(res) => {
             setAuth(res)
             setShowSignIn(false)
@@ -531,6 +499,7 @@ export default function App() {
               ts: Date.now(),
             }])
             if (openSellAfterAuth) { setOpenSellAfterAuth(false); setShowSell(true) }
+            if (openBuyAfterAuth)  { setOpenBuyAfterAuth(false);  setShowBuy(true) }
           }}
         />
       ) : showSignUp ? (
@@ -560,7 +529,6 @@ export default function App() {
                 </div>
                 <div className="text">
                   {renderMessageText(m.text)}
-
                   {m.role === 'assistant' && m.cta?.type === 'button' && m.cta.buttons?.length > 0 && (
                     <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       {m.cta.buttons.map((btn, index) => {
@@ -603,7 +571,6 @@ export default function App() {
                 </div>
               </div>
             ))}
-
             {(loading || isStreaming || isTyping) && <div className="typing">{getLoadingText()}</div>}
             <div ref={endRef} />
           </div>
@@ -629,7 +596,9 @@ export default function App() {
         </main>
       )}
 
+      {/* Modals */}
       <SellModal open={showSell} onClose={() => setShowSell(false)} onChatEcho={echoFromModalToChat} />
+      <BuyModal  open={showBuy}  onClose={() => setShowBuy(false)}  onChatEcho={echoFromModalToChat} />
 
       <footer className="footer">
         <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
