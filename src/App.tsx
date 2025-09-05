@@ -116,8 +116,6 @@ async function sendStreamingMessage(
       if (done) break
 
       const chunk = decoder.decode(value, { stream: true })
-      // Helps confirm chunks really stream in DevTools
-      // console.log('[SSE chunk]', chunk.length, 'bytes')
 
       buffer += chunk
       const lines = buffer.split('\n')
@@ -152,9 +150,8 @@ async function sendStreamingMessage(
             clearTimeout(timeout)
             return { reply: fullText || '', cta, metadata }
           }
-        } catch (parseError) {
-          // Ignore malformed JSON - sometimes partial lines
-          // console.debug('Failed to parse SSE data:', dataStr)
+        } catch {
+          // ignore partial JSON
         }
       }
     }
