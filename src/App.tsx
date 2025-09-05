@@ -58,8 +58,48 @@ async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
   return fetch(input, { ...init, headers })
 }
 
-// --- SSE client (robust) ---
-async function sendStreamingMessage(
+// ===== Simulated Streaming Implementation =====
+
+// Helper function to simulate typing effect
+async function simulateTypingEffect(
+  fullText: string, 
+  onChunk: (text: string) => void,
+  options: {
+    wordsPerChunk?: number
+    delayBetweenChunks?: number
+    minDelay?: number
+    maxDelay?: number
+  } = {}
+): Promise<void> {
+  const {
+    wordsPerChunk = 2,
+    delayBetweenChunks = 120,
+    minDelay = 80,
+    maxDelay = 200
+  } = options
+
+  const words = fullText.split(' ')
+  let currentText = ''
+
+  for (let i = 0; i < words.length; i += wordsPerChunk) {
+    const chunk = words.slice(i, i + wordsPerChunk)
+    currentText += (currentText ? ' ' : '') + chunk.join(' ')
+    
+    // Update the display
+    onChunk(currentText)
+    
+    // Don't delay after the last chunk
+    if (i + wordsPerChunk < words.length) {
+      // Variable delay to make it feel more natural
+      const randomDelay = Math.random() * (maxDelay - minDelay) + minDelay
+      const delay = Math.min(delayBetweenChunks + randomDelay, maxDelay)
+      await new Promise(resolve => setTimeout(resolve, delay))
+    }
+  }
+}
+
+// Simulated streaming message function
+async function sendSimulatedStreamingMessage(
   message: string,
   history: ChatMessage[],
   onChunk: (text: string) => void,
@@ -69,98 +109,56 @@ async function sendStreamingMessage(
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'Accept': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-    'Pragma': 'no-cache',
   }
   if (access && !isExpiredJwt(access)) {
     headers['Authorization'] = `Bearer ${access}`
   }
 
-  const ac = new AbortController()
-  const timeout = setTimeout(() => ac.abort('stream-timeout'), 120_000)
-
-  const response = await fetch(`${API_BASE}/chatbot/chat/stream`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      message,
-      history: history.slice(-10).map((m) => ({ role: m.role, text: m.text })),
-      sessionId: getSessionId(),
-    }),
-    mode: 'cors',
-    cache: 'no-store',
-    referrerPolicy: 'no-referrer',
-    signal: ac.signal,
-  })
-
-  if (!response.ok) {
-    clearTimeout(timeout)
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-  }
-  if (!response.body) {
-    clearTimeout(timeout)
-    throw new Error('No response body for streaming')
-  }
-
-  const reader = response.body.getReader()
-  const decoder = new TextDecoder()
-  let buffer = ''
-  let fullText = ''
-  let cta: CTA | null | undefined = null
-  let metadata: any = undefined
+  // Show typing indicator
+  onTyping?.(true)
 
   try {
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
+    // Make regular HTTP request to /chat endpoint
+    const response = await fetch(`${API_BASE}/chatbot/chat`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        message,
+        history: history.slice(-10).map((m) => ({ role: m.role, text: m.text })),
+        sessionId: getSessionId(),
+      }),
+      mode: 'cors',
+      cache: 'no-store',
+    })
 
-      const chunk = decoder.decode(value, { stream: true })
-
-      buffer += chunk
-      const lines = buffer.split('\n')
-      buffer = lines.pop() || ''
-
-      for (const line of lines) {
-        const trimmed = line.trim()
-        if (!trimmed || !trimmed.startsWith('data:')) continue
-
-        const dataStr = trimmed.slice(5).trim()
-        if (!dataStr) continue
-
-        try {
-          const payload = JSON.parse(dataStr)
-
-          if (payload.error) {
-            throw new Error(payload.error)
-          }
-          if (payload.typing) {
-            onTyping?.(true)
-            continue
-          }
-          if (payload.isStream && typeof payload.text === 'string') {
-            fullText += payload.text // append delta
-            onChunk(fullText)        // render cumulatively
-            continue
-          }
-          if (payload.complete) {
-            onTyping?.(false)
-            cta = payload.cta
-            metadata = payload.metadata
-            clearTimeout(timeout)
-            return { reply: fullText || '', cta, metadata }
-          }
-        } catch {
-          // ignore partial JSON
-        }
-      }
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
     }
-  } finally {
-    clearTimeout(timeout)
-    try { reader.releaseLock() } catch {}
-  }
 
-  return { reply: fullText || '', cta, metadata }
+    const data = await response.json()
+    const fullText = data?.reply ?? 'Sorry, I could not process that.'
+    
+    // Stop typing indicator
+    onTyping?.(false)
+
+    // Simulate streaming by gradually revealing text
+    await simulateTypingEffect(fullText, onChunk, {
+      wordsPerChunk: 2,
+      delayBetweenChunks: 120,
+      minDelay: 80,
+      maxDelay: 200
+    })
+
+    return {
+      reply: fullText,
+      cta: data.cta || null,
+      metadata: data.metadata
+    }
+
+  } catch (error) {
+    onTyping?.(false)
+    throw error
+  }
 }
 
 /* ----------------------- Linkify + Markdown-lite helpers ----------------------- */
@@ -358,38 +356,24 @@ export default function App() {
 
     try {
       setIsStreaming(true)
-      const data = await sendStreamingMessage(
+      
+      // Use simulated streaming instead of real SSE
+      const data = await sendSimulatedStreamingMessage(
         trimmed, 
         messages, 
         (text) => { updateStreamingMessage(aiMessageId, text) },
         (typing) => { setIsTyping(typing) }
       )
+      
       updateStreamingMessage(aiMessageId, data.reply, true)
+      
       if (data.cta) {
         setMessages((prev) => prev.map((msg) => (msg.id === aiMessageId ? { ...msg, cta: data.cta || null } : msg)))
       }
-    } catch (streamError) {
-      console.error('Streaming failed, falling back to /chatbot/chat:', streamError)
-      try {
-        updateStreamingMessage(aiMessageId, 'Connecting...', false)
-        const res = await authFetch(`${API_BASE}/chatbot/chat`, {
-          method: 'POST',
-          body: JSON.stringify({
-            message: trimmed,
-            history: messages.slice(-10).map((m) => ({ role: m.role, text: m.text })),
-            sessionId: getSessionId(),
-          }),
-        })
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const data = await res.json()
-        const botText = data?.reply ?? 'Sorry, I could not process that.'
-        updateStreamingMessage(aiMessageId, botText, true)
-        if (data.cta) {
-          setMessages((prev) => prev.map((msg) => (msg.id === aiMessageId ? { ...msg, cta: data.cta || null } : msg)))
-        }
-      } catch (err: any) {
-        updateStreamingMessage(aiMessageId, `Error reaching server: ${err?.message || 'Network Error.'}`, true)
-      }
+      
+    } catch (error) {
+      console.error('Simulated streaming failed:', error)
+      updateStreamingMessage(aiMessageId, `Error reaching server: ${error?.message || 'Network Error.'}`, true)
     } finally {
       setLoading(false)
       setIsStreaming(false)
