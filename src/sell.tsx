@@ -588,9 +588,9 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                           <span style={{ color: '#ff6b6b' }}>{accountNameError}</span>
                         ) : accountName ? (
                           accountName
-                        ) : (
-                          'Enter account number to resolve'
-                        )}
+                        ) : 
+                          'Enter account numbe'
+                        }
                       </div>
                     </label>
 
