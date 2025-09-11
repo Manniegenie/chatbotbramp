@@ -199,10 +199,45 @@ function renderMessageText(text: string): React.ReactNode {
 // Three dot loading component
 function ThreeDotLoader() {
   return (
-    <div className="three-dot-loader">
-      <div className="dot"></div>
-      <div className="dot"></div>
-      <div className="dot"></div>
+    <div className="typing">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <div style={{ 
+          width: '6px', 
+          height: '6px', 
+          backgroundColor: 'var(--muted)', 
+          borderRadius: '50%', 
+          animation: 'dotBounce 1.4s ease-in-out infinite both',
+          animationDelay: '-0.32s'
+        }}></div>
+        <div style={{ 
+          width: '6px', 
+          height: '6px', 
+          backgroundColor: 'var(--muted)', 
+          borderRadius: '50%', 
+          animation: 'dotBounce 1.4s ease-in-out infinite both',
+          animationDelay: '-0.16s'
+        }}></div>
+        <div style={{ 
+          width: '6px', 
+          height: '6px', 
+          backgroundColor: 'var(--muted)', 
+          borderRadius: '50%', 
+          animation: 'dotBounce 1.4s ease-in-out infinite both',
+          animationDelay: '0s'
+        }}></div>
+      </div>
+      <style>{`
+        @keyframes dotBounce {
+          0%, 80%, 100% {
+            transform: scale(0.8);
+            opacity: 0.5;
+          }
+          40% {
+            transform: scale(1.2);
+            opacity: 1;
+          }
+        }
+      `}</style>
     </div>
   )
 }
@@ -265,12 +300,7 @@ export default function App() {
     const trimmed = input.trim()
     if (!trimmed || loading) return
 
-    const userMsg: ChatMessage = { 
-      id: crypto.randomUUID(), 
-      role: 'user', 
-      text: trimmed, 
-      ts: Date.now()
-    }
+    const userMsg: ChatMessage = { id: crypto.randomUUID(), role: 'user', text: trimmed, ts: Date.now() }
     setMessages((prev) => [...prev, userMsg])
     setInput('')
     setLoading(true)
@@ -339,155 +369,97 @@ export default function App() {
 
   function echoFromModalToChat(text: string) {
     if (!text) return
-    setMessages((prev) => [...prev, { 
-      id: crypto.randomUUID(), 
-      role: 'assistant', 
-      text, 
-      ts: Date.now()
-    }])
+    setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'assistant', text, ts: Date.now() }])
   }
 
   return (
-    <>
-      <style>
-        {`
-          .three-dot-loader {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            padding: 12px;
-            margin: 8px 0;
-          }
+    <div className="page">
+      <header className="header">
+        <div className="brand">
+          <p className="tag">Secure access to digital assets & payments — via licensed partners.</p>
+        </div>
 
-          .three-dot-loader .dot {
-            width: 6px;
-            height: 6px;
-            background-color: var(--muted);
-            border-radius: 50%;
-            animation: dotBounce 1.4s ease-in-out infinite both;
-          }
-
-          .three-dot-loader .dot:nth-child(1) { animation-delay: -0.32s; }
-          .three-dot-loader .dot:nth-child(2) { animation-delay: -0.16s; }
-          .three-dot-loader .dot:nth-child(3) { animation-delay: 0s; }
-
-          @keyframes dotBounce {
-            0%, 80%, 100% {
-              transform: scale(0.8);
-              opacity: 0.5;
-            }
-            40% {
-              transform: scale(1.2);
-              opacity: 1;
-            }
-          }
-        `}
-      </style>
-      
-      <div className="page">
-        <header className="header">
-          <div className="brand">
-            <p className="tag">Secure access to digital assets & payments — via licensed partners.</p>
+        {!auth ? (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn" onClick={() => setShowSignIn(true)}>Sign in</button>
+            <button
+              className="btn"
+              style={{ background: 'transparent', color: 'var(--txt)', border: '1px solid var(--border)' }}
+              onClick={() => setShowSignUp(true)}
+            >
+              Sign up
+            </button>
           </div>
-
-          {!auth ? (
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn" onClick={() => setShowSignIn(true)}>Sign in</button>
-              <button
-                className="btn"
-                style={{ background: 'transparent', color: 'var(--txt)', border: '1px solid var(--border)' }}
-                onClick={() => setShowSignUp(true)}
-              >
-                Sign up
-              </button>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <span className="tag">Signed in{auth.user?.username ? ` as ${auth.user.username}` : ''}</span>
-              <button className="btn" onClick={handleBuyClick} style={{ background: 'var(--primary)', color: 'white' }}>
-                Buy
-              </button>
-              <button className="btn" onClick={handleSellClick} style={{ background: 'var(--primary)', color: 'white' }}>
-                Sell
-              </button>
-              <button
-                className="btn"
-                style={{ background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border)' }}
-                onClick={signOut}
-              >
-                Sign out
-              </button>
-            </div>
-          )}
-        </header>
-
-        {showSignIn ? (
-          <SignIn
-            onCancel={() => { setShowSignIn(false); setOpenSellAfterAuth(false); setOpenBuyAfterAuth(false) }}
-            onSuccess={(res) => {
-              setAuth(res)
-              setShowSignIn(false)
-              setMessages((prev) => [...prev, {
-                id: crypto.randomUUID(),
-                role: 'assistant',
-                text: `You're in, ${res.user.username || (res.user as any).firstname || 'there'}!`,
-                ts: Date.now()
-              }])
-              if (openSellAfterAuth) { setOpenSellAfterAuth(false); setShowSell(true) }
-              if (openBuyAfterAuth)  { setOpenBuyAfterAuth(false);  setShowBuy(true) }
-            }}
-          />
-        ) : showSignUp ? (
-          <SignUp
-            onCancel={() => setShowSignUp(false)}
-            onSuccess={(_res: SignUpResult) => {
-              setShowSignUp(false)
-              setMessages((prev) => [...prev, {
-                id: crypto.randomUUID(),
-                role: 'assistant',
-                text: 'Account created. Please verify OTP to complete your signup.',
-                ts: Date.now()
-              }])
-              setShowSignIn(true)
-            }}
-          />
         ) : (
-          <main className="chat">
-            <div className="messages">
-              {messages.map((m) => (
-                <div key={m.id} className={`bubble ${m.role}`}>
-                  <div className="role">
-                    {m.role === 'user' ? 'You' : 'Bramp AI'}
-                  </div>
-                  <div className="text">
-                    {renderMessageText(m.text)}
-                    {m.role === 'assistant' && m.cta?.type === 'button' && m.cta.buttons?.length > 0 && (
-                      <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                        {m.cta.buttons.map((btn, index) => {
-                          const isSell = isSellCTA(btn)
-                          if (isSell) {
-                            return (
-                              <button
-                                key={btn.id || btn.title || index}
-                                className="btn"
-                                onClick={handleSellClick}
-                                style={
-                                  btn.style === 'primary'
-                                    ? undefined
-                                    : { background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }
-                                }
-                              >
-                                {btn.title}
-                              </button>
-                            )
-                          }
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <span className="tag">Signed in{auth.user?.username ? ` as ${auth.user.username}` : ''}</span>
+            <button className="btn" onClick={handleBuyClick} style={{ background: 'var(--primary)', color: 'white' }}>
+              Buy
+            </button>
+            <button className="btn" onClick={handleSellClick} style={{ background: 'var(--primary)', color: 'white' }}>
+              Sell
+            </button>
+            <button
+              className="btn"
+              style={{ background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border)' }}
+              onClick={signOut}
+            >
+              Sign out
+            </button>
+          </div>
+        )}
+      </header>
+
+      {showSignIn ? (
+        <SignIn
+          onCancel={() => { setShowSignIn(false); setOpenSellAfterAuth(false); setOpenBuyAfterAuth(false) }}
+          onSuccess={(res) => {
+            setAuth(res)
+            setShowSignIn(false)
+            setMessages((prev) => [...prev, {
+              id: crypto.randomUUID(),
+              role: 'assistant',
+              text: `You're in, ${res.user.username || (res.user as any).firstname || 'there'}!`,
+              ts: Date.now(),
+            }])
+            if (openSellAfterAuth) { setOpenSellAfterAuth(false); setShowSell(true) }
+            if (openBuyAfterAuth)  { setOpenBuyAfterAuth(false);  setShowBuy(true) }
+          }}
+        />
+      ) : showSignUp ? (
+        <SignUp
+          onCancel={() => setShowSignUp(false)}
+          onSuccess={(_res: SignUpResult) => {
+            setShowSignUp(false)
+            setMessages((prev) => [...prev, {
+              id: crypto.randomUUID(),
+              role: 'assistant',
+              text: 'Account created. Please verify OTP to complete your signup.',
+              ts: Date.now(),
+            }])
+            setShowSignIn(true)
+          }}
+        />
+      ) : (
+        <main className="chat">
+          <div className="messages">
+            {messages.map((m) => (
+              <div key={m.id} className={`bubble ${m.role}`}>
+                <div className="role">
+                  {m.role === 'user' ? 'You' : 'Bramp AI'}
+                </div>
+                <div className="text">
+                  {renderMessageText(m.text)}
+                  {m.role === 'assistant' && m.cta?.type === 'button' && m.cta.buttons?.length > 0 && (
+                    <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {m.cta.buttons.map((btn, index) => {
+                        const isSell = isSellCTA(btn)
+                        if (isSell) {
                           return (
-                            <a
+                            <button
                               key={btn.id || btn.title || index}
                               className="btn"
-                              href={btn.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                              onClick={handleSellClick}
                               style={
                                 btn.style === 'primary'
                                   ? undefined
@@ -495,50 +467,66 @@ export default function App() {
                               }
                             >
                               {btn.title}
-                            </a>
+                            </button>
                           )
-                        })}
-                      </div>
-                    )}
-                  </div>
+                        }
+                        return (
+                          <a
+                            key={btn.id || btn.title || index}
+                            className="btn"
+                            href={btn.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={
+                              btn.style === 'primary'
+                                ? undefined
+                                : { background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }
+                            }
+                          >
+                            {btn.title}
+                          </a>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
-              ))}
-              {loading && <ThreeDotLoader />}
-              <div ref={endRef} />
-            </div>
+              </div>
+            ))}
+            {loading && <ThreeDotLoader />}
+            <div ref={endRef} />
+          </div>
 
-            <form className="composer" onSubmit={sendMessage}>
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={loading ? 'Please wait…' : 'Try: Sell 100 USDT to NGN'}
-                autoFocus
-                disabled={loading}
-              />
-              <button className="btn" disabled={loading || !input.trim()}>
-                {loading ? 'Sending…' : 'Send'}
-              </button>
-            </form>
+          <form className="composer" onSubmit={sendMessage}>
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={loading ? 'Please wait…' : 'Try: Sell 100 USDT to NGN'}
+              autoFocus
+              disabled={loading}
+            />
+            <button className="btn" disabled={loading || !input.trim()}>
+              {loading ? 'Sending…' : 'Send'}
+            </button>
+          </form>
 
-            <div className="hints">
-              <span className="hint" onClick={() => !loading && setInput('Sell 100 USDT to NGN')}>Sell 100 USDT to NGN</span>
-              <span className="hint" onClick={() => !loading && setInput('Show my portfolio balance')}>Show my portfolio balance</span>
-              <span className="hint" onClick={() => !loading && setInput('Current NGN rates')}>Current NGN rates</span>
-            </div>
-          </main>
-        )}
+          <div className="hints">
+            <span className="hint" onClick={() => !loading && setInput('Sell 100 USDT to NGN')}>Sell 100 USDT to NGN</span>
+            <span className="hint" onClick={() => !loading && setInput('Show my portfolio balance')}>Show my portfolio balance</span>
+            <span className="hint" onClick={() => !loading && setInput('Current NGN rates')}>Current NGN rates</span>
+          </div>
+        </main>
+      )}
 
-        {/* Modals */}
-        <SellModal open={showSell} onClose={() => setShowSell(false)} onChatEcho={echoFromModalToChat} />
-        <BuyModal  open={showBuy}  onClose={() => setShowBuy(false)}  onChatEcho={echoFromModalToChat} />
+      {/* Modals */}
+      <SellModal open={showSell} onClose={() => setShowSell(false)} onChatEcho={echoFromModalToChat} />
+      <BuyModal  open={showBuy}  onClose={() => setShowBuy(false)}  onChatEcho={echoFromModalToChat} />
 
-        <footer className="footer">
-          <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
-          <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
-          <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp/drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
-          <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
-        </footer>
-      </div>
-    </>
+      <footer className="footer">
+        <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
+        <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
+        <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp/drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
+        <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
+      </footer>
+    </div>
   )
 }
