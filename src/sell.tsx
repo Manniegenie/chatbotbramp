@@ -1,4 +1,4 @@
-// src/sell.tsx - DEBUG VERSION WITH FULL LOGGING
+// src/sell.tsx - FINAL FIX
 import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -204,110 +204,54 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
   const [bankOptions, setBankOptions] = useState<BankOption[]>([])
   const banksFetchedRef = useRef(false)
 
-  // 🔍 DEBUG: Log every render
-  console.log("🔍 SellModal RENDER", { 
-    open, 
-    step,
-    hasInitData: !!initData,
-    hasPayData: !!payData,
-    initDataId: initData?.paymentId,
-    payDataId: payData?.paymentId,
-    hasToken: !!authToken,
-    tokenLength: authToken?.length
-  })
-
-  // 🔍 DEBUG: Log when final summary should be shown
-  const showFinalSummary = !!payData
+  // 🔧 FIXED: Clear state immediately when modal closes, reset when it opens
   useEffect(() => {
-    if (showFinalSummary) {
-      console.log("🔍 FINAL SUMMARY TRIGGERED", {
-        hasInitData: !!initData,
-        hasPayData: !!payData,
-        payDataDetails: payData ? {
-          paymentId: payData.paymentId,
-          bankName: payData.payout?.bankName,
-          accountName: payData.payout?.accountName
-        } : null
-      })
-      
-      if (initData && payData) {
-        const recapText = buildPayoutRecap(initData, payData)
-        console.log("🔍 CALLING onChatEcho with:", recapText)
-        onChatEcho?.(recapText)
-      }
+    if (open) {
+      // Reset to initial state when opening
+      setStep(1)
+      setToken('USDT')
+      setNetwork(NETWORKS_BY_TOKEN['USDT'][0].code)
+      setAmount('100')
+      setInitLoading(false)
+      setInitError(null)
+      setInitData(null)
+      setBankName('')
+      setBankCode('')
+      setAccountNumber('')
+      setAccountName('')
+      setAccountNameLoading(false)
+      setAccountNameError(null)
+      setPayLoading(false)
+      setPayError(null)
+      setPayData(null)
+      setBanksLoading(false)
+      setBanksError(null)
+      setBankOptions([])
+      setSummaryExpiresAt(null)
+      banksFetchedRef.current = false
+    } else {
+      // 🔧 CRITICAL: Clear transaction data when modal closes
+      setInitData(null)
+      setPayData(null)
+      setSummaryExpiresAt(null)
     }
-  }, [showFinalSummary, initData, payData, onChatEcho])
+  }, [open])
 
-  // 🔍 DEBUG: Reset on open - with detailed logging
+  // 🔧 FIXED: Only trigger onChatEcho when modal is actually open and we have valid data
+  const showFinalSummary = !!payData
+  const hasTriggeredChatRef = useRef(false)
+  
   useEffect(() => {
-    console.log("🔍 RESET EFFECT TRIGGERED", { open })
-    
     if (!open) {
-      console.log("🔍 Modal closed - not resetting")
+      hasTriggeredChatRef.current = false
       return
     }
     
-    console.log("🔍 BEFORE RESET:", { 
-      step,
-      hasInitData: !!initData,
-      hasPayData: !!payData,
-      initDataDetails: initData ? {
-        paymentId: initData.paymentId,
-        reference: initData.reference,
-        bankDetails: initData.deposit
-      } : null,
-      payDataDetails: payData ? {
-        paymentId: payData.paymentId,
-        bankName: payData.payout?.bankName
-      } : null
-    })
-    
-    setStep(1)
-    setToken('USDT')
-    setNetwork(NETWORKS_BY_TOKEN['USDT'][0].code)
-    setAmount('100')
-    setInitLoading(false)
-    setInitError(null)
-    setInitData(null)
-    setBankName('')
-    setBankCode('')
-    setAccountNumber('')
-    setAccountName('')
-    setAccountNameLoading(false)
-    setAccountNameError(null)
-    setPayLoading(false)
-    setPayError(null)
-    setPayData(null)
-    setBanksLoading(false)
-    setBanksError(null)
-    setBankOptions([])
-    setSummaryExpiresAt(null)
-    banksFetchedRef.current = false
-    
-    console.log("🔍 AFTER RESET: All state should be cleared")
-  }, [open])
-
-  // 🔍 DEBUG: Watch for state changes that shouldn't happen
-  useEffect(() => {
-    if (open && initData) {
-      console.log("🔍 WARNING: initData exists when modal is open!", {
-        paymentId: initData.paymentId,
-        reference: initData.reference,
-        amount: initData.deposit?.amount,
-        token: initData.deposit?.token
-      })
+    if (showFinalSummary && initData && payData && !hasTriggeredChatRef.current) {
+      hasTriggeredChatRef.current = true
+      onChatEcho?.(buildPayoutRecap(initData, payData))
     }
-  }, [open, initData])
-
-  useEffect(() => {
-    if (open && payData) {
-      console.log("🔍 WARNING: payData exists when modal is open!", {
-        paymentId: payData.paymentId,
-        bankName: payData.payout?.bankName,
-        accountName: payData.payout?.accountName
-      })
-    }
-  }, [open, payData])
+  }, [open, showFinalSummary, initData, payData, onChatEcho])
 
   // Keep network valid
   useEffect(() => {
@@ -331,8 +275,6 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
   useEffect(() => {
     if (!open || step !== 2 || banksFetchedRef.current || !authToken) return
     banksFetchedRef.current = true
-    
-    console.log("🔍 FETCHING BANKS")
     
     ;(async () => {
       setBanksLoading(true)
@@ -361,9 +303,7 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
           setBankCode('')
           setBankName('')
         }
-        console.log("🔍 BANKS LOADED:", opts.length)
       } catch (e: any) {
-        console.log("🔍 BANKS ERROR:", e.message)
         setBanksError(e?.message || 'Failed to load banks')
         setBankOptions([])
         setBankCode('')
@@ -422,15 +362,6 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
 
   async function submitInitiate(e: React.FormEvent) {
     e.preventDefault()
-    
-    console.log("🔍 SUBMIT INITIATE called", {
-      hasToken: !!authToken,
-      tokenLength: authToken?.length,
-      amount,
-      token,
-      network
-    })
-    
     setInitError(null)
     if (!amount || isNaN(+amount) || +amount <= 0) {
       setInitError('Enter a valid amount')
@@ -451,13 +382,10 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
       })
       
       const data: InitiateSellRes = await res.json()
-      console.log("🔍 INITIATE RESPONSE:", { success: res.ok, data })
-      
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
       setInitData(data)
       setStep(2)
     } catch (err: any) {
-      console.log("🔍 INITIATE ERROR:", err.message)
       setInitError(err.message || 'Failed to initiate sell')
     } finally {
       setInitLoading(false)
@@ -466,16 +394,6 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
 
   async function submitPayout(e: React.FormEvent) {
     e.preventDefault()
-    
-    console.log("🔍 SUBMIT PAYOUT called", {
-      hasInitData: !!initData,
-      paymentId: initData?.paymentId,
-      bankName,
-      bankCode,
-      accountNumber,
-      accountName
-    })
-    
     setPayError(null)
     if (!bankName || !bankCode || !accountNumber || !accountName) {
       setPayError('Fill in all bank fields')
@@ -506,20 +424,12 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
       })
       
       const data: PayoutRes = await res.json()
-      console.log("🔍 PAYOUT RESPONSE:", { success: res.ok, data })
-      
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
       setPayData(data)
-      
-      console.log("🔍 PAYOUT SUCCESS - setting payData", {
-        paymentId: data.paymentId,
-        bankName: data.payout?.bankName
-      })
       
       // Start a fresh local 10:00 window AFTER payout is captured
       setSummaryExpiresAt(new Date(Date.now() + 10 * 60 * 1000).toISOString())
     } catch (err: any) {
-      console.log("🔍 PAYOUT ERROR:", err.message)
       setPayError(err.message || 'Failed to save payout details')
     } finally {
       setPayLoading(false)
@@ -530,7 +440,6 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
   useEffect(() => {
     if (!open) return
     if (showFinalSummary && expired) {
-      console.log("🔍 AUTO-CLOSING due to expired countdown")
       onClose()
     }
   }, [open, showFinalSummary, expired, onClose])
@@ -547,7 +456,6 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
 
   // Show auth required message if no token
   if (!authToken) {
-    console.log("🔍 SHOWING AUTH REQUIRED SCREEN")
     return createPortal(
       <div style={overlayStyle} role="dialog" aria-modal="true">
         <div style={{...sheetStyle, padding: 40, textAlign: 'center' as const, minHeight: 200, placeItems: 'center'}}>
@@ -564,14 +472,6 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
   const headerTitle =
     step === 1 ? 'Start a Sell'
     : (!payData ? 'Payout Details' : 'Transaction Summary')
-
-  console.log("🔍 RENDERING MAIN MODAL", { 
-    step, 
-    headerTitle, 
-    showFinalSummary,
-    hasInitData: !!initData,
-    hasPayData: !!payData
-  })
 
   return createPortal(
     <div style={overlayStyle} role="dialog" aria-modal="true" aria-labelledby="sell-title" onClick={onClose}>
