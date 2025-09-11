@@ -250,9 +250,9 @@ export default function App() {
       id: crypto.randomUUID(),
       role: 'assistant',
       text:
-        "Hey! I'm Bramp AI—your fast lane from crypto to NGN. " +
-        "Sign in to unlock live rates, instant quotes, and one-tap cashouts. " +
-        "Try: 'Sell 100 USDT to NGN'",
+        "👋 Hey there! I’m Bramp AI — your crypto buddy for turning USDT into NGN (and back). " +
+        "Ready for live rates, ⚡ instant quotes, and 💸 one-tap cashouts? " +
+        "Just say something like: “Sell 100 USDT to NGN” — and I’ll handle it. 😉'",
       ts: Date.now(),
     },
   ])
