@@ -373,7 +373,36 @@ export default function App() {
   }
 
   return (
-    <div className="page">
+    <>
+      <style>
+        {`
+          /* Fix iOS viewport issues */
+          @supports (-webkit-touch-callout: none) {
+            html {
+              height: -webkit-fill-available;
+            }
+            body {
+              min-height: 100vh;
+              min-height: -webkit-fill-available;
+            }
+            .page {
+              min-height: 100vh;
+              min-height: -webkit-fill-available;
+            }
+          }
+          
+          /* Prevent safe area displacement during scroll */
+          @media (max-width: 480px) {
+            .composer {
+              padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
+            }
+            .footer {
+              padding-bottom: max(14px, calc(14px + env(safe-area-inset-bottom))) !important;
+            }
+          }
+        `}
+      </style>
+      <div className="page">
       <header className="header">
         <div className="brand">
           <p className="tag">Secure access to digital assets & payments — via licensed partners.</p>
@@ -528,5 +557,6 @@ export default function App() {
         <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
       </footer>
     </div>
+    </>
   )
 }
