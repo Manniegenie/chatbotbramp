@@ -137,7 +137,7 @@ function buildPayoutRecap(init: InitiateSellRes | null, p: PayoutRes) {
     `Account: ${p.payout.accountName} — ${p.payout.accountNumber}`,
     '',
     `Recap: pay **${prettyAmount(Number(payAmount || 0))} ${t}** on **${netLabel}**.`,
-    `You’ll receive: **${prettyNgn(Number(recv || 0))}** at **${prettyAmount(Number(rate || 0))} NGN/${t}**.`,
+    `You'll receive: **${prettyNgn(Number(recv || 0))}** at **${prettyAmount(Number(rate || 0))} NGN/${t}**.`,
     `⚠️ Remember: pay the **exact amount** shown for smooth processing.`,
   ].join('\n')
 }
@@ -187,6 +187,8 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [bankCode, setBankCode] = useState('')
   const [accountNumber, setAccountNumber] = useState('')
   const [accountName, setAccountName] = useState('')
+  const [accountNameLoading, setAccountNameLoading] = useState(false)
+  const [accountNameError, setAccountNameError] = useState<string | null>(null)
   const [payLoading, setPayLoading] = useState(false)
   const [payError, setPayError] = useState<string | null>(null)
   const [payData, setPayData] = useState<PayoutRes | null>(null)
@@ -215,6 +217,8 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     setBankCode('')
     setAccountNumber('')
     setAccountName('')
+    setAccountNameLoading(false)
+    setAccountNameError(null)
     setPayLoading(false)
     setPayError(null)
     setPayData(null)
@@ -279,6 +283,45 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       }
     })()
   }, [open, step])
+
+  // Resolve account name (debounced)
+  useEffect(() => {
+    if (!open || step !== 2 || !bankCode || !accountNumber) return
+    if (accountNumber.length < 10) {
+      setAccountName('')
+      setAccountNameError(null)
+      return
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setAccountNameLoading(true)
+      setAccountNameError(null)
+      setAccountName('')
+      try {
+        const res = await fetch(
+          `${API_BASE}/accountname/resolve?sortCode=${encodeURIComponent(bankCode)}&accountNumber=${encodeURIComponent(accountNumber)}`,
+          { method: 'GET', headers: getHeaders() }
+        )
+        const data = await res.json()
+        if (!res.ok || !data.success) {
+          throw new Error(data?.message || `HTTP ${res.status}`)
+        }
+        if (data.data?.accountName) {
+          setAccountName(data.data.accountName)
+          setAccountNameError(null)
+        } else {
+          throw new Error('Account name not found')
+        }
+      } catch (err: any) {
+        setAccountName('')
+        setAccountNameError(err?.message || 'Failed to resolve account name')
+      } finally {
+        setAccountNameLoading(false)
+      }
+    }, 500)
+
+    return () => clearTimeout(timeoutId)
+  }, [open, step, bankCode, accountNumber])
 
   async function submitInitiate(e: React.FormEvent) {
     e.preventDefault()
@@ -386,7 +429,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
           {step === 1 && (
             <div style={{ display: 'grid', gap: 14 }}>
               <p style={{ margin: 0, color: 'var(--muted)' }}>
-                Choose token, network, and amount. We’ll capture payout next.
+                Choose token, network, and amount. We'll capture payout next.
               </p>
 
               {!!initError && (
@@ -521,18 +564,26 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
                     <label style={{ ...inputWrap, gridColumn: '1 / span 2' }}>
                       <span style={labelText}>Account Name</span>
-                      <input
-                        style={inputBase}
-                        value={accountName}
-                        onChange={e => setAccountName(e.target.value)}
-                        placeholder="e.g. Aduke Oslo Okoro"
-                      />
+                      <div style={{ ...inputBase, background: '#1a1d23', color: accountName ? 'var(--txt)' : 'var(--muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {accountNameLoading ? (
+                          <>
+                            <div style={{ width: 12, height: 12, border: '2px solid var(--border)', borderTop: '2px solid var(--accent)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                            Resolving...
+                          </>
+                        ) : accountNameError ? (
+                          <span style={{ color: '#ff6b6b' }}>{accountNameError}</span>
+                        ) : accountName ? (
+                          accountName
+                        ) : 
+                          'Enter account number'
+                        }
+                      </div>
                     </label>
 
                     <div style={{ gridColumn: '1 / span 2', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
                       <button
                         style={btnPrimary}
-                        disabled={payLoading || !bankCode || banksLoading}
+                        disabled={payLoading || !bankCode || banksLoading || !accountName}
                       >
                         {payLoading ? 'Saving…' : 'Save Payout & Show Summary'}
                       </button>
@@ -627,7 +678,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         <div style={footerStyle}>
           <div style={smallMuted}>
             {step === 1
-              ? 'We’ll capture your payout next.'
+              ? 'We\'ll capture your payout next.'
               : (showFinalSummary
                   ? 'Copy the deposit details and send the exact amount within the window.'
                   : 'Ensure your bank details match your account name.')}
@@ -648,7 +699,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
       {/* Tiny animation keyframes */}
       <style>
-        {`@keyframes scaleIn{from{transform:translateY(8px) scale(.98); opacity:.0} to{transform:none; opacity:1}}`}
+        {`@keyframes scaleIn{from{transform:translateY(8px) scale(.98); opacity:.0} to{transform:none; opacity:1}} @keyframes spin{from{transform:rotate(0deg)} to{transform:rotate(360deg)}}`}
       </style>
     </div>,
     document.body
