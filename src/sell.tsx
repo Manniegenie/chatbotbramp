@@ -496,6 +496,13 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
       console.log('🎉 Payout flow completed successfully!')
 
+      // Nuclear option: force complete re-render by updating multiple states
+      setTimeout(() => {
+        console.log('💥 Nuclear re-render triggered')
+        setStep(2) // Force step state update
+        setPayLoading(false) // Ensure loading is off
+      }, 100)
+
     } catch (err: any) {
       console.error('💥 Payout failed:', err)
       setPayError(err.message || 'Failed to save payout details')
