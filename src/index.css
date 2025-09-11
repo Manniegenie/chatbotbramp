@@ -12,9 +12,7 @@
   --sa-top: env(safe-area-inset-top, 0px);
   --sa-bottom: env(safe-area-inset-bottom, 0px);
   --appbar-h: 56px;
-  --composer-h: 76px;      /* actual visual height of composer (adjust if you change padding/height) */
-  --hints-h: 48px;         /* approximate hints row height */
-  --footer-h: 54px;
+  --composer-h: 64px;
   --max-chat-width: 860px;
 }
 
@@ -23,20 +21,20 @@
 html, body, #root { height: 100%; margin: 0; }
 html { text-size-adjust: 100%; -webkit-text-size-adjust: 100%; }
 
-/* Body / typography */
+/* Body / typography: slightly restrained mobile scaling to avoid layout jumps */
 body {
   background: var(--bg);
   color: var(--txt);
   font-family: var(--font-sans);
   font-optical-sizing: auto;
-  font-size: 16px;
+  font-size: 16px;                       /* fixed baseline avoids iOS zoom oddities */
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color-scheme: dark;
 }
 
-/* Geist utility classes */
+/* Geist utility classes (unchanged) */
 .geist-brand,
 .geist-100, .geist-200, .geist-300, .geist-400,
 .geist-500, .geist-600, .geist-700, .geist-800, .geist-900 {
@@ -55,14 +53,13 @@ a:hover { opacity: .92; }
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  position: relative;
 }
 
-/* Header */
+/* Header: compact, collapsible on mobile but keep auth buttons visible */
 .header {
   position: sticky;
   top: 0;
-  z-index: 30;
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -75,7 +72,7 @@ a:hover { opacity: .92; }
   gap: 12px;
 }
 
-/* Brand */
+/* Brand: keep it compact and allow truncation */
 .brand { display: flex; gap: 10px; align-items: center; min-width: 0; }
 .logo { width: 34px; height: 34px; object-fit: contain; border-radius: 8px; box-shadow: var(--glow); }
 .tag  { margin: 0; color: var(--muted); font-size: 13px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
@@ -97,7 +94,7 @@ a:hover { opacity: .92; }
 .btn-ghost   { background: transparent; color: var(--muted); border: 1px solid var(--border); }
 .btn-block   { width: 100%; }
 
-/* Chat container */
+/* Chat container: center on larger screens, full width on small screens */
 .chat {
   max-width: var(--max-chat-width);
   width: 100%;
@@ -106,26 +103,20 @@ a:hover { opacity: .92; }
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 0; /* IMPORTANT */
+  min-height: 0;
   box-sizing: border-box;
-  position: relative;
 }
 
-/* Messages: scrolling container */
+/* Messages: fluid — keep padding-bottom large enough for composer + safe area */
 .messages {
   display: flex;
   flex-direction: column;
   gap: 14px;
   padding: 10px 0;
   overflow: auto;
-  -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   scroll-behavior: smooth;
-  padding-bottom: calc(var(--composer-h) + var(--hints-h) + var(--sa-bottom) + 18px);
-  scroll-padding-bottom: calc(var(--composer-h) + var(--hints-h) + var(--sa-bottom) + 18px);
-  min-height: 0; /* allow correct shrinking in flex layout */
-  position: relative;
-  z-index: 1;
+  padding-bottom: calc(var(--composer-h) + var(--sa-bottom) + 22px);
 }
 .messages::-webkit-scrollbar{height:10px;width:10px}
 .messages::-webkit-scrollbar-thumb{background:#1b1b24;border:2px solid transparent;border-radius:8px;background-clip:padding-box}
@@ -164,7 +155,7 @@ a:hover { opacity: .92; }
 
 .bubble .text { white-space: pre-wrap; word-wrap: break-word; }
 
-/* CTA buttons inside messages */
+/* CTA buttons inside messages — become single column on very small screens */
 .cta-buttons { display: grid; gap: 10px; margin-top: 12px; }
 @media (min-width: 480px) { .cta-buttons { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 420px) { .cta-buttons { grid-template-columns: 1fr; } }
@@ -183,17 +174,12 @@ a:hover { opacity: .92; }
 .typing-dots .dot:nth-child(2){animation-delay:.2s}.typing-dots .dot:nth-child(3){animation-delay:.4s}
 @keyframes blink{0%,80%,100%{opacity:.3;transform:translateY(0)}40%{opacity:1;transform:translateY(-2px)}}
 
-/* Composer: fixed on small screens for predictable behavior */
+/* Composer: sticky and responsive — swaps to stacked layout on narrow viewports */
 .composer {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: calc(var(--sa-bottom));
-  z-index: 60;
-  margin: 0 auto;
-  width: 100%;
-  max-width: var(--max-chat-width);
-  box-sizing: border-box;
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  margin-top: auto;
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 10px;
@@ -202,49 +188,32 @@ a:hover { opacity: .92; }
   background: linear-gradient(180deg, rgba(11,11,16,0), rgba(11,11,16,.92));
   backdrop-filter: saturate(120%) blur(6px);
   -webkit-backdrop-filter: saturate(120%) blur(6px);
-  height: var(--composer-h); /* keeps consistent visual height */
 }
 
-/* Input styles */
+/* Input styles (touch-friendly) */
 .composer input {
   flex: 1;
   background: var(--card);
   border: 1px solid var(--border);
   color: var(--txt);
   height: 48px;
-  min-height: 48px;
+  min-height: 48px;                /* >=44px to avoid iOS zoom */
   padding: 0 14px;
   border-radius: 12px;
   outline: none;
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.4;
   transition: border-color .15s ease, box-shadow .15s ease;
   touch-action: manipulation;
   appearance: none; -webkit-appearance: none;
 }
-.composer input::placeholder { color: #7b8391; font-size: 16px; }
+.composer input::placeholder { color: #7b8391; }
 .composer input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,115,55,.12); }
 
 .composer .btn { height: 48px; padding: 0 14px; font-size: 15px; }
 
-/* Hints (positioned above composer) */
-.hints {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: calc(var(--composer-h) + var(--sa-bottom) + 8px);
-  max-width: var(--max-chat-width);
-  margin: 0 auto;
-  z-index: 59;
-  display: flex;
-  gap: 10px;
-  padding: 8px 14px;
-  box-sizing: border-box;
-  background: linear-gradient(180deg, rgba(11,11,16,0), rgba(11,11,16,.6));
-  pointer-events: auto;
-  overflow-x: auto;
-  white-space: nowrap;
-}
+/* Hints (chips) */
+.hints { display: flex; gap: 10px; flex-wrap: nowrap; overflow-x: auto; padding: 10px 14px 12px; }
 .hint {
   font-size: 14px; color: var(--muted); border: 1px dashed var(--border);
   padding: 8px 12px; border-radius: 999px; cursor: pointer; white-space: nowrap;
@@ -259,7 +228,6 @@ a:hover { opacity: .92; }
   padding: 18px 14px calc(14px + var(--sa-bottom));
   border-top: 1px solid var(--border);
   color: var(--muted); font-size: 14px; background: #0c0c12;
-  z-index: 20;
 }
 .footer a { color: var(--muted); text-decoration: none; }
 .footer a:hover { color: var(--accent); }
@@ -267,35 +235,18 @@ a:hover { opacity: .92; }
 /* Selection */
 ::selection { background: rgba(0,115,55,.35); }
 
-/* Strong global overrides for iOS safeguard */
-input, select, textarea, button,
-[contenteditable="true"], [contenteditable],
-summary, label,
-a[role="button"], [role="button"],
-.btn, .icon-button, .message-action {
-  font-size: 16px !important;
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-  min-height: 44px !important;
-  line-height: 1.4;
+/* Inputs global */
+input, select, textarea, button {
+  font-size: 15px; line-height: 1.4; font-family: inherit; color: inherit;
+  -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
+  -webkit-appearance: none; appearance: none; min-height: 44px;
   touch-action: manipulation;
 }
-::placeholder { font-size: 16px; }
-.messages [role="button"], .messages input, .messages textarea, .messages [contenteditable] {
-  font-size: 16px !important;
-}
-input, select, textarea, button {
-  font-family: inherit; color: inherit;
-  -webkit-appearance: none; appearance: none;
-}
+
+/* iOS safeguard — keep tappable targets big enough and avoid zoom */
 @supports (-webkit-touch-callout: none) {
-  input, select, textarea, button,
-  [contenteditable="true"], [contenteditable],
-  a[role="button"], [role="button"], .btn {
-    font-size: 16px !important;
-    -webkit-text-size-adjust: 100%;
-    text-size-adjust: 100%;
-    min-height: 44px !important;
+  input, select, textarea, button, option {
+    font-size: 15px !important; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; min-height: 44px;
   }
 }
 
@@ -308,30 +259,127 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 .chat, .bubble { touch-action: manipulation; }
 button, .hint { -webkit-tap-highlight-color: transparent; }
 
-/* Responsive tweaks */
-@media (max-width: 1024px) {
-  :root { --composer-h: 76px; --hints-h: 48px; }
-  .chat { padding-bottom: calc(var(--composer-h) + var(--hints-h) + var(--sa-bottom) + 28px); }
+/* ===== Responsive tweaks ===== */
+@media (max-width: 640px) {
+  :root { --appbar-h: 64px; --composer-h: 72px; --max-chat-width: 100%; }
+  .header { padding: calc(12px + var(--sa-top)) 12px 12px; }
+  .chat { padding: 12px 12px 0; }
+  .bubble { max-width: 96%; }
+  .logo { width: 32px; height: 32px; }
 }
 
-@media (min-width: 1025px) {
-  /* desktop: make composer sticky instead of fixed */
+/* Larger screens: center chat area */
+@media (min-width: 768px) {
+  .chat, .composer, .footer { max-width: var(--max-chat-width); margin: 0 auto; }
+}
+
+/* Bold Mobile Mode (iPhone-friendly): end-of-css overrides */
+@media (max-width: 480px) {
+  :root {
+    --appbar-h: 68px;
+    --composer-h: 76px;
+  }
+
+  html, body {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .header {
+    padding: calc(12px + var(--sa-top)) 12px 12px;
+  }
+
+  .logo { width: 34px; height: 34px; }
+
+  .chat {
+    padding: 10px 12px 0;
+    max-width: 100%;
+  }
+
+  .messages {
+    gap: 14px;
+    padding-bottom: calc(var(--composer-h) + var(--sa-bottom) + 22px);
+  }
+
+  .bubble {
+    max-width: 96%;
+    padding: 14px 16px;
+    border-radius: 16px;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .bubble .role {
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+
+  .btn {
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 15px;
+    border-radius: 12px;
+    font-weight: 700;
+  }
+
   .composer {
-    position: sticky;
-    bottom: 0;
-    height: auto;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    padding: 10px 12px calc(10px + var(--sa-bottom));
   }
+
+  .composer input {
+    height: 48px;
+    min-height: 48px;
+    padding: 0 14px;
+    border-radius: 12px;
+    font-size: 15px;
+    line-height: 1.45;
+  }
+
+  .composer .btn {
+    height: 48px;
+    padding: 0 14px;
+    font-size: 15px;
+    border-radius: 12px;
+  }
+
   .hints {
-    position: static;
-    bottom: auto;
-    background: transparent;
-    padding: 0;
-    gap: 8px;
+    gap: 10px;
+    padding: 10px 12px 12px;
   }
-  .messages { padding-bottom: calc(var(--composer-h) + var(--sa-bottom) + 22px); }
+
+  .hint {
+    font-size: 14px;
+    padding: 8px 12px;
+    border-radius: 999px;
+  }
+
+  .footer {
+    font-size: 14px;
+    padding: 16px 12px calc(12px + var(--sa-bottom));
+  }
 }
 
-/* Mobile header collapse but keep auth area visible */
+/* Very narrow screens: stack composer (input above send) so the input gets full width and doesn't squeeze */
+@media (max-width: 380px) {
+  .composer {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    align-items: stretch;
+  }
+  .composer .btn { width: 100%; }
+}
+
+/* Extra nudge for iOS Safari focus edge-cases */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea, button {
+    font-size: 15px !important;
+    min-height: 44px;
+  }
+}
+
+/* Mobile header collapse but keep auth area visible (safe override) */
 @media (max-width: 640px) {
   .header {
     justify-content: flex-end;
@@ -345,10 +393,12 @@ button, .hint { -webkit-tap-highlight-color: transparent; }
     box-shadow: none;
   }
 
+  /* hide non-essential header chrome but not the sign-in / sign-up buttons */
   .header .brand { display: none; }
   .header .logo { display: none; }
   .header .tag { display: none; }
 
+  /* ensure buttons remain visible */
   .header .btn, .header button.btn {
     min-height: 40px;
     padding: 10px 12px;
@@ -360,13 +410,5 @@ button, .hint { -webkit-tap-highlight-color: transparent; }
   .header .btn-outline {
     border-color: #2a2f3e;
     color: var(--txt);
-  }
-}
-
-/* Extra nudge for iOS Safari focus edge-cases */
-@supports (-webkit-touch-callout: none) {
-  input, select, textarea, button, [contenteditable] {
-    font-size: 16px !important;
-    min-height: 44px;
   }
 }
