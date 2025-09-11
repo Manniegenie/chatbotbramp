@@ -26,7 +26,6 @@ export type ChatMessage = {
   text: string
   ts: number
   cta?: CTA | null
-  isStreaming?: boolean
 }
 
 // --- session id (stable across page loads) ---
@@ -65,102 +64,37 @@ function getErrorMessage(e: unknown): string {
   try { return JSON.stringify(e) } catch { return String(e) }
 }
 
-// ===== Simulated Streaming Implementation =====
-
-// Helper function to simulate typing effect
-async function simulateTypingEffect(
-  fullText: string, 
-  onChunk: (text: string) => void,
-  options: {
-    wordsPerChunk?: number
-    delayBetweenChunks?: number
-    minDelay?: number
-    maxDelay?: number
-  } = {}
-): Promise<void> {
-  const {
-    wordsPerChunk = 2,
-    delayBetweenChunks = 120,
-    minDelay = 80,
-    maxDelay = 200
-  } = options
-
-  const words = fullText.split(' ')
-  let currentText = ''
-
-  for (let i = 0; i < words.length; i += wordsPerChunk) {
-    const chunk = words.slice(i, i + wordsPerChunk)
-    currentText += (currentText ? ' ' : '') + chunk.join(' ')
-    
-    // Update the display
-    onChunk(currentText)
-    
-    // Don't delay after the last chunk
-    if (i + wordsPerChunk < words.length) {
-      // Variable delay to make it feel more natural
-      const randomDelay = Math.random() * (maxDelay - minDelay) + minDelay
-      const delay = Math.min(delayBetweenChunks + randomDelay, maxDelay)
-      await new Promise(resolve => setTimeout(resolve, delay))
-    }
-  }
-}
-
-// Simulated streaming message function
-async function sendSimulatedStreamingMessage(
+// Simple API call without streaming
+async function sendChatMessage(
   message: string,
-  history: ChatMessage[],
-  onChunk: (text: string) => void,
-  onTyping?: (isTyping: boolean) => void
+  history: ChatMessage[]
 ): Promise<{ reply: string; cta?: CTA | null; metadata?: any }> {
   const { access } = tokenStore.getTokens()
 
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
   if (access && !isExpiredJwt(access)) headers['Authorization'] = `Bearer ${access}`
 
-  // Show typing indicator
-  onTyping?.(true)
+  const response = await fetch(`${API_BASE}/chatbot/chat`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      message,
+      history: history.slice(-10).map((m) => ({ role: m.role, text: m.text })),
+      sessionId: getSessionId(),
+    }),
+    mode: 'cors',
+    cache: 'no-store',
+  })
 
-  try {
-    // Make regular HTTP request to /chat endpoint
-    const response = await fetch(`${API_BASE}/chatbot/chat`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        message,
-        history: history.slice(-10).map((m) => ({ role: m.role, text: m.text })),
-        sessionId: getSessionId(),
-      }),
-      mode: 'cors',
-      cache: 'no-store',
-    })
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+  }
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-    }
-
-    const data = await response.json()
-    const fullText = data?.reply ?? 'Sorry, I could not process that.'
-    
-    // Stop typing indicator
-    onTyping?.(false)
-
-    // Simulate streaming by gradually revealing text
-    await simulateTypingEffect(fullText, onChunk, {
-      wordsPerChunk: 2,
-      delayBetweenChunks: 120,
-      minDelay: 80,
-      maxDelay: 200
-    })
-
-    return {
-      reply: fullText,
-      cta: data.cta || null,
-      metadata: data.metadata
-    }
-
-  } catch (error) {
-    onTyping?.(false)
-    throw error
+  const data = await response.json()
+  return {
+    reply: data?.reply ?? 'Sorry, I could not process that.',
+    cta: data.cta || null,
+    metadata: data.metadata
   }
 }
 
@@ -262,6 +196,52 @@ function renderMessageText(text: string): React.ReactNode {
   return rendered
 }
 
+// Three dot loading component
+function ThreeDotLoader() {
+  return (
+    <div className="typing">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <div style={{ 
+          width: '6px', 
+          height: '6px', 
+          backgroundColor: 'var(--muted)', 
+          borderRadius: '50%', 
+          animation: 'dotBounce 1.4s ease-in-out infinite both',
+          animationDelay: '-0.32s'
+        }}></div>
+        <div style={{ 
+          width: '6px', 
+          height: '6px', 
+          backgroundColor: 'var(--muted)', 
+          borderRadius: '50%', 
+          animation: 'dotBounce 1.4s ease-in-out infinite both',
+          animationDelay: '-0.16s'
+        }}></div>
+        <div style={{ 
+          width: '6px', 
+          height: '6px', 
+          backgroundColor: 'var(--muted)', 
+          borderRadius: '50%', 
+          animation: 'dotBounce 1.4s ease-in-out infinite both',
+          animationDelay: '0s'
+        }}></div>
+      </div>
+      <style>{`
+        @keyframes dotBounce {
+          0%, 80%, 100% {
+            transform: scale(0.8);
+            opacity: 0.5;
+          }
+          40% {
+            transform: scale(1.2);
+            opacity: 1;
+          }
+        }
+      `}</style>
+    </div>
+  )
+}
+
 /* ----------------------------------- App ----------------------------------- */
 
 export default function App() {
@@ -279,11 +259,6 @@ export default function App() {
 
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [isStreaming, setIsStreaming] = useState(false)
-  const [isTyping, setIsTyping] = useState(false)
-
-  const [thinkingPhase, setThinkingPhase] = useState<'thinking' | 'browsing' | 'streaming'>('thinking')
-  const [emojiTick, setEmojiTick] = useState(0)
 
   const [showSignIn, setShowSignIn] = useState(false)
   const [showSignUp, setShowSignUp] = useState(false)
@@ -320,67 +295,40 @@ export default function App() {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading, showSignIn, showSignUp, showSell, showBuy])
 
-  useEffect(() => {
-    let phaseTimer: number | undefined
-    let emojiTimer: number | undefined
-    if (loading && !isStreaming && !isTyping) {
-      setThinkingPhase('thinking')
-      setEmojiTick(0)
-      phaseTimer = window.setTimeout(() => setThinkingPhase('browsing'), 2500)
-      emojiTimer = window.setInterval(() => setEmojiTick((t) => (t + 1) % 2), 600)
-    } else if (isTyping || isStreaming) {
-      setThinkingPhase('streaming')
-    }
-    return () => {
-      if (phaseTimer) window.clearTimeout(phaseTimer)
-      if (emojiTimer) window.clearInterval(emojiTimer)
-    }
-  }, [loading, isStreaming, isTyping])
-
-  function updateStreamingMessage(messageId: string, text: string, isComplete = false) {
-    setMessages((prev) =>
-      prev.map((msg) => (msg.id === messageId ? { ...msg, text, isStreaming: !isComplete } : msg))
-    )
-  }
-
   async function sendMessage(e?: React.FormEvent) {
     e?.preventDefault()
     const trimmed = input.trim()
-    if (!trimmed || loading || isStreaming) return
+    if (!trimmed || loading) return
 
     const userMsg: ChatMessage = { id: crypto.randomUUID(), role: 'user', text: trimmed, ts: Date.now() }
     setMessages((prev) => [...prev, userMsg])
     setInput('')
     setLoading(true)
 
-    const aiMessageId = crypto.randomUUID()
-    const aiMsg: ChatMessage = { id: aiMessageId, role: 'assistant', text: '', ts: Date.now(), isStreaming: true }
-    setMessages((prev) => [...prev, aiMsg])
-
     try {
-      setIsStreaming(true)
+      const data = await sendChatMessage(trimmed, [...messages, userMsg])
       
-      // Use simulated streaming instead of real SSE
-      const data = await sendSimulatedStreamingMessage(
-        trimmed, 
-        [...messages, userMsg], // include the just-sent user message in history
-        (text) => { updateStreamingMessage(aiMessageId, text) },
-        (typing) => { setIsTyping(typing) }
-      )
-      
-      updateStreamingMessage(aiMessageId, data.reply, true)
-      
-      if (data.cta) {
-        setMessages((prev) => prev.map((msg) => (msg.id === aiMessageId ? { ...msg, cta: data.cta || null } : msg)))
+      const aiMsg: ChatMessage = { 
+        id: crypto.randomUUID(), 
+        role: 'assistant', 
+        text: data.reply, 
+        ts: Date.now(),
+        cta: data.cta || null
       }
       
+      setMessages((prev) => [...prev, aiMsg])
+      
     } catch (error) {
-      console.error('Simulated streaming failed:', error)
-      updateStreamingMessage(aiMessageId, `Error reaching server: ${getErrorMessage(error)}`, true)
+      console.error('Chat message failed:', error)
+      const errorMsg: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        text: `Error reaching server: ${getErrorMessage(error)}`,
+        ts: Date.now()
+      }
+      setMessages((prev) => [...prev, errorMsg])
     } finally {
       setLoading(false)
-      setIsStreaming(false)
-      setIsTyping(false)
     }
   }
 
@@ -422,14 +370,6 @@ export default function App() {
   function echoFromModalToChat(text: string) {
     if (!text) return
     setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'assistant', text, ts: Date.now() }])
-  }
-
-  const getLoadingText = () => {
-    if (isTyping) return 'Bramp AI is typing…'
-    if (isStreaming) return 'Bramp AI is responding…'
-    if (thinkingPhase === 'thinking') return 'Bramp AI is thinking…'
-    const browsingEmoji = emojiTick % 2 === 0 ? '🌍' : '🪙'
-    return `Bramp AI is browsing… ${browsingEmoji}`
   }
 
   return (
@@ -507,9 +447,6 @@ export default function App() {
               <div key={m.id} className={`bubble ${m.role}`}>
                 <div className="role">
                   {m.role === 'user' ? 'You' : 'Bramp AI'}
-                  {m.isStreaming && (
-                    <span style={{ marginLeft: 8, fontSize: 12, opacity: 0.6, fontStyle: 'italic' }}>typing…</span>
-                  )}
                 </div>
                 <div className="text">
                   {renderMessageText(m.text)}
@@ -555,7 +492,7 @@ export default function App() {
                 </div>
               </div>
             ))}
-            {(loading || isStreaming || isTyping) && <div className="typing">{getLoadingText()}</div>}
+            {loading && <ThreeDotLoader />}
             <div ref={endRef} />
           </div>
 
@@ -563,19 +500,19 @@ export default function App() {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={isStreaming || isTyping ? 'Please wait…' : 'Try: Sell 100 USDT to NGN'}
+              placeholder={loading ? 'Please wait…' : 'Try: Sell 100 USDT to NGN'}
               autoFocus
-              disabled={isStreaming || isTyping}
+              disabled={loading}
             />
-            <button className="btn" disabled={loading || isStreaming || isTyping || !input.trim()}>
-              {isTyping ? 'AI typing…' : isStreaming ? 'Streaming…' : loading ? 'Sending…' : 'Send'}
+            <button className="btn" disabled={loading || !input.trim()}>
+              {loading ? 'Sending…' : 'Send'}
             </button>
           </form>
 
           <div className="hints">
-            <span className="hint" onClick={() => !(isStreaming || isTyping) && setInput('Sell 100 USDT to NGN')}>Sell 100 USDT to NGN</span>
-            <span className="hint" onClick={() => !(isStreaming || isTyping) && setInput('Show my portfolio balance')}>Show my portfolio balance</span>
-            <span className="hint" onClick={() => !(isStreaming || isTyping) && setInput('Current NGN rates')}>Current NGN rates</span>
+            <span className="hint" onClick={() => !loading && setInput('Sell 100 USDT to NGN')}>Sell 100 USDT to NGN</span>
+            <span className="hint" onClick={() => !loading && setInput('Show my portfolio balance')}>Show my portfolio balance</span>
+            <span className="hint" onClick={() => !loading && setInput('Current NGN rates')}>Current NGN rates</span>
           </div>
         </main>
       )}
