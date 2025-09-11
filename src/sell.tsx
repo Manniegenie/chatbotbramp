@@ -589,7 +589,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                         ) : accountName ? (
                           accountName
                         ) : 
-                          'Enter account numbe'
+                          'Enter account number'
                         }
                       </div>
                     </label>
