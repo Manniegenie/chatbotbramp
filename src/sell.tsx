@@ -203,13 +203,18 @@ function clearProgress() {
   localStorage.removeItem('sell_progress')
 }
 
-// API health check
+// API health check with timeout
 async function checkAPIHealth(): Promise<boolean> {
   try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 15000) // 15 second timeout
+    
     const res = await fetch(`${API_BASE}/health`, { 
       method: 'GET',
-      timeout: 5000 as any 
+      signal: controller.signal
     })
+    
+    clearTimeout(timeoutId)
     return res.ok
   } catch {
     return false
@@ -308,7 +313,10 @@ function ErrorDisplay({ error, onRetry }: { error: string; onRetry?: () => void 
 
 // Debug panel for development
 function DebugPanel({ initData, payData, step }: any) {
-  if (process.env.NODE_ENV !== 'development') return null
+  // Check if we're in development mode (Vite sets this)
+  const isDev = import.meta.env?.DEV || import.meta.env?.MODE === 'development'
+  
+  if (!isDev) return null
   
   return (
     <details style={{ margin: '16px 0', padding: 12, background: '#1a1a1a', borderRadius: 8 }}>
