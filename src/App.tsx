@@ -411,6 +411,12 @@ export default function App() {
               padding-bottom: max(14px, calc(14px + env(safe-area-inset-bottom))) !important;
             }
           }
+          
+          /* Animation for spinner */
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
         `}
       </style>
       <div className="page">
@@ -514,22 +520,21 @@ export default function App() {
                             )
                           }
                           return (
-  <a
-    key={btn.id || btn.title || index}
-    className="btn"
-    href={btn.url}
-    target="_blank"
-    rel="noopener noreferrer"
-    style={
-      btn.style === 'primary'
-        ? undefined
-        : { background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }
-    }
-  >
-    {btn.title}
-  </a> // Correct closing tag
-)
-
+                            <a
+                              key={btn.id || btn.title || index}
+                              className="btn"
+                              href={btn.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={
+                                btn.style === 'primary'
+                                  ? undefined
+                                  : { background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }
+                              }
+                            >
+                              {btn.title}
+                            </a>
+                          )
                         })}
                       </div>
                     )}
@@ -548,8 +553,60 @@ export default function App() {
                 autoFocus
                 disabled={loading}
               />
-              <button className="btn" disabled={loading || !input.trim()}>
-                {loading ? 'Typing…' : 'Send'}
+              <button 
+                type="submit"
+                disabled={loading || !input.trim()}
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0',
+                  background: loading || !input.trim() ? 'var(--muted)' : 'var(--primary)',
+                  border: 'none',
+                  cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: loading || !input.trim() ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.1)',
+                  minWidth: '44px',
+                  flexShrink: 0
+                }}
+                onMouseEnter={(e) => {
+                  if (!loading && input.trim()) {
+                    e.currentTarget.style.transform = 'scale(1.05)'
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)'
+                  e.currentTarget.style.boxShadow = loading || !input.trim() ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.1)'
+                }}
+              >
+                {loading ? (
+                  <div style={{
+                    width: '16px',
+                    height: '16px',
+                    border: '2px solid transparent',
+                    borderTop: '2px solid white',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                  }} />
+                ) : (
+                  <svg 
+                    width="18" 
+                    height="18" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="white" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                  >
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22,2 15,22 11,13 2,9"></polygon>
+                  </svg>
+                )}
               </button>
             </form>
 
