@@ -88,12 +88,56 @@ const NETWORKS_BY_TOKEN: Record<TokenSym, Array<{ code: string; label: string }>
   ],
 }
 
+// Add a helper to check if we have valid auth
+function hasValidAuth(): boolean {
+  const { access } = tokenStore.getTokens()
+  return !!access && access.length > 0
+}
+
+// Modified getHeaders with better error handling
 function getHeaders() {
   const { access } = tokenStore.getTokens()
   const h = new Headers()
   h.set('Content-Type', 'application/json')
   if (access) h.set('Authorization', `Bearer ${access}`)
   return h
+}
+
+// Add retry logic for API calls
+async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 2): Promise<Response> {
+  let lastError: Error | null = null
+  
+  for (let i = 0; i <= maxRetries; i++) {
+    try {
+      // Wait a bit on retries to allow auth to settle
+      if (i > 0) {
+        await new Promise(resolve => setTimeout(resolve, 500))
+      }
+      
+      // Rebuild headers each time in case tokens were updated
+      const headers = getHeaders()
+      
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          ...Object.fromEntries(headers),
+          ...Object.fromEntries(new Headers(options.headers || {}))
+        }
+      })
+      
+      // If we get 401, it might be auth not ready yet, so retry
+      if (response.status === 401 && i < maxRetries) {
+        throw new Error('Authentication not ready')
+      }
+      
+      return response
+    } catch (error) {
+      lastError = error as Error
+      if (i === maxRetries) break
+    }
+  }
+  
+  throw lastError || new Error('Request failed after retries')
 }
 
 function prettyAmount(n: number) {
@@ -178,6 +222,9 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   // Steps: 1 = Start Sell, 2 = Payout. Final summary is a sub-state of step 2.
   const [step, setStep] = useState<1 | 2>(1)
 
+  // Add auth ready state
+  const [authReady, setAuthReady] = useState(false)
+
   // Step 1 (Start Sell)
   const [token, setToken] = useState<TokenSym>('USDT')
   const [network, setNetwork] = useState(NETWORKS_BY_TOKEN['USDT'][0].code)
@@ -206,6 +253,39 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [banksError, setBanksError] = useState<string | null>(null)
   const [bankOptions, setBankOptions] = useState<BankOption[]>([])
   const banksFetchedRef = useRef(false)
+
+  // Check auth state when modal opens
+  useEffect(() => {
+    if (!open) {
+      setAuthReady(false)
+      return
+    }
+    
+    // Check if auth is ready immediately
+    if (hasValidAuth()) {
+      setAuthReady(true)
+      return
+    }
+    
+    // If not ready, wait a bit and check again
+    let timeoutCount = 0
+    const maxTimeouts = 30 // 3 seconds total (30 * 100ms)
+    
+    const checkAuth = () => {
+      if (hasValidAuth()) {
+        setAuthReady(true)
+      } else if (timeoutCount < maxTimeouts) {
+        timeoutCount++
+        setTimeout(checkAuth, 100)
+      } else {
+        // Fallback - proceed anyway after 3 seconds
+        console.warn('Auth check timeout, proceeding anyway')
+        setAuthReady(true)
+      }
+    }
+    
+    checkAuth()
+  }, [open])
 
   // Reset on open
   useEffect(() => {
@@ -251,15 +331,20 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const firstInputRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null)
   useEffect(() => { firstInputRef.current?.focus() }, [step])
 
-  // Fetch banks once when entering Step 2
+  // Fetch banks once when entering Step 2 (wait for auth)
   useEffect(() => {
-    if (!open || step !== 2 || banksFetchedRef.current) return
+    if (!open || step !== 2 || banksFetchedRef.current || !authReady) return
     banksFetchedRef.current = true
+    
     ;(async () => {
       setBanksLoading(true)
       setBanksError(null)
       try {
-        const res = await fetch(`${API_BASE}/fetchnaira/naira-accounts`, { method: 'GET', cache: 'no-store' })
+        const res = await fetchWithRetry(`${API_BASE}/fetchnaira/naira-accounts`, {
+          method: 'GET',
+          cache: 'no-store'
+        })
+        
         const json = await res.json()
         if (!res.ok) throw new Error(json?.error || `HTTP ${res.status}`)
 
@@ -286,11 +371,11 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         setBanksLoading(false)
       }
     })()
-  }, [open, step])
+  }, [open, step, authReady]) // Added authReady dependency
 
-  // Resolve account name when account number is 10+ digits
+  // Resolve account name when account number is 10+ digits (wait for auth)
   useEffect(() => {
-    if (!open || step !== 2 || !bankCode || !accountNumber) return
+    if (!open || step !== 2 || !bankCode || !accountNumber || !authReady) return
     if (accountNumber.length < 10) {
       setAccountName('')
       setAccountNameError(null)
@@ -303,10 +388,11 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       setAccountName('')
       
       try {
-        const res = await fetch(`${API_BASE}/accountname/resolve?sortCode=${encodeURIComponent(bankCode)}&accountNumber=${encodeURIComponent(accountNumber)}`, {
-          method: 'GET',
-          headers: getHeaders(),
-        })
+        const res = await fetchWithRetry(
+          `${API_BASE}/accountname/resolve?sortCode=${encodeURIComponent(bankCode)}&accountNumber=${encodeURIComponent(accountNumber)}`,
+          { method: 'GET' }
+        )
+        
         const data = await res.json()
         
         if (!res.ok || !data.success) {
@@ -328,7 +414,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     }, 500) // Debounce for 500ms
 
     return () => clearTimeout(timeoutId)
-  }, [open, step, bankCode, accountNumber])
+  }, [open, step, bankCode, accountNumber, authReady]) // Added authReady dependency
 
   async function submitInitiate(e: React.FormEvent) {
     e.preventDefault()
@@ -337,13 +423,19 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       setInitError('Enter a valid amount')
       return
     }
+    
+    if (!authReady) {
+      setInitError('Please wait for authentication to complete')
+      return
+    }
+    
     setInitLoading(true)
     try {
-      const res = await fetch(`${API_BASE}/sell/initiate`, {
+      const res = await fetchWithRetry(`${API_BASE}/sell/initiate`, {
         method: 'POST',
-        headers: getHeaders(),
         body: JSON.stringify({ token, network, sellAmount: +amount }),
       })
+      
       const data: InitiateSellRes = await res.json()
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
       setInitData(data)
@@ -367,11 +459,16 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       setPayError('Missing paymentId — restart the sell flow')
       return
     }
+    
+    if (!authReady) {
+      setPayError('Please wait for authentication to complete')
+      return
+    }
+    
     setPayLoading(true)
     try {
-      const res = await fetch(`${API_BASE}/sell/payout`, {
+      const res = await fetchWithRetry(`${API_BASE}/sell/payout`, {
         method: 'POST',
-        headers: getHeaders(),
         body: JSON.stringify({
           paymentId: initData.paymentId,
           bankName,
@@ -380,6 +477,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
           accountName,
         }),
       })
+      
       const data: PayoutRes = await res.json()
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
       setPayData(data)
@@ -411,6 +509,24 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   }
 
   if (!open) return null
+
+  // Add loading state for when auth isn't ready
+  if (!authReady) {
+    return createPortal(
+      <div style={overlayStyle} role="dialog" aria-modal="true">
+        <div style={{...sheetStyle, padding: 40, textAlign: 'center' as const, minHeight: 200, placeItems: 'center'}}>
+          <div style={{marginBottom: 16}}>
+            <div style={{ width: 24, height: 24, border: '2px solid var(--border)', borderTop: '2px solid var(--accent)', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }}></div>
+          </div>
+          <div style={{color: 'var(--muted)'}}>Initializing authentication...</div>
+        </div>
+        <style>
+          {`@keyframes spin{from{transform:rotate(0deg)} to{transform:rotate(360deg)}}`}
+        </style>
+      </div>,
+      document.body
+    )
+  }
 
   const headerTitle =
     step === 1 ? 'Start a Sell'
