@@ -203,24 +203,6 @@ function clearProgress() {
   localStorage.removeItem('sell_progress')
 }
 
-// API health check with timeout
-async function checkAPIHealth(): Promise<boolean> {
-  try {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 15000) // 15 second timeout
-    
-    const res = await fetch(`${API_BASE}/health`, { 
-      method: 'GET',
-      signal: controller.signal
-    })
-    
-    clearTimeout(timeoutId)
-    return res.ok
-  } catch {
-    return false
-  }
-}
-
 function getHeaders(accessToken?: string) {
   const h = new Headers()
   h.set('Content-Type', 'application/json')
@@ -228,16 +210,29 @@ function getHeaders(accessToken?: string) {
   return h
 }
 
-async function fetchWithAuth(url: string, options: RequestInit = {}, accessToken?: string): Promise<Response> {
+async function fetchWithAuth(url: string, options: RequestInit = {}, accessToken?: string, timeoutMs: number = 15000): Promise<Response> {
   const headers = getHeaders(accessToken)
   
-  return fetch(url, {
-    ...options,
-    headers: {
-      ...Object.fromEntries(headers),
-      ...Object.fromEntries(new Headers(options.headers || {}))
-    }
-  })
+  // Add timeout using AbortController
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        ...Object.fromEntries(headers),
+        ...Object.fromEntries(new Headers(options.headers || {}))
+      }
+    })
+    
+    clearTimeout(timeoutId)
+    return response
+  } catch (error) {
+    clearTimeout(timeoutId)
+    throw error
+  }
 }
 
 function prettyAmount(n: number) {
@@ -393,7 +388,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [payError, setPayError] = useState<string | null>(null)
   const [payData, setPayData] = useState<PayoutRes | null>(null)
 
-  // Countdown starts only AFTER payout is saved
+  // Countdown starts only AFTER payout is saved (local 15-second window)
   const [summaryExpiresAt, setSummaryExpiresAt] = useState<string | null>(null)
   const { text: countdown, expired } = useCountdown(summaryExpiresAt)
 
@@ -402,9 +397,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [banksError, setBanksError] = useState<string | null>(null)
   const [bankOptions, setBankOptions] = useState<BankOption[]>([])
   const banksFetchedRef = useRef(false)
-
-  // API health
-  const [apiHealthy, setApiHealthy] = useState(true)
 
   // Recovery functionality
   const [isRecovering, setIsRecovering] = useState(false)
@@ -430,7 +422,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       
       // If we have payData, start countdown
       if (savedProgress.payData) {
-        setSummaryExpiresAt(new Date(Date.now() + 10 * 60 * 1000).toISOString())
+        setSummaryExpiresAt(new Date(Date.now() + 15 * 1000).toISOString())
       }
     } else {
       // Fresh start
@@ -511,18 +503,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   // Autofocus per step
   const firstInputRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null)
   useEffect(() => { firstInputRef.current?.focus() }, [step])
-
-  // Check API health on open
-  useEffect(() => {
-    if (!open) return
-    
-    checkAPIHealth().then(setApiHealthy)
-    const interval = setInterval(() => {
-      checkAPIHealth().then(setApiHealthy)
-    }, 30000) // Check every 30 seconds
-    
-    return () => clearInterval(interval)
-  }, [open])
 
   // Fetch banks once when entering Step 2 (wait for auth)
   useEffect(() => {
@@ -616,11 +596,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     
     if (!isOnline) {
       setInitError('No internet connection. Please check your network.')
-      return
-    }
-    
-    if (!apiHealthy) {
-      setInitError('Service temporarily unavailable. Please try again later.')
       return
     }
     
@@ -724,11 +699,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       return
     }
     
-    if (!apiHealthy) {
-      setPayError('Service temporarily unavailable. Please try again later.')
-      return
-    }
-    
     // Enhanced validation
     if (!bankName || !bankCode || !accountNumber || !accountName) {
       setPayError('Fill in all bank fields')
@@ -822,7 +792,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         }
         
         // Start countdown timer
-        setSummaryExpiresAt(new Date(Date.now() + 10 * 60 * 1000).toISOString())
+        setSummaryExpiresAt(new Date(Date.now() + 15 * 1000).toISOString())
         setPayLoading(false)
         
         // Success - break out of retry loop
@@ -880,7 +850,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       if (data.success && data.payout) {
         console.log('Transaction recovered successfully')
         setPayData(data)
-        setSummaryExpiresAt(new Date(Date.now() + 10 * 60 * 1000).toISOString())
+        setSummaryExpiresAt(new Date(Date.now() + 15 * 1000).toISOString())
         
         try {
           onChatEcho?.(buildPayoutRecap(initData, data))
@@ -989,7 +959,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                 <span style={dot(step === 2)}></span> Step 2 — Payout
                 {/* Status indicators */}
                 {!isOnline && <span style={{...badgeOffline, marginLeft: 8}}>📵 Offline</span>}
-                {!apiHealthy && <span style={{...badgeWarn, marginLeft: 8}}>⚠️ API Issues</span>}
               </div>
             </div>
           </div>
@@ -1055,7 +1024,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                 <div style={{ gridColumn: '1 / span 2', display: 'flex', justifyContent: 'flex-end' }}>
                   <button 
                     style={btnPrimary} 
-                    disabled={initLoading || !isOnline || !apiHealthy}
+                    disabled={initLoading || !isOnline}
                   >
                     {initLoading ? (
                       <>
@@ -1190,7 +1159,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                       )}
                       <button
                         style={btnPrimary}
-                        disabled={payLoading || !bankCode || banksLoading || !accountName || !isOnline || !apiHealthy || isRecovering}
+                        disabled={payLoading || !bankCode || banksLoading || !accountName || !isOnline || isRecovering}
                       >
                         {payLoading ? (
                           <>
@@ -1212,7 +1181,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                     <h3 style={{ margin: 0, fontSize: 16 }}>Transaction Summary</h3>
                     <div style={badge}>
-                      ⏱ {expired ? 'Expired' : countdown} <span style={{ opacity: .6 }}>of 10:00</span>
+                      ⏱ {expired ? 'Expired' : countdown} <span style={{ opacity: .6 }}>of 00:15</span>
                     </div>
                   </div>
 
