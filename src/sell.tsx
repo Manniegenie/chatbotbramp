@@ -5,8 +5,7 @@ import { tokenStore } from './lib/secureStore'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
-/* ================= Types & Constants ================= */
-
+/* Types, constants, helpers — unchanged except for small logs where helpful */
 type BankOption = { name: string; code: string }
 
 type InitiateSellRes = {
@@ -86,8 +85,6 @@ const NETWORKS_BY_TOKEN: Record<TokenSym, { code: string; label: string }[]> = {
   ],
 }
 
-/* ================= Helpers ================= */
-
 function getHeaders() {
   const { access } = tokenStore.getTokens()
   console.log('🔑 Token check:', {
@@ -148,8 +145,7 @@ function buildPayoutRecap(init: InitiateSellRes | null, p: PayoutRes) {
   ].join('\n')
 }
 
-/* ================= Countdown ================= */
-
+/* Countdown hook — returns expired=false if there's no expiry yet */
 function useCountdown(expiryIso?: string | null) {
   const [msLeft, setMsLeft] = useState<number>(() => expiryIso ? Math.max(0, new Date(expiryIso).getTime() - Date.now()) : 0)
   useEffect(() => {
@@ -168,8 +164,7 @@ function useCountdown(expiryIso?: string | null) {
   return { msLeft, text: `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`, expired }
 }
 
-/* ================= Styles (kept from original) ================= */
-
+/* Styles — copied from your original file (kept identical) */
 const overlayStyle: React.CSSProperties = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', display: 'grid', placeItems: 'center', padding: 16, zIndex: 1000 }
 const sheetStyle: React.CSSProperties = { width: '100%', maxWidth: 760, background: 'var(--card)', color: 'var(--txt)', border: '1px solid var(--border)', borderRadius: 16, boxShadow: 'var(--shadow)', overflow: 'hidden', display: 'grid', gridTemplateRows: 'auto 1fr auto', animation: 'scaleIn 120ms ease-out' }
 const headerStyle: React.CSSProperties = { padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }
@@ -197,7 +192,7 @@ const badgeWarn: React.CSSProperties = { ...badge, background: 'rgba(255, 170, 0
 const errorBanner: React.CSSProperties = { ...card, background: 'rgba(220, 50, 50, .1)', borderColor: 'rgba(220, 50, 50, .25)' }
 const successCard: React.CSSProperties = { ...card, background: 'rgba(0, 115, 55, .12)', borderColor: 'rgba(0, 115, 55, .35)' }
 
-/* ================= Reducer & initial state ================= */
+/* Reducer + state (same atomic PAYOUT_SUCCESS) */
 
 type Flow = 'idle' | 'initiated' | 'complete'
 
@@ -288,25 +283,24 @@ function reducer(s: State, action: Action): State {
   }
 }
 
-/* ================= Component ================= */
-
+/* Component */
 export default function SellModal({ open, onClose, onChatEcho }: SellModalProps) {
   const [state, dispatch] = useReducer(reducer, initialState)
   const banksFetchedRef = useRef(false)
   const firstInputRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null)
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
 
-  // countdown hook
   const { text: countdown, expired } = useCountdown(state.summaryExpiresAt)
 
-  // Reset on open (like original)
+  // Reset on open
   useEffect(() => {
     if (!open) return
     dispatch({ type: 'RESET' })
     banksFetchedRef.current = false
+    console.log('Modal opened — state reset')
   }, [open])
 
-  // Keep network valid when token changes
+  // Keep network valid
   useEffect(() => {
     const list = NETWORKS_BY_TOKEN[state.token]
     if (!list.find(n => n.code === state.network)) {
@@ -325,7 +319,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   // Autofocus per flow
   useEffect(() => { firstInputRef.current?.focus() }, [state.flow])
 
-  // Fetch banks once when entering initiated
+  // Fetch banks once when entering 'initiated'
   useEffect(() => {
     if (!open || state.flow !== 'initiated' || banksFetchedRef.current) return
     banksFetchedRef.current = true
@@ -386,15 +380,39 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     return () => clearTimeout(timeoutId)
   }, [open, state.flow, state.bankCode, state.accountNumber])
 
-  // Auto-close when countdown expires on final summary
-  const showFinalSummary = state.flow === 'complete' && !!state.payData
+  // AUTHORITATIVE final-summary check — showFinalSummary is true when flow === 'complete'
+  const showFinalSummary = state.flow === 'complete'
+
+  // Auto-close when the countdown expires on the final summary
   useEffect(() => {
     if (!open) return
     if (!state.summaryExpiresAt) return
     if (showFinalSummary && expired) {
+      console.log('Auto-closing modal because countdown expired', { summaryExpiresAt: state.summaryExpiresAt, expired })
       onClose()
     }
   }, [open, showFinalSummary, expired, onClose, state.summaryExpiresAt])
+
+  // Log whenever flow becomes 'complete' so you can see actual state after reducer update
+  useEffect(() => {
+    if (state.flow === 'complete') {
+      console.log('FLOW -> complete. state snapshot:', {
+        initData: !!state.initData,
+        payData: !!state.payData,
+        summaryExpiresAt: state.summaryExpiresAt,
+        payLoading: state.payLoading
+      })
+    }
+  }, [state.flow])
+
+  // overlay click handler: ignore overlay clicks while final summary active & countdown not expired
+  const onOverlayClick = () => {
+    if (state.flow === 'complete' && state.summaryExpiresAt && !expired) {
+      console.log('Overlay click ignored because final summary countdown is active', { summaryExpiresAt: state.summaryExpiresAt, expired })
+      return
+    }
+    onClose()
+  }
 
   // Clipboard helper
   function copyToClipboard(text: string, key: string) {
@@ -404,7 +422,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     }).catch(() => {})
   }
 
-  /* ================= Handlers that dispatch reducer actions ================= */
+  /* Handlers: submitInitiate & submitPayout (same as before, with atomic dispatch) */
 
   async function submitInitiate(e: React.FormEvent) {
     e.preventDefault()
@@ -500,14 +518,15 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
       console.log('✅ Payout validation passed, preparing to show summary...')
 
-      // compute expiry and dispatch atomic PAYOUT_SUCCESS that sets payData + expiry + flow
       const expiryTime = new Date(Date.now() + 10 * 60 * 1000).toISOString()
       console.log('⏰ Setting countdown expiry to:', expiryTime)
+
+      // Atomic transition: set payData + expiry + flow
       dispatch({ type: 'PAYOUT_SUCCESS', payload: data, expiryIso: expiryTime })
 
-      console.log('🎉 Payout flow completed successfully!')
+      console.log('🎉 Payout flow completed successfully (dispatched PAYOUT_SUCCESS)')
 
-      // Send to chat
+      // chat recap
       try {
         const recap = buildPayoutRecap(state.initData, data)
         console.log('💬 Sending chat recap...')
@@ -517,7 +536,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         console.warn('⚠️ Chat echo failed:', chatError)
       }
 
-      // small UI stabilization tick (keeps previous behaviour)
+      // stabilization tick
       setTimeout(() => {
         console.log('💥 Post-payout UI stabilization tick')
         dispatch({ type: 'SET_FIELD', key: 'payLoading', value: false })
@@ -532,8 +551,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     }
   }
 
-  /* ================= Render (keeps original UI markup) ================= */
-
   if (!open) return null
 
   const headerTitle =
@@ -541,7 +558,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       : (state.flow === 'initiated' ? 'Payout Details' : 'Transaction Summary')
 
   return createPortal(
-    <div style={overlayStyle} role="dialog" aria-modal="true" aria-labelledby="sell-title" onClick={onClose}>
+    <div style={overlayStyle} role="dialog" aria-modal="true" aria-labelledby="sell-title" onClick={onOverlayClick}>
       <div style={sheetStyle} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div style={headerStyle}>
@@ -563,14 +580,19 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
         {/* Body */}
         <div style={bodyStyle}>
-          {/* debug card (DEV) */}
-          {import.meta.env?.DEV && (
-            <div style={{...card, background: '#1a1a1a', marginTop: 10}}>
-              <div style={{fontSize: 11, color: '#888'}}>
-                Debug: flow={state.flow} | initData={!!state.initData} | payData={!!state.payData} | payLoading={state.payLoading} | expiry={state.summaryExpiresAt ?? 'null'}
-              </div>
+          {/* Always-visible debug panel — shows the important values so you can see exactly what's missing */}
+          <div style={{ ...card, background: '#111', marginBottom: 10 }}>
+            <div style={{ fontSize: 12, color: '#ccc' }}>
+              <div><strong>Diagnostics</strong></div>
+              <div>flow: {state.flow}</div>
+              <div>initData: {state.initData ? 'yes' : 'no'}</div>
+              <div>payData: {state.payData ? 'yes' : 'no'}</div>
+              <div>summaryExpiresAt: {state.summaryExpiresAt ?? 'null'}</div>
+              <div>expired: {expired ? 'true' : 'false'}</div>
+              <div>initLoading: {String(state.initLoading)}</div>
+              <div>payLoading: {String(state.payLoading)}</div>
             </div>
-          )}
+          </div>
 
           {/* STEP 1 — Start a Sell */}
           {state.flow === 'idle' && (
@@ -853,7 +875,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         </div>
       </div>
 
-      {/* Animation keyframes */}
       <style>
         {`@keyframes scaleIn{from{transform:translateY(8px) scale(.98); opacity:0} to{transform:none; opacity:1}} @keyframes spin{from{transform:rotate(0deg)} to{transform:rotate(360deg)}}`}
       </style>
