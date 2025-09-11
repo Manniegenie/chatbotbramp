@@ -39,6 +39,7 @@ function getSessionId(): string {
   return sid
 }
 
+// Always read the freshest token from secure storage
 function isExpiredJwt(token: string): boolean {
   try {
     const [, payloadB64] = token.split('.')
@@ -56,15 +57,14 @@ async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
   return fetch(input, { ...init, headers })
 }
 
-/* ----------------------- Error helper ----------------------- */
+/* ----------------------- Error helper (fixes TS2339) ----------------------- */
 function getErrorMessage(e: unknown): string {
   if (e instanceof Error) return e.message
   if (typeof e === 'string') return e
   try { return JSON.stringify(e) } catch { return String(e) }
 }
 
-// sendChatMessage omitted (same as before) — if you have it in another file, import there.
-// For brevity, re-add your implementation here exactly as in your codebase.
+// Simple API call without streaming
 async function sendChatMessage(
   message: string,
   history: ChatMessage[]
@@ -98,7 +98,8 @@ async function sendChatMessage(
   }
 }
 
-/* ---------- Inline helpers (rendering, loader) ---------- */
+/* ----------------------- Linkify + Markdown-lite helpers ----------------------- */
+
 const URL_REGEX = /https?:\/\/[^\s<>"')]+/gi
 const MD_LINK = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g
 
@@ -153,6 +154,7 @@ function inlineRender(text: string, keyPrefix: string): React.ReactNode[] {
     })
     if (idx < node.length) finalNodes.push(node.slice(idx))
   })
+
   return finalNodes
 }
 
@@ -190,18 +192,52 @@ function renderMessageText(text: string): React.ReactNode {
       )
     }
   })
+
   return rendered
 }
 
+// Three dot loading component
 function ThreeDotLoader() {
   return (
     <div className="typing">
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-        <div style={{ width: '6px', height: '6px', backgroundColor: 'var(--muted)', borderRadius: '50%', animation: 'dotBounce 1.4s ease-in-out infinite both', animationDelay: '-0.32s' }} />
-        <div style={{ width: '6px', height: '6px', backgroundColor: 'var(--muted)', borderRadius: '50%', animation: 'dotBounce 1.4s ease-in-out infinite both', animationDelay: '-0.16s' }} />
-        <div style={{ width: '6px', height: '6px', backgroundColor: 'var(--muted)', borderRadius: '50%', animation: 'dotBounce 1.4s ease-in-out infinite both', animationDelay: '0s' }} />
+        <div style={{ 
+          width: '6px', 
+          height: '6px', 
+          backgroundColor: 'var(--muted)', 
+          borderRadius: '50%', 
+          animation: 'dotBounce 1.4s ease-in-out infinite both',
+          animationDelay: '-0.32s'
+        }}></div>
+        <div style={{ 
+          width: '6px', 
+          height: '6px', 
+          backgroundColor: 'var(--muted)', 
+          borderRadius: '50%', 
+          animation: 'dotBounce 1.4s ease-in-out infinite both',
+          animationDelay: '-0.16s'
+        }}></div>
+        <div style={{ 
+          width: '6px', 
+          height: '6px', 
+          backgroundColor: 'var(--muted)', 
+          borderRadius: '50%', 
+          animation: 'dotBounce 1.4s ease-in-out infinite both',
+          animationDelay: '0s'
+        }}></div>
       </div>
-      <style>{`@keyframes dotBounce{0%,80%,100%{transform:scale(.8);opacity:.5}40%{transform:scale(1.2);opacity:1}}`}</style>
+      <style>{`
+        @keyframes dotBounce {
+          0%, 80%, 100% {
+            transform: scale(0.8);
+            opacity: 0.5;
+          }
+          40% {
+            transform: scale(1.2);
+            opacity: 1;
+          }
+        }
+      `}</style>
     </div>
   )
 }
@@ -259,19 +295,6 @@ export default function App() {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading, showSignIn, showSignUp, showSell, showBuy])
 
-  // Robust fix: open modal only after auth has been set
-  useEffect(() => {
-    if (!auth) return
-    if (openSellAfterAuth) {
-      setOpenSellAfterAuth(false)
-      setShowSell(true)
-    }
-    if (openBuyAfterAuth) {
-      setOpenBuyAfterAuth(false)
-      setShowBuy(true)
-    }
-  }, [auth, openSellAfterAuth, openBuyAfterAuth])
-
   async function sendMessage(e?: React.FormEvent) {
     e?.preventDefault()
     const trimmed = input.trim()
@@ -284,14 +307,17 @@ export default function App() {
 
     try {
       const data = await sendChatMessage(trimmed, [...messages, userMsg])
-      const aiMsg: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        text: data.reply,
+      
+      const aiMsg: ChatMessage = { 
+        id: crypto.randomUUID(), 
+        role: 'assistant', 
+        text: data.reply, 
         ts: Date.now(),
         cta: data.cta || null
       }
+      
       setMessages((prev) => [...prev, aiMsg])
+      
     } catch (error) {
       console.error('Chat message failed:', error)
       const errorMsg: ChatMessage = {
@@ -352,67 +378,122 @@ export default function App() {
         {`
           /* Fix iOS viewport issues */
           @supports (-webkit-touch-callout: none) {
-            html { height: -webkit-fill-available; }
-            body { min-height: 100vh; min-height: -webkit-fill-available; }
-            .page { min-height: 100vh; min-height: -webkit-fill-available; }
+            html {
+              height: -webkit-fill-available;
+            }
+            body {
+              min-height: 100vh;
+              min-height: -webkit-fill-available;
+            }
+            .page {
+              min-height: 100vh;
+              min-height: -webkit-fill-available;
+            }
           }
-          /* composer safe area handled in CSS file */
+          
+          /* Prevent safe area displacement during scroll */
+          @media (max-width: 480px) {
+            .composer {
+              padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
+            }
+            .footer {
+              padding-bottom: max(14px, calc(14px + env(safe-area-inset-bottom))) !important;
+            }
+          }
         `}
       </style>
-
       <div className="page">
-        <header className="header">
-          <div className="brand">
-            <p className="tag">Secure access to digital assets & payments — via licensed partners.</p>
+      <header className="header">
+        <div className="brand">
+          <p className="tag">Secure access to digital assets & payments — via licensed partners.</p>
+        </div>
+
+        {!auth ? (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn" onClick={() => setShowSignIn(true)}>Sign in</button>
+            <button
+              className="btn"
+              style={{ background: 'transparent', color: 'var(--txt)', border: '1px solid var(--border)' }}
+              onClick={() => setShowSignUp(true)}
+            >
+              Sign up
+            </button>
           </div>
+        ) : (
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <span className="tag">Signed in{auth.user?.username ? ` as ${auth.user.username}` : ''}</span>
+            <button className="btn" onClick={handleBuyClick} style={{ background: 'var(--primary)', color: 'white' }}>
+              Buy
+            </button>
+            <button className="btn" onClick={handleSellClick} style={{ background: 'var(--primary)', color: 'white' }}>
+              Sell
+            </button>
+            <button
+              className="btn"
+              style={{ background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border)' }}
+              onClick={signOut}
+            >
+              Sign out
+            </button>
+          </div>
+        )}
+      </header>
 
-          {!auth ? (
-            <div style={{ display: 'flex', gap: 8 }} className="auth-buttons">
-              <button className="btn" onClick={() => setShowSignIn(true)}>Sign in</button>
-              <button
-                className="btn btn-outline"
-                onClick={() => setShowSignUp(true)}
-              >
-                Sign up
-              </button>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }} className="auth-buttons">
-              <span className="tag">Signed in{auth.user?.username ? ` as ${auth.user.username}` : ''}</span>
-              <button className="btn" onClick={handleBuyClick}>Buy</button>
-              <button className="btn" onClick={handleSellClick}>Sell</button>
-              <button className="btn btn-outline" onClick={signOut}>Sign out</button>
-            </div>
-          )}
-        </header>
-
+      {showSignIn ? (
+        <SignIn
+          onCancel={() => { setShowSignIn(false); setOpenSellAfterAuth(false); setOpenBuyAfterAuth(false) }}
+          onSuccess={(res) => {
+            setAuth(res)
+            setShowSignIn(false)
+            setMessages((prev) => [...prev, {
+              id: crypto.randomUUID(),
+              role: 'assistant',
+              text: `You're in, ${res.user.username || (res.user as any).firstname || 'there'}!`,
+              ts: Date.now(),
+            }])
+            if (openSellAfterAuth) { setOpenSellAfterAuth(false); setShowSell(true) }
+            if (openBuyAfterAuth)  { setOpenBuyAfterAuth(false);  setShowBuy(true) }
+          }}
+        />
+      ) : showSignUp ? (
+        <SignUp
+          onCancel={() => setShowSignUp(false)}
+          onSuccess={(_res: SignUpResult) => {
+            setShowSignUp(false)
+            setMessages((prev) => [...prev, {
+              id: crypto.randomUUID(),
+              role: 'assistant',
+              text: 'Account created. Please verify OTP to complete your signup.',
+              ts: Date.now(),
+            }])
+            setShowSignIn(true)
+          }}
+        />
+      ) : (
         <main className="chat">
-          {/* CHAT TOP: sticky under header — put top tabs, try chips here so they remain static */}
-          <div className="chat-top">
-            <div style={{ display: 'flex', gap: 8, padding: '10px 2px', alignItems: 'center', overflowX: 'auto' }}>
-              <button className="btn btn-outline" onClick={() => !loading && setInput('Sell 100 USDT to NGN')}>Sell 100 USDT</button>
-              <button className="btn btn-outline" onClick={() => !loading && setInput('Show my portfolio balance')}>Portfolio balance</button>
-              <button className="btn btn-outline" onClick={() => !loading && setInput('Current NGN rates')}>NGN rates</button>
-              {/* Add more tabs/chips as needed */}
-            </div>
-          </div>
-
-          <div className="messages" role="list">
+          <div className="messages">
             {messages.map((m) => (
               <div key={m.id} className={`bubble ${m.role}`}>
-                <div className="role">{m.role === 'user' ? 'You' : 'Bramp AI'}</div>
+                <div className="role">
+                  {m.role === 'user' ? 'You' : 'Bramp AI'}
+                </div>
                 <div className="text">
                   {renderMessageText(m.text)}
                   {m.role === 'assistant' && m.cta?.type === 'button' && m.cta.buttons?.length > 0 && (
-                    <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }} className="cta-buttons">
+                    <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       {m.cta.buttons.map((btn, index) => {
                         const isSell = isSellCTA(btn)
                         if (isSell) {
                           return (
                             <button
                               key={btn.id || btn.title || index}
-                              className="btn btn-outline"
+                              className="btn"
                               onClick={handleSellClick}
+                              style={
+                                btn.style === 'primary'
+                                  ? undefined
+                                  : { background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }
+                              }
                             >
                               {btn.title}
                             </button>
@@ -421,10 +502,15 @@ export default function App() {
                         return (
                           <a
                             key={btn.id || btn.title || index}
-                            className="btn btn-outline"
+                            className="btn"
                             href={btn.url}
                             target="_blank"
                             rel="noopener noreferrer"
+                            style={
+                              btn.style === 'primary'
+                                ? undefined
+                                : { background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }
+                            }
                           >
                             {btn.title}
                           </a>
@@ -451,29 +537,26 @@ export default function App() {
               {loading ? 'Typing…' : 'Send'}
             </button>
           </form>
+
+          <div className="hints">
+            <span className="hint" onClick={() => !loading && setInput('Sell 100 USDT to NGN')}>Sell 100 USDT to NGN</span>
+            <span className="hint" onClick={() => !loading && setInput('Show my portfolio balance')}>Show my portfolio balance</span>
+            <span className="hint" onClick={() => !loading && setInput('Current NGN rates')}>Current NGN rates</span>
+          </div>
         </main>
+      )}
 
-        {/* Pass live token from tokenStore as fallback to avoid mount-time race */}
-        <SellModal
-          open={showSell}
-          onClose={() => setShowSell(false)}
-          onChatEcho={echoFromModalToChat}
-          authToken={auth?.accessToken || tokenStore.getTokens().access || null}
-        />
-        <BuyModal
-          open={showBuy}
-          onClose={() => setShowBuy(false)}
-          onChatEcho={echoFromModalToChat}
-          authToken={auth?.accessToken || tokenStore.getTokens().access || null}
-        />
+      {/* Modals */}
+      <SellModal open={showSell} onClose={() => setShowSell(false)} onChatEcho={echoFromModalToChat} />
+      <BuyModal  open={showBuy}  onClose={() => setShowBuy(false)}  onChatEcho={echoFromModalToChat} />
 
-        <footer className="footer">
-          <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
-          <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
-          <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp/drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
-          <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
-        </footer>
-      </div>
+      <footer className="footer">
+        <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
+        <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
+        <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp/drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
+        <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
+      </footer>
+    </div>
     </>
   )
 }
