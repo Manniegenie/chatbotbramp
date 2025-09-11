@@ -1,11 +1,10 @@
-// src/sell.tsx
-import React, { useEffect, useReducer, useRef, useState } from 'react'
+// src/sell.tsx - Enhanced version with improved reliability
+import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { tokenStore } from './lib/secureStore'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
-/* Types, constants, helpers — unchanged except for small logs where helpful */
 type BankOption = { name: string; code: string }
 
 type InitiateSellRes = {
@@ -42,17 +41,17 @@ type PayoutRes = {
     rate: number
     receiveCurrency: string
     receiveAmount: number
-    expiresAt?: string
+    expiresAt: string
   }
-  payout?: {
+  payout: {
     bankName: string
     bankCode: string
     accountNumber: string
     accountName: string
-    capturedAt?: string
+    capturedAt: string
   }
   deposit?: {
-    address?: string
+    address: string
     memo?: string | null
   }
   message?: string
@@ -64,10 +63,28 @@ type SellModalProps = {
   onChatEcho?: (text: string) => void
 }
 
-const TOKENS = ['USDT','USDC','BTC','ETH','SOL','BNB','MATIC','AVAX'] as const
-type TokenSym = typeof TOKENS[number]
+type ProgressState = {
+  step: 1 | 2
+  initData: InitiateSellRes | null
+  payData: PayoutRes | null
+  formData: {
+    token: string
+    network: string
+    amount: string
+    bankCode: string
+    bankName: string
+    accountNumber: string
+    accountName: string
+  }
+  timestamp: number
+}
 
-const NETWORKS_BY_TOKEN: Record<TokenSym, { code: string; label: string }[]> = {
+const TOKENS = ['USDT','USDC','BTC','ETH','SOL','BNB','MATIC','AVAX'] as const
+type TokenSym =
+  | 'USDT' | 'USDC' | 'BTC' | 'ETH'
+  | 'SOL'  | 'BNB'  | 'MATIC' | 'AVAX'
+
+const NETWORKS_BY_TOKEN: Record<TokenSym, Array<{ code: string; label: string }>> = {
   BTC:   [{ code: 'BTC', label: 'Bitcoin' }],
   ETH:   [{ code: 'ETH', label: 'Ethereum' }],
   SOL:   [{ code: 'SOL', label: 'Solana' }],
@@ -85,31 +102,136 @@ const NETWORKS_BY_TOKEN: Record<TokenSym, { code: string; label: string }[]> = {
   ],
 }
 
-function getHeaders() {
-  const { access } = tokenStore.getTokens()
-  console.log('🔑 Token check:', {
-    hasAccess: !!access,
-    accessLength: access?.length || 0,
-    tokenStore: typeof tokenStore,
-    coldStart: performance.getEntriesByType('navigation').length === 0 ||
-      (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming)?.type === 'reload'
-  })
+// Enhanced token checking with async support and error handling
+function useTokenStore() {
+  const [tokens, setTokens] = useState(() => tokenStore.getTokens())
+  const [isWaiting, setIsWaiting] = useState(false)
+  const [tokenError, setTokenError] = useState<string | null>(null)
+  
+  useEffect(() => {
+    if (!tokens.access) {
+      setIsWaiting(true)
+      setTokenError(null)
+      
+      tokenStore.waitForTokens(5000).then((newTokens) => {
+        setTokens(newTokens)
+        setIsWaiting(false)
+        if (!newTokens.access) {
+          setTokenError('Failed to get authentication token')
+        }
+      }).catch((err) => {
+        console.error('Token wait failed:', err)
+        setTokenError('Authentication timeout - please refresh and try again')
+        setIsWaiting(false)
+      })
+    }
+  }, [])
+  
+  // Enhanced polling with error detection
+  useEffect(() => {
+    if (tokens.access || isWaiting) return
+    
+    const interval = setInterval(() => {
+      try {
+        const newTokens = tokenStore.getTokens()
+        if (newTokens.access) {
+          setTokens(newTokens)
+          setTokenError(null)
+        }
+      } catch (err) {
+        console.error('Token polling error:', err)
+        setTokenError('Token retrieval error')
+      }
+    }, 200)
+    
+    return () => clearInterval(interval)
+  }, [tokens.access, isWaiting])
+  
+  return { ...tokens, isWaiting, tokenError }
+}
+
+// Network status detection
+function useNetworkStatus() {
+  const [isOnline, setIsOnline] = useState(navigator.onLine)
+  
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true)
+    const handleOffline = () => setIsOnline(false)
+    
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
+  
+  return isOnline
+}
+
+// Progress persistence
+function saveProgress(data: ProgressState) {
+  try {
+    const encrypted = btoa(JSON.stringify(data))
+    localStorage.setItem('sell_progress', encrypted)
+  } catch (err) {
+    console.warn('Failed to save progress:', err)
+  }
+}
+
+function restoreProgress(): ProgressState | null {
+  try {
+    const data = localStorage.getItem('sell_progress')
+    if (!data) return null
+    
+    const progress = JSON.parse(atob(data)) as ProgressState
+    // Only restore if less than 30 minutes old
+    if (Date.now() - progress.timestamp < 30 * 60 * 1000) {
+      return progress
+    }
+    localStorage.removeItem('sell_progress')
+    return null
+  } catch (err) {
+    console.warn('Failed to restore progress:', err)
+    localStorage.removeItem('sell_progress')
+    return null
+  }
+}
+
+function clearProgress() {
+  localStorage.removeItem('sell_progress')
+}
+
+function getHeaders(accessToken?: string) {
   const h = new Headers()
   h.set('Content-Type', 'application/json')
-  if (access) h.set('Authorization', `Bearer ${access}`)
+  if (accessToken) h.set('Authorization', `Bearer ${accessToken}`)
   return h
 }
 
-async function fetchWithTimeout(url: string, options: RequestInit = {}, ms = 15000) {
+async function fetchWithAuth(url: string, options: RequestInit = {}, accessToken?: string, timeoutMs: number = 15000): Promise<Response> {
+  const headers = getHeaders(accessToken)
+  
+  // Add timeout using AbortController
   const controller = new AbortController()
-  const id = setTimeout(() => controller.abort(), ms)
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+  
   try {
-    const res = await fetch(url, { ...options, signal: controller.signal })
-    clearTimeout(id)
-    return res
-  } catch (err) {
-    clearTimeout(id)
-    throw err
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        ...Object.fromEntries(headers),
+        ...Object.fromEntries(new Headers(options.headers || {}))
+      }
+    })
+    
+    clearTimeout(timeoutId)
+    return response
+  } catch (error) {
+    clearTimeout(timeoutId)
+    throw error
   }
 }
 
@@ -118,6 +240,24 @@ function prettyAmount(n: number) {
 }
 function prettyNgn(n: number) {
   return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 2 }).format(n)
+}
+
+function useCountdown(expiryIso?: string | null) {
+  const [msLeft, setMsLeft] = useState<number>(() => {
+    if (!expiryIso) return 0
+    return Math.max(0, new Date(expiryIso).getTime() - Date.now())
+  })
+  useEffect(() => {
+    if (!expiryIso) return
+    const t = setInterval(() => {
+      const left = Math.max(0, new Date(expiryIso).getTime() - Date.now())
+      setMsLeft(left)
+    }, 250)
+    return () => clearInterval(t)
+  }, [expiryIso])
+  const mm = Math.floor(msLeft / 60000)
+  const ss = Math.floor((msLeft % 60000) / 1000)
+  return { msLeft, text: `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`, expired: msLeft <= 0 }
 }
 
 function toNetworkLabel(token: string, code: string) {
@@ -136,8 +276,8 @@ function buildPayoutRecap(init: InitiateSellRes | null, p: PayoutRes) {
 
   return [
     `Payout details saved 🏦`,
-    `Bank: ${p.payout?.bankName ?? '—'}`,
-    `Account: ${p.payout?.accountName ?? '—'} — ${p.payout?.accountNumber ?? '—'}`,
+    `Bank: ${p.payout.bankName}`,
+    `Account: ${p.payout.accountName} — ${p.payout.accountNumber}`,
     '',
     `Recap: pay **${prettyAmount(Number(payAmount || 0))} ${t}** on **${netLabel}**.`,
     `You'll receive: **${prettyNgn(Number(recv || 0))}** at **${prettyAmount(Number(rate || 0))} NGN/${t}**.`,
@@ -145,26 +285,54 @@ function buildPayoutRecap(init: InitiateSellRes | null, p: PayoutRes) {
   ].join('\n')
 }
 
-/* Countdown hook — returns expired=false if there's no expiry yet */
-function useCountdown(expiryIso?: string | null) {
-  const [msLeft, setMsLeft] = useState<number>(() => expiryIso ? Math.max(0, new Date(expiryIso).getTime() - Date.now()) : 0)
-  useEffect(() => {
-    if (!expiryIso) {
-      setMsLeft(0)
-      return
-    }
-    const update = () => setMsLeft(Math.max(0, new Date(expiryIso).getTime() - Date.now()))
-    update()
-    const t = setInterval(update, 250)
-    return () => clearInterval(t)
-  }, [expiryIso])
-  const mm = Math.floor(msLeft / 60000)
-  const ss = Math.floor((msLeft % 60000) / 1000)
-  const expired = expiryIso ? msLeft <= 0 : false
-  return { msLeft, text: `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`, expired }
+// Enhanced error display component
+function ErrorDisplay({ error, onRetry }: { error: string; onRetry?: () => void }) {
+  return (
+    <div role="alert" style={errorBanner}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+        <div style={{ flex: 1 }}>
+          <strong style={{ color: '#ffaaaa' }}>Error:</strong> {error}
+        </div>
+        {onRetry && (
+          <button 
+            style={{ ...btn, padding: '6px 12px', fontSize: 12 }}
+            onClick={onRetry}
+          >
+            Retry
+          </button>
+        )}
+      </div>
+    </div>
+  )
 }
 
-/* Styles — copied from your original file (kept identical) */
+// Debug panel for development
+function DebugPanel({ initData, payData, step }: any) {
+  // Check if we're in development mode (Vite sets this)
+  const isDev = import.meta.env?.DEV || import.meta.env?.MODE === 'development'
+  
+  if (!isDev) return null
+  
+  return (
+    <details style={{ margin: '16px 0', padding: 12, background: '#1a1a1a', borderRadius: 8 }}>
+      <summary style={{ cursor: 'pointer', color: '#888' }}>Debug Info</summary>
+      <pre style={{ fontSize: 11, color: '#ccc', marginTop: 8, overflow: 'auto' }}>
+        {JSON.stringify({
+          step,
+          hasInitData: !!initData,
+          hasPayData: !!payData,
+          initDataKeys: initData ? Object.keys(initData) : [],
+          payDataKeys: payData ? Object.keys(payData) : [],
+          paymentId: initData?.paymentId,
+          payoutStatus: payData?.status,
+          timestamp: Date.now()
+        }, null, 2)}
+      </pre>
+    </details>
+  )
+}
+
+/* ===== Styles ===== */
 const overlayStyle: React.CSSProperties = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', display: 'grid', placeItems: 'center', padding: 16, zIndex: 1000 }
 const sheetStyle: React.CSSProperties = { width: '100%', maxWidth: 760, background: 'var(--card)', color: 'var(--txt)', border: '1px solid var(--border)', borderRadius: 16, boxShadow: 'var(--shadow)', overflow: 'hidden', display: 'grid', gridTemplateRows: 'auto 1fr auto', animation: 'scaleIn 120ms ease-out' }
 const headerStyle: React.CSSProperties = { padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }
@@ -189,124 +357,140 @@ const smallMuted: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' }
 const row: React.CSSProperties = { display: 'flex', gap: 10, flexWrap: 'wrap' }
 const badge: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 12, padding: '6px 10px', borderRadius: 999, border: '1px solid var(--border)', background: '#0d1210' }
 const badgeWarn: React.CSSProperties = { ...badge, background: 'rgba(255, 170, 0, .08)', borderColor: 'rgba(255, 170, 0, .25)' }
+const badgeOffline: React.CSSProperties = { ...badge, background: 'rgba(220, 50, 50, .08)', borderColor: 'rgba(220, 50, 50, .25)' }
 const errorBanner: React.CSSProperties = { ...card, background: 'rgba(220, 50, 50, .1)', borderColor: 'rgba(220, 50, 50, .25)' }
 const successCard: React.CSSProperties = { ...card, background: 'rgba(0, 115, 55, .12)', borderColor: 'rgba(0, 115, 55, .35)' }
 
-/* Reducer + state (same atomic PAYOUT_SUCCESS) */
-
-type Flow = 'idle' | 'initiated' | 'complete'
-
-type State = {
-  flow: Flow
-  token: TokenSym
-  network: string
-  amount: string
-
-  initLoading: boolean
-  initError: string | null
-  initData: InitiateSellRes | null
-
-  payLoading: boolean
-  payError: string | null
-  payData: PayoutRes | null
-
-  summaryExpiresAt: string | null
-
-  banksLoading: boolean
-  banksError: string | null
-  bankOptions: BankOption[]
-  bankCode: string
-  bankName: string
-  accountNumber: string
-  accountName: string
-  accountNameLoading: boolean
-  accountNameError: string | null
-}
-
-const initialState: State = {
-  flow: 'idle',
-  token: 'USDT',
-  network: NETWORKS_BY_TOKEN['USDT'][0].code,
-  amount: '100',
-
-  initLoading: false,
-  initError: null,
-  initData: null,
-
-  payLoading: false,
-  payError: null,
-  payData: null,
-
-  summaryExpiresAt: null,
-
-  banksLoading: false,
-  banksError: null,
-  bankOptions: [],
-  bankCode: '',
-  bankName: '',
-  accountNumber: '',
-  accountName: '',
-  accountNameLoading: false,
-  accountNameError: null,
-}
-
-type Action =
-  | { type: 'RESET' }
-  | { type: 'SET_FIELD'; key: keyof State; value: any }
-  | { type: 'INIT_START' }
-  | { type: 'INIT_SUCCESS'; payload: InitiateSellRes }
-  | { type: 'INIT_FAIL'; error: string }
-  | { type: 'PAYOUT_START' }
-  | { type: 'PAYOUT_SUCCESS'; payload: PayoutRes; expiryIso: string }
-  | { type: 'PAYOUT_FAIL'; error: string }
-  | { type: 'SET_BANKS'; banks: BankOption[] }
-  | { type: 'SET_ACCOUNT_NAME'; name?: string; error?: string | null }
-
-function reducer(s: State, action: Action): State {
-  switch (action.type) {
-    case 'RESET': return { ...initialState }
-    case 'SET_FIELD': return { ...s, [action.key]: action.value }
-    case 'INIT_START': return { ...s, initLoading: true, initError: null }
-    case 'INIT_SUCCESS': return { ...s, initLoading: false, initData: action.payload, flow: 'initiated' }
-    case 'INIT_FAIL': return { ...s, initLoading: false, initError: action.error }
-    case 'PAYOUT_START': return { ...s, payLoading: true, payError: null }
-    case 'PAYOUT_SUCCESS':
-      return { ...s, payLoading: false, payData: action.payload, summaryExpiresAt: action.expiryIso, flow: 'complete' }
-    case 'PAYOUT_FAIL': return { ...s, payLoading: false, payError: action.error }
-    case 'SET_BANKS': {
-      const first = action.banks[0] ?? { name: '', code: '' }
-      return { ...s, bankOptions: action.banks, bankCode: first.code, bankName: first.name, banksLoading: false, banksError: null }
-    }
-    case 'SET_ACCOUNT_NAME':
-      return { ...s, accountName: action.name ?? '', accountNameError: action.error ?? null, accountNameLoading: false }
-    default: return s
-  }
-}
-
-/* Component */
 export default function SellModal({ open, onClose, onChatEcho }: SellModalProps) {
-  const [state, dispatch] = useReducer(reducer, initialState)
+  // Enhanced token store with error handling
+  const { access: accessToken, isWaiting: tokenWaiting, tokenError } = useTokenStore()
+  const isOnline = useNetworkStatus()
+  
+  // Steps: 1 = Start Sell, 2 = Payout. Final summary is a sub-state of step 2.
+  const [step, setStep] = useState<1 | 2>(1)
+
+  // Step 1 (Start Sell)
+  const [token, setToken] = useState<TokenSym>('USDT')
+  const [network, setNetwork] = useState(NETWORKS_BY_TOKEN['USDT'][0].code)
+  const [amount, setAmount] = useState<string>('100')
+  const [initLoading, setInitLoading] = useState(false)
+  const [initError, setInitError] = useState<string | null>(null)
+  const [initData, setInitData] = useState<InitiateSellRes | null>(null)
+
+  // Step 2 (Payout + Summary)
+  const [bankName, setBankName] = useState('')
+  const [bankCode, setBankCode] = useState('')
+  const [accountNumber, setAccountNumber] = useState('')
+  const [accountName, setAccountName] = useState('')
+  const [accountNameLoading, setAccountNameLoading] = useState(false)
+  const [accountNameError, setAccountNameError] = useState<string | null>(null)
+  const [payLoading, setPayLoading] = useState(false)
+  const [payError, setPayError] = useState<string | null>(null)
+  const [payData, setPayData] = useState<PayoutRes | null>(null)
+
+  // Countdown starts only AFTER payout is saved (local 15-second window)
+  const [summaryExpiresAt, setSummaryExpiresAt] = useState<string | null>(null)
+  const { text: countdown, expired } = useCountdown(summaryExpiresAt)
+
+  // Banks
+  const [banksLoading, setBanksLoading] = useState(false)
+  const [banksError, setBanksError] = useState<string | null>(null)
+  const [bankOptions, setBankOptions] = useState<BankOption[]>([])
   const banksFetchedRef = useRef(false)
-  const firstInputRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null)
-  const [copiedKey, setCopiedKey] = useState<string | null>(null)
 
-  const { text: countdown, expired } = useCountdown(state.summaryExpiresAt)
+  // Recovery functionality
+  const [isRecovering, setIsRecovering] = useState(false)
 
-  // Reset on open
+  // Reset on open with progress restoration
   useEffect(() => {
     if (!open) return
-    dispatch({ type: 'RESET' })
+    
+    // Try to restore progress first
+    const savedProgress = restoreProgress()
+    if (savedProgress) {
+      console.log('Restoring saved progress:', savedProgress)
+      setStep(savedProgress.step)
+      setToken(savedProgress.formData.token as TokenSym)
+      setNetwork(savedProgress.formData.network)
+      setAmount(savedProgress.formData.amount)
+      setBankCode(savedProgress.formData.bankCode)
+      setBankName(savedProgress.formData.bankName)
+      setAccountNumber(savedProgress.formData.accountNumber)
+      setAccountName(savedProgress.formData.accountName)
+      setInitData(savedProgress.initData)
+      setPayData(savedProgress.payData)
+      
+      // If we have payData, start countdown
+      if (savedProgress.payData) {
+        setSummaryExpiresAt(new Date(Date.now() + 15 * 1000).toISOString())
+      }
+    } else {
+      // Fresh start
+      setStep(1)
+      setToken('USDT')
+      setNetwork(NETWORKS_BY_TOKEN['USDT'][0].code)
+      setAmount('100')
+      setInitData(null)
+      setBankName('')
+      setBankCode('')
+      setAccountNumber('')
+      setAccountName('')
+      setPayData(null)
+      setSummaryExpiresAt(null)
+    }
+    
+    // Reset loading states
+    setInitLoading(false)
+    setInitError(null)
+    setAccountNameLoading(false)
+    setAccountNameError(null)
+    setPayLoading(false)
+    setPayError(null)
+    setBanksLoading(false)
+    setBanksError(null)
+    setBankOptions([])
     banksFetchedRef.current = false
-    console.log('Modal opened — state reset')
+    setIsRecovering(false)
   }, [open])
+
+  // Save progress whenever important state changes
+  useEffect(() => {
+    if (!open) return
+    
+    const progress: ProgressState = {
+      step,
+      initData,
+      payData,
+      formData: {
+        token,
+        network,
+        amount,
+        bankCode,
+        bankName,
+        accountNumber,
+        accountName
+      },
+      timestamp: Date.now()
+    }
+    
+    // Only save if we have meaningful progress
+    if (initData || payData) {
+      saveProgress(progress)
+    }
+  }, [open, step, initData, payData, token, network, amount, bankCode, bankName, accountNumber, accountName])
+
+  // Clear progress on successful completion or close
+  useEffect(() => {
+    if (!open || (payData && expired)) {
+      clearProgress()
+    }
+  }, [open, payData, expired])
 
   // Keep network valid
   useEffect(() => {
-    const list = NETWORKS_BY_TOKEN[state.token]
-    if (!list.find(n => n.code === state.network)) {
-      dispatch({ type: 'SET_FIELD', key: 'network', value: list[0].code })
-    }
-  }, [state.token])
+    const list = NETWORKS_BY_TOKEN[token]
+    if (!list.find(n => n.code === network)) setNetwork(list[0].code)
+  }, [token, network])
 
   // Esc to close
   useEffect(() => {
@@ -316,105 +500,384 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onClose])
 
-  // Autofocus per flow
-  useEffect(() => { firstInputRef.current?.focus() }, [state.flow])
+  // Autofocus per step
+  const firstInputRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null)
+  useEffect(() => { firstInputRef.current?.focus() }, [step])
 
-  // Fetch banks once when entering 'initiated'
+  // Fetch banks once when entering Step 2 (wait for auth)
   useEffect(() => {
-    if (!open || state.flow !== 'initiated' || banksFetchedRef.current) return
+    if (!open || step !== 2 || banksFetchedRef.current || !accessToken || tokenWaiting) return
     banksFetchedRef.current = true
+    
     ;(async () => {
-      dispatch({ type: 'SET_FIELD', key: 'banksLoading', value: true })
-      dispatch({ type: 'SET_FIELD', key: 'banksError', value: null })
+      setBanksLoading(true)
+      setBanksError(null)
       try {
-        const res = await fetchWithTimeout(`${API_BASE}/fetchnaira/naira-accounts`, { method: 'GET', headers: getHeaders(), cache: 'no-store' })
+        const res = await fetchWithAuth(`${API_BASE}/fetchnaira/naira-accounts`, {
+          method: 'GET',
+          cache: 'no-store'
+        }, accessToken)
+        
         const json = await res.json()
         if (!res.ok) throw new Error(json?.error || `HTTP ${res.status}`)
+
         const list: BankOption[] = Array.isArray(json?.banks) ? json.banks : []
         const opts: BankOption[] = (list as BankOption[])
-          .map((b: any) => ({ name: String(b.name || '').trim(), code: String(b.code || '').trim() }))
+          .map((b: BankOption) => ({ name: String(b.name || '').trim(), code: String(b.code || '').trim() }))
           .filter((b: BankOption) => b.name.length > 0 && b.code.length > 0)
-          .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
-        dispatch({ type: 'SET_BANKS', banks: opts })
+          .sort((a: BankOption, b: BankOption) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+
+        setBankOptions(opts)
+        if (opts.length && !bankCode) {
+          setBankCode(opts[0].code)
+          setBankName(opts[0].name)
+        }
       } catch (e: any) {
-        dispatch({ type: 'SET_FIELD', key: 'banksLoading', value: false })
-        dispatch({ type: 'SET_FIELD', key: 'banksError', value: e?.message || 'Failed to load banks' })
-        dispatch({ type: 'SET_FIELD', key: 'bankOptions', value: [] })
-        dispatch({ type: 'SET_FIELD', key: 'bankCode', value: '' })
-        dispatch({ type: 'SET_FIELD', key: 'bankName', value: '' })
+        setBanksError(e?.message || 'Failed to load banks')
+        setBankOptions([])
+        if (!bankCode) {
+          setBankCode('')
+          setBankName('')
+        }
+      } finally {
+        setBanksLoading(false)
       }
     })()
-  }, [open, state.flow])
+  }, [open, step, accessToken, tokenWaiting, bankCode])
 
-  // Resolve account name (debounced)
+  // Resolve account name when account number is 10+ digits (wait for auth)
   useEffect(() => {
-    if (!open || state.flow !== 'initiated' || !state.bankCode || !state.accountNumber) return
-    if (state.accountNumber.length < 10) {
-      dispatch({ type: 'SET_ACCOUNT_NAME', name: '', error: null })
+    if (!open || step !== 2 || !bankCode || !accountNumber || !accessToken || tokenWaiting) return
+    if (accountNumber.length < 10) {
+      setAccountName('')
+      setAccountNameError(null)
       return
     }
 
     const timeoutId = setTimeout(async () => {
-      dispatch({ type: 'SET_FIELD', key: 'accountNameLoading', value: true })
-      dispatch({ type: 'SET_FIELD', key: 'accountNameError', value: null })
-      dispatch({ type: 'SET_FIELD', key: 'accountName', value: '' })
+      setAccountNameLoading(true)
+      setAccountNameError(null)
+      setAccountName('')
+      
       try {
-        const res = await fetchWithTimeout(
-          `${API_BASE}/accountname/resolve?sortCode=${encodeURIComponent(state.bankCode)}&accountNumber=${encodeURIComponent(state.accountNumber)}`,
-          { method: 'GET', headers: getHeaders() }
+        const res = await fetchWithAuth(
+          `${API_BASE}/accountname/resolve?sortCode=${encodeURIComponent(bankCode)}&accountNumber=${encodeURIComponent(accountNumber)}`,
+          { method: 'GET' },
+          accessToken
         )
+        
         const data = await res.json()
-        if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
+        
+        if (!res.ok || !data.success) {
+          throw new Error(data?.message || `HTTP ${res.status}`)
+        }
+        
         if (data.data?.accountName) {
-          dispatch({ type: 'SET_ACCOUNT_NAME', name: data.data.accountName, error: null })
+          setAccountName(data.data.accountName)
+          setAccountNameError(null)
         } else {
           throw new Error('Account name not found')
         }
       } catch (err: any) {
-        dispatch({ type: 'SET_ACCOUNT_NAME', name: '', error: err?.message || 'Failed to resolve account name' })
+        setAccountNameError(err.message || 'Failed to resolve account name')
+        setAccountName('')
       } finally {
-        // accountNameLoading cleared by SET_ACCOUNT_NAME
+        setAccountNameLoading(false)
       }
-    }, 500)
+    }, 500) // Debounce for 500ms
 
     return () => clearTimeout(timeoutId)
-  }, [open, state.flow, state.bankCode, state.accountNumber])
+  }, [open, step, bankCode, accountNumber, accessToken, tokenWaiting])
 
-  // AUTHORITATIVE final-summary check — showFinalSummary is true when flow === 'complete'
-  const showFinalSummary = state.flow === 'complete'
-
-  // Auto-close when the countdown expires on the final summary
-  useEffect(() => {
-    if (!open) return
-    if (!state.summaryExpiresAt) return
-    if (showFinalSummary && expired) {
-      console.log('Auto-closing modal because countdown expired', { summaryExpiresAt: state.summaryExpiresAt, expired })
-      onClose()
-    }
-  }, [open, showFinalSummary, expired, onClose, state.summaryExpiresAt])
-
-  // Log whenever flow becomes 'complete' so you can see actual state after reducer update
-  useEffect(() => {
-    if (state.flow === 'complete') {
-      console.log('FLOW -> complete. state snapshot:', {
-        initData: !!state.initData,
-        payData: !!state.payData,
-        summaryExpiresAt: state.summaryExpiresAt,
-        payLoading: state.payLoading
-      })
-    }
-  }, [state.flow])
-
-  // overlay click handler: ignore overlay clicks while final summary active & countdown not expired
-  const onOverlayClick = () => {
-    if (state.flow === 'complete' && state.summaryExpiresAt && !expired) {
-      console.log('Overlay click ignored because final summary countdown is active', { summaryExpiresAt: state.summaryExpiresAt, expired })
+  // Enhanced initiate function with retry logic
+  async function submitInitiate(e: React.FormEvent) {
+    e.preventDefault()
+    setInitError(null)
+    
+    if (!isOnline) {
+      setInitError('No internet connection. Please check your network.')
       return
     }
-    onClose()
+    
+    if (!amount || isNaN(+amount) || +amount <= 0) {
+      setInitError('Enter a valid amount')
+      return
+    }
+    
+    if (!accessToken) {
+      setInitError('Please sign in first')
+      return
+    }
+    
+    setInitLoading(true)
+    
+    const maxRetries = 3
+    let lastError: Error | null = null
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`Initiate attempt ${attempt}/${maxRetries}`, {
+          token,
+          network,
+          amount: +amount
+        })
+        
+        const res = await fetchWithAuth(`${API_BASE}/sell/initiate`, {
+          method: 'POST',
+          body: JSON.stringify({ token, network, sellAmount: +amount }),
+        }, accessToken)
+        
+        if (!res.ok) {
+          const errorText = await res.text()
+          console.error('Initiate API error:', {
+            status: res.status,
+            statusText: res.statusText,
+            body: errorText
+          })
+          throw new Error(`Server error (${res.status}): ${errorText}`)
+        }
+        
+        const data: InitiateSellRes = await res.json()
+        
+        if (!data || typeof data !== 'object') {
+          throw new Error('Invalid response format from server')
+        }
+        
+        if (!data.success) {
+          throw new Error(data.message || 'Server reported failure')
+        }
+        
+        // Validate required fields
+        if (!data.paymentId || !data.reference || !data.deposit || !data.quote) {
+          console.error('Incomplete initiate response:', data)
+          throw new Error('Incomplete response from server')
+        }
+        
+        console.log('Initiate successful:', {
+          paymentId: data.paymentId,
+          reference: data.reference
+        })
+        
+        setInitData(data)
+        setStep(2)
+        return
+        
+      } catch (err: any) {
+        lastError = err
+        console.error(`Initiate attempt ${attempt} failed:`, err)
+        
+        // Don't retry for validation/auth errors
+        if (err.message?.includes('Enter a valid') || 
+            err.message?.includes('sign in') ||
+            err.message?.includes('400') ||
+            err.message?.includes('401') ||
+            err.message?.includes('403')) {
+          break
+        }
+        
+        // Wait before retry
+        if (attempt < maxRetries) {
+          const delay = Math.pow(2, attempt - 1) * 1000
+          console.log(`Retrying in ${delay}ms...`)
+          await new Promise(resolve => setTimeout(resolve, delay))
+        }
+      }
+    }
+    
+    const errorMsg = lastError?.message || 'Failed to initiate sell'
+    setInitError(`${errorMsg}${maxRetries > 1 ? ` (tried ${maxRetries} times)` : ''}`)
+    setInitLoading(false)
   }
 
-  // Clipboard helper
+  // Enhanced payout function with comprehensive error handling and retry
+  async function submitPayout(e: React.FormEvent) {
+    e.preventDefault()
+    setPayError(null)
+    
+    if (!isOnline) {
+      setPayError('No internet connection. Please check your network.')
+      return
+    }
+    
+    // Enhanced validation
+    if (!bankName || !bankCode || !accountNumber || !accountName) {
+      setPayError('Fill in all bank fields')
+      return
+    }
+    if (!initData?.paymentId) {
+      setPayError('Missing paymentId — restart the sell flow')
+      return
+    }
+    
+    if (!accessToken) {
+      setPayError('Please sign in first')
+      return
+    }
+    
+    setPayLoading(true)
+    
+    // Retry mechanism for network issues
+    const maxRetries = 3
+    let lastError: Error | null = null
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`Payout attempt ${attempt}/${maxRetries}`, {
+          paymentId: initData.paymentId,
+          bankCode,
+          accountNumber: accountNumber.slice(0, 4) + '****' // Log safely
+        })
+        
+        const res = await fetchWithAuth(`${API_BASE}/sell/payout`, {
+          method: 'POST',
+          body: JSON.stringify({
+            paymentId: initData.paymentId,
+            bankName,
+            bankCode,
+            accountNumber,
+            accountName,
+          }),
+        }, accessToken)
+        
+        // Enhanced response validation
+        if (!res.ok) {
+          const errorText = await res.text()
+          console.error('Payout API error:', {
+            status: res.status,
+            statusText: res.statusText,
+            body: errorText
+          })
+          throw new Error(`Server error (${res.status}): ${errorText}`)
+        }
+        
+        const data: PayoutRes = await res.json()
+        
+        // Strict response validation
+        if (!data || typeof data !== 'object') {
+          throw new Error('Invalid response format from server')
+        }
+        
+        if (!data.success) {
+          throw new Error(data.message || 'Server reported failure')
+        }
+        
+        // Validate required fields in response
+        if (!data.paymentId || !data.status || !data.payout) {
+          console.error('Incomplete payout response:', data)
+          throw new Error('Incomplete response from server')
+        }
+        
+        // Validate payout object structure
+        const { payout } = data
+        if (!payout.bankName || !payout.accountNumber || !payout.accountName) {
+          console.error('Incomplete payout details:', payout)
+          throw new Error('Incomplete payout details in response')
+        }
+        
+        console.log('Payout successful:', {
+          paymentId: data.paymentId,
+          status: data.status,
+          bankName: payout.bankName
+        })
+        
+        // Success! Set the data and trigger summary
+        setPayData(data)
+        
+        // Send to chat with error handling
+        try {
+          onChatEcho?.(buildPayoutRecap(initData, data))
+        } catch (chatError) {
+          console.warn('Chat echo failed:', chatError)
+          // Don't fail the whole flow for chat issues
+        }
+        
+        // Start countdown timer
+        setSummaryExpiresAt(new Date(Date.now() + 15 * 1000).toISOString())
+        setPayLoading(false)
+        
+        // Success - break out of retry loop
+        return
+        
+      } catch (err: any) {
+        lastError = err
+        console.error(`Payout attempt ${attempt} failed:`, err)
+        
+        // Don't retry for validation errors or auth errors
+        if (err.message?.includes('Fill in all') || 
+            err.message?.includes('sign in') ||
+            err.message?.includes('400') ||
+            err.message?.includes('401') ||
+            err.message?.includes('403')) {
+          break
+        }
+        
+        // Wait before retry (exponential backoff)
+        if (attempt < maxRetries) {
+          const delay = Math.pow(2, attempt - 1) * 1000 // 1s, 2s, 4s
+          console.log(`Retrying in ${delay}ms...`)
+          await new Promise(resolve => setTimeout(resolve, delay))
+        }
+      }
+    }
+    
+    // All retries failed
+    const errorMsg = lastError?.message || 'Failed to save payout details'
+    console.error('All payout attempts failed:', lastError)
+    setPayError(`${errorMsg}${maxRetries > 1 ? ` (tried ${maxRetries} times)` : ''}`)
+    setPayLoading(false)
+  }
+
+  // Recovery function for stuck transactions
+  async function recoverTransaction() {
+    if (!initData?.paymentId || !accessToken) return
+    
+    setIsRecovering(true)
+    setPayError(null)
+    
+    try {
+      console.log('Attempting transaction recovery for:', initData.paymentId)
+      
+      const res = await fetchWithAuth(`${API_BASE}/sell/status/${initData.paymentId}`, {
+        method: 'GET'
+      }, accessToken)
+      
+      if (!res.ok) {
+        throw new Error(`Failed to recover transaction: HTTP ${res.status}`)
+      }
+      
+      const data = await res.json()
+      
+      if (data.success && data.payout) {
+        console.log('Transaction recovered successfully')
+        setPayData(data)
+        setSummaryExpiresAt(new Date(Date.now() + 15 * 1000).toISOString())
+        
+        try {
+          onChatEcho?.(buildPayoutRecap(initData, data))
+        } catch (chatError) {
+          console.warn('Chat echo failed during recovery:', chatError)
+        }
+      } else {
+        throw new Error('Transaction not found or incomplete')
+      }
+    } catch (err: any) {
+      console.error('Recovery failed:', err)
+      setPayError(`Recovery failed: ${err.message}`)
+    } finally {
+      setIsRecovering(false)
+    }
+  }
+
+  // Auto-close when the countdown expires on the final summary
+  const showFinalSummary = !!payData
+  useEffect(() => {
+    if (!open) return
+    if (showFinalSummary && expired) {
+      onClose()
+    }
+  }, [open, showFinalSummary, expired, onClose])
+
+  const [copiedKey, setCopiedKey] = useState<string | null>(null)
   function copyToClipboard(text: string, key: string) {
     navigator.clipboard?.writeText(text).then(() => {
       setCopiedKey(key)
@@ -422,143 +885,65 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     }).catch(() => {})
   }
 
-  /* Handlers: submitInitiate & submitPayout (same as before, with atomic dispatch) */
-
-  async function submitInitiate(e: React.FormEvent) {
-    e.preventDefault()
-    dispatch({ type: 'INIT_START' })
-    dispatch({ type: 'SET_FIELD', key: 'initError', value: null })
-    if (!state.amount || isNaN(+state.amount) || +state.amount <= 0) {
-      dispatch({ type: 'INIT_FAIL', error: 'Enter a valid amount' })
-      return
-    }
-    try {
-      const res = await fetchWithTimeout(`${API_BASE}/sell/initiate`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({ token: state.token, network: state.network, sellAmount: +state.amount }),
-      })
-      const data: InitiateSellRes = await res.json()
-      if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
-      dispatch({ type: 'INIT_SUCCESS', payload: data })
-    } catch (err: any) {
-      dispatch({ type: 'INIT_FAIL', error: err.message || 'Failed to initiate sell' })
-    }
-  }
-
-  async function submitPayout(e: React.FormEvent) {
-    e.preventDefault()
-    dispatch({ type: 'PAYOUT_START' })
-    dispatch({ type: 'SET_FIELD', key: 'payError', value: null })
-    if (!state.bankName || !state.bankCode || !state.accountNumber || !state.accountName) {
-      dispatch({ type: 'PAYOUT_FAIL', error: 'Fill in all bank fields' })
-      return
-    }
-    if (!state.initData?.paymentId) {
-      dispatch({ type: 'PAYOUT_FAIL', error: 'Missing paymentId — restart the sell flow' })
-      return
-    }
-    try {
-      console.log('🚀 Starting payout call:', {
-        paymentId: state.initData.paymentId,
-        bankCode: state.bankCode,
-        accountNumber: state.accountNumber.slice(0, 4) + '****'
-      })
-
-      const res = await fetchWithTimeout(`${API_BASE}/sell/payout`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({
-          paymentId: state.initData.paymentId,
-          bankName: state.bankName,
-          bankCode: state.bankCode,
-          accountNumber: state.accountNumber,
-          accountName: state.accountName,
-        }),
-      })
-
-      console.log('📡 Payout response received:', {
-        status: res.status,
-        ok: res.ok,
-        headers: Object.fromEntries(res.headers.entries())
-      })
-
-      const responseText = await res.text()
-      console.log('📄 Raw response text:', responseText)
-
-      let data: PayoutRes
-      try {
-        data = JSON.parse(responseText)
-      } catch (parseError) {
-        console.error('❌ JSON parse failed:', parseError)
-        throw new Error('Invalid JSON response from server')
-      }
-
-      console.log('📦 Parsed response data:', data)
-
-      if (!res.ok) {
-        console.error('❌ HTTP error:', res.status, data)
-        throw new Error(data?.message || `HTTP ${res.status}`)
-      }
-
-      if (!data.success) {
-        console.error('❌ Server reported failure:', data.message)
-        throw new Error(data.message || 'Server reported failure')
-      }
-
-      if (!data.paymentId) {
-        console.error('❌ Missing paymentId in response')
-        throw new Error('Missing paymentId in response')
-      }
-
-      if (!data.payout) {
-        console.error('❌ Missing payout object in response')
-        throw new Error('Missing payout details in response')
-      }
-
-      console.log('✅ Payout validation passed, preparing to show summary...')
-
-      const expiryTime = new Date(Date.now() + 10 * 60 * 1000).toISOString()
-      console.log('⏰ Setting countdown expiry to:', expiryTime)
-
-      // Atomic transition: set payData + expiry + flow
-      dispatch({ type: 'PAYOUT_SUCCESS', payload: data, expiryIso: expiryTime })
-
-      console.log('🎉 Payout flow completed successfully (dispatched PAYOUT_SUCCESS)')
-
-      // chat recap
-      try {
-        const recap = buildPayoutRecap(state.initData, data)
-        console.log('💬 Sending chat recap...')
-        onChatEcho?.(recap)
-        console.log('✅ Chat recap sent')
-      } catch (chatError) {
-        console.warn('⚠️ Chat echo failed:', chatError)
-      }
-
-      // stabilization tick
-      setTimeout(() => {
-        console.log('💥 Post-payout UI stabilization tick')
-        dispatch({ type: 'SET_FIELD', key: 'payLoading', value: false })
-      }, 100)
-
-    } catch (err: any) {
-      console.error('💥 Payout failed:', err)
-      dispatch({ type: 'PAYOUT_FAIL', error: err.message || 'Failed to save payout details' })
-    } finally {
-      dispatch({ type: 'SET_FIELD', key: 'payLoading', value: false })
-      console.log('🏁 Payout loading state cleared')
-    }
-  }
-
   if (!open) return null
 
+  // Show loading state while waiting for tokens
+  if (tokenWaiting || (!accessToken && !tokenError)) {
+    return createPortal(
+      <div style={overlayStyle} role="dialog" aria-modal="true">
+        <div style={{...sheetStyle, padding: 40, textAlign: 'center' as const, minHeight: 200, placeItems: 'center'}}>
+          <div style={{marginBottom: 16}}>
+            <div style={{ width: 24, height: 24, border: '2px solid var(--border)', borderTop: '2px solid var(--accent)', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }}></div>
+          </div>
+          <div style={{color: 'var(--muted)'}}>
+            {tokenWaiting ? 'Waiting for authentication...' : 'Please sign in to continue'}
+          </div>
+          {!isOnline && (
+            <div style={{...badgeOffline, marginTop: 12}}>
+              📵 Offline
+            </div>
+          )}
+          {!tokenWaiting && (
+            <button style={{...btnPrimary, marginTop: 16}} onClick={onClose}>Close</button>
+          )}
+        </div>
+        <style>
+          {`@keyframes spin{from{transform:rotate(0deg)} to{transform:rotate(360deg)}}`}
+        </style>
+      </div>,
+      document.body
+    )
+  }
+
+  // Show token error
+  if (tokenError && !accessToken) {
+    return createPortal(
+      <div style={overlayStyle} role="dialog" aria-modal="true">
+        <div style={{...sheetStyle, padding: 40, textAlign: 'center' as const, minHeight: 200}}>
+          <div style={{color: '#ffaaaa', marginBottom: 16, fontSize: 18}}>
+            🔐 Authentication Error
+          </div>
+          <div style={{color: 'var(--muted)', marginBottom: 20}}>
+            {tokenError}
+          </div>
+          <div style={{display: 'flex', gap: 12, justifyContent: 'center'}}>
+            <button style={btn} onClick={() => window.location.reload()}>
+              Refresh Page
+            </button>
+            <button style={btnPrimary} onClick={onClose}>Close</button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )
+  }
+
   const headerTitle =
-    state.flow === 'idle' ? 'Start a Sell'
-      : (state.flow === 'initiated' ? 'Payout Details' : 'Transaction Summary')
+    step === 1 ? 'Start a Sell'
+    : (!payData ? 'Payout Details' : 'Transaction Summary')
 
   return createPortal(
-    <div style={overlayStyle} role="dialog" aria-modal="true" aria-labelledby="sell-title" onClick={onOverlayClick}>
+    <div style={overlayStyle} role="dialog" aria-modal="true" aria-labelledby="sell-title" onClick={onClose}>
       <div style={sheetStyle} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div style={headerStyle}>
@@ -569,9 +954,11 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
             <div>
               <div id="sell-title" style={{ fontWeight: 700 }}>{headerTitle}</div>
               <div style={stepperStyle}>
-                <span style={dot(state.flow === 'idle')}></span> Step 1 — Start
+                <span style={dot(step === 1)}></span> Step 1 — Start
                 <span style={{ opacity: .4, padding: '0 6px' }}>•</span>
-                <span style={dot(state.flow !== 'idle')}></span> Step 2 — Payout
+                <span style={dot(step === 2)}></span> Step 2 — Payout
+                {/* Status indicators */}
+                {!isOnline && <span style={{...badgeOffline, marginLeft: 8}}>📵 Offline</span>}
               </div>
             </div>
           </div>
@@ -580,31 +967,18 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
         {/* Body */}
         <div style={bodyStyle}>
-          {/* Always-visible debug panel — shows the important values so you can see exactly what's missing */}
-          <div style={{ ...card, background: '#111', marginBottom: 10 }}>
-            <div style={{ fontSize: 12, color: '#ccc' }}>
-              <div><strong>Diagnostics</strong></div>
-              <div>flow: {state.flow}</div>
-              <div>initData: {state.initData ? 'yes' : 'no'}</div>
-              <div>payData: {state.payData ? 'yes' : 'no'}</div>
-              <div>summaryExpiresAt: {state.summaryExpiresAt ?? 'null'}</div>
-              <div>expired: {expired ? 'true' : 'false'}</div>
-              <div>initLoading: {String(state.initLoading)}</div>
-              <div>payLoading: {String(state.payLoading)}</div>
-            </div>
-          </div>
-
           {/* STEP 1 — Start a Sell */}
-          {state.flow === 'idle' && (
+          {step === 1 && (
             <div style={{ display: 'grid', gap: 14 }}>
               <p style={{ margin: 0, color: 'var(--muted)' }}>
                 Choose token, network, and amount. We'll capture payout next.
               </p>
 
-              {!!state.initError && (
-                <div role="alert" style={errorBanner}>
-                  <strong style={{ color: '#ffaaaa' }}>Error:</strong> {state.initError}
-                </div>
+              {!!initError && (
+                <ErrorDisplay 
+                  error={initError} 
+                  onRetry={() => setInitError(null)}
+                />
               )}
 
               <form onSubmit={submitInitiate} style={gridForm}>
@@ -613,8 +987,9 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   <select
                     ref={firstInputRef as any}
                     style={inputBase}
-                    value={state.token}
-                    onChange={e => dispatch({ type: 'SET_FIELD', key: 'token', value: e.target.value })}
+                    value={token}
+                    onChange={e => setToken(e.target.value as TokenSym)}
+                    disabled={initLoading}
                   >
                     {TOKENS.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
@@ -624,74 +999,99 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   <span style={labelText}>Network</span>
                   <select
                     style={inputBase}
-                    value={state.network}
-                    onChange={e => dispatch({ type: 'SET_FIELD', key: 'network', value: e.target.value })}
+                    value={network}
+                    onChange={e => setNetwork(e.target.value)}
+                    disabled={initLoading}
                   >
-                    {NETWORKS_BY_TOKEN[state.token].map(n => (
+                    {NETWORKS_BY_TOKEN[token].map(n => (
                       <option key={n.code} value={n.code}>{n.label}</option>
                     ))}
                   </select>
                 </label>
 
                 <label style={{ ...inputWrap, gridColumn: '1 / span 2' }}>
-                  <span style={labelText}>Amount ({state.token})</span>
+                  <span style={labelText}>Amount ({token})</span>
                   <input
                     style={inputBase}
                     inputMode="decimal"
                     placeholder="e.g. 100"
-                    value={state.amount}
-                    onChange={e => dispatch({ type: 'SET_FIELD', key: 'amount', value: e.target.value })}
+                    value={amount}
+                    onChange={e => setAmount(e.target.value)}
+                    disabled={initLoading}
                   />
                 </label>
 
                 <div style={{ gridColumn: '1 / span 2', display: 'flex', justifyContent: 'flex-end' }}>
-                  <button style={btnPrimary} disabled={state.initLoading}>
-                    {state.initLoading ? 'Starting…' : 'Start & Continue to Payout'}
+                  <button 
+                    style={btnPrimary} 
+                    disabled={initLoading || !isOnline}
+                  >
+                    {initLoading ? (
+                      <>
+                        <div style={{ width: 12, height: 12, border: '2px solid white', borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 1s linear infinite', marginRight: 8, display: 'inline-block' }}></div>
+                        Starting…
+                      </>
+                    ) : (
+                      'Start & Continue to Payout'
+                    )}
                   </button>
                 </div>
               </form>
+
+              <DebugPanel initData={initData} payData={payData} step={step} />
             </div>
           )}
 
           {/* STEP 2 — Payout (then Summary with countdown) */}
-          {state.flow !== 'idle' && (
+          {step === 2 && (
             <div style={{ display: 'grid', gap: 14 }}>
-              {!state.initData && (
+              {!initData && (
                 <div role="alert" style={errorBanner}>
-                  Missing sell reference — please restart.
+                  <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                    <span>Missing sell reference — please restart.</span>
+                    <button style={{...btn, padding: '6px 12px', fontSize: 12}} onClick={() => setStep(1)}>
+                      Restart
+                    </button>
+                  </div>
                 </div>
               )}
 
-              {state.initData && state.flow === 'initiated' && (
+              {initData && !showFinalSummary && (
                 <>
                   <div style={card}>
                     <h3 style={{ margin: 0, fontSize: 16 }}>Sell Summary</h3>
                     <div style={kvGrid}>
                       <div>
                         <div style={kStyle}>Payment ID</div>
-                        <div style={{ ...vStyle, ...mono }}>{state.initData?.paymentId}</div>
+                        <div style={{ ...vStyle, ...mono }}>{initData.paymentId}</div>
                       </div>
                       <div>
                         <div style={kStyle}>Reference</div>
-                        <div style={{ ...vStyle, ...mono }}>{state.initData?.reference}</div>
+                        <div style={{ ...vStyle, ...mono }}>{initData.reference}</div>
                       </div>
                       <div>
                         <div style={kStyle}>You Receive</div>
                         <div style={vStyle}>
-                          {prettyNgn(state.initData?.quote.receiveAmount ?? 0)} ({state.initData?.quote.receiveCurrency})
+                          {prettyNgn(initData.quote.receiveAmount)} ({initData.quote.receiveCurrency})
                         </div>
                       </div>
                       <div>
                         <div style={kStyle}>Rate</div>
-                        <div style={vStyle}>{prettyAmount(state.initData?.quote.rate ?? 0)} NGN/{state.initData?.deposit.token}</div>
+                        <div style={vStyle}>{prettyAmount(initData.quote.rate)} NGN/{initData.deposit.token}</div>
                       </div>
                     </div>
                   </div>
 
-                  {!!state.payError && (
-                    <div role="alert" style={errorBanner}>
-                      <strong style={{ color: '#ffaaaa' }}>Error:</strong> {state.payError}
-                    </div>
+                  {!!payError && (
+                    <ErrorDisplay 
+                      error={payError} 
+                      onRetry={() => {
+                        setPayError(null)
+                        if (initData?.paymentId) {
+                          recoverTransaction()
+                        }
+                      }}
+                    />
                   )}
 
                   <form onSubmit={submitPayout} style={gridForm}>
@@ -700,23 +1100,21 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                       <select
                         ref={firstInputRef as any}
                         style={inputBase}
-                        value={state.bankCode}
-                        disabled={state.banksLoading || state.bankOptions.length === 0}
+                        value={bankCode}
+                        disabled={banksLoading || bankOptions.length === 0 || payLoading}
                         onChange={e => {
                           const code = e.target.value
-                          const hit = state.bankOptions.find((b: BankOption) => b.code === code)
+                          const hit = bankOptions.find((b: BankOption) => b.code === code)
                           if (hit) {
-                            dispatch({ type: 'SET_FIELD', key: 'bankCode', value: hit.code })
-                            dispatch({ type: 'SET_FIELD', key: 'bankName', value: hit.name })
-                          } else {
-                            dispatch({ type: 'SET_FIELD', key: 'bankCode', value: code })
+                            setBankCode(hit.code)
+                            setBankName(hit.name)
                           }
                         }}
                       >
-                        {state.bankOptions.length === 0 ? (
-                          <option value="">{state.banksLoading ? 'Loading…' : (state.banksError || 'No banks')}</option>
+                        {bankOptions.length === 0 ? (
+                          <option value="">{banksLoading ? 'Loading…' : (banksError || 'No banks')}</option>
                         ) : (
-                          state.bankOptions.map((b: BankOption) => (
+                          bankOptions.map((b: BankOption) => (
                             <option key={b.code} value={b.code}>{b.name}</option>
                           ))
                         )}
@@ -727,36 +1125,50 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                       <span style={labelText}>Account Number</span>
                       <input
                         style={inputBase}
-                        value={state.accountNumber}
-                        onChange={e => dispatch({ type: 'SET_FIELD', key: 'accountNumber', value: e.target.value })}
+                        value={accountNumber}
+                        onChange={e => setAccountNumber(e.target.value)}
                         placeholder="e.g. 0123456789"
+                        disabled={payLoading}
                       />
                     </label>
 
-                    <label style={{ ...inputWrap, gridColumn: '1 / span 2' }}>
+                    <label style={inputWrap}>
                       <span style={labelText}>Account Name</span>
-                      <div style={{ ...inputBase, background: '#1a1d23', color: state.accountName ? 'var(--txt)' : 'var(--muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {state.accountNameLoading ? (
+                      <div style={{ ...inputBase, background: '#1a1d23', color: accountName ? 'var(--txt)' : 'var(--muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {accountNameLoading ? (
                           <>
                             <div style={{ width: 12, height: 12, border: '2px solid var(--border)', borderTop: '2px solid var(--accent)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
                             Resolving...
                           </>
-                        ) : state.accountNameError ? (
-                          <span style={{ color: '#ff6b6b' }}>{state.accountNameError}</span>
-                        ) : state.accountName ? (
-                          state.accountName
-                        ) :
+                        ) : accountNameError ? (
+                          <span style={{ color: '#ff6b6b' }}>{accountNameError}</span>
+                        ) : accountName ? (
+                          accountName
+                        ) : 
                           'Enter account number'
                         }
                       </div>
                     </label>
 
                     <div style={{ gridColumn: '1 / span 2', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                      {isRecovering && (
+                        <button type="button" style={btn} disabled>
+                          <div style={{ width: 12, height: 12, border: '2px solid var(--border)', borderTop: '2px solid var(--accent)', borderRadius: '50%', animation: 'spin 1s linear infinite', marginRight: 8, display: 'inline-block' }}></div>
+                          Recovering...
+                        </button>
+                      )}
                       <button
                         style={btnPrimary}
-                        disabled={state.payLoading || !state.bankCode || state.banksLoading || !state.accountName}
+                        disabled={payLoading || !bankCode || banksLoading || !accountName || !isOnline || isRecovering}
                       >
-                        {state.payLoading ? 'Saving…' : 'Save Payout & Show Summary'}
+                        {payLoading ? (
+                          <>
+                            <div style={{ width: 12, height: 12, border: '2px solid white', borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 1s linear infinite', marginRight: 8, display: 'inline-block' }}></div>
+                            Saving…
+                          </>
+                        ) : (
+                          'Save Payout & Show Summary'
+                        )}
                       </button>
                     </div>
                   </form>
@@ -764,33 +1176,33 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
               )}
 
               {/* FINAL SUMMARY (countdown starts here) */}
-              {state.initData && showFinalSummary && state.payData && (
+              {initData && showFinalSummary && payData && (
                 <div style={successCard}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                     <h3 style={{ margin: 0, fontSize: 16 }}>Transaction Summary</h3>
                     <div style={badge}>
-                      ⏱ {expired ? 'Expired' : countdown} <span style={{ opacity: .6 }}>of 10:00</span>
+                      ⏱ {expired ? 'Expired' : countdown} <span style={{ opacity: .6 }}>of 00:15</span>
                     </div>
                   </div>
 
                   <div style={kvGrid}>
                     <div>
                       <div style={kStyle}>Status</div>
-                      <div style={vStyle}>{state.payData?.status}</div>
+                      <div style={vStyle}>{payData.status}</div>
                     </div>
                     <div>
                       <div style={kStyle}>Payment ID</div>
-                      <div style={{ ...vStyle, ...mono }}>{state.payData?.paymentId}</div>
+                      <div style={{ ...vStyle, ...mono }}>{payData.paymentId}</div>
                     </div>
                     <div>
                       <div style={kStyle}>Reference</div>
-                      <div style={{ ...vStyle, ...mono }}>{state.initData?.reference}</div>
+                      <div style={{ ...vStyle, ...mono }}>{initData.reference}</div>
                     </div>
                     <div>
                       <div style={kStyle}>You Receive</div>
                       <div>
                         <div style={vStyle}>
-                          {prettyNgn(state.initData?.quote.receiveAmount ?? 0)} ({state.initData?.quote.receiveCurrency})
+                          {prettyNgn(initData.quote.receiveAmount || 0)} ({initData.quote.receiveCurrency})
                         </div>
                         <div style={{ ...smallMuted, marginTop: 4 }}>
                           Transaction fee (fixed): <strong>70&nbsp;NGN</strong>
@@ -799,36 +1211,36 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     </div>
                     <div>
                       <div style={kStyle}>Rate</div>
-                      <div style={vStyle}>{prettyAmount(state.initData?.quote.rate ?? 0)} NGN/{state.initData?.deposit.token}</div>
+                      <div style={vStyle}>{prettyAmount(initData.quote.rate)} NGN/{initData.deposit.token}</div>
                     </div>
                     <div>
                       <div style={kStyle}>Bank</div>
-                      <div style={vStyle}>{state.payData?.payout?.bankName}</div>
+                      <div style={vStyle}>{payData.payout.bankName}</div>
                     </div>
                     <div>
                       <div style={kStyle}>Account</div>
-                      <div style={vStyle}>{state.payData?.payout?.accountName} — {state.payData?.payout?.accountNumber}</div>
+                      <div style={vStyle}>{payData.payout.accountName} — {payData.payout.accountNumber}</div>
                     </div>
                     <div>
                       <div style={kStyle}>Deposit Address</div>
-                      <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{state.initData?.deposit.address}</div>
+                      <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{initData.deposit.address}</div>
                       <div style={row}>
                         <button
                           style={btn}
-                          onClick={() => copyToClipboard(state.initData!.deposit.address, 'addr2')}
+                          onClick={() => copyToClipboard(initData.deposit.address, 'addr2')}
                         >
                           {copiedKey === 'addr2' ? 'Copied ✓' : 'Copy Address'}
                         </button>
                       </div>
                     </div>
-                    {!!state.initData?.deposit.memo && (
+                    {!!initData.deposit.memo && (
                       <div>
                         <div style={kStyle}>Memo / Tag</div>
-                        <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{state.initData.deposit.memo}</div>
+                        <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{initData.deposit.memo}</div>
                         <div style={row}>
                           <button
                             style={btn}
-                            onClick={() => copyToClipboard(state.initData!.deposit.memo!, 'memo2')}
+                            onClick={() => copyToClipboard(initData.deposit.memo!, 'memo2')}
                           >
                             {copiedKey === 'memo2' ? 'Copied ✓' : 'Copy Memo'}
                           </button>
@@ -838,7 +1250,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   </div>
 
                   <div style={{ ...smallMuted, ...badgeWarn }}>
-                    ⚠️ Send exactly {prettyAmount(state.initData?.deposit.amount ?? 0)} {state.initData?.deposit.token} on {toNetworkLabel(state.initData?.deposit.token ?? '', state.initData?.deposit.network ?? '')} before the timer runs out.
+                    ⚠️ Send exactly {prettyAmount(initData.deposit.amount)} {initData.deposit.token} on {toNetworkLabel(initData.deposit.token, initData.deposit.network)} before the timer runs out.
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -846,6 +1258,8 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   </div>
                 </div>
               )}
+
+              <DebugPanel initData={initData} payData={payData} step={step} />
             </div>
           )}
         </div>
@@ -853,21 +1267,19 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         {/* Footer */}
         <div style={footerStyle}>
           <div style={smallMuted}>
-            {state.flow === 'idle'
+            {step === 1
               ? 'We\'ll capture your payout next.'
               : (showFinalSummary
-                ? 'Copy the deposit details and send the exact amount within the window.'
-                : 'Ensure your bank details match your account name.')}
+                  ? 'Copy the deposit details and send the exact amount within the window.'
+                  : 'Ensure your bank details match your account name.')}
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
-            {state.flow === 'initiated' ? (
+            {step === 2 ? (
               !showFinalSummary ? (
-                <button style={btn} onClick={() => { dispatch({ type: 'SET_FIELD', key: 'flow', value: 'idle' }) }}>← Back</button>
+                <button style={btn} onClick={() => setStep(1)} disabled={payLoading}>← Back</button>
               ) : (
                 <button style={btn} onClick={onClose}>Close</button>
               )
-            ) : state.flow === 'complete' ? (
-              <button style={btn} onClick={onClose}>Close</button>
             ) : (
               <button style={btn} onClick={onClose}>Cancel</button>
             )}
@@ -875,6 +1287,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         </div>
       </div>
 
+      {/* Animation keyframes */}
       <style>
         {`@keyframes scaleIn{from{transform:translateY(8px) scale(.98); opacity:0} to{transform:none; opacity:1}} @keyframes spin{from{transform:rotate(0deg)} to{transform:rotate(360deg)}}`}
       </style>
