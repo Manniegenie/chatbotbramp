@@ -1,9 +1,11 @@
 // src/sell.tsx
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useReducer, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { tokenStore } from './lib/secureStore'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
+
+/* ================= Types & Constants ================= */
 
 type BankOption = { name: string; code: string }
 
@@ -41,17 +43,17 @@ type PayoutRes = {
     rate: number
     receiveCurrency: string
     receiveAmount: number
-    expiresAt: string
+    expiresAt?: string
   }
-  payout: {
+  payout?: {
     bankName: string
     bankCode: string
     accountNumber: string
     accountName: string
-    capturedAt: string
+    capturedAt?: string
   }
   deposit?: {
-    address: string
+    address?: string
     memo?: string | null
   }
   message?: string
@@ -84,39 +86,33 @@ const NETWORKS_BY_TOKEN: Record<TokenSym, { code: string; label: string }[]> = {
   ],
 }
 
+/* ================= Helpers ================= */
+
 function getHeaders() {
   const { access } = tokenStore.getTokens()
-  
-  // Debug cold start token issues
   console.log('🔑 Token check:', {
     hasAccess: !!access,
     accessLength: access?.length || 0,
     tokenStore: typeof tokenStore,
-    coldStart: performance.getEntriesByType('navigation').length === 0 || 
-               (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming)?.type === 'reload'
+    coldStart: performance.getEntriesByType('navigation').length === 0 ||
+      (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming)?.type === 'reload'
   })
-  
   const h = new Headers()
   h.set('Content-Type', 'application/json')
   if (access) h.set('Authorization', `Bearer ${access}`)
   return h
 }
 
-// Fetch with 15-second timeout
-async function fetchWithTimeout(url: string, options: RequestInit = {}) {
+async function fetchWithTimeout(url: string, options: RequestInit = {}, ms = 15000) {
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), 15000)
-  
+  const id = setTimeout(() => controller.abort(), ms)
   try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal
-    })
-    clearTimeout(timeoutId)
-    return response
-  } catch (error) {
-    clearTimeout(timeoutId)
-    throw error
+    const res = await fetch(url, { ...options, signal: controller.signal })
+    clearTimeout(id)
+    return res
+  } catch (err) {
+    clearTimeout(id)
+    throw err
   }
 }
 
@@ -125,39 +121,6 @@ function prettyAmount(n: number) {
 }
 function prettyNgn(n: number) {
   return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 2 }).format(n)
-}
-
-/**
- * useCountdown(expiryIso?)
- * - If expiryIso is absent/undefined/null, treat as "countdown not started" (expired = false).
- * - When expiryIso is provided, returns msLeft, text, and expired boolean.
- */
-function useCountdown(expiryIso?: string | null) {
-  // Initialize msLeft to 0 when no expiry is given (pre-countdown)
-  const [msLeft, setMsLeft] = useState<number>(() => {
-    if (!expiryIso) return 0
-    return Math.max(0, new Date(expiryIso).getTime() - Date.now())
-  })
-
-  useEffect(() => {
-    if (!expiryIso) {
-      // Pre-countdown state: ensure msLeft is 0 and no interval runs
-      setMsLeft(0)
-      return
-    }
-    const update = () => {
-      setMsLeft(Math.max(0, new Date(expiryIso).getTime() - Date.now()))
-    }
-    update()
-    const t = setInterval(update, 250)
-    return () => clearInterval(t)
-  }, [expiryIso])
-
-  const mm = Math.floor(msLeft / 60000)
-  const ss = Math.floor((msLeft % 60000) / 1000)
-  // If no expiry provided, expired = false (we haven't started counting down yet)
-  const expired = expiryIso ? msLeft <= 0 : false
-  return { msLeft, text: `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`, expired }
 }
 
 function toNetworkLabel(token: string, code: string) {
@@ -176,8 +139,8 @@ function buildPayoutRecap(init: InitiateSellRes | null, p: PayoutRes) {
 
   return [
     `Payout details saved 🏦`,
-    `Bank: ${p.payout.bankName}`,
-    `Account: ${p.payout.accountName} — ${p.payout.accountNumber}`,
+    `Bank: ${p.payout?.bankName ?? '—'}`,
+    `Account: ${p.payout?.accountName ?? '—'} — ${p.payout?.accountNumber ?? '—'}`,
     '',
     `Recap: pay **${prettyAmount(Number(payAmount || 0))} ${t}** on **${netLabel}**.`,
     `You'll receive: **${prettyNgn(Number(recv || 0))}** at **${prettyAmount(Number(rate || 0))} NGN/${t}**.`,
@@ -185,7 +148,28 @@ function buildPayoutRecap(init: InitiateSellRes | null, p: PayoutRes) {
   ].join('\n')
 }
 
-/* ===== Styles ===== */
+/* ================= Countdown ================= */
+
+function useCountdown(expiryIso?: string | null) {
+  const [msLeft, setMsLeft] = useState<number>(() => expiryIso ? Math.max(0, new Date(expiryIso).getTime() - Date.now()) : 0)
+  useEffect(() => {
+    if (!expiryIso) {
+      setMsLeft(0)
+      return
+    }
+    const update = () => setMsLeft(Math.max(0, new Date(expiryIso).getTime() - Date.now()))
+    update()
+    const t = setInterval(update, 250)
+    return () => clearInterval(t)
+  }, [expiryIso])
+  const mm = Math.floor(msLeft / 60000)
+  const ss = Math.floor((msLeft % 60000) / 1000)
+  const expired = expiryIso ? msLeft <= 0 : false
+  return { msLeft, text: `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`, expired }
+}
+
+/* ================= Styles (kept from original) ================= */
+
 const overlayStyle: React.CSSProperties = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', display: 'grid', placeItems: 'center', padding: 16, zIndex: 1000 }
 const sheetStyle: React.CSSProperties = { width: '100%', maxWidth: 760, background: 'var(--card)', color: 'var(--txt)', border: '1px solid var(--border)', borderRadius: 16, boxShadow: 'var(--shadow)', overflow: 'hidden', display: 'grid', gridTemplateRows: 'auto 1fr auto', animation: 'scaleIn 120ms ease-out' }
 const headerStyle: React.CSSProperties = { padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }
@@ -213,76 +197,122 @@ const badgeWarn: React.CSSProperties = { ...badge, background: 'rgba(255, 170, 0
 const errorBanner: React.CSSProperties = { ...card, background: 'rgba(220, 50, 50, .1)', borderColor: 'rgba(220, 50, 50, .25)' }
 const successCard: React.CSSProperties = { ...card, background: 'rgba(0, 115, 55, .12)', borderColor: 'rgba(0, 115, 55, .35)' }
 
+/* ================= Reducer & initial state ================= */
+
+type Flow = 'idle' | 'initiated' | 'complete'
+
+type State = {
+  flow: Flow
+  token: TokenSym
+  network: string
+  amount: string
+
+  initLoading: boolean
+  initError: string | null
+  initData: InitiateSellRes | null
+
+  payLoading: boolean
+  payError: string | null
+  payData: PayoutRes | null
+
+  summaryExpiresAt: string | null
+
+  banksLoading: boolean
+  banksError: string | null
+  bankOptions: BankOption[]
+  bankCode: string
+  bankName: string
+  accountNumber: string
+  accountName: string
+  accountNameLoading: boolean
+  accountNameError: string | null
+}
+
+const initialState: State = {
+  flow: 'idle',
+  token: 'USDT',
+  network: NETWORKS_BY_TOKEN['USDT'][0].code,
+  amount: '100',
+
+  initLoading: false,
+  initError: null,
+  initData: null,
+
+  payLoading: false,
+  payError: null,
+  payData: null,
+
+  summaryExpiresAt: null,
+
+  banksLoading: false,
+  banksError: null,
+  bankOptions: [],
+  bankCode: '',
+  bankName: '',
+  accountNumber: '',
+  accountName: '',
+  accountNameLoading: false,
+  accountNameError: null,
+}
+
+type Action =
+  | { type: 'RESET' }
+  | { type: 'SET_FIELD'; key: keyof State; value: any }
+  | { type: 'INIT_START' }
+  | { type: 'INIT_SUCCESS'; payload: InitiateSellRes }
+  | { type: 'INIT_FAIL'; error: string }
+  | { type: 'PAYOUT_START' }
+  | { type: 'PAYOUT_SUCCESS'; payload: PayoutRes; expiryIso: string }
+  | { type: 'PAYOUT_FAIL'; error: string }
+  | { type: 'SET_BANKS'; banks: BankOption[] }
+  | { type: 'SET_ACCOUNT_NAME'; name?: string; error?: string | null }
+
+function reducer(s: State, action: Action): State {
+  switch (action.type) {
+    case 'RESET': return { ...initialState }
+    case 'SET_FIELD': return { ...s, [action.key]: action.value }
+    case 'INIT_START': return { ...s, initLoading: true, initError: null }
+    case 'INIT_SUCCESS': return { ...s, initLoading: false, initData: action.payload, flow: 'initiated' }
+    case 'INIT_FAIL': return { ...s, initLoading: false, initError: action.error }
+    case 'PAYOUT_START': return { ...s, payLoading: true, payError: null }
+    case 'PAYOUT_SUCCESS':
+      return { ...s, payLoading: false, payData: action.payload, summaryExpiresAt: action.expiryIso, flow: 'complete' }
+    case 'PAYOUT_FAIL': return { ...s, payLoading: false, payError: action.error }
+    case 'SET_BANKS': {
+      const first = action.banks[0] ?? { name: '', code: '' }
+      return { ...s, bankOptions: action.banks, bankCode: first.code, bankName: first.name, banksLoading: false, banksError: null }
+    }
+    case 'SET_ACCOUNT_NAME':
+      return { ...s, accountName: action.name ?? '', accountNameError: action.error ?? null, accountNameLoading: false }
+    default: return s
+  }
+}
+
+/* ================= Component ================= */
+
 export default function SellModal({ open, onClose, onChatEcho }: SellModalProps) {
-  /**
-   * flowState: explicit small enum for flow
-   * - 'idle' : initial screen (Start a Sell)
-   * - 'initiated' : sell initiated; show payout form and fetch banks
-   * - 'complete' : payout saved; show final summary and countdown
-   */
-  const [flowState, setFlowState] = useState<'idle' | 'initiated' | 'complete'>('idle')
-
-  // Step 1 (Start Sell)
-  const [token, setToken] = useState<TokenSym>('USDT')
-  const [network, setNetwork] = useState(NETWORKS_BY_TOKEN['USDT'][0].code)
-  const [amount, setAmount] = useState<string>('100')
-  const [initLoading, setInitLoading] = useState(false)
-  const [initError, setInitError] = useState<string | null>(null)
-  const [initData, setInitData] = useState<InitiateSellRes | null>(null)
-
-  // Step 2 (Payout + Summary)
-  const [bankName, setBankName] = useState('')
-  const [bankCode, setBankCode] = useState('')
-  const [accountNumber, setAccountNumber] = useState('')
-  const [accountName, setAccountName] = useState('')
-  const [accountNameLoading, setAccountNameLoading] = useState(false)
-  const [accountNameError, setAccountNameError] = useState<string | null>(null)
-  const [payLoading, setPayLoading] = useState(false)
-  const [payError, setPayError] = useState<string | null>(null)
-  const [payData, setPayData] = useState<PayoutRes | null>(null)
-
-  // Countdown starts only AFTER payout is saved (10 minutes)
-  const [summaryExpiresAt, setSummaryExpiresAt] = useState<string | null>(null)
-  const { text: countdown, expired } = useCountdown(summaryExpiresAt)
-
-  // Banks
-  const [banksLoading, setBanksLoading] = useState(false)
-  const [banksError, setBanksError] = useState<string | null>(null)
-  const [bankOptions, setBankOptions] = useState<BankOption[]>([])
-
+  const [state, dispatch] = useReducer(reducer, initialState)
   const banksFetchedRef = useRef(false)
+  const firstInputRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null)
+  const [copiedKey, setCopiedKey] = useState<string | null>(null)
 
-  // Reset on open
+  // countdown hook
+  const { text: countdown, expired } = useCountdown(state.summaryExpiresAt)
+
+  // Reset on open (like original)
   useEffect(() => {
     if (!open) return
-    setFlowState('idle')
-    setToken('USDT')
-    setNetwork(NETWORKS_BY_TOKEN['USDT'][0].code)
-    setAmount('100')
-    setInitLoading(false)
-    setInitError(null)
-    setInitData(null)
-    setBankName('')
-    setBankCode('')
-    setAccountNumber('')
-    setAccountName('')
-    setAccountNameLoading(false)
-    setAccountNameError(null)
-    setPayLoading(false)
-    setPayError(null)
-    setPayData(null)
-    setBanksLoading(false)
-    setBanksError(null)
-    setBankOptions([])
-    setSummaryExpiresAt(null)
+    dispatch({ type: 'RESET' })
     banksFetchedRef.current = false
   }, [open])
 
-  // Keep network valid
+  // Keep network valid when token changes
   useEffect(() => {
-    const list = NETWORKS_BY_TOKEN[token]
-    if (!list.find(n => n.code === network)) setNetwork(list[0].code)
-  }, [token])
+    const list = NETWORKS_BY_TOKEN[state.token]
+    if (!list.find(n => n.code === state.network)) {
+      dispatch({ type: 'SET_FIELD', key: 'network', value: list[0].code })
+    }
+  }, [state.token])
 
   // Esc to close
   useEffect(() => {
@@ -292,151 +322,140 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onClose])
 
-  // Autofocus per flowState
-  const firstInputRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null)
-  useEffect(() => { firstInputRef.current?.focus() }, [flowState])
+  // Autofocus per flow
+  useEffect(() => { firstInputRef.current?.focus() }, [state.flow])
 
-  // Fetch banks once when entering 'initiated' (i.e., payout form)
+  // Fetch banks once when entering initiated
   useEffect(() => {
-    if (!open || flowState !== 'initiated' || banksFetchedRef.current) return
+    if (!open || state.flow !== 'initiated' || banksFetchedRef.current) return
     banksFetchedRef.current = true
     ;(async () => {
-      setBanksLoading(true)
-      setBanksError(null)
+      dispatch({ type: 'SET_FIELD', key: 'banksLoading', value: true })
+      dispatch({ type: 'SET_FIELD', key: 'banksError', value: null })
       try {
-        const res = await fetchWithTimeout(`${API_BASE}/fetchnaira/naira-accounts`, { 
-          method: 'GET', 
-          headers: getHeaders(),
-          cache: 'no-store' 
-        })
+        const res = await fetchWithTimeout(`${API_BASE}/fetchnaira/naira-accounts`, { method: 'GET', headers: getHeaders(), cache: 'no-store' })
         const json = await res.json()
         if (!res.ok) throw new Error(json?.error || `HTTP ${res.status}`)
-
         const list: BankOption[] = Array.isArray(json?.banks) ? json.banks : []
         const opts: BankOption[] = (list as BankOption[])
-          .map((b: BankOption) => ({ name: String(b.name || '').trim(), code: String(b.code || '').trim() }))
+          .map((b: any) => ({ name: String(b.name || '').trim(), code: String(b.code || '').trim() }))
           .filter((b: BankOption) => b.name.length > 0 && b.code.length > 0)
-          .sort((a: BankOption, b: BankOption) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
-
-        setBankOptions(opts)
-        if (opts.length) {
-          setBankCode(opts[0].code)
-          setBankName(opts[0].name)
-        } else {
-          setBankCode('')
-          setBankName('')
-        }
+          .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+        dispatch({ type: 'SET_BANKS', banks: opts })
       } catch (e: any) {
-        setBanksError(e?.message || 'Failed to load banks')
-        setBankOptions([])
-        setBankCode('')
-        setBankName('')
-      } finally {
-        setBanksLoading(false)
+        dispatch({ type: 'SET_FIELD', key: 'banksLoading', value: false })
+        dispatch({ type: 'SET_FIELD', key: 'banksError', value: e?.message || 'Failed to load banks' })
+        dispatch({ type: 'SET_FIELD', key: 'bankOptions', value: [] })
+        dispatch({ type: 'SET_FIELD', key: 'bankCode', value: '' })
+        dispatch({ type: 'SET_FIELD', key: 'bankName', value: '' })
       }
     })()
-  }, [open, flowState])
+  }, [open, state.flow])
 
-  // Resolve account name when account number is 10+ digits (only while in payout form)
+  // Resolve account name (debounced)
   useEffect(() => {
-    if (!open || flowState !== 'initiated' || !bankCode || !accountNumber) return
-    if (accountNumber.length < 10) {
-      setAccountName('')
-      setAccountNameError(null)
+    if (!open || state.flow !== 'initiated' || !state.bankCode || !state.accountNumber) return
+    if (state.accountNumber.length < 10) {
+      dispatch({ type: 'SET_ACCOUNT_NAME', name: '', error: null })
       return
     }
 
     const timeoutId = setTimeout(async () => {
-      setAccountNameLoading(true)
-      setAccountNameError(null)
-      setAccountName('')
-      
+      dispatch({ type: 'SET_FIELD', key: 'accountNameLoading', value: true })
+      dispatch({ type: 'SET_FIELD', key: 'accountNameError', value: null })
+      dispatch({ type: 'SET_FIELD', key: 'accountName', value: '' })
       try {
         const res = await fetchWithTimeout(
-          `${API_BASE}/accountname/resolve?sortCode=${encodeURIComponent(bankCode)}&accountNumber=${encodeURIComponent(accountNumber)}`,
-          { 
-            method: 'GET',
-            headers: getHeaders()
-          }
+          `${API_BASE}/accountname/resolve?sortCode=${encodeURIComponent(state.bankCode)}&accountNumber=${encodeURIComponent(state.accountNumber)}`,
+          { method: 'GET', headers: getHeaders() }
         )
-        
         const data = await res.json()
-        
-        if (!res.ok || !data.success) {
-          throw new Error(data?.message || `HTTP ${res.status}`)
-        }
-        
+        if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
         if (data.data?.accountName) {
-          setAccountName(data.data.accountName)
-          setAccountNameError(null)
+          dispatch({ type: 'SET_ACCOUNT_NAME', name: data.data.accountName, error: null })
         } else {
           throw new Error('Account name not found')
         }
       } catch (err: any) {
-        setAccountNameError(err.message || 'Failed to resolve account name')
-        setAccountName('')
+        dispatch({ type: 'SET_ACCOUNT_NAME', name: '', error: err?.message || 'Failed to resolve account name' })
       } finally {
-        setAccountNameLoading(false)
+        // accountNameLoading cleared by SET_ACCOUNT_NAME
       }
-    }, 500) // Debounce for 500ms
+    }, 500)
 
     return () => clearTimeout(timeoutId)
-  }, [open, flowState, bankCode, accountNumber])
+  }, [open, state.flow, state.bankCode, state.accountNumber])
+
+  // Auto-close when countdown expires on final summary
+  const showFinalSummary = state.flow === 'complete' && !!state.payData
+  useEffect(() => {
+    if (!open) return
+    if (!state.summaryExpiresAt) return
+    if (showFinalSummary && expired) {
+      onClose()
+    }
+  }, [open, showFinalSummary, expired, onClose, state.summaryExpiresAt])
+
+  // Clipboard helper
+  function copyToClipboard(text: string, key: string) {
+    navigator.clipboard?.writeText(text).then(() => {
+      setCopiedKey(key)
+      setTimeout(() => setCopiedKey(null), 1200)
+    }).catch(() => {})
+  }
+
+  /* ================= Handlers that dispatch reducer actions ================= */
 
   async function submitInitiate(e: React.FormEvent) {
     e.preventDefault()
-    setInitError(null)
-    if (!amount || isNaN(+amount) || +amount <= 0) {
-      setInitError('Enter a valid amount')
+    dispatch({ type: 'INIT_START' })
+    dispatch({ type: 'SET_FIELD', key: 'initError', value: null })
+    if (!state.amount || isNaN(+state.amount) || +state.amount <= 0) {
+      dispatch({ type: 'INIT_FAIL', error: 'Enter a valid amount' })
       return
     }
-    setInitLoading(true)
     try {
       const res = await fetchWithTimeout(`${API_BASE}/sell/initiate`, {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify({ token, network, sellAmount: +amount }),
+        body: JSON.stringify({ token: state.token, network: state.network, sellAmount: +state.amount }),
       })
       const data: InitiateSellRes = await res.json()
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
-      setInitData(data)
-      // Move to payout form state
-      setFlowState('initiated')
+      dispatch({ type: 'INIT_SUCCESS', payload: data })
     } catch (err: any) {
-      setInitError(err.message || 'Failed to initiate sell')
-    } finally {
-      setInitLoading(false)
+      dispatch({ type: 'INIT_FAIL', error: err.message || 'Failed to initiate sell' })
     }
   }
 
   async function submitPayout(e: React.FormEvent) {
     e.preventDefault()
-    setPayError(null)
-    if (!bankName || !bankCode || !accountNumber || !accountName) {
-      setPayError('Fill in all bank fields')
+    dispatch({ type: 'PAYOUT_START' })
+    dispatch({ type: 'SET_FIELD', key: 'payError', value: null })
+    if (!state.bankName || !state.bankCode || !state.accountNumber || !state.accountName) {
+      dispatch({ type: 'PAYOUT_FAIL', error: 'Fill in all bank fields' })
       return
     }
-    if (!initData?.paymentId) {
-      setPayError('Missing paymentId — restart the sell flow')
+    if (!state.initData?.paymentId) {
+      dispatch({ type: 'PAYOUT_FAIL', error: 'Missing paymentId — restart the sell flow' })
       return
     }
-    setPayLoading(true)
     try {
       console.log('🚀 Starting payout call:', {
-        paymentId: initData.paymentId,
-        bankCode,
-        accountNumber: accountNumber.slice(0, 4) + '****'
+        paymentId: state.initData.paymentId,
+        bankCode: state.bankCode,
+        accountNumber: state.accountNumber.slice(0, 4) + '****'
       })
 
       const res = await fetchWithTimeout(`${API_BASE}/sell/payout`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({
-          paymentId: initData.paymentId,
-          bankName,
-          bankCode,
-          accountNumber,
-          accountName,
+          paymentId: state.initData.paymentId,
+          bankName: state.bankName,
+          bankCode: state.bankCode,
+          accountNumber: state.accountNumber,
+          accountName: state.accountName,
         }),
       })
 
@@ -469,7 +488,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         throw new Error(data.message || 'Server reported failure')
       }
 
-      // Validate essential fields
       if (!data.paymentId) {
         console.error('❌ Missing paymentId in response')
         throw new Error('Missing paymentId in response')
@@ -482,21 +500,16 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
       console.log('✅ Payout validation passed, preparing to show summary...')
 
-      // Start 10-minute countdown AFTER payout is captured
+      // compute expiry and dispatch atomic PAYOUT_SUCCESS that sets payData + expiry + flow
       const expiryTime = new Date(Date.now() + 10 * 60 * 1000).toISOString()
       console.log('⏰ Setting countdown expiry to:', expiryTime)
-      // Set expiry first to avoid a window where payData is true but expiry is unset
-      setSummaryExpiresAt(expiryTime)
+      dispatch({ type: 'PAYOUT_SUCCESS', payload: data, expiryIso: expiryTime })
 
-      // Now set the data - this will make final summary visible
-      setPayData(data)
-      setFlowState('complete')
-      
       console.log('🎉 Payout flow completed successfully!')
 
       // Send to chat
       try {
-        const recap = buildPayoutRecap(initData, data)
+        const recap = buildPayoutRecap(state.initData, data)
         console.log('💬 Sending chat recap...')
         onChatEcho?.(recap)
         console.log('✅ Chat recap sent')
@@ -504,46 +517,28 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         console.warn('⚠️ Chat echo failed:', chatError)
       }
 
-      // UI stabilization tick - keep behaviour similar to previous "nuclear" step
+      // small UI stabilization tick (keeps previous behaviour)
       setTimeout(() => {
         console.log('💥 Post-payout UI stabilization tick')
-        setPayLoading(false)
+        dispatch({ type: 'SET_FIELD', key: 'payLoading', value: false })
       }, 100)
 
     } catch (err: any) {
       console.error('💥 Payout failed:', err)
-      setPayError(err.message || 'Failed to save payout details')
-      setPayLoading(false)
+      dispatch({ type: 'PAYOUT_FAIL', error: err.message || 'Failed to save payout details' })
     } finally {
-      // Ensure loading state cleared in all paths
-      setPayLoading(false)
+      dispatch({ type: 'SET_FIELD', key: 'payLoading', value: false })
       console.log('🏁 Payout loading state cleared')
     }
   }
 
-  // Auto-close when the countdown expires on the final summary
-  const showFinalSummary = flowState === 'complete' && !!payData
-  useEffect(() => {
-    if (!open) return
-    if (!summaryExpiresAt) return // don't auto-close until expiry is actually set
-    if (showFinalSummary && expired) {
-      onClose()
-    }
-  }, [open, showFinalSummary, expired, onClose, summaryExpiresAt])
-
-  const [copiedKey, setCopiedKey] = useState<string | null>(null)
-  function copyToClipboard(text: string, key: string) {
-    navigator.clipboard?.writeText(text).then(() => {
-      setCopiedKey(key)
-      setTimeout(() => setCopiedKey(null), 1200)
-    }).catch(() => {})
-  }
+  /* ================= Render (keeps original UI markup) ================= */
 
   if (!open) return null
 
   const headerTitle =
-    flowState === 'idle' ? 'Start a Sell'
-    : (flowState === 'initiated' ? 'Payout Details' : 'Transaction Summary')
+    state.flow === 'idle' ? 'Start a Sell'
+      : (state.flow === 'initiated' ? 'Payout Details' : 'Transaction Summary')
 
   return createPortal(
     <div style={overlayStyle} role="dialog" aria-modal="true" aria-labelledby="sell-title" onClick={onClose}>
@@ -557,9 +552,9 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
             <div>
               <div id="sell-title" style={{ fontWeight: 700 }}>{headerTitle}</div>
               <div style={stepperStyle}>
-                <span style={dot(flowState === 'idle')}></span> Step 1 — Start
+                <span style={dot(state.flow === 'idle')}></span> Step 1 — Start
                 <span style={{ opacity: .4, padding: '0 6px' }}>•</span>
-                <span style={dot(flowState !== 'idle')}></span> Step 2 — Payout
+                <span style={dot(state.flow !== 'idle')}></span> Step 2 — Payout
               </div>
             </div>
           </div>
@@ -568,16 +563,25 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
         {/* Body */}
         <div style={bodyStyle}>
+          {/* debug card (DEV) */}
+          {import.meta.env?.DEV && (
+            <div style={{...card, background: '#1a1a1a', marginTop: 10}}>
+              <div style={{fontSize: 11, color: '#888'}}>
+                Debug: flow={state.flow} | initData={!!state.initData} | payData={!!state.payData} | payLoading={state.payLoading} | expiry={state.summaryExpiresAt ?? 'null'}
+              </div>
+            </div>
+          )}
+
           {/* STEP 1 — Start a Sell */}
-          {flowState === 'idle' && (
+          {state.flow === 'idle' && (
             <div style={{ display: 'grid', gap: 14 }}>
               <p style={{ margin: 0, color: 'var(--muted)' }}>
                 Choose token, network, and amount. We'll capture payout next.
               </p>
 
-              {!!initError && (
+              {!!state.initError && (
                 <div role="alert" style={errorBanner}>
-                  <strong style={{ color: '#ffaaaa' }}>Error:</strong> {initError}
+                  <strong style={{ color: '#ffaaaa' }}>Error:</strong> {state.initError}
                 </div>
               )}
 
@@ -587,8 +591,8 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   <select
                     ref={firstInputRef as any}
                     style={inputBase}
-                    value={token}
-                    onChange={e => setToken(e.target.value as TokenSym)}
+                    value={state.token}
+                    onChange={e => dispatch({ type: 'SET_FIELD', key: 'token', value: e.target.value })}
                   >
                     {TOKENS.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
@@ -598,29 +602,29 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   <span style={labelText}>Network</span>
                   <select
                     style={inputBase}
-                    value={network}
-                    onChange={e => setNetwork(e.target.value)}
+                    value={state.network}
+                    onChange={e => dispatch({ type: 'SET_FIELD', key: 'network', value: e.target.value })}
                   >
-                    {NETWORKS_BY_TOKEN[token].map(n => (
+                    {NETWORKS_BY_TOKEN[state.token].map(n => (
                       <option key={n.code} value={n.code}>{n.label}</option>
                     ))}
                   </select>
                 </label>
 
                 <label style={{ ...inputWrap, gridColumn: '1 / span 2' }}>
-                  <span style={labelText}>Amount ({token})</span>
+                  <span style={labelText}>Amount ({state.token})</span>
                   <input
                     style={inputBase}
                     inputMode="decimal"
                     placeholder="e.g. 100"
-                    value={amount}
-                    onChange={e => setAmount(e.target.value)}
+                    value={state.amount}
+                    onChange={e => dispatch({ type: 'SET_FIELD', key: 'amount', value: e.target.value })}
                   />
                 </label>
 
                 <div style={{ gridColumn: '1 / span 2', display: 'flex', justifyContent: 'flex-end' }}>
-                  <button style={btnPrimary} disabled={initLoading}>
-                    {initLoading ? 'Starting…' : 'Start & Continue to Payout'}
+                  <button style={btnPrimary} disabled={state.initLoading}>
+                    {state.initLoading ? 'Starting…' : 'Start & Continue to Payout'}
                   </button>
                 </div>
               </form>
@@ -628,52 +632,43 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
           )}
 
           {/* STEP 2 — Payout (then Summary with countdown) */}
-          {flowState !== 'idle' && (
+          {state.flow !== 'idle' && (
             <div style={{ display: 'grid', gap: 14 }}>
-              {!initData && (
+              {!state.initData && (
                 <div role="alert" style={errorBanner}>
                   Missing sell reference — please restart.
                 </div>
               )}
 
-              {/* Debug info for cold start issues */}
-              {import.meta.env?.DEV && (
-                <div style={{...card, background: '#1a1a1a', marginTop: 10}}>
-                  <div style={{fontSize: 11, color: '#888'}}>
-                    Debug: initData={!!initData} | payData={!!payData} | payLoading={payLoading} | flowState={flowState}
-                  </div>
-                </div>
-              )}
-
-              {initData && flowState === 'initiated' && !payData && (
+              {state.initData && state.flow === 'initiated' && (
                 <>
                   <div style={card}>
                     <h3 style={{ margin: 0, fontSize: 16 }}>Sell Summary</h3>
                     <div style={kvGrid}>
                       <div>
                         <div style={kStyle}>Payment ID</div>
-                        <div style={{ ...vStyle, ...mono }}>{initData.paymentId}</div>
+                        <div style={{ ...vStyle, ...mono }}>{state.initData?.paymentId}</div>
                       </div>
                       <div>
                         <div style={kStyle}>Reference</div>
-                        <div style={{ ...vStyle, ...mono }}>{initData.reference}</div>
+                        <div style={{ ...vStyle, ...mono }}>{state.initData?.reference}</div>
                       </div>
                       <div>
                         <div style={kStyle}>You Receive</div>
                         <div style={vStyle}>
-                          {prettyNgn(initData.quote.receiveAmount)} ({initData.quote.receiveCurrency})
+                          {prettyNgn(state.initData?.quote.receiveAmount ?? 0)} ({state.initData?.quote.receiveCurrency})
                         </div>
                       </div>
                       <div>
                         <div style={kStyle}>Rate</div>
-                        <div style={vStyle}>{prettyAmount(initData.quote.rate)} NGN/{initData.deposit.token}</div>
+                        <div style={vStyle}>{prettyAmount(state.initData?.quote.rate ?? 0)} NGN/{state.initData?.deposit.token}</div>
                       </div>
                     </div>
                   </div>
 
-                  {!!payError && (
+                  {!!state.payError && (
                     <div role="alert" style={errorBanner}>
-                      <strong style={{ color: '#ffaaaa' }}>Error:</strong> {payError}
+                      <strong style={{ color: '#ffaaaa' }}>Error:</strong> {state.payError}
                     </div>
                   )}
 
@@ -683,21 +678,23 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                       <select
                         ref={firstInputRef as any}
                         style={inputBase}
-                        value={bankCode}
-                        disabled={banksLoading || bankOptions.length === 0}
+                        value={state.bankCode}
+                        disabled={state.banksLoading || state.bankOptions.length === 0}
                         onChange={e => {
                           const code = e.target.value
-                          const hit = bankOptions.find((b: BankOption) => b.code === code)
+                          const hit = state.bankOptions.find((b: BankOption) => b.code === code)
                           if (hit) {
-                            setBankCode(hit.code)
-                            setBankName(hit.name)
+                            dispatch({ type: 'SET_FIELD', key: 'bankCode', value: hit.code })
+                            dispatch({ type: 'SET_FIELD', key: 'bankName', value: hit.name })
+                          } else {
+                            dispatch({ type: 'SET_FIELD', key: 'bankCode', value: code })
                           }
                         }}
                       >
-                        {bankOptions.length === 0 ? (
-                          <option value="">{banksLoading ? 'Loading…' : (banksError || 'No banks')}</option>
+                        {state.bankOptions.length === 0 ? (
+                          <option value="">{state.banksLoading ? 'Loading…' : (state.banksError || 'No banks')}</option>
                         ) : (
-                          bankOptions.map((b: BankOption) => (
+                          state.bankOptions.map((b: BankOption) => (
                             <option key={b.code} value={b.code}>{b.name}</option>
                           ))
                         )}
@@ -708,25 +705,25 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                       <span style={labelText}>Account Number</span>
                       <input
                         style={inputBase}
-                        value={accountNumber}
-                        onChange={e => setAccountNumber(e.target.value)}
+                        value={state.accountNumber}
+                        onChange={e => dispatch({ type: 'SET_FIELD', key: 'accountNumber', value: e.target.value })}
                         placeholder="e.g. 0123456789"
                       />
                     </label>
 
                     <label style={{ ...inputWrap, gridColumn: '1 / span 2' }}>
                       <span style={labelText}>Account Name</span>
-                      <div style={{ ...inputBase, background: '#1a1d23', color: accountName ? 'var(--txt)' : 'var(--muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {accountNameLoading ? (
+                      <div style={{ ...inputBase, background: '#1a1d23', color: state.accountName ? 'var(--txt)' : 'var(--muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {state.accountNameLoading ? (
                           <>
                             <div style={{ width: 12, height: 12, border: '2px solid var(--border)', borderTop: '2px solid var(--accent)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
                             Resolving...
                           </>
-                        ) : accountNameError ? (
-                          <span style={{ color: '#ff6b6b' }}>{accountNameError}</span>
-                        ) : accountName ? (
-                          accountName
-                        ) : 
+                        ) : state.accountNameError ? (
+                          <span style={{ color: '#ff6b6b' }}>{state.accountNameError}</span>
+                        ) : state.accountName ? (
+                          state.accountName
+                        ) :
                           'Enter account number'
                         }
                       </div>
@@ -735,9 +732,9 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     <div style={{ gridColumn: '1 / span 2', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
                       <button
                         style={btnPrimary}
-                        disabled={payLoading || !bankCode || banksLoading || !accountName}
+                        disabled={state.payLoading || !state.bankCode || state.banksLoading || !state.accountName}
                       >
-                        {payLoading ? 'Saving…' : 'Save Payout & Show Summary'}
+                        {state.payLoading ? 'Saving…' : 'Save Payout & Show Summary'}
                       </button>
                     </div>
                   </form>
@@ -745,7 +742,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
               )}
 
               {/* FINAL SUMMARY (countdown starts here) */}
-              {initData && showFinalSummary && payData && (
+              {state.initData && showFinalSummary && state.payData && (
                 <div style={successCard}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                     <h3 style={{ margin: 0, fontSize: 16 }}>Transaction Summary</h3>
@@ -757,21 +754,21 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   <div style={kvGrid}>
                     <div>
                       <div style={kStyle}>Status</div>
-                      <div style={vStyle}>{payData.status}</div>
+                      <div style={vStyle}>{state.payData?.status}</div>
                     </div>
                     <div>
                       <div style={kStyle}>Payment ID</div>
-                      <div style={{ ...vStyle, ...mono }}>{payData.paymentId}</div>
+                      <div style={{ ...vStyle, ...mono }}>{state.payData?.paymentId}</div>
                     </div>
                     <div>
                       <div style={kStyle}>Reference</div>
-                      <div style={{ ...vStyle, ...mono }}>{initData.reference}</div>
+                      <div style={{ ...vStyle, ...mono }}>{state.initData?.reference}</div>
                     </div>
                     <div>
                       <div style={kStyle}>You Receive</div>
                       <div>
                         <div style={vStyle}>
-                          {prettyNgn(initData.quote.receiveAmount || 0)} ({initData.quote.receiveCurrency})
+                          {prettyNgn(state.initData?.quote.receiveAmount ?? 0)} ({state.initData?.quote.receiveCurrency})
                         </div>
                         <div style={{ ...smallMuted, marginTop: 4 }}>
                           Transaction fee (fixed): <strong>70&nbsp;NGN</strong>
@@ -780,36 +777,36 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     </div>
                     <div>
                       <div style={kStyle}>Rate</div>
-                      <div style={vStyle}>{prettyAmount(initData.quote.rate)} NGN/{initData.deposit.token}</div>
+                      <div style={vStyle}>{prettyAmount(state.initData?.quote.rate ?? 0)} NGN/{state.initData?.deposit.token}</div>
                     </div>
                     <div>
                       <div style={kStyle}>Bank</div>
-                      <div style={vStyle}>{payData.payout.bankName}</div>
+                      <div style={vStyle}>{state.payData?.payout?.bankName}</div>
                     </div>
                     <div>
                       <div style={kStyle}>Account</div>
-                      <div style={vStyle}>{payData.payout.accountName} — {payData.payout.accountNumber}</div>
+                      <div style={vStyle}>{state.payData?.payout?.accountName} — {state.payData?.payout?.accountNumber}</div>
                     </div>
                     <div>
                       <div style={kStyle}>Deposit Address</div>
-                      <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{initData.deposit.address}</div>
+                      <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{state.initData?.deposit.address}</div>
                       <div style={row}>
                         <button
                           style={btn}
-                          onClick={() => copyToClipboard(initData.deposit.address, 'addr2')}
+                          onClick={() => copyToClipboard(state.initData!.deposit.address, 'addr2')}
                         >
                           {copiedKey === 'addr2' ? 'Copied ✓' : 'Copy Address'}
                         </button>
                       </div>
                     </div>
-                    {!!initData.deposit.memo && (
+                    {!!state.initData?.deposit.memo && (
                       <div>
                         <div style={kStyle}>Memo / Tag</div>
-                        <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{initData.deposit.memo}</div>
+                        <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{state.initData.deposit.memo}</div>
                         <div style={row}>
                           <button
                             style={btn}
-                            onClick={() => copyToClipboard(initData.deposit.memo!, 'memo2')}
+                            onClick={() => copyToClipboard(state.initData!.deposit.memo!, 'memo2')}
                           >
                             {copiedKey === 'memo2' ? 'Copied ✓' : 'Copy Memo'}
                           </button>
@@ -819,7 +816,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   </div>
 
                   <div style={{ ...smallMuted, ...badgeWarn }}>
-                    ⚠️ Send exactly {prettyAmount(initData.deposit.amount)} {initData.deposit.token} on {toNetworkLabel(initData.deposit.token, initData.deposit.network)} before the timer runs out.
+                    ⚠️ Send exactly {prettyAmount(state.initData?.deposit.amount ?? 0)} {state.initData?.deposit.token} on {toNetworkLabel(state.initData?.deposit.token ?? '', state.initData?.deposit.network ?? '')} before the timer runs out.
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -834,22 +831,21 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         {/* Footer */}
         <div style={footerStyle}>
           <div style={smallMuted}>
-            {flowState === 'idle'
+            {state.flow === 'idle'
               ? 'We\'ll capture your payout next.'
               : (showFinalSummary
-                  ? 'Copy the deposit details and send the exact amount within the window.'
-                  : 'Ensure your bank details match your account name.')}
+                ? 'Copy the deposit details and send the exact amount within the window.'
+                : 'Ensure your bank details match your account name.')}
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
-            {flowState !== 'idle' ? (
+            {state.flow === 'initiated' ? (
               !showFinalSummary ? (
-                <button style={btn} onClick={() => {
-                  // Back to the start screen where user can change token/amount
-                  setFlowState('idle')
-                }}>← Back</button>
+                <button style={btn} onClick={() => { dispatch({ type: 'SET_FIELD', key: 'flow', value: 'idle' }) }}>← Back</button>
               ) : (
                 <button style={btn} onClick={onClose}>Close</button>
               )
+            ) : state.flow === 'complete' ? (
+              <button style={btn} onClick={onClose}>Close</button>
             ) : (
               <button style={btn} onClick={onClose}>Cancel</button>
             )}
