@@ -534,7 +534,7 @@ export default function App() {
               disabled={loading}
             />
             <button className="btn" disabled={loading || !input.trim()}>
-              {loading ? 'Sending…' : 'Send'}
+              {loading ? 'Typing…' : 'Send'}
             </button>
           </form>
 
