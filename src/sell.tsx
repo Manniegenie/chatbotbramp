@@ -478,6 +478,15 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                 </div>
               )}
 
+              {/* Debug info for first-time sign-in issues */}
+              {import.meta.env?.DEV && (
+                <div style={{...card, background: '#1a1a1a', marginTop: 10}}>
+                  <div style={{fontSize: 11, color: '#888'}}>
+                    Debug: initData={!!initData} | payData={!!payData} | payLoading={payLoading} | showSummary={showFinalSummary}
+                  </div>
+                </div>
+              )}
+
               {initData && !showFinalSummary && (
                 <>
                   <div style={card}>
@@ -560,7 +569,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     <div style={{ gridColumn: '1 / span 2', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
                       <button
                         style={btnPrimary}
-                        disabled={payLoading || !bankCode || banksLoading}
+                        disabled={payLoading || !bankCode || banksLoading || !accountName}
                       >
                         {payLoading ? 'Saving…' : 'Save Payout & Show Summary'}
                       </button>
