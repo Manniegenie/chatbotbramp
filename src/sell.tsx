@@ -1,5 +1,5 @@
 // src/sell.tsx
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { tokenStore } from './lib/secureStore'
 
@@ -63,12 +63,6 @@ type SellModalProps = {
   onChatEcho?: (text: string) => void
 }
 
-// Define the UI states more clearly
-type UIState = 
-  | { type: 'STEP_1' }
-  | { type: 'STEP_2_PAYOUT' }
-  | { type: 'STEP_2_SUMMARY' }
-
 const TOKENS = ['USDT','USDC','BTC','ETH','SOL','BNB','MATIC','AVAX'] as const
 type TokenSym = typeof TOKENS[number]
 
@@ -92,6 +86,15 @@ const NETWORKS_BY_TOKEN: Record<TokenSym, { code: string; label: string }[]> = {
 
 function getHeaders() {
   const { access } = tokenStore.getTokens()
+  
+  // Debug cold start token issues
+  console.log('🔑 Token check:', {
+    hasAccess: !!access,
+    accessLength: access?.length || 0,
+    tokenStore: typeof tokenStore,
+    coldStart: performance.getEntriesByType('navigation').length === 0 || 
+               (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming)?.type === 'reload'
+  })
   
   const h = new Headers()
   h.set('Content-Type', 'application/json')
@@ -129,7 +132,6 @@ function useCountdown(expiryIso?: string | null) {
     if (!expiryIso) return 0
     return Math.max(0, new Date(expiryIso).getTime() - Date.now())
   })
-  
   useEffect(() => {
     if (!expiryIso) return
     const t = setInterval(() => {
@@ -138,14 +140,9 @@ function useCountdown(expiryIso?: string | null) {
     }, 250)
     return () => clearInterval(t)
   }, [expiryIso])
-  
   const mm = Math.floor(msLeft / 60000)
   const ss = Math.floor((msLeft % 60000) / 1000)
-  return { 
-    msLeft, 
-    text: `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`, 
-    expired: msLeft <= 0 
-  }
+  return { msLeft, text: `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`, expired: msLeft <= 0 }
 }
 
 function toNetworkLabel(token: string, code: string) {
@@ -202,8 +199,8 @@ const errorBanner: React.CSSProperties = { ...card, background: 'rgba(220, 50, 5
 const successCard: React.CSSProperties = { ...card, background: 'rgba(0, 115, 55, .12)', borderColor: 'rgba(0, 115, 55, .35)' }
 
 export default function SellModal({ open, onClose, onChatEcho }: SellModalProps) {
-  // **FIXED: Simplified state management with clear UI state**
-  const [uiState, setUIState] = useState<UIState>({ type: 'STEP_1' })
+  // Steps: 1 = Start Sell, 2 = Payout. Final summary is a sub-state of step 2.
+  const [step, setStep] = useState<1 | 2>(1)
 
   // Step 1 (Start Sell)
   const [token, setToken] = useState<TokenSym>('USDT')
@@ -234,22 +231,10 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [bankOptions, setBankOptions] = useState<BankOption[]>([])
   const banksFetchedRef = useRef(false)
 
-  // **FIXED: Memoized derived state**
-  const currentStep = useMemo(() => {
-    switch (uiState.type) {
-      case 'STEP_1': return 1
-      case 'STEP_2_PAYOUT':
-      case 'STEP_2_SUMMARY': return 2
-      default: return 1
-    }
-  }, [uiState.type])
-
-  const showPayoutForm = uiState.type === 'STEP_2_PAYOUT'
-  const showFinalSummary = uiState.type === 'STEP_2_SUMMARY'
-
-  // **FIXED: Single reset function**
-  const resetModal = useCallback(() => {
-    setUIState({ type: 'STEP_1' })
+  // Reset on open
+  useEffect(() => {
+    if (!open) return
+    setStep(1)
     setToken('USDT')
     setNetwork(NETWORKS_BY_TOKEN['USDT'][0].code)
     setAmount('100')
@@ -270,20 +255,13 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     setBankOptions([])
     setSummaryExpiresAt(null)
     banksFetchedRef.current = false
-  }, [])
-
-  // Reset on open
-  useEffect(() => {
-    if (open) {
-      resetModal()
-    }
-  }, [open, resetModal])
+  }, [open])
 
   // Keep network valid
   useEffect(() => {
     const list = NETWORKS_BY_TOKEN[token]
     if (!list.find(n => n.code === network)) setNetwork(list[0].code)
-  }, [token, network])
+  }, [token])
 
   // Esc to close
   useEffect(() => {
@@ -295,17 +273,11 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
   // Autofocus per step
   const firstInputRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null)
-  useEffect(() => { 
-    if (open) {
-      // Small delay to ensure DOM is ready
-      setTimeout(() => firstInputRef.current?.focus(), 100)
-    }
-  }, [uiState.type, open])
+  useEffect(() => { firstInputRef.current?.focus() }, [step])
 
-  // Fetch banks when entering Step 2 payout
+  // Fetch banks once when entering Step 2
   useEffect(() => {
-    if (!open || uiState.type !== 'STEP_2_PAYOUT' || banksFetchedRef.current) return
-    
+    if (!open || step !== 2 || banksFetchedRef.current) return
     banksFetchedRef.current = true
     ;(async () => {
       setBanksLoading(true)
@@ -342,11 +314,11 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         setBanksLoading(false)
       }
     })()
-  }, [open, uiState.type])
+  }, [open, step])
 
   // Resolve account name when account number is 10+ digits
   useEffect(() => {
-    if (!open || uiState.type !== 'STEP_2_PAYOUT' || !bankCode || !accountNumber) return
+    if (!open || step !== 2 || !bankCode || !accountNumber) return
     if (accountNumber.length < 10) {
       setAccountName('')
       setAccountNameError(null)
@@ -388,18 +360,15 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     }, 500) // Debounce for 500ms
 
     return () => clearTimeout(timeoutId)
-  }, [open, uiState.type, bankCode, accountNumber])
+  }, [open, step, bankCode, accountNumber])
 
-  // **FIXED: Simplified submit functions**
-  const submitInitiate = useCallback(async (e: React.FormEvent) => {
+  async function submitInitiate(e: React.FormEvent) {
     e.preventDefault()
     setInitError(null)
-    
     if (!amount || isNaN(+amount) || +amount <= 0) {
       setInitError('Enter a valid amount')
       return
     }
-    
     setInitLoading(true)
     try {
       const res = await fetchWithTimeout(`${API_BASE}/sell/initiate`, {
@@ -409,20 +378,18 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       })
       const data: InitiateSellRes = await res.json()
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
-      
       setInitData(data)
-      setUIState({ type: 'STEP_2_PAYOUT' })
+      setStep(2)
     } catch (err: any) {
       setInitError(err.message || 'Failed to initiate sell')
     } finally {
       setInitLoading(false)
     }
-  }, [amount, token, network])
+  }
 
-  const submitPayout = useCallback(async (e: React.FormEvent) => {
+  async function submitPayout(e: React.FormEvent) {
     e.preventDefault()
     setPayError(null)
-    
     if (!bankName || !bankCode || !accountNumber || !accountName) {
       setPayError('Fill in all bank fields')
       return
@@ -431,9 +398,14 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       setPayError('Missing paymentId — restart the sell flow')
       return
     }
-    
     setPayLoading(true)
     try {
+      console.log('🚀 Starting payout call:', {
+        paymentId: initData.paymentId,
+        bankCode,
+        accountNumber: accountNumber.slice(0, 4) + '****'
+      })
+
       const res = await fetchWithTimeout(`${API_BASE}/sell/payout`, {
         method: 'POST',
         headers: getHeaders(),
@@ -446,63 +418,122 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         }),
       })
 
-      const data: PayoutRes = await res.json()
+      console.log('📡 Payout response received:', {
+        status: res.status,
+        ok: res.ok,
+        headers: Object.fromEntries(res.headers.entries())
+      })
 
-      if (!res.ok || !data.success) {
+      const responseText = await res.text()
+      console.log('📄 Raw response text:', responseText)
+
+      let data: PayoutRes
+      try {
+        data = JSON.parse(responseText)
+      } catch (parseError) {
+        console.error('❌ JSON parse failed:', parseError)
+        throw new Error('Invalid JSON response from server')
+      }
+
+      console.log('📦 Parsed response data:', data)
+
+      if (!res.ok) {
+        console.error('❌ HTTP error:', res.status, data)
         throw new Error(data?.message || `HTTP ${res.status}`)
       }
 
-      // **FIXED: Clean state transition**
+      if (!data.success) {
+        console.error('❌ Server reported failure:', data.message)
+        throw new Error(data.message || 'Server reported failure')
+      }
+
+      // Validate essential fields
+      if (!data.paymentId) {
+        console.error('❌ Missing paymentId in response')
+        throw new Error('Missing paymentId in response')
+      }
+
+      if (!data.payout) {
+        console.error('❌ Missing payout object in response')
+        throw new Error('Missing payout details in response')
+      }
+
+      console.log('✅ Payout validation passed, setting payData...')
+      console.log('🎯 About to set payData with:', {
+        paymentId: data.paymentId,
+        status: data.status,
+        hasPayout: !!data.payout
+      })
+
+      // Set the data - this should trigger the summary to show
       setPayData(data)
-      setUIState({ type: 'STEP_2_SUMMARY' })
+      
+      console.log('✅ PayData set, triggering re-render...')
+
+      // Force a re-render on cold start by using a small delay
+      if (performance.getEntriesByType('navigation').length === 0 || 
+          (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming)?.type === 'reload') {
+        console.log('🔄 Cold start detected, forcing re-render...')
+        setTimeout(() => {
+          setPayData(prevData => prevData ? {...prevData} : prevData)
+        }, 50)
+      }
 
       // Send to chat
       try {
         const recap = buildPayoutRecap(initData, data)
+        console.log('💬 Sending chat recap...')
         onChatEcho?.(recap)
+        console.log('✅ Chat recap sent')
       } catch (chatError) {
-        console.warn('Chat echo failed:', chatError)
+        console.warn('⚠️ Chat echo failed:', chatError)
       }
 
-      // Start 10-minute countdown
+      // Start 10-minute countdown AFTER payout is captured
       const expiryTime = new Date(Date.now() + 10 * 60 * 1000).toISOString()
+      console.log('⏰ Setting countdown expiry to:', expiryTime)
       setSummaryExpiresAt(expiryTime)
 
+      console.log('🎉 Payout flow completed successfully!')
+
+      // Nuclear option: force complete re-render by updating multiple states
+      setTimeout(() => {
+        console.log('💥 Nuclear re-render triggered')
+        setStep(2) // Force step state update
+        setPayLoading(false) // Ensure loading is off
+      }, 100)
+
     } catch (err: any) {
+      console.error('💥 Payout failed:', err)
       setPayError(err.message || 'Failed to save payout details')
     } finally {
       setPayLoading(false)
+      console.log('🏁 Payout loading state cleared')
     }
-  }, [bankName, bankCode, accountNumber, accountName, initData, onChatEcho])
+  }
 
   // Auto-close when the countdown expires on the final summary
+  const showFinalSummary = !!payData
   useEffect(() => {
-    if (!open || !showFinalSummary || !expired) return
-    onClose()
+    if (!open) return
+    if (showFinalSummary && expired) {
+      onClose()
+    }
   }, [open, showFinalSummary, expired, onClose])
 
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
-  const copyToClipboard = useCallback((text: string, key: string) => {
+  function copyToClipboard(text: string, key: string) {
     navigator.clipboard?.writeText(text).then(() => {
       setCopiedKey(key)
       setTimeout(() => setCopiedKey(null), 1200)
     }).catch(() => {})
-  }, [])
-
-  // **FIXED: Simplified navigation functions**
-  const goToStep1 = useCallback(() => setUIState({ type: 'STEP_1' }), [])
-  const goToPayoutStep = useCallback(() => setUIState({ type: 'STEP_2_PAYOUT' }), [])
+  }
 
   if (!open) return null
 
-  const headerTitle = useMemo(() => {
-    switch (uiState.type) {
-      case 'STEP_1': return 'Start a Sell'
-      case 'STEP_2_PAYOUT': return 'Payout Details'
-      case 'STEP_2_SUMMARY': return 'Transaction Summary'
-      default: return 'Start a Sell'
-    }
-  }, [uiState.type])
+  const headerTitle =
+    step === 1 ? 'Start a Sell'
+    : (!payData ? 'Payout Details' : 'Transaction Summary')
 
   return createPortal(
     <div style={overlayStyle} role="dialog" aria-modal="true" aria-labelledby="sell-title" onClick={onClose}>
@@ -516,9 +547,9 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
             <div>
               <div id="sell-title" style={{ fontWeight: 700 }}>{headerTitle}</div>
               <div style={stepperStyle}>
-                <span style={dot(currentStep === 1)}></span> Step 1 — Start
+                <span style={dot(step === 1)}></span> Step 1 — Start
                 <span style={{ opacity: .4, padding: '0 6px' }}>•</span>
-                <span style={dot(currentStep === 2)}></span> Step 2 — Payout
+                <span style={dot(step === 2)}></span> Step 2 — Payout
               </div>
             </div>
           </div>
@@ -528,7 +559,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         {/* Body */}
         <div style={bodyStyle}>
           {/* STEP 1 — Start a Sell */}
-          {uiState.type === 'STEP_1' && (
+          {step === 1 && (
             <div style={{ display: 'grid', gap: 14 }}>
               <p style={{ margin: 0, color: 'var(--muted)' }}>
                 Choose token, network, and amount. We'll capture payout next.
@@ -586,8 +617,8 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
             </div>
           )}
 
-          {/* STEP 2 — Payout Form */}
-          {showPayoutForm && (
+          {/* STEP 2 — Payout (then Summary with countdown) */}
+          {step === 2 && (
             <div style={{ display: 'grid', gap: 14 }}>
               {!initData && (
                 <div role="alert" style={errorBanner}>
@@ -595,7 +626,16 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                 </div>
               )}
 
-              {initData && (
+              {/* Debug info for cold start issues */}
+              {import.meta.env?.DEV && (
+                <div style={{...card, background: '#1a1a1a', marginTop: 10}}>
+                  <div style={{fontSize: 11, color: '#888'}}>
+                    Debug: initData={!!initData} | payData={!!payData} | payLoading={payLoading} | showSummary={showFinalSummary}
+                  </div>
+                </div>
+              )}
+
+              {initData && !showFinalSummary && (
                 <>
                   <div style={card}>
                     <h3 style={{ margin: 0, fontSize: 16 }}>Sell Summary</h3>
@@ -693,90 +733,90 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   </form>
                 </>
               )}
-            </div>
-          )}
 
-          {/* STEP 2 — Final Summary */}
-          {showFinalSummary && initData && payData && (
-            <div style={successCard}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                <h3 style={{ margin: 0, fontSize: 16 }}>Transaction Summary</h3>
-                <div style={badge}>
-                  ⏱ {expired ? 'Expired' : countdown} <span style={{ opacity: .6 }}>of 10:00</span>
-                </div>
-              </div>
-
-              <div style={kvGrid}>
-                <div>
-                  <div style={kStyle}>Status</div>
-                  <div style={vStyle}>{payData.status}</div>
-                </div>
-                <div>
-                  <div style={kStyle}>Payment ID</div>
-                  <div style={{ ...vStyle, ...mono }}>{payData.paymentId}</div>
-                </div>
-                <div>
-                  <div style={kStyle}>Reference</div>
-                  <div style={{ ...vStyle, ...mono }}>{initData.reference}</div>
-                </div>
-                <div>
-                  <div style={kStyle}>You Receive</div>
-                  <div>
-                    <div style={vStyle}>
-                      {prettyNgn(initData.quote.receiveAmount || 0)} ({initData.quote.receiveCurrency})
-                    </div>
-                    <div style={{ ...smallMuted, marginTop: 4 }}>
-                      Transaction fee (fixed): <strong>70&nbsp;NGN</strong>
+              {/* FINAL SUMMARY (countdown starts here) */}
+              {initData && showFinalSummary && payData && (
+                <div style={successCard}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                    <h3 style={{ margin: 0, fontSize: 16 }}>Transaction Summary</h3>
+                    <div style={badge}>
+                      ⏱ {expired ? 'Expired' : countdown} <span style={{ opacity: .6 }}>of 10:00</span>
                     </div>
                   </div>
-                </div>
-                <div>
-                  <div style={kStyle}>Rate</div>
-                  <div style={vStyle}>{prettyAmount(initData.quote.rate)} NGN/{initData.deposit.token}</div>
-                </div>
-                <div>
-                  <div style={kStyle}>Bank</div>
-                  <div style={vStyle}>{payData.payout.bankName}</div>
-                </div>
-                <div>
-                  <div style={kStyle}>Account</div>
-                  <div style={vStyle}>{payData.payout.accountName} — {payData.payout.accountNumber}</div>
-                </div>
-                <div>
-                  <div style={kStyle}>Deposit Address</div>
-                  <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{initData.deposit.address}</div>
-                  <div style={row}>
-                    <button
-                      style={btn}
-                      onClick={() => copyToClipboard(initData.deposit.address, 'addr2')}
-                    >
-                      {copiedKey === 'addr2' ? 'Copied ✓' : 'Copy Address'}
-                    </button>
-                  </div>
-                </div>
-                {!!initData.deposit.memo && (
-                  <div>
-                    <div style={kStyle}>Memo / Tag</div>
-                    <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{initData.deposit.memo}</div>
-                    <div style={row}>
-                      <button
-                        style={btn}
-                        onClick={() => copyToClipboard(initData.deposit.memo!, 'memo2')}
-                      >
-                        {copiedKey === 'memo2' ? 'Copied ✓' : 'Copy Memo'}
-                      </button>
+
+                  <div style={kvGrid}>
+                    <div>
+                      <div style={kStyle}>Status</div>
+                      <div style={vStyle}>{payData.status}</div>
                     </div>
+                    <div>
+                      <div style={kStyle}>Payment ID</div>
+                      <div style={{ ...vStyle, ...mono }}>{payData.paymentId}</div>
+                    </div>
+                    <div>
+                      <div style={kStyle}>Reference</div>
+                      <div style={{ ...vStyle, ...mono }}>{initData.reference}</div>
+                    </div>
+                    <div>
+                      <div style={kStyle}>You Receive</div>
+                      <div>
+                        <div style={vStyle}>
+                          {prettyNgn(initData.quote.receiveAmount || 0)} ({initData.quote.receiveCurrency})
+                        </div>
+                        <div style={{ ...smallMuted, marginTop: 4 }}>
+                          Transaction fee (fixed): <strong>70&nbsp;NGN</strong>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <div style={kStyle}>Rate</div>
+                      <div style={vStyle}>{prettyAmount(initData.quote.rate)} NGN/{initData.deposit.token}</div>
+                    </div>
+                    <div>
+                      <div style={kStyle}>Bank</div>
+                      <div style={vStyle}>{payData.payout.bankName}</div>
+                    </div>
+                    <div>
+                      <div style={kStyle}>Account</div>
+                      <div style={vStyle}>{payData.payout.accountName} — {payData.payout.accountNumber}</div>
+                    </div>
+                    <div>
+                      <div style={kStyle}>Deposit Address</div>
+                      <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{initData.deposit.address}</div>
+                      <div style={row}>
+                        <button
+                          style={btn}
+                          onClick={() => copyToClipboard(initData.deposit.address, 'addr2')}
+                        >
+                          {copiedKey === 'addr2' ? 'Copied ✓' : 'Copy Address'}
+                        </button>
+                      </div>
+                    </div>
+                    {!!initData.deposit.memo && (
+                      <div>
+                        <div style={kStyle}>Memo / Tag</div>
+                        <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{initData.deposit.memo}</div>
+                        <div style={row}>
+                          <button
+                            style={btn}
+                            onClick={() => copyToClipboard(initData.deposit.memo!, 'memo2')}
+                          >
+                            {copiedKey === 'memo2' ? 'Copied ✓' : 'Copy Memo'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
 
-              <div style={{ ...smallMuted, ...badgeWarn }}>
-                ⚠️ Send exactly {prettyAmount(initData.deposit.amount)} {initData.deposit.token} on {toNetworkLabel(initData.deposit.token, initData.deposit.network)} before the timer runs out.
-              </div>
+                  <div style={{ ...smallMuted, ...badgeWarn }}>
+                    ⚠️ Send exactly {prettyAmount(initData.deposit.amount)} {initData.deposit.token} on {toNetworkLabel(initData.deposit.token, initData.deposit.network)} before the timer runs out.
+                  </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <button style={btnPrimary} onClick={onClose}>Done</button>
-              </div>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <button style={btnPrimary} onClick={onClose}>Done</button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -784,16 +824,16 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         {/* Footer */}
         <div style={footerStyle}>
           <div style={smallMuted}>
-            {uiState.type === 'STEP_1'
+            {step === 1
               ? 'We\'ll capture your payout next.'
               : (showFinalSummary
                   ? 'Copy the deposit details and send the exact amount within the window.'
                   : 'Ensure your bank details match your account name.')}
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
-            {currentStep === 2 ? (
+            {step === 2 ? (
               !showFinalSummary ? (
-                <button style={btn} onClick={goToStep1}>← Back</button>
+                <button style={btn} onClick={() => setStep(1)}>← Back</button>
               ) : (
                 <button style={btn} onClick={onClose}>Close</button>
               )
