@@ -470,6 +470,15 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       
       console.log('✅ PayData set, triggering re-render...')
 
+      // Force a re-render on cold start by using a small delay
+      if (performance.getEntriesByType('navigation').length === 0 || 
+          (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming)?.type === 'reload') {
+        console.log('🔄 Cold start detected, forcing re-render...')
+        setTimeout(() => {
+          setPayData(prevData => prevData ? {...prevData} : prevData)
+        }, 50)
+      }
+
       // Send to chat
       try {
         const recap = buildPayoutRecap(initData, data)
