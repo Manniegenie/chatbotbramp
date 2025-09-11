@@ -1,4 +1,4 @@
-// src/sell.tsx - FIXED VERSION
+// src/sell.tsx - DEBUG VERSION WITH FULL LOGGING
 import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -60,7 +60,7 @@ type SellModalProps = {
   open: boolean
   onClose: () => void
   onChatEcho?: (text: string) => void
-  authToken: string | null  // 🔧 NEW: Accept token as prop
+  authToken: string | null
 }
 
 const TOKENS = ['USDT','USDC','BTC','ETH','SOL','BNB','MATIC','AVAX'] as const
@@ -172,8 +172,6 @@ const errorBanner: React.CSSProperties = { ...card, background: 'rgba(220, 50, 5
 const successCard: React.CSSProperties = { ...card, background: 'rgba(0, 115, 55, .12)', borderColor: 'rgba(0, 115, 55, .35)' }
 
 export default function SellModal({ open, onClose, onChatEcho, authToken }: SellModalProps) {
-  // 🔧 REMOVED: useTokenStore() - now using authToken prop directly
-  
   // Steps: 1 = Start Sell, 2 = Payout. Final summary is a sub-state of step 2.
   const [step, setStep] = useState<1 | 2>(1)
 
@@ -206,9 +204,64 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
   const [bankOptions, setBankOptions] = useState<BankOption[]>([])
   const banksFetchedRef = useRef(false)
 
-  // Reset on open
+  // 🔍 DEBUG: Log every render
+  console.log("🔍 SellModal RENDER", { 
+    open, 
+    step,
+    hasInitData: !!initData,
+    hasPayData: !!payData,
+    initDataId: initData?.paymentId,
+    payDataId: payData?.paymentId,
+    hasToken: !!authToken,
+    tokenLength: authToken?.length
+  })
+
+  // 🔍 DEBUG: Log when final summary should be shown
+  const showFinalSummary = !!payData
   useEffect(() => {
-    if (!open) return
+    if (showFinalSummary) {
+      console.log("🔍 FINAL SUMMARY TRIGGERED", {
+        hasInitData: !!initData,
+        hasPayData: !!payData,
+        payDataDetails: payData ? {
+          paymentId: payData.paymentId,
+          bankName: payData.payout?.bankName,
+          accountName: payData.payout?.accountName
+        } : null
+      })
+      
+      if (initData && payData) {
+        const recapText = buildPayoutRecap(initData, payData)
+        console.log("🔍 CALLING onChatEcho with:", recapText)
+        onChatEcho?.(recapText)
+      }
+    }
+  }, [showFinalSummary, initData, payData, onChatEcho])
+
+  // 🔍 DEBUG: Reset on open - with detailed logging
+  useEffect(() => {
+    console.log("🔍 RESET EFFECT TRIGGERED", { open })
+    
+    if (!open) {
+      console.log("🔍 Modal closed - not resetting")
+      return
+    }
+    
+    console.log("🔍 BEFORE RESET:", { 
+      step,
+      hasInitData: !!initData,
+      hasPayData: !!payData,
+      initDataDetails: initData ? {
+        paymentId: initData.paymentId,
+        reference: initData.reference,
+        bankDetails: initData.deposit
+      } : null,
+      payDataDetails: payData ? {
+        paymentId: payData.paymentId,
+        bankName: payData.payout?.bankName
+      } : null
+    })
+    
     setStep(1)
     setToken('USDT')
     setNetwork(NETWORKS_BY_TOKEN['USDT'][0].code)
@@ -230,7 +283,31 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
     setBankOptions([])
     setSummaryExpiresAt(null)
     banksFetchedRef.current = false
+    
+    console.log("🔍 AFTER RESET: All state should be cleared")
   }, [open])
+
+  // 🔍 DEBUG: Watch for state changes that shouldn't happen
+  useEffect(() => {
+    if (open && initData) {
+      console.log("🔍 WARNING: initData exists when modal is open!", {
+        paymentId: initData.paymentId,
+        reference: initData.reference,
+        amount: initData.deposit?.amount,
+        token: initData.deposit?.token
+      })
+    }
+  }, [open, initData])
+
+  useEffect(() => {
+    if (open && payData) {
+      console.log("🔍 WARNING: payData exists when modal is open!", {
+        paymentId: payData.paymentId,
+        bankName: payData.payout?.bankName,
+        accountName: payData.payout?.accountName
+      })
+    }
+  }, [open, payData])
 
   // Keep network valid
   useEffect(() => {
@@ -250,10 +327,12 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
   const firstInputRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null)
   useEffect(() => { firstInputRef.current?.focus() }, [step])
 
-  // 🔧 SIMPLIFIED: Fetch banks once when entering Step 2 (no token waiting)
+  // Fetch banks once when entering Step 2
   useEffect(() => {
     if (!open || step !== 2 || banksFetchedRef.current || !authToken) return
     banksFetchedRef.current = true
+    
+    console.log("🔍 FETCHING BANKS")
     
     ;(async () => {
       setBanksLoading(true)
@@ -282,7 +361,9 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
           setBankCode('')
           setBankName('')
         }
+        console.log("🔍 BANKS LOADED:", opts.length)
       } catch (e: any) {
+        console.log("🔍 BANKS ERROR:", e.message)
         setBanksError(e?.message || 'Failed to load banks')
         setBankOptions([])
         setBankCode('')
@@ -291,9 +372,9 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
         setBanksLoading(false)
       }
     })()
-  }, [open, step, authToken]) // 🔧 Simplified dependencies
+  }, [open, step, authToken])
 
-  // 🔧 SIMPLIFIED: Resolve account name when account number is 10+ digits
+  // Resolve account name when account number is 10+ digits
   useEffect(() => {
     if (!open || step !== 2 || !bankCode || !accountNumber || !authToken) return
     if (accountNumber.length < 10) {
@@ -337,10 +418,19 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
     }, 500)
 
     return () => clearTimeout(timeoutId)
-  }, [open, step, bankCode, accountNumber, authToken]) // 🔧 Simplified dependencies
+  }, [open, step, bankCode, accountNumber, authToken])
 
   async function submitInitiate(e: React.FormEvent) {
     e.preventDefault()
+    
+    console.log("🔍 SUBMIT INITIATE called", {
+      hasToken: !!authToken,
+      tokenLength: authToken?.length,
+      amount,
+      token,
+      network
+    })
+    
     setInitError(null)
     if (!amount || isNaN(+amount) || +amount <= 0) {
       setInitError('Enter a valid amount')
@@ -361,11 +451,13 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
       })
       
       const data: InitiateSellRes = await res.json()
+      console.log("🔍 INITIATE RESPONSE:", { success: res.ok, data })
+      
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
       setInitData(data)
-      // Go straight to payout (no deposit-details screen)
       setStep(2)
     } catch (err: any) {
+      console.log("🔍 INITIATE ERROR:", err.message)
       setInitError(err.message || 'Failed to initiate sell')
     } finally {
       setInitLoading(false)
@@ -374,6 +466,16 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
 
   async function submitPayout(e: React.FormEvent) {
     e.preventDefault()
+    
+    console.log("🔍 SUBMIT PAYOUT called", {
+      hasInitData: !!initData,
+      paymentId: initData?.paymentId,
+      bankName,
+      bankCode,
+      accountNumber,
+      accountName
+    })
+    
     setPayError(null)
     if (!bankName || !bankCode || !accountNumber || !accountName) {
       setPayError('Fill in all bank fields')
@@ -404,12 +506,20 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
       })
       
       const data: PayoutRes = await res.json()
+      console.log("🔍 PAYOUT RESPONSE:", { success: res.ok, data })
+      
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
       setPayData(data)
-      onChatEcho?.(buildPayoutRecap(initData, data))
+      
+      console.log("🔍 PAYOUT SUCCESS - setting payData", {
+        paymentId: data.paymentId,
+        bankName: data.payout?.bankName
+      })
+      
       // Start a fresh local 10:00 window AFTER payout is captured
       setSummaryExpiresAt(new Date(Date.now() + 10 * 60 * 1000).toISOString())
     } catch (err: any) {
+      console.log("🔍 PAYOUT ERROR:", err.message)
       setPayError(err.message || 'Failed to save payout details')
     } finally {
       setPayLoading(false)
@@ -417,10 +527,10 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
   }
 
   // Auto-close when the countdown expires on the final summary
-  const showFinalSummary = !!payData
   useEffect(() => {
     if (!open) return
     if (showFinalSummary && expired) {
+      console.log("🔍 AUTO-CLOSING due to expired countdown")
       onClose()
     }
   }, [open, showFinalSummary, expired, onClose])
@@ -435,8 +545,9 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
 
   if (!open) return null
 
-  // 🔧 SIMPLIFIED: Show auth required message if no token
+  // Show auth required message if no token
   if (!authToken) {
+    console.log("🔍 SHOWING AUTH REQUIRED SCREEN")
     return createPortal(
       <div style={overlayStyle} role="dialog" aria-modal="true">
         <div style={{...sheetStyle, padding: 40, textAlign: 'center' as const, minHeight: 200, placeItems: 'center'}}>
@@ -453,6 +564,14 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
   const headerTitle =
     step === 1 ? 'Start a Sell'
     : (!payData ? 'Payout Details' : 'Transaction Summary')
+
+  console.log("🔍 RENDERING MAIN MODAL", { 
+    step, 
+    headerTitle, 
+    showFinalSummary,
+    hasInitData: !!initData,
+    hasPayData: !!payData
+  })
 
   return createPortal(
     <div style={overlayStyle} role="dialog" aria-modal="true" aria-labelledby="sell-title" onClick={onClose}>
