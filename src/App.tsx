@@ -26,7 +26,7 @@ export type ChatMessage = {
   text: string
   ts: number
   cta?: CTA | null
-  isStreaming?: boolean
+  isNew?: boolean // For animation purposes
 }
 
 // --- session id (stable across page loads) ---
@@ -65,102 +65,37 @@ function getErrorMessage(e: unknown): string {
   try { return JSON.stringify(e) } catch { return String(e) }
 }
 
-// ===== Simulated Streaming Implementation =====
-
-// Helper function to simulate typing effect
-async function simulateTypingEffect(
-  fullText: string, 
-  onChunk: (text: string) => void,
-  options: {
-    wordsPerChunk?: number
-    delayBetweenChunks?: number
-    minDelay?: number
-    maxDelay?: number
-  } = {}
-): Promise<void> {
-  const {
-    wordsPerChunk = 2,
-    delayBetweenChunks = 120,
-    minDelay = 80,
-    maxDelay = 200
-  } = options
-
-  const words = fullText.split(' ')
-  let currentText = ''
-
-  for (let i = 0; i < words.length; i += wordsPerChunk) {
-    const chunk = words.slice(i, i + wordsPerChunk)
-    currentText += (currentText ? ' ' : '') + chunk.join(' ')
-    
-    // Update the display
-    onChunk(currentText)
-    
-    // Don't delay after the last chunk
-    if (i + wordsPerChunk < words.length) {
-      // Variable delay to make it feel more natural
-      const randomDelay = Math.random() * (maxDelay - minDelay) + minDelay
-      const delay = Math.min(delayBetweenChunks + randomDelay, maxDelay)
-      await new Promise(resolve => setTimeout(resolve, delay))
-    }
-  }
-}
-
-// Simulated streaming message function
-async function sendSimulatedStreamingMessage(
+// Simple API call without streaming
+async function sendChatMessage(
   message: string,
-  history: ChatMessage[],
-  onChunk: (text: string) => void,
-  onTyping?: (isTyping: boolean) => void
+  history: ChatMessage[]
 ): Promise<{ reply: string; cta?: CTA | null; metadata?: any }> {
   const { access } = tokenStore.getTokens()
 
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
   if (access && !isExpiredJwt(access)) headers['Authorization'] = `Bearer ${access}`
 
-  // Show typing indicator
-  onTyping?.(true)
+  const response = await fetch(`${API_BASE}/chatbot/chat`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      message,
+      history: history.slice(-10).map((m) => ({ role: m.role, text: m.text })),
+      sessionId: getSessionId(),
+    }),
+    mode: 'cors',
+    cache: 'no-store',
+  })
 
-  try {
-    // Make regular HTTP request to /chat endpoint
-    const response = await fetch(`${API_BASE}/chatbot/chat`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        message,
-        history: history.slice(-10).map((m) => ({ role: m.role, text: m.text })),
-        sessionId: getSessionId(),
-      }),
-      mode: 'cors',
-      cache: 'no-store',
-    })
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+  }
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-    }
-
-    const data = await response.json()
-    const fullText = data?.reply ?? 'Sorry, I could not process that.'
-    
-    // Stop typing indicator
-    onTyping?.(false)
-
-    // Simulate streaming by gradually revealing text
-    await simulateTypingEffect(fullText, onChunk, {
-      wordsPerChunk: 2,
-      delayBetweenChunks: 120,
-      minDelay: 80,
-      maxDelay: 200
-    })
-
-    return {
-      reply: fullText,
-      cta: data.cta || null,
-      metadata: data.metadata
-    }
-
-  } catch (error) {
-    onTyping?.(false)
-    throw error
+  const data = await response.json()
+  return {
+    reply: data?.reply ?? 'Sorry, I could not process that.',
+    cta: data.cta || null,
+    metadata: data.metadata
   }
 }
 
@@ -262,6 +197,17 @@ function renderMessageText(text: string): React.ReactNode {
   return rendered
 }
 
+// Three dot loading component
+function ThreeDotLoader() {
+  return (
+    <div className="three-dot-loader">
+      <div className="dot"></div>
+      <div className="dot"></div>
+      <div className="dot"></div>
+    </div>
+  )
+}
+
 /* ----------------------------------- App ----------------------------------- */
 
 export default function App() {
@@ -279,11 +225,6 @@ export default function App() {
 
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [isStreaming, setIsStreaming] = useState(false)
-  const [isTyping, setIsTyping] = useState(false)
-
-  const [thinkingPhase, setThinkingPhase] = useState<'thinking' | 'browsing' | 'streaming'>('thinking')
-  const [emojiTick, setEmojiTick] = useState(0)
 
   const [showSignIn, setShowSignIn] = useState(false)
   const [showSignUp, setShowSignUp] = useState(false)
@@ -320,67 +261,56 @@ export default function App() {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading, showSignIn, showSignUp, showSell, showBuy])
 
+  // Remove isNew flag after animation
   useEffect(() => {
-    let phaseTimer: number | undefined
-    let emojiTimer: number | undefined
-    if (loading && !isStreaming && !isTyping) {
-      setThinkingPhase('thinking')
-      setEmojiTick(0)
-      phaseTimer = window.setTimeout(() => setThinkingPhase('browsing'), 2500)
-      emojiTimer = window.setInterval(() => setEmojiTick((t) => (t + 1) % 2), 600)
-    } else if (isTyping || isStreaming) {
-      setThinkingPhase('streaming')
-    }
-    return () => {
-      if (phaseTimer) window.clearTimeout(phaseTimer)
-      if (emojiTimer) window.clearInterval(emojiTimer)
-    }
-  }, [loading, isStreaming, isTyping])
-
-  function updateStreamingMessage(messageId: string, text: string, isComplete = false) {
-    setMessages((prev) =>
-      prev.map((msg) => (msg.id === messageId ? { ...msg, text, isStreaming: !isComplete } : msg))
-    )
-  }
+    const timer = setTimeout(() => {
+      setMessages(prev => prev.map(msg => ({ ...msg, isNew: false })))
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [messages])
 
   async function sendMessage(e?: React.FormEvent) {
     e?.preventDefault()
     const trimmed = input.trim()
-    if (!trimmed || loading || isStreaming) return
+    if (!trimmed || loading) return
 
-    const userMsg: ChatMessage = { id: crypto.randomUUID(), role: 'user', text: trimmed, ts: Date.now() }
+    const userMsg: ChatMessage = { 
+      id: crypto.randomUUID(), 
+      role: 'user', 
+      text: trimmed, 
+      ts: Date.now(),
+      isNew: true
+    }
     setMessages((prev) => [...prev, userMsg])
     setInput('')
     setLoading(true)
 
-    const aiMessageId = crypto.randomUUID()
-    const aiMsg: ChatMessage = { id: aiMessageId, role: 'assistant', text: '', ts: Date.now(), isStreaming: true }
-    setMessages((prev) => [...prev, aiMsg])
-
     try {
-      setIsStreaming(true)
+      const data = await sendChatMessage(trimmed, [...messages, userMsg])
       
-      // Use simulated streaming instead of real SSE
-      const data = await sendSimulatedStreamingMessage(
-        trimmed, 
-        [...messages, userMsg], // include the just-sent user message in history
-        (text) => { updateStreamingMessage(aiMessageId, text) },
-        (typing) => { setIsTyping(typing) }
-      )
-      
-      updateStreamingMessage(aiMessageId, data.reply, true)
-      
-      if (data.cta) {
-        setMessages((prev) => prev.map((msg) => (msg.id === aiMessageId ? { ...msg, cta: data.cta || null } : msg)))
+      const aiMsg: ChatMessage = { 
+        id: crypto.randomUUID(), 
+        role: 'assistant', 
+        text: data.reply, 
+        ts: Date.now(),
+        cta: data.cta || null,
+        isNew: true
       }
       
+      setMessages((prev) => [...prev, aiMsg])
+      
     } catch (error) {
-      console.error('Simulated streaming failed:', error)
-      updateStreamingMessage(aiMessageId, `Error reaching server: ${getErrorMessage(error)}`, true)
+      console.error('Chat message failed:', error)
+      const errorMsg: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        text: `Error reaching server: ${getErrorMessage(error)}`,
+        ts: Date.now(),
+        isNew: true
+      }
+      setMessages((prev) => [...prev, errorMsg])
     } finally {
       setLoading(false)
-      setIsStreaming(false)
-      setIsTyping(false)
     }
   }
 
@@ -421,108 +351,175 @@ export default function App() {
 
   function echoFromModalToChat(text: string) {
     if (!text) return
-    setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'assistant', text, ts: Date.now() }])
-  }
-
-  const getLoadingText = () => {
-    if (isTyping) return 'Bramp AI is typing…'
-    if (isStreaming) return 'Bramp AI is responding…'
-    if (thinkingPhase === 'thinking') return 'Bramp AI is thinking…'
-    const browsingEmoji = emojiTick % 2 === 0 ? '🌍' : '🪙'
-    return `Bramp AI is browsing… ${browsingEmoji}`
+    setMessages((prev) => [...prev, { 
+      id: crypto.randomUUID(), 
+      role: 'assistant', 
+      text, 
+      ts: Date.now(),
+      isNew: true
+    }])
   }
 
   return (
-    <div className="page">
-      <header className="header">
-        <div className="brand">
-          <p className="tag">Secure access to digital assets & payments — via licensed partners.</p>
-        </div>
+    <>
+      <style>
+        {`
+          .bubble {
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+            animation: messagePopIn 0.3s ease-out forwards;
+          }
 
-        {!auth ? (
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn" onClick={() => setShowSignIn(true)}>Sign in</button>
-            <button
-              className="btn"
-              style={{ background: 'transparent', color: 'var(--txt)', border: '1px solid var(--border)' }}
-              onClick={() => setShowSignUp(true)}
-            >
-              Sign up
-            </button>
+          .bubble.isNew {
+            animation: messagePopIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+          }
+
+          @keyframes messagePopIn {
+            to {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+          }
+
+          .three-dot-loader {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 12px;
+            margin: 8px 0;
+          }
+
+          .three-dot-loader .dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--muted);
+            border-radius: 50%;
+            animation: dotBounce 1.4s ease-in-out infinite both;
+          }
+
+          .three-dot-loader .dot:nth-child(1) { animation-delay: -0.32s; }
+          .three-dot-loader .dot:nth-child(2) { animation-delay: -0.16s; }
+          .three-dot-loader .dot:nth-child(3) { animation-delay: 0s; }
+
+          @keyframes dotBounce {
+            0%, 80%, 100% {
+              transform: scale(0.8);
+              opacity: 0.5;
+            }
+            40% {
+              transform: scale(1.2);
+              opacity: 1;
+            }
+          }
+        `}
+      </style>
+      
+      <div className="page">
+        <header className="header">
+          <div className="brand">
+            <p className="tag">Secure access to digital assets & payments — via licensed partners.</p>
           </div>
+
+          {!auth ? (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn" onClick={() => setShowSignIn(true)}>Sign in</button>
+              <button
+                className="btn"
+                style={{ background: 'transparent', color: 'var(--txt)', border: '1px solid var(--border)' }}
+                onClick={() => setShowSignUp(true)}
+              >
+                Sign up
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <span className="tag">Signed in{auth.user?.username ? ` as ${auth.user.username}` : ''}</span>
+              <button className="btn" onClick={handleBuyClick} style={{ background: 'var(--primary)', color: 'white' }}>
+                Buy
+              </button>
+              <button className="btn" onClick={handleSellClick} style={{ background: 'var(--primary)', color: 'white' }}>
+                Sell
+              </button>
+              <button
+                className="btn"
+                style={{ background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border)' }}
+                onClick={signOut}
+              >
+                Sign out
+              </button>
+            </div>
+          )}
+        </header>
+
+        {showSignIn ? (
+          <SignIn
+            onCancel={() => { setShowSignIn(false); setOpenSellAfterAuth(false); setOpenBuyAfterAuth(false) }}
+            onSuccess={(res) => {
+              setAuth(res)
+              setShowSignIn(false)
+              setMessages((prev) => [...prev, {
+                id: crypto.randomUUID(),
+                role: 'assistant',
+                text: `You're in, ${res.user.username || (res.user as any).firstname || 'there'}!`,
+                ts: Date.now(),
+                isNew: true
+              }])
+              if (openSellAfterAuth) { setOpenSellAfterAuth(false); setShowSell(true) }
+              if (openBuyAfterAuth)  { setOpenBuyAfterAuth(false);  setShowBuy(true) }
+            }}
+          />
+        ) : showSignUp ? (
+          <SignUp
+            onCancel={() => setShowSignUp(false)}
+            onSuccess={(_res: SignUpResult) => {
+              setShowSignUp(false)
+              setMessages((prev) => [...prev, {
+                id: crypto.randomUUID(),
+                role: 'assistant',
+                text: 'Account created. Please verify OTP to complete your signup.',
+                ts: Date.now(),
+                isNew: true
+              }])
+              setShowSignIn(true)
+            }}
+          />
         ) : (
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <span className="tag">Signed in{auth.user?.username ? ` as ${auth.user.username}` : ''}</span>
-            <button className="btn" onClick={handleBuyClick} style={{ background: 'var(--primary)', color: 'white' }}>
-              Buy
-            </button>
-            <button className="btn" onClick={handleSellClick} style={{ background: 'var(--primary)', color: 'white' }}>
-              Sell
-            </button>
-            <button
-              className="btn"
-              style={{ background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border)' }}
-              onClick={signOut}
-            >
-              Sign out
-            </button>
-          </div>
-        )}
-      </header>
-
-      {showSignIn ? (
-        <SignIn
-          onCancel={() => { setShowSignIn(false); setOpenSellAfterAuth(false); setOpenBuyAfterAuth(false) }}
-          onSuccess={(res) => {
-            setAuth(res)
-            setShowSignIn(false)
-            setMessages((prev) => [...prev, {
-              id: crypto.randomUUID(),
-              role: 'assistant',
-              text: `You're in, ${res.user.username || (res.user as any).firstname || 'there'}!`,
-              ts: Date.now(),
-            }])
-            if (openSellAfterAuth) { setOpenSellAfterAuth(false); setShowSell(true) }
-            if (openBuyAfterAuth)  { setOpenBuyAfterAuth(false);  setShowBuy(true) }
-          }}
-        />
-      ) : showSignUp ? (
-        <SignUp
-          onCancel={() => setShowSignUp(false)}
-          onSuccess={(_res: SignUpResult) => {
-            setShowSignUp(false)
-            setMessages((prev) => [...prev, {
-              id: crypto.randomUUID(),
-              role: 'assistant',
-              text: 'Account created. Please verify OTP to complete your signup.',
-              ts: Date.now(),
-            }])
-            setShowSignIn(true)
-          }}
-        />
-      ) : (
-        <main className="chat">
-          <div className="messages">
-            {messages.map((m) => (
-              <div key={m.id} className={`bubble ${m.role}`}>
-                <div className="role">
-                  {m.role === 'user' ? 'You' : 'Bramp AI'}
-                  {m.isStreaming && (
-                    <span style={{ marginLeft: 8, fontSize: 12, opacity: 0.6, fontStyle: 'italic' }}>typing…</span>
-                  )}
-                </div>
-                <div className="text">
-                  {renderMessageText(m.text)}
-                  {m.role === 'assistant' && m.cta?.type === 'button' && m.cta.buttons?.length > 0 && (
-                    <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      {m.cta.buttons.map((btn, index) => {
-                        const isSell = isSellCTA(btn)
-                        if (isSell) {
+          <main className="chat">
+            <div className="messages">
+              {messages.map((m) => (
+                <div key={m.id} className={`bubble ${m.role} ${m.isNew ? 'isNew' : ''}`}>
+                  <div className="role">
+                    {m.role === 'user' ? 'You' : 'Bramp AI'}
+                  </div>
+                  <div className="text">
+                    {renderMessageText(m.text)}
+                    {m.role === 'assistant' && m.cta?.type === 'button' && m.cta.buttons?.length > 0 && (
+                      <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        {m.cta.buttons.map((btn, index) => {
+                          const isSell = isSellCTA(btn)
+                          if (isSell) {
+                            return (
+                              <button
+                                key={btn.id || btn.title || index}
+                                className="btn"
+                                onClick={handleSellClick}
+                                style={
+                                  btn.style === 'primary'
+                                    ? undefined
+                                    : { background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }
+                                }
+                              >
+                                {btn.title}
+                              </button>
+                            )
+                          }
                           return (
-                            <button
+                            <a
                               key={btn.id || btn.title || index}
                               className="btn"
-                              onClick={handleSellClick}
+                              href={btn.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
                               style={
                                 btn.style === 'primary'
                                   ? undefined
@@ -530,66 +527,50 @@ export default function App() {
                               }
                             >
                               {btn.title}
-                            </button>
+                            </a>
                           )
-                        }
-                        return (
-                          <a
-                            key={btn.id || btn.title || index}
-                            className="btn"
-                            href={btn.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={
-                              btn.style === 'primary'
-                                ? undefined
-                                : { background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }
-                            }
-                          >
-                            {btn.title}
-                          </a>
-                        )
-                      })}
-                    </div>
-                  )}
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-            {(loading || isStreaming || isTyping) && <div className="typing">{getLoadingText()}</div>}
-            <div ref={endRef} />
-          </div>
+              ))}
+              {loading && <ThreeDotLoader />}
+              <div ref={endRef} />
+            </div>
 
-          <form className="composer" onSubmit={sendMessage}>
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder={isStreaming || isTyping ? 'Please wait…' : 'Try: Sell 100 USDT to NGN'}
-              autoFocus
-              disabled={isStreaming || isTyping}
-            />
-            <button className="btn" disabled={loading || isStreaming || isTyping || !input.trim()}>
-              {isTyping ? 'AI typing…' : isStreaming ? 'Streaming…' : loading ? 'Sending…' : 'Send'}
-            </button>
-          </form>
+            <form className="composer" onSubmit={sendMessage}>
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder={loading ? 'Please wait…' : 'Try: Sell 100 USDT to NGN'}
+                autoFocus
+                disabled={loading}
+              />
+              <button className="btn" disabled={loading || !input.trim()}>
+                {loading ? 'Sending…' : 'Send'}
+              </button>
+            </form>
 
-          <div className="hints">
-            <span className="hint" onClick={() => !(isStreaming || isTyping) && setInput('Sell 100 USDT to NGN')}>Sell 100 USDT to NGN</span>
-            <span className="hint" onClick={() => !(isStreaming || isTyping) && setInput('Show my portfolio balance')}>Show my portfolio balance</span>
-            <span className="hint" onClick={() => !(isStreaming || isTyping) && setInput('Current NGN rates')}>Current NGN rates</span>
-          </div>
-        </main>
-      )}
+            <div className="hints">
+              <span className="hint" onClick={() => !loading && setInput('Sell 100 USDT to NGN')}>Sell 100 USDT to NGN</span>
+              <span className="hint" onClick={() => !loading && setInput('Show my portfolio balance')}>Show my portfolio balance</span>
+              <span className="hint" onClick={() => !loading && setInput('Current NGN rates')}>Current NGN rates</span>
+            </div>
+          </main>
+        )}
 
-      {/* Modals */}
-      <SellModal open={showSell} onClose={() => setShowSell(false)} onChatEcho={echoFromModalToChat} />
-      <BuyModal  open={showBuy}  onClose={() => setShowBuy(false)}  onChatEcho={echoFromModalToChat} />
+        {/* Modals */}
+        <SellModal open={showSell} onClose={() => setShowSell(false)} onChatEcho={echoFromModalToChat} />
+        <BuyModal  open={showBuy}  onClose={() => setShowBuy(false)}  onChatEcho={echoFromModalToChat} />
 
-      <footer className="footer">
-        <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
-        <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
-        <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp/drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
-        <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
-      </footer>
-    </div>
+        <footer className="footer">
+          <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
+          <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
+          <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp/drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
+          <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
+        </footer>
+      </div>
+    </>
   )
 }
