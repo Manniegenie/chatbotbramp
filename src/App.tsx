@@ -26,6 +26,7 @@ export type ChatMessage = {
   text: string
   ts: number
   cta?: CTA | null
+  isStreaming?: boolean
 }
 
 // --- session id (stable across page loads) ---
@@ -57,24 +58,29 @@ async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
   return fetch(input, { ...init, headers })
 }
 
-/* ----------------------- Error helper (fixes TS2339) ----------------------- */
-function getErrorMessage(e: unknown): string {
-  if (e instanceof Error) return e.message
-  if (typeof e === 'string') return e
-  try { return JSON.stringify(e) } catch { return String(e) }
-}
-
-// Simple API call without streaming
-async function sendChatMessage(
+// --- SSE client (robust) ---
+async function sendStreamingMessage(
   message: string,
-  history: ChatMessage[]
+  history: ChatMessage[],
+  onChunk: (text: string) => void,
+  onTyping?: (isTyping: boolean) => void
 ): Promise<{ reply: string; cta?: CTA | null; metadata?: any }> {
   const { access } = tokenStore.getTokens()
 
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (access && !isExpiredJwt(access)) headers['Authorization'] = `Bearer ${access}`
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Accept': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache',
+  }
+  if (access && !isExpiredJwt(access)) {
+    headers['Authorization'] = `Bearer ${access}`
+  }
 
-  const response = await fetch(`${API_BASE}/chatbot/chat`, {
+  const ac = new AbortController()
+  const timeout = setTimeout(() => ac.abort('stream-timeout'), 120_000)
+
+  const response = await fetch(`${API_BASE}/chatbot/chat/stream`, {
     method: 'POST',
     headers,
     body: JSON.stringify({
@@ -84,18 +90,77 @@ async function sendChatMessage(
     }),
     mode: 'cors',
     cache: 'no-store',
+    referrerPolicy: 'no-referrer',
+    signal: ac.signal,
   })
 
   if (!response.ok) {
+    clearTimeout(timeout)
     throw new Error(`HTTP ${response.status}: ${response.statusText}`)
   }
-
-  const data = await response.json()
-  return {
-    reply: data?.reply ?? 'Sorry, I could not process that.',
-    cta: data.cta || null,
-    metadata: data.metadata
+  if (!response.body) {
+    clearTimeout(timeout)
+    throw new Error('No response body for streaming')
   }
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  let fullText = ''
+  let cta: CTA | null | undefined = null
+  let metadata: any = undefined
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      const chunk = decoder.decode(value, { stream: true })
+
+      buffer += chunk
+      const lines = buffer.split('\n')
+      buffer = lines.pop() || ''
+
+      for (const line of lines) {
+        const trimmed = line.trim()
+        if (!trimmed || !trimmed.startsWith('data:')) continue
+
+        const dataStr = trimmed.slice(5).trim()
+        if (!dataStr) continue
+
+        try {
+          const payload = JSON.parse(dataStr)
+
+          if (payload.error) {
+            throw new Error(payload.error)
+          }
+          if (payload.typing) {
+            onTyping?.(true)
+            continue
+          }
+          if (payload.isStream && typeof payload.text === 'string') {
+            fullText += payload.text // append delta
+            onChunk(fullText)        // render cumulatively
+            continue
+          }
+          if (payload.complete) {
+            onTyping?.(false)
+            cta = payload.cta
+            metadata = payload.metadata
+            clearTimeout(timeout)
+            return { reply: fullText || '', cta, metadata }
+          }
+        } catch {
+          // ignore partial JSON
+        }
+      }
+    }
+  } finally {
+    clearTimeout(timeout)
+    try { reader.releaseLock() } catch {}
+  }
+
+  return { reply: fullText || '', cta, metadata }
 }
 
 /* ----------------------- Linkify + Markdown-lite helpers ----------------------- */
@@ -196,52 +261,6 @@ function renderMessageText(text: string): React.ReactNode {
   return rendered
 }
 
-// Three dot loading component
-function ThreeDotLoader() {
-  return (
-    <div className="typing">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-        <div style={{ 
-          width: '6px', 
-          height: '6px', 
-          backgroundColor: 'var(--muted)', 
-          borderRadius: '50%', 
-          animation: 'dotBounce 1.4s ease-in-out infinite both',
-          animationDelay: '-0.32s'
-        }}></div>
-        <div style={{ 
-          width: '6px', 
-          height: '6px', 
-          backgroundColor: 'var(--muted)', 
-          borderRadius: '50%', 
-          animation: 'dotBounce 1.4s ease-in-out infinite both',
-          animationDelay: '-0.16s'
-        }}></div>
-        <div style={{ 
-          width: '6px', 
-          height: '6px', 
-          backgroundColor: 'var(--muted)', 
-          borderRadius: '50%', 
-          animation: 'dotBounce 1.4s ease-in-out infinite both',
-          animationDelay: '0s'
-        }}></div>
-      </div>
-      <style>{`
-        @keyframes dotBounce {
-          0%, 80%, 100% {
-            transform: scale(0.8);
-            opacity: 0.5;
-          }
-          40% {
-            transform: scale(1.2);
-            opacity: 1;
-          }
-        }
-      `}</style>
-    </div>
-  )
-}
-
 /* ----------------------------------- App ----------------------------------- */
 
 export default function App() {
@@ -259,6 +278,11 @@ export default function App() {
 
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [isStreaming, setIsStreaming] = useState(false)
+  const [isTyping, setIsTyping] = useState(false)
+
+  const [thinkingPhase, setThinkingPhase] = useState<'thinking' | 'browsing' | 'streaming'>('thinking')
+  const [emojiTick, setEmojiTick] = useState(0)
 
   const [showSignIn, setShowSignIn] = useState(false)
   const [showSignUp, setShowSignUp] = useState(false)
@@ -295,40 +319,81 @@ export default function App() {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading, showSignIn, showSignUp, showSell, showBuy])
 
+  useEffect(() => {
+    let phaseTimer: number | undefined
+    let emojiTimer: number | undefined
+    if (loading && !isStreaming && !isTyping) {
+      setThinkingPhase('thinking')
+      setEmojiTick(0)
+      phaseTimer = window.setTimeout(() => setThinkingPhase('browsing'), 2500)
+      emojiTimer = window.setInterval(() => setEmojiTick((t) => (t + 1) % 2), 600)
+    } else if (isTyping || isStreaming) {
+      setThinkingPhase('streaming')
+    }
+    return () => {
+      if (phaseTimer) window.clearTimeout(phaseTimer)
+      if (emojiTimer) window.clearInterval(emojiTimer)
+    }
+  }, [loading, isStreaming, isTyping])
+
+  function updateStreamingMessage(messageId: string, text: string, isComplete = false) {
+    setMessages((prev) =>
+      prev.map((msg) => (msg.id === messageId ? { ...msg, text, isStreaming: !isComplete } : msg))
+    )
+  }
+
   async function sendMessage(e?: React.FormEvent) {
     e?.preventDefault()
     const trimmed = input.trim()
-    if (!trimmed || loading) return
+    if (!trimmed || loading || isStreaming) return
 
     const userMsg: ChatMessage = { id: crypto.randomUUID(), role: 'user', text: trimmed, ts: Date.now() }
     setMessages((prev) => [...prev, userMsg])
     setInput('')
     setLoading(true)
 
+    const aiMessageId = crypto.randomUUID()
+    const aiMsg: ChatMessage = { id: aiMessageId, role: 'assistant', text: '', ts: Date.now(), isStreaming: true }
+    setMessages((prev) => [...prev, aiMsg])
+
     try {
-      const data = await sendChatMessage(trimmed, [...messages, userMsg])
-      
-      const aiMsg: ChatMessage = { 
-        id: crypto.randomUUID(), 
-        role: 'assistant', 
-        text: data.reply, 
-        ts: Date.now(),
-        cta: data.cta || null
+      setIsStreaming(true)
+      const data = await sendStreamingMessage(
+        trimmed, 
+        messages, 
+        (text) => { updateStreamingMessage(aiMessageId, text) },
+        (typing) => { setIsTyping(typing) }
+      )
+      updateStreamingMessage(aiMessageId, data.reply, true)
+      if (data.cta) {
+        setMessages((prev) => prev.map((msg) => (msg.id === aiMessageId ? { ...msg, cta: data.cta || null } : msg)))
       }
-      
-      setMessages((prev) => [...prev, aiMsg])
-      
-    } catch (error) {
-      console.error('Chat message failed:', error)
-      const errorMsg: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        text: `Error reaching server: ${getErrorMessage(error)}`,
-        ts: Date.now()
+    } catch (streamError) {
+      console.error('Streaming failed, falling back to /chatbot/chat:', streamError)
+      try {
+        updateStreamingMessage(aiMessageId, 'Connecting...', false)
+        const res = await authFetch(`${API_BASE}/chatbot/chat`, {
+          method: 'POST',
+          body: JSON.stringify({
+            message: trimmed,
+            history: messages.slice(-10).map((m) => ({ role: m.role, text: m.text })),
+            sessionId: getSessionId(),
+          }),
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        const botText = data?.reply ?? 'Sorry, I could not process that.'
+        updateStreamingMessage(aiMessageId, botText, true)
+        if (data.cta) {
+          setMessages((prev) => prev.map((msg) => (msg.id === aiMessageId ? { ...msg, cta: data.cta || null } : msg)))
+        }
+      } catch (err: any) {
+        updateStreamingMessage(aiMessageId, `Error reaching server: ${err?.message || 'Network Error.'}`, true)
       }
-      setMessages((prev) => [...prev, errorMsg])
     } finally {
       setLoading(false)
+      setIsStreaming(false)
+      setIsTyping(false)
     }
   }
 
@@ -372,37 +437,16 @@ export default function App() {
     setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'assistant', text, ts: Date.now() }])
   }
 
+  const getLoadingText = () => {
+    if (isTyping) return 'Bramp AI is typing…'
+    if (isStreaming) return 'Bramp AI is responding…'
+    if (thinkingPhase === 'thinking') return 'Bramp AI is thinking…'
+    const browsingEmoji = emojiTick % 2 === 0 ? '🌍' : '🪙'
+    return `Bramp AI is browsing… ${browsingEmoji}`
+  }
+
   return (
-    <>
-      <style>
-        {`
-          /* Fix iOS viewport issues */
-          @supports (-webkit-touch-callout: none) {
-            html {
-              height: -webkit-fill-available;
-            }
-            body {
-              min-height: 100vh;
-              min-height: -webkit-fill-available;
-            }
-            .page {
-              min-height: 100vh;
-              min-height: -webkit-fill-available;
-            }
-          }
-          
-          /* Prevent safe area displacement during scroll */
-          @media (max-width: 480px) {
-            .composer {
-              padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
-            }
-            .footer {
-              padding-bottom: max(14px, calc(14px + env(safe-area-inset-bottom))) !important;
-            }
-          }
-        `}
-      </style>
-      <div className="page">
+    <div className="page">
       <header className="header">
         <div className="brand">
           <p className="tag">Secure access to digital assets & payments — via licensed partners.</p>
@@ -448,7 +492,7 @@ export default function App() {
             setMessages((prev) => [...prev, {
               id: crypto.randomUUID(),
               role: 'assistant',
-              text: `You're in, ${res.user.username || (res.user as any).firstname || 'there'}!`,
+              text: `You're in, ${res.user.username || res.user.firstname || 'there'}!`,
               ts: Date.now(),
             }])
             if (openSellAfterAuth) { setOpenSellAfterAuth(false); setShowSell(true) }
@@ -458,12 +502,12 @@ export default function App() {
       ) : showSignUp ? (
         <SignUp
           onCancel={() => setShowSignUp(false)}
-          onSuccess={(_res: SignUpResult) => {
+          onSuccess={(res: SignUpResult) => {
             setShowSignUp(false)
             setMessages((prev) => [...prev, {
               id: crypto.randomUUID(),
               role: 'assistant',
-              text: 'Account created. Please verify OTP to complete your signup.',
+              text: res.message || 'Account created. Please verify OTP to complete your signup.',
               ts: Date.now(),
             }])
             setShowSignIn(true)
@@ -476,6 +520,9 @@ export default function App() {
               <div key={m.id} className={`bubble ${m.role}`}>
                 <div className="role">
                   {m.role === 'user' ? 'You' : 'Bramp AI'}
+                  {m.isStreaming && (
+                    <span style={{ marginLeft: 8, fontSize: 12, opacity: 0.6, fontStyle: 'italic' }}>typing…</span>
+                  )}
                 </div>
                 <div className="text">
                   {renderMessageText(m.text)}
@@ -521,7 +568,7 @@ export default function App() {
                 </div>
               </div>
             ))}
-            {loading && <ThreeDotLoader />}
+            {(loading || isStreaming || isTyping) && <div className="typing">{getLoadingText()}</div>}
             <div ref={endRef} />
           </div>
 
@@ -529,19 +576,19 @@ export default function App() {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={loading ? 'Please wait…' : 'Try: Sell 100 USDT to NGN'}
+              placeholder={isStreaming || isTyping ? 'Please wait…' : 'Try: Sell 100 USDT to NGN'}
               autoFocus
-              disabled={loading}
+              disabled={isStreaming || isTyping}
             />
-            <button className="btn" disabled={loading || !input.trim()}>
-              {loading ? 'Typing…' : 'Send'}
+            <button className="btn" disabled={loading || isStreaming || isTyping || !input.trim()}>
+              {isTyping ? 'AI typing…' : isStreaming ? 'Streaming…' : loading ? 'Sending…' : 'Send'}
             </button>
           </form>
 
           <div className="hints">
-            <span className="hint" onClick={() => !loading && setInput('Sell 100 USDT to NGN')}>Sell 100 USDT to NGN</span>
-            <span className="hint" onClick={() => !loading && setInput('Show my portfolio balance')}>Show my portfolio balance</span>
-            <span className="hint" onClick={() => !loading && setInput('Current NGN rates')}>Current NGN rates</span>
+            <span className="hint" onClick={() => !(isStreaming || isTyping) && setInput('Sell 100 USDT to NGN')}>Sell 100 USDT to NGN</span>
+            <span className="hint" onClick={() => !(isStreaming || isTyping) && setInput('Show my portfolio balance')}>Show my portfolio balance</span>
+            <span className="hint" onClick={() => !(isStreaming || isTyping) && setInput('Current NGN rates')}>Current NGN rates</span>
           </div>
         </main>
       )}
@@ -557,6 +604,5 @@ export default function App() {
         <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
       </footer>
     </div>
-    </>
   )
 }

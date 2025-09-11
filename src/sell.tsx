@@ -57,6 +57,12 @@ type PayoutRes = {
   message?: string
 }
 
+type AccountResolutionRes = {
+  success: boolean
+  accountName?: string
+  message?: string
+}
+
 type SellModalProps = {
   open: boolean
   onClose: () => void
@@ -64,11 +70,9 @@ type SellModalProps = {
 }
 
 const TOKENS = ['USDT','USDC','BTC','ETH','SOL','BNB','MATIC','AVAX'] as const
-type TokenSym =
-  | 'USDT' | 'USDC' | 'BTC' | 'ETH'
-  | 'SOL'  | 'BNB'  | 'MATIC' | 'AVAX'
+type TokenSym = typeof TOKENS[number]
 
-const NETWORKS_BY_TOKEN: Record<TokenSym, Array<{ code: string; label: string }>> = {
+const NETWORKS_BY_TOKEN: Record<TokenSym, { code: string; label: string }[]> = {
   BTC:   [{ code: 'BTC', label: 'Bitcoin' }],
   ETH:   [{ code: 'ETH', label: 'Ethereum' }],
   SOL:   [{ code: 'SOL', label: 'Solana' }],
@@ -86,56 +90,12 @@ const NETWORKS_BY_TOKEN: Record<TokenSym, Array<{ code: string; label: string }>
   ],
 }
 
-// Enhanced token checking with async support for secure storage
-function useTokenStore() {
-  const [tokens, setTokens] = useState(() => tokenStore.getTokens())
-  const [isWaiting, setIsWaiting] = useState(false)
-  
-  useEffect(() => {
-    // If we don't have tokens on mount, wait for them
-    if (!tokens.access) {
-      setIsWaiting(true)
-      tokenStore.waitForTokens(3000).then((newTokens) => {
-        setTokens(newTokens)
-        setIsWaiting(false)
-      })
-    }
-  }, [])
-  
-  // Also poll periodically if we still don't have tokens
-  useEffect(() => {
-    if (tokens.access || isWaiting) return
-    
-    const interval = setInterval(() => {
-      const newTokens = tokenStore.getTokens()
-      if (newTokens.access) {
-        setTokens(newTokens)
-      }
-    }, 200)
-    
-    return () => clearInterval(interval)
-  }, [tokens.access, isWaiting])
-  
-  return { ...tokens, isWaiting }
-}
-
-function getHeaders(accessToken?: string) {
+function getHeaders() {
+  const { access } = tokenStore.getTokens()
   const h = new Headers()
   h.set('Content-Type', 'application/json')
-  if (accessToken) h.set('Authorization', `Bearer ${accessToken}`)
+  if (access) h.set('Authorization', `Bearer ${access}`)
   return h
-}
-
-async function fetchWithAuth(url: string, options: RequestInit = {}, accessToken?: string): Promise<Response> {
-  const headers = getHeaders(accessToken)
-  
-  return fetch(url, {
-    ...options,
-    headers: {
-      ...Object.fromEntries(headers),
-      ...Object.fromEntries(new Headers(options.headers || {}))
-    }
-  })
 }
 
 function prettyAmount(n: number) {
@@ -213,13 +173,12 @@ const smallMuted: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' }
 const row: React.CSSProperties = { display: 'flex', gap: 10, flexWrap: 'wrap' }
 const badge: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 12, padding: '6px 10px', borderRadius: 999, border: '1px solid var(--border)', background: '#0d1210' }
 const badgeWarn: React.CSSProperties = { ...badge, background: 'rgba(255, 170, 0, .08)', borderColor: 'rgba(255, 170, 0, .25)' }
+const badgeSuccess: React.CSSProperties = { ...badge, background: 'rgba(0, 115, 55, .12)', borderColor: 'rgba(0, 115, 55, .35)', color: '#4ade80' }
+const badgeError: React.CSSProperties = { ...badge, background: 'rgba(220, 50, 50, .1)', borderColor: 'rgba(220, 50, 50, .25)', color: '#f87171' }
 const errorBanner: React.CSSProperties = { ...card, background: 'rgba(220, 50, 50, .1)', borderColor: 'rgba(220, 50, 50, .25)' }
 const successCard: React.CSSProperties = { ...card, background: 'rgba(0, 115, 55, .12)', borderColor: 'rgba(0, 115, 55, .35)' }
 
 export default function SellModal({ open, onClose, onChatEcho }: SellModalProps) {
-  // Use reactive token store with async support
-  const { access: accessToken, isWaiting: tokenWaiting } = useTokenStore()
-  
   // Steps: 1 = Start Sell, 2 = Payout. Final summary is a sub-state of step 2.
   const [step, setStep] = useState<1 | 2>(1)
 
@@ -236,11 +195,16 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [bankCode, setBankCode] = useState('')
   const [accountNumber, setAccountNumber] = useState('')
   const [accountName, setAccountName] = useState('')
-  const [accountNameLoading, setAccountNameLoading] = useState(false)
-  const [accountNameError, setAccountNameError] = useState<string | null>(null)
   const [payLoading, setPayLoading] = useState(false)
   const [payError, setPayError] = useState<string | null>(null)
   const [payData, setPayData] = useState<PayoutRes | null>(null)
+
+  // Account Number Resolution
+  const [resolving, setResolving] = useState(false)
+  const [resolvedName, setResolvedName] = useState<string | null>(null)
+  const [resolutionError, setResolutionError] = useState<string | null>(null)
+  // useRef can be undefined initially — keep typings safe
+  const resolutionTimeoutRef = useRef<number | undefined>(undefined)
 
   // Countdown should start only AFTER payout is saved (local 10:00 window)
   const [summaryExpiresAt, setSummaryExpiresAt] = useState<string | null>(null)
@@ -266,8 +230,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     setBankCode('')
     setAccountNumber('')
     setAccountName('')
-    setAccountNameLoading(false)
-    setAccountNameError(null)
     setPayLoading(false)
     setPayError(null)
     setPayData(null)
@@ -275,6 +237,12 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     setBanksError(null)
     setBankOptions([])
     setSummaryExpiresAt(null)
+    setResolving(false)
+    setResolvedName(null)
+    setResolutionError(null)
+    if (resolutionTimeoutRef.current) {
+      clearTimeout(resolutionTimeoutRef.current)
+    }
     banksFetchedRef.current = false
   }, [open])
 
@@ -296,20 +264,15 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const firstInputRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null)
   useEffect(() => { firstInputRef.current?.focus() }, [step])
 
-  // Fetch banks once when entering Step 2 (wait for auth)
+  // Fetch banks once when entering Step 2
   useEffect(() => {
-    if (!open || step !== 2 || banksFetchedRef.current || !accessToken || tokenWaiting) return
+    if (!open || step !== 2 || banksFetchedRef.current) return
     banksFetchedRef.current = true
-    
     ;(async () => {
       setBanksLoading(true)
       setBanksError(null)
       try {
-        const res = await fetchWithAuth(`${API_BASE}/fetchnaira/naira-accounts`, {
-          method: 'GET',
-          cache: 'no-store'
-        }, accessToken)
-        
+        const res = await fetch(`${API_BASE}/fetchnaira/naira-accounts`, { method: 'GET', cache: 'no-store' })
         const json = await res.json()
         if (!res.ok) throw new Error(json?.error || `HTTP ${res.status}`)
 
@@ -336,51 +299,62 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         setBanksLoading(false)
       }
     })()
-  }, [open, step, accessToken, tokenWaiting])
+  }, [open, step])
 
-  // Resolve account name when account number is 10+ digits (wait for auth)
+  // Account Number Resolution Effect
   useEffect(() => {
-    if (!open || step !== 2 || !bankCode || !accountNumber || !accessToken || tokenWaiting) return
-    if (accountNumber.length < 10) {
-      setAccountName('')
-      setAccountNameError(null)
+    if (resolutionTimeoutRef.current) {
+      clearTimeout(resolutionTimeoutRef.current)
+    }
+
+    setResolvedName(null)
+    setResolutionError(null)
+
+    if (!bankCode || !accountNumber || accountNumber.length < 10) {
       return
     }
 
-    const timeoutId = setTimeout(async () => {
-      setAccountNameLoading(true)
-      setAccountNameError(null)
-      setAccountName('')
+    resolutionTimeoutRef.current = window.setTimeout(async () => {
+      setResolving(true)
+      setResolutionError(null)
       
       try {
-        const res = await fetchWithAuth(
-          `${API_BASE}/accountname/resolve?sortCode=${encodeURIComponent(bankCode)}&accountNumber=${encodeURIComponent(accountNumber)}`,
-          { method: 'GET' },
-          accessToken
-        )
+        const res = await fetch(`${API_BASE}/fetchnaira/resolve-account`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({
+            accountNumber: accountNumber.trim(),
+            bankCode: bankCode
+          }),
+        })
         
-        const data = await res.json()
+        const data: AccountResolutionRes = await res.json()
         
         if (!res.ok || !data.success) {
           throw new Error(data?.message || `HTTP ${res.status}`)
         }
         
-        if (data.data?.accountName) {
-          setAccountName(data.data.accountName)
-          setAccountNameError(null)
+        if (data.accountName) {
+          setResolvedName(data.accountName)
+          if (!accountName.trim()) {
+            setAccountName(data.accountName)
+          }
         } else {
-          throw new Error('Account name not found')
+          setResolutionError('Unable to resolve account name')
         }
       } catch (err: any) {
-        setAccountNameError(err.message || 'Failed to resolve account name')
-        setAccountName('')
+        setResolutionError(err.message || 'Failed to resolve account')
       } finally {
-        setAccountNameLoading(false)
+        setResolving(false)
       }
-    }, 500) // Debounce for 500ms
+    }, 800)
 
-    return () => clearTimeout(timeoutId)
-  }, [open, step, bankCode, accountNumber, accessToken, tokenWaiting])
+    return () => {
+      if (resolutionTimeoutRef.current) {
+        clearTimeout(resolutionTimeoutRef.current)
+      }
+    }
+  }, [accountNumber, bankCode, accountName])
 
   async function submitInitiate(e: React.FormEvent) {
     e.preventDefault()
@@ -389,23 +363,17 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       setInitError('Enter a valid amount')
       return
     }
-    
-    if (!accessToken) {
-      setInitError('Please sign in first')
-      return
-    }
-    
     setInitLoading(true)
     try {
-      const res = await fetchWithAuth(`${API_BASE}/sell/initiate`, {
+      const res = await fetch(`${API_BASE}/sell/initiate`, {
         method: 'POST',
+        headers: getHeaders(),
         body: JSON.stringify({ token, network, sellAmount: +amount }),
-      }, accessToken)
-      
+      })
       const data: InitiateSellRes = await res.json()
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
       setInitData(data)
-      // Go straight to payout (no deposit-details screen)
+      // 🚀 Go straight to payout (no deposit-details screen)
       setStep(2)
     } catch (err: any) {
       setInitError(err.message || 'Failed to initiate sell')
@@ -421,20 +389,19 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       setPayError('Fill in all bank fields')
       return
     }
+    if (resolvedName && accountName.trim().toLowerCase() !== resolvedName.trim().toLowerCase()) {
+      setPayError('Account name does not match the resolved name. Please check your details.')
+      return
+    }
     if (!initData?.paymentId) {
       setPayError('Missing paymentId — restart the sell flow')
       return
     }
-    
-    if (!accessToken) {
-      setPayError('Please sign in first')
-      return
-    }
-    
     setPayLoading(true)
     try {
-      const res = await fetchWithAuth(`${API_BASE}/sell/payout`, {
+      const res = await fetch(`${API_BASE}/sell/payout`, {
         method: 'POST',
+        headers: getHeaders(),
         body: JSON.stringify({
           paymentId: initData.paymentId,
           bankName,
@@ -442,13 +409,12 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
           accountNumber,
           accountName,
         }),
-      }, accessToken)
-      
+      })
       const data: PayoutRes = await res.json()
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
       setPayData(data)
       onChatEcho?.(buildPayoutRecap(initData, data))
-      // Start a fresh local 10:00 window AFTER payout is captured
+      // ⏱ Start a fresh local 10:00 window AFTER payout is captured
       setSummaryExpiresAt(new Date(Date.now() + 10 * 60 * 1000).toISOString())
     } catch (err: any) {
       setPayError(err.message || 'Failed to save payout details')
@@ -457,7 +423,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     }
   }
 
-  // Auto-close when the countdown expires on the final summary
+  // 🔔 Auto-close when the countdown expires on the final summary
   const showFinalSummary = !!payData
   useEffect(() => {
     if (!open) return
@@ -475,29 +441,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   }
 
   if (!open) return null
-
-  // Show loading state while waiting for tokens
-  if (tokenWaiting || (!accessToken)) {
-    return createPortal(
-      <div style={overlayStyle} role="dialog" aria-modal="true">
-        <div style={{...sheetStyle, padding: 40, textAlign: 'center' as const, minHeight: 200, placeItems: 'center'}}>
-          <div style={{marginBottom: 16}}>
-            <div style={{ width: 24, height: 24, border: '2px solid var(--border)', borderTop: '2px solid var(--accent)', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }}></div>
-          </div>
-          <div style={{color: 'var(--muted)'}}>
-            {tokenWaiting ? 'Waiting for authentication...' : 'Please sign in to continue'}
-          </div>
-          {!tokenWaiting && (
-            <button style={{...btnPrimary, marginTop: 16}} onClick={onClose}>Close</button>
-          )}
-        </div>
-        <style>
-          {`@keyframes spin{from{transform:rotate(0deg)} to{transform:rotate(360deg)}}`}
-        </style>
-      </div>,
-      document.body
-    )
-  }
 
   const headerTitle =
     step === 1 ? 'Start a Sell'
@@ -660,31 +603,40 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                         value={accountNumber}
                         onChange={e => setAccountNumber(e.target.value)}
                         placeholder="e.g. 0123456789"
+                        inputMode="numeric"
+                        maxLength={10}
                       />
+                      {resolving && (
+                        <div style={{ ...smallMuted, marginTop: 4 }}>
+                          <span style={badge}>⏳ Resolving...</span>
+                        </div>
+                      )}
+                      {resolutionError && (
+                        <div style={{ ...smallMuted, marginTop: 4 }}>
+                          <span style={badgeError}>✗ {resolutionError}</span>
+                        </div>
+                      )}
+                      {resolvedName && (
+                        <div style={{ ...smallMuted, marginTop: 4 }}>
+                          <span style={badgeSuccess}>✓ {resolvedName}</span>
+                        </div>
+                      )}
                     </label>
 
-                    <label style={inputWrap}>
+                    <label style={{ ...inputWrap, gridColumn: '1 / span 2' }}>
                       <span style={labelText}>Account Name</span>
-                      <div style={{ ...inputBase, background: '#1a1d23', color: accountName ? 'var(--txt)' : 'var(--muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {accountNameLoading ? (
-                          <>
-                            <div style={{ width: 12, height: 12, border: '2px solid var(--border)', borderTop: '2px solid var(--accent)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-                            Resolving...
-                          </>
-                        ) : accountNameError ? (
-                          <span style={{ color: '#ff6b6b' }}>{accountNameError}</span>
-                        ) : accountName ? (
-                          accountName
-                        ) : 
-                          'Enter account number'
-                        }
-                      </div>
+                      <input
+                        style={inputBase}
+                        value={accountName}
+                        onChange={e => setAccountName(e.target.value)}
+                        placeholder="e.g. Aduke Oslo Okoro"
+                      />
                     </label>
 
                     <div style={{ gridColumn: '1 / span 2', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
                       <button
                         style={btnPrimary}
-                        disabled={payLoading || !bankCode || banksLoading || !accountName}
+                        disabled={payLoading || !bankCode || banksLoading || resolving}
                       >
                         {payLoading ? 'Saving…' : 'Save Payout & Show Summary'}
                       </button>
@@ -720,8 +672,9 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                       <div style={kStyle}>You Receive</div>
                       <div>
                         <div style={vStyle}>
-                          {prettyNgn(initData.quote.receiveAmount || 0)} ({initData.quote.receiveCurrency})
+                          {prettyNgn((initData.quote.receiveAmount) || 0)} ({initData.quote.receiveCurrency})
                         </div>
+                        {/* 👇 Fixed transaction fee directly under "You Receive" */}
                         <div style={{ ...smallMuted, marginTop: 4 }}>
                           Transaction fee (fixed): <strong>70&nbsp;NGN</strong>
                         </div>
@@ -784,10 +737,13 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         <div style={footerStyle}>
           <div style={smallMuted}>
             {step === 1
-              ? 'We\'ll capture your payout next.'
-              : (showFinalSummary
-                  ? 'Copy the deposit details and send the exact amount within the window.'
-                  : 'Ensure your bank details match your account name.')}
+              ? "We'll capture your payout next."
+              : (
+                  showFinalSummary
+                    ? 'Copy the deposit details and send the exact amount within the window.'
+                    : 'Ensure your bank details match your account name.'
+                )
+            }
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
             {step === 2 ? (
@@ -805,7 +761,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
       {/* Tiny animation keyframes */}
       <style>
-        {`@keyframes scaleIn{from{transform:translateY(8px) scale(.98); opacity:0} to{transform:none; opacity:1}} @keyframes spin{from{transform:rotate(0deg)} to{transform:rotate(360deg)}}`}
+        {`@keyframes scaleIn{from{transform:translateY(8px) scale(.98); opacity:.0} to{transform:none; opacity:1}}`}
       </style>
     </div>,
     document.body
