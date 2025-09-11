@@ -263,7 +263,7 @@ export default function App() {
       id: crypto.randomUUID(),
       role: 'assistant',
       text:
-        "👋 Hey there! I'm Ada — your personal Bramp assistant for everything crypto. Please Sign in for full access ",
+        "👋 Hey there! I'm Ada — your personal Bramp assistant for everything crypto. Please Sign up or Sign in for full access😊",
       ts: Date.now(),
     },
   ])
