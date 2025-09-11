@@ -127,22 +127,37 @@ function prettyNgn(n: number) {
   return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 2 }).format(n)
 }
 
+/**
+ * useCountdown(expiryIso?)
+ * - If expiryIso is absent/undefined/null, treat as "countdown not started" (expired = false).
+ * - When expiryIso is provided, returns msLeft, text, and expired boolean.
+ */
 function useCountdown(expiryIso?: string | null) {
+  // Initialize msLeft to 0 when no expiry is given (pre-countdown)
   const [msLeft, setMsLeft] = useState<number>(() => {
     if (!expiryIso) return 0
     return Math.max(0, new Date(expiryIso).getTime() - Date.now())
   })
+
   useEffect(() => {
-    if (!expiryIso) return
-    const t = setInterval(() => {
-      const left = Math.max(0, new Date(expiryIso).getTime() - Date.now())
-      setMsLeft(left)
-    }, 250)
+    if (!expiryIso) {
+      // Pre-countdown state: ensure msLeft is 0 and no interval runs
+      setMsLeft(0)
+      return
+    }
+    const update = () => {
+      setMsLeft(Math.max(0, new Date(expiryIso).getTime() - Date.now()))
+    }
+    update()
+    const t = setInterval(update, 250)
     return () => clearInterval(t)
   }, [expiryIso])
+
   const mm = Math.floor(msLeft / 60000)
   const ss = Math.floor((msLeft % 60000) / 1000)
-  return { msLeft, text: `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`, expired: msLeft <= 0 }
+  // If no expiry provided, expired = false (we haven't started counting down yet)
+  const expired = expiryIso ? msLeft <= 0 : false
+  return { msLeft, text: `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`, expired }
 }
 
 function toNetworkLabel(token: string, code: string) {
@@ -199,8 +214,13 @@ const errorBanner: React.CSSProperties = { ...card, background: 'rgba(220, 50, 5
 const successCard: React.CSSProperties = { ...card, background: 'rgba(0, 115, 55, .12)', borderColor: 'rgba(0, 115, 55, .35)' }
 
 export default function SellModal({ open, onClose, onChatEcho }: SellModalProps) {
-  // Steps: 1 = Start Sell, 2 = Payout. Final summary is a sub-state of step 2.
-  const [step, setStep] = useState<1 | 2>(1)
+  /**
+   * flowState: explicit small enum for flow
+   * - 'idle' : initial screen (Start a Sell)
+   * - 'initiated' : sell initiated; show payout form and fetch banks
+   * - 'complete' : payout saved; show final summary and countdown
+   */
+  const [flowState, setFlowState] = useState<'idle' | 'initiated' | 'complete'>('idle')
 
   // Step 1 (Start Sell)
   const [token, setToken] = useState<TokenSym>('USDT')
@@ -229,12 +249,13 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [banksLoading, setBanksLoading] = useState(false)
   const [banksError, setBanksError] = useState<string | null>(null)
   const [bankOptions, setBankOptions] = useState<BankOption[]>([])
+
   const banksFetchedRef = useRef(false)
 
   // Reset on open
   useEffect(() => {
     if (!open) return
-    setStep(1)
+    setFlowState('idle')
     setToken('USDT')
     setNetwork(NETWORKS_BY_TOKEN['USDT'][0].code)
     setAmount('100')
@@ -271,13 +292,13 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onClose])
 
-  // Autofocus per step
+  // Autofocus per flowState
   const firstInputRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null)
-  useEffect(() => { firstInputRef.current?.focus() }, [step])
+  useEffect(() => { firstInputRef.current?.focus() }, [flowState])
 
-  // Fetch banks once when entering Step 2
+  // Fetch banks once when entering 'initiated' (i.e., payout form)
   useEffect(() => {
-    if (!open || step !== 2 || banksFetchedRef.current) return
+    if (!open || flowState !== 'initiated' || banksFetchedRef.current) return
     banksFetchedRef.current = true
     ;(async () => {
       setBanksLoading(true)
@@ -314,11 +335,11 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         setBanksLoading(false)
       }
     })()
-  }, [open, step])
+  }, [open, flowState])
 
-  // Resolve account name when account number is 10+ digits
+  // Resolve account name when account number is 10+ digits (only while in payout form)
   useEffect(() => {
-    if (!open || step !== 2 || !bankCode || !accountNumber) return
+    if (!open || flowState !== 'initiated' || !bankCode || !accountNumber) return
     if (accountNumber.length < 10) {
       setAccountName('')
       setAccountNameError(null)
@@ -360,7 +381,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     }, 500) // Debounce for 500ms
 
     return () => clearTimeout(timeoutId)
-  }, [open, step, bankCode, accountNumber])
+  }, [open, flowState, bankCode, accountNumber])
 
   async function submitInitiate(e: React.FormEvent) {
     e.preventDefault()
@@ -379,7 +400,8 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       const data: InitiateSellRes = await res.json()
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
       setInitData(data)
-      setStep(2)
+      // Move to payout form state
+      setFlowState('initiated')
     } catch (err: any) {
       setInitError(err.message || 'Failed to initiate sell')
     } finally {
@@ -458,26 +480,19 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         throw new Error('Missing payout details in response')
       }
 
-      console.log('✅ Payout validation passed, setting payData...')
-      console.log('🎯 About to set payData with:', {
-        paymentId: data.paymentId,
-        status: data.status,
-        hasPayout: !!data.payout
-      })
+      console.log('✅ Payout validation passed, preparing to show summary...')
 
-      // Set the data - this should trigger the summary to show
+      // Start 10-minute countdown AFTER payout is captured
+      const expiryTime = new Date(Date.now() + 10 * 60 * 1000).toISOString()
+      console.log('⏰ Setting countdown expiry to:', expiryTime)
+      // Set expiry first to avoid a window where payData is true but expiry is unset
+      setSummaryExpiresAt(expiryTime)
+
+      // Now set the data - this will make final summary visible
       setPayData(data)
+      setFlowState('complete')
       
-      console.log('✅ PayData set, triggering re-render...')
-
-      // Force a re-render on cold start by using a small delay
-      if (performance.getEntriesByType('navigation').length === 0 || 
-          (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming)?.type === 'reload') {
-        console.log('🔄 Cold start detected, forcing re-render...')
-        setTimeout(() => {
-          setPayData(prevData => prevData ? {...prevData} : prevData)
-        }, 50)
-      }
+      console.log('🎉 Payout flow completed successfully!')
 
       // Send to chat
       try {
@@ -489,37 +504,32 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         console.warn('⚠️ Chat echo failed:', chatError)
       }
 
-      // Start 10-minute countdown AFTER payout is captured
-      const expiryTime = new Date(Date.now() + 10 * 60 * 1000).toISOString()
-      console.log('⏰ Setting countdown expiry to:', expiryTime)
-      setSummaryExpiresAt(expiryTime)
-
-      console.log('🎉 Payout flow completed successfully!')
-
-      // Nuclear option: force complete re-render by updating multiple states
+      // UI stabilization tick - keep behaviour similar to previous "nuclear" step
       setTimeout(() => {
-        console.log('💥 Nuclear re-render triggered')
-        setStep(2) // Force step state update
-        setPayLoading(false) // Ensure loading is off
+        console.log('💥 Post-payout UI stabilization tick')
+        setPayLoading(false)
       }, 100)
 
     } catch (err: any) {
       console.error('💥 Payout failed:', err)
       setPayError(err.message || 'Failed to save payout details')
+      setPayLoading(false)
     } finally {
+      // Ensure loading state cleared in all paths
       setPayLoading(false)
       console.log('🏁 Payout loading state cleared')
     }
   }
 
   // Auto-close when the countdown expires on the final summary
-  const showFinalSummary = !!payData
+  const showFinalSummary = flowState === 'complete' && !!payData
   useEffect(() => {
     if (!open) return
+    if (!summaryExpiresAt) return // don't auto-close until expiry is actually set
     if (showFinalSummary && expired) {
       onClose()
     }
-  }, [open, showFinalSummary, expired, onClose])
+  }, [open, showFinalSummary, expired, onClose, summaryExpiresAt])
 
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
   function copyToClipboard(text: string, key: string) {
@@ -532,8 +542,8 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   if (!open) return null
 
   const headerTitle =
-    step === 1 ? 'Start a Sell'
-    : (!payData ? 'Payout Details' : 'Transaction Summary')
+    flowState === 'idle' ? 'Start a Sell'
+    : (flowState === 'initiated' ? 'Payout Details' : 'Transaction Summary')
 
   return createPortal(
     <div style={overlayStyle} role="dialog" aria-modal="true" aria-labelledby="sell-title" onClick={onClose}>
@@ -547,9 +557,9 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
             <div>
               <div id="sell-title" style={{ fontWeight: 700 }}>{headerTitle}</div>
               <div style={stepperStyle}>
-                <span style={dot(step === 1)}></span> Step 1 — Start
+                <span style={dot(flowState === 'idle')}></span> Step 1 — Start
                 <span style={{ opacity: .4, padding: '0 6px' }}>•</span>
-                <span style={dot(step === 2)}></span> Step 2 — Payout
+                <span style={dot(flowState !== 'idle')}></span> Step 2 — Payout
               </div>
             </div>
           </div>
@@ -559,7 +569,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         {/* Body */}
         <div style={bodyStyle}>
           {/* STEP 1 — Start a Sell */}
-          {step === 1 && (
+          {flowState === 'idle' && (
             <div style={{ display: 'grid', gap: 14 }}>
               <p style={{ margin: 0, color: 'var(--muted)' }}>
                 Choose token, network, and amount. We'll capture payout next.
@@ -618,7 +628,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
           )}
 
           {/* STEP 2 — Payout (then Summary with countdown) */}
-          {step === 2 && (
+          {flowState !== 'idle' && (
             <div style={{ display: 'grid', gap: 14 }}>
               {!initData && (
                 <div role="alert" style={errorBanner}>
@@ -630,12 +640,12 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
               {import.meta.env?.DEV && (
                 <div style={{...card, background: '#1a1a1a', marginTop: 10}}>
                   <div style={{fontSize: 11, color: '#888'}}>
-                    Debug: initData={!!initData} | payData={!!payData} | payLoading={payLoading} | showSummary={showFinalSummary}
+                    Debug: initData={!!initData} | payData={!!payData} | payLoading={payLoading} | flowState={flowState}
                   </div>
                 </div>
               )}
 
-              {initData && !showFinalSummary && (
+              {initData && flowState === 'initiated' && !payData && (
                 <>
                   <div style={card}>
                     <h3 style={{ margin: 0, fontSize: 16 }}>Sell Summary</h3>
@@ -824,16 +834,19 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         {/* Footer */}
         <div style={footerStyle}>
           <div style={smallMuted}>
-            {step === 1
+            {flowState === 'idle'
               ? 'We\'ll capture your payout next.'
               : (showFinalSummary
                   ? 'Copy the deposit details and send the exact amount within the window.'
                   : 'Ensure your bank details match your account name.')}
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
-            {step === 2 ? (
+            {flowState !== 'idle' ? (
               !showFinalSummary ? (
-                <button style={btn} onClick={() => setStep(1)}>← Back</button>
+                <button style={btn} onClick={() => {
+                  // Back to the start screen where user can change token/amount
+                  setFlowState('idle')
+                }}>← Back</button>
               ) : (
                 <button style={btn} onClick={onClose}>Close</button>
               )
