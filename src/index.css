@@ -14,6 +14,13 @@
   --appbar-h: 56px;
   --composer-h: 64px;
   --max-chat-width: 860px;
+
+  /* Background image controls (set --bg-image-url via JS, e.g. document.documentElement.style.setProperty('--bg-image-url', `url(${bg})`)) */
+  --bg-image-url: none;
+  --bg-image-position: center;
+  --bg-image-size: cover;
+  --bg-overlay-top-alpha: 0.50;
+  --bg-overlay-bottom-alpha: 0.9;
 }
 
 /* Reset / touch */
@@ -49,11 +56,50 @@ a { color: var(--accent); text-decoration: none; }
 a:hover { opacity: .92; }
 
 /* =================== Layout =================== */
+
+/* .page now hosts the background image layer via pseudo-elements.
+   The actual content is positioned above the image. */
 .page {
+  position: relative; /* needed for the pseudo-elements */
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden; /* critical: prevent body scroll, only .messages scrolls */
+  background: var(--bg); /* fallback color while asset loads */
+}
+
+/* background image layer */
+.page::before {
+  content: "";
+  position: absolute;
+  inset: 0; /* top:0; right:0; bottom:0; left:0; */
+  pointer-events: none;
+  background-image: var(--bg-image-url);
+  background-position: var(--bg-image-position);
+  background-size: var(--bg-image-size);
+  background-repeat: no-repeat;
+  z-index: 0;
+  transform: translateZ(0); /* improves paint on some mobile browsers */
+  will-change: transform, opacity;
+}
+
+/* dark tint overlay on top of the image so text remains readable */
+.page::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg,
+    rgba(11,11,16,var(--bg-overlay-top-alpha)),
+    rgba(11,11,16,var(--bg-overlay-bottom-alpha))
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ensure content sits above image & overlay */
+.page > * {
+  position: relative;
+  z-index: 2;
 }
 
 /* Header: compact, collapsible on mobile but keep auth buttons visible */
@@ -271,7 +317,7 @@ button, .hint { -webkit-tap-highlight-color: transparent; }
   }
   .header { padding: calc(12px + var(--sa-top)) 12px 12px; }
   .chat { padding: 0; max-width: 100%; }
-  .messages { gap: 14px; padding-bottom: calc(var(--composer_h) + var(--sa-bottom) + 22px); }
+  .messages { gap: 14px; padding-bottom: calc(var(--composer-h) + var(--sa-bottom) + 22px); }
   .bubble { padding: 14px 16px; }
   .btn { min-height: 44px; padding: 10px 14px; font-size: 15px; border-radius: 12px; }
   .composer { grid-template-columns: 1fr auto; gap: 10px; padding: 10px 12px calc(10px + var(--sa-bottom)); }

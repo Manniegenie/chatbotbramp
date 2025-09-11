@@ -3,8 +3,11 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
 import './index.css'
+import bg from './assets/bg.jpg' // <-- import your background image (adjust filename)
 
+//
 // Inject Google Fonts <link> tags (so you don't have to touch index.html)
+//
 ;(function injectGeistLinks() {
   // avoid duplicates if HMR reloads
   if (document.querySelector('link[href*="family=Geist"]')) return
@@ -26,7 +29,12 @@ import './index.css'
   document.head.append(preconnect1, preconnect2, stylesheet)
 })()
 
+// --- set background image CSS variable on :root (bundler will resolve the URL) ---
+document.documentElement.style.setProperty('--bg-image-url', `url(${bg})`)
+
+//
 // --- Prevent iOS focus zoom only while editing (keeps pinch-zoom otherwise) ---
+//
 const BASE_VIEWPORT = 'width=device-width, initial-scale=1, viewport-fit=cover'
 
 function getOrCreateViewportMeta(): HTMLMetaElement {
