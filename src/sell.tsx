@@ -221,9 +221,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [payError, setPayError] = useState<string | null>(null)
   const [payData, setPayData] = useState<PayoutRes | null>(null)
 
-  // NEW: manual summary toggle state (fixes TS2304 errors)
-  const [showSummaryManually, setShowSummaryManually] = useState(false)
-
   // Countdown starts only AFTER payout is saved (10 minutes)
   const [summaryExpiresAt, setSummaryExpiresAt] = useState<string | null>(null)
   const { text: countdown, expired } = useCountdown(summaryExpiresAt)
@@ -257,8 +254,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     setBanksError(null)
     setBankOptions([])
     setSummaryExpiresAt(null)
-    // Reset manual summary flag on open
-    setShowSummaryManually(false)
     banksFetchedRef.current = false
   }, [open])
 
@@ -464,6 +459,11 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       }
 
       console.log('✅ Payout validation passed, setting payData...')
+      console.log('🎯 About to set payData with:', {
+        paymentId: data.paymentId,
+        status: data.status,
+        hasPayout: !!data.payout
+      })
 
       // Set the data - this should trigger the summary to show
       setPayData(data)
@@ -630,7 +630,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
               {import.meta.env?.DEV && (
                 <div style={{...card, background: '#1a1a1a', marginTop: 10}}>
                   <div style={{fontSize: 11, color: '#888'}}>
-                    Debug: initData={!!initData} | payData={!!payData} | payLoading={payLoading} | showSummary={showFinalSummary} | manual={showSummaryManually}
+                    Debug: initData={!!initData} | payData={!!payData} | payLoading={payLoading} | showSummary={showFinalSummary}
                   </div>
                 </div>
               )}
@@ -731,19 +731,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                       </button>
                     </div>
                   </form>
-
-                  {/* Show manual summary button after payout succeeds */}
-                  {payData && !showSummaryManually && (
-                    <div style={{...card, background: 'rgba(0, 115, 55, .12)', borderColor: 'rgba(0, 115, 55, .35)', textAlign: 'center'}}>
-                      <div style={{marginBottom: 12}}>✅ Payout details saved successfully!</div>
-                      <button 
-                        style={btnPrimary} 
-                        onClick={() => setShowSummaryManually(true)}
-                      >
-                        View Transaction Summary
-                      </button>
-                    </div>
-                  )}
                 </>
               )}
 
