@@ -546,14 +546,16 @@ export default function App() {
         </main>
       )}
 
-      {/* FIXED: Pass auth tokens directly to modals */}
+      {/* FIXED: Pass auth tokens directly to modals and force remount via key */}
       <SellModal 
+        key={showSell ? 'sell-open' : 'sell-closed'} // force full remount when toggling
         open={showSell} 
         onClose={() => setShowSell(false)} 
         onChatEcho={echoFromModalToChat}
         authToken={auth?.accessToken || null}
       />
       <BuyModal  
+        key={showBuy ? 'buy-open' : 'buy-closed'} // force full remount when toggling
         open={showBuy}  
         onClose={() => setShowBuy(false)}  
         onChatEcho={echoFromModalToChat}
