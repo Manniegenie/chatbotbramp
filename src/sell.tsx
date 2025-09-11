@@ -1,7 +1,6 @@
-// src/sell.tsx
+// src/sell.tsx - FIXED VERSION
 import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { tokenStore } from './lib/secureStore'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -61,6 +60,7 @@ type SellModalProps = {
   open: boolean
   onClose: () => void
   onChatEcho?: (text: string) => void
+  authToken: string | null  // 🔧 NEW: Accept token as prop
 }
 
 const TOKENS = ['USDT','USDC','BTC','ETH','SOL','BNB','MATIC','AVAX'] as const
@@ -86,56 +86,11 @@ const NETWORKS_BY_TOKEN: Record<TokenSym, Array<{ code: string; label: string }>
   ],
 }
 
-// Enhanced token checking with async support for secure storage
-function useTokenStore() {
-  const [tokens, setTokens] = useState(() => tokenStore.getTokens())
-  const [isWaiting, setIsWaiting] = useState(false)
-  
-  useEffect(() => {
-    // If we don't have tokens on mount, wait for them
-    if (!tokens.access) {
-      setIsWaiting(true)
-      tokenStore.waitForTokens(3000).then((newTokens) => {
-        setTokens(newTokens)
-        setIsWaiting(false)
-      })
-    }
-  }, [])
-  
-  // Also poll periodically if we still don't have tokens
-  useEffect(() => {
-    if (tokens.access || isWaiting) return
-    
-    const interval = setInterval(() => {
-      const newTokens = tokenStore.getTokens()
-      if (newTokens.access) {
-        setTokens(newTokens)
-      }
-    }, 200)
-    
-    return () => clearInterval(interval)
-  }, [tokens.access, isWaiting])
-  
-  return { ...tokens, isWaiting }
-}
-
 function getHeaders(accessToken?: string) {
   const h = new Headers()
   h.set('Content-Type', 'application/json')
   if (accessToken) h.set('Authorization', `Bearer ${accessToken}`)
   return h
-}
-
-async function fetchWithAuth(url: string, options: RequestInit = {}, accessToken?: string): Promise<Response> {
-  const headers = getHeaders(accessToken)
-  
-  return fetch(url, {
-    ...options,
-    headers: {
-      ...Object.fromEntries(headers),
-      ...Object.fromEntries(new Headers(options.headers || {}))
-    }
-  })
 }
 
 function prettyAmount(n: number) {
@@ -216,9 +171,8 @@ const badgeWarn: React.CSSProperties = { ...badge, background: 'rgba(255, 170, 0
 const errorBanner: React.CSSProperties = { ...card, background: 'rgba(220, 50, 50, .1)', borderColor: 'rgba(220, 50, 50, .25)' }
 const successCard: React.CSSProperties = { ...card, background: 'rgba(0, 115, 55, .12)', borderColor: 'rgba(0, 115, 55, .35)' }
 
-export default function SellModal({ open, onClose, onChatEcho }: SellModalProps) {
-  // Use reactive token store with async support
-  const { access: accessToken, isWaiting: tokenWaiting } = useTokenStore()
+export default function SellModal({ open, onClose, onChatEcho, authToken }: SellModalProps) {
+  // 🔧 REMOVED: useTokenStore() - now using authToken prop directly
   
   // Steps: 1 = Start Sell, 2 = Payout. Final summary is a sub-state of step 2.
   const [step, setStep] = useState<1 | 2>(1)
@@ -296,19 +250,20 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const firstInputRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null)
   useEffect(() => { firstInputRef.current?.focus() }, [step])
 
-  // Fetch banks once when entering Step 2 (wait for auth)
+  // 🔧 SIMPLIFIED: Fetch banks once when entering Step 2 (no token waiting)
   useEffect(() => {
-    if (!open || step !== 2 || banksFetchedRef.current || !accessToken || tokenWaiting) return
+    if (!open || step !== 2 || banksFetchedRef.current || !authToken) return
     banksFetchedRef.current = true
     
     ;(async () => {
       setBanksLoading(true)
       setBanksError(null)
       try {
-        const res = await fetchWithAuth(`${API_BASE}/fetchnaira/naira-accounts`, {
+        const res = await fetch(`${API_BASE}/fetchnaira/naira-accounts`, {
           method: 'GET',
+          headers: getHeaders(authToken),
           cache: 'no-store'
-        }, accessToken)
+        })
         
         const json = await res.json()
         if (!res.ok) throw new Error(json?.error || `HTTP ${res.status}`)
@@ -336,11 +291,11 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         setBanksLoading(false)
       }
     })()
-  }, [open, step, accessToken, tokenWaiting])
+  }, [open, step, authToken]) // 🔧 Simplified dependencies
 
-  // Resolve account name when account number is 10+ digits (wait for auth)
+  // 🔧 SIMPLIFIED: Resolve account name when account number is 10+ digits
   useEffect(() => {
-    if (!open || step !== 2 || !bankCode || !accountNumber || !accessToken || tokenWaiting) return
+    if (!open || step !== 2 || !bankCode || !accountNumber || !authToken) return
     if (accountNumber.length < 10) {
       setAccountName('')
       setAccountNameError(null)
@@ -353,10 +308,12 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       setAccountName('')
       
       try {
-        const res = await fetchWithAuth(
+        const res = await fetch(
           `${API_BASE}/accountname/resolve?sortCode=${encodeURIComponent(bankCode)}&accountNumber=${encodeURIComponent(accountNumber)}`,
-          { method: 'GET' },
-          accessToken
+          {
+            method: 'GET',
+            headers: getHeaders(authToken)
+          }
         )
         
         const data = await res.json()
@@ -377,10 +334,10 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       } finally {
         setAccountNameLoading(false)
       }
-    }, 500) // Debounce for 500ms
+    }, 500)
 
     return () => clearTimeout(timeoutId)
-  }, [open, step, bankCode, accountNumber, accessToken, tokenWaiting])
+  }, [open, step, bankCode, accountNumber, authToken]) // 🔧 Simplified dependencies
 
   async function submitInitiate(e: React.FormEvent) {
     e.preventDefault()
@@ -390,17 +347,18 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       return
     }
     
-    if (!accessToken) {
+    if (!authToken) {
       setInitError('Please sign in first')
       return
     }
     
     setInitLoading(true)
     try {
-      const res = await fetchWithAuth(`${API_BASE}/sell/initiate`, {
+      const res = await fetch(`${API_BASE}/sell/initiate`, {
         method: 'POST',
+        headers: getHeaders(authToken),
         body: JSON.stringify({ token, network, sellAmount: +amount }),
-      }, accessToken)
+      })
       
       const data: InitiateSellRes = await res.json()
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
@@ -426,15 +384,16 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       return
     }
     
-    if (!accessToken) {
+    if (!authToken) {
       setPayError('Please sign in first')
       return
     }
     
     setPayLoading(true)
     try {
-      const res = await fetchWithAuth(`${API_BASE}/sell/payout`, {
+      const res = await fetch(`${API_BASE}/sell/payout`, {
         method: 'POST',
+        headers: getHeaders(authToken),
         body: JSON.stringify({
           paymentId: initData.paymentId,
           bankName,
@@ -442,7 +401,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
           accountNumber,
           accountName,
         }),
-      }, accessToken)
+      })
       
       const data: PayoutRes = await res.json()
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
@@ -476,24 +435,16 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
   if (!open) return null
 
-  // Show loading state while waiting for tokens
-  if (tokenWaiting || (!accessToken)) {
+  // 🔧 SIMPLIFIED: Show auth required message if no token
+  if (!authToken) {
     return createPortal(
       <div style={overlayStyle} role="dialog" aria-modal="true">
         <div style={{...sheetStyle, padding: 40, textAlign: 'center' as const, minHeight: 200, placeItems: 'center'}}>
-          <div style={{marginBottom: 16}}>
-            <div style={{ width: 24, height: 24, border: '2px solid var(--border)', borderTop: '2px solid var(--accent)', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }}></div>
-          </div>
-          <div style={{color: 'var(--muted)'}}>
-            {tokenWaiting ? 'Waiting for authentication...' : 'Please sign in to continue'}
-          </div>
-          {!tokenWaiting && (
-            <button style={{...btnPrimary, marginTop: 16}} onClick={onClose}>Close</button>
-          )}
+          <div style={{marginBottom: 16, fontSize: 24}}>🔐</div>
+          <h3 style={{margin: '0 0 8px 0', fontSize: 18}}>Authentication Required</h3>
+          <div style={{color: 'var(--muted)', marginBottom: 20}}>Please sign in to continue with your transaction</div>
+          <button style={btnPrimary} onClick={onClose}>Close</button>
         </div>
-        <style>
-          {`@keyframes spin{from{transform:rotate(0deg)} to{transform:rotate(360deg)}}`}
-        </style>
       </div>,
       document.body
     )

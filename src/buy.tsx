@@ -1,7 +1,6 @@
 // src/buy.tsx
 import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { tokenStore } from './lib/secureStore'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -9,6 +8,7 @@ type BuyModalProps = {
   open: boolean
   onClose: () => void
   onChatEcho?: (text: string) => void
+  authToken: string | null  // 🔧 NEW: Accept token as prop
 }
 
 const TOKENS = ['USDT','USDC','BTC','ETH','SOL','BNB','MATIC','AVAX'] as const
@@ -63,11 +63,11 @@ type InitiateBuyRes = {
   message?: string
 }
 
-function getHeaders() {
-  const { access } = tokenStore.getTokens()
+// 🔧 UPDATED: Accept token as parameter
+function getHeaders(accessToken?: string) {
   const h = new Headers()
   h.set('Content-Type', 'application/json')
-  if (access) h.set('Authorization', `Bearer ${access}`)
+  if (accessToken) h.set('Authorization', `Bearer ${accessToken}`)
   return h
 }
 
@@ -104,7 +104,7 @@ const card: React.CSSProperties = { border: '1px solid var(--border)', borderRad
 const smallMuted: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' }
 const mono: React.CSSProperties = { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace' }
 
-export default function BuyModal({ open, onClose, onChatEcho }: BuyModalProps) {
+export default function BuyModal({ open, onClose, onChatEcho, authToken }: BuyModalProps) {
   // Form fields
   const [token, setToken] = useState<TokenSym>('USDT')
   const [network, setNetwork] = useState(NETWORKS_BY_TOKEN['USDT'][0].code)
@@ -148,8 +148,8 @@ export default function BuyModal({ open, onClose, onChatEcho }: BuyModalProps) {
   function buildChatEcho(data: InitiateBuyRes) {
     return [
       `Buy started ✅`,
-      `You’re paying **${prettyNgn(data.buyAmount)}**.`,
-      `You’ll receive **${prettyAmount(data.quote.tokenAmount)} ${data.token}** to **${data.delivery.walletAddress}** on **${toNetworkLabel(data.token, data.network)}**.`,
+      `You're paying **${prettyNgn(data.buyAmount)}**.`,
+      `You'll receive **${prettyAmount(data.quote.tokenAmount)} ${data.token}** to **${data.delivery.walletAddress}** on **${toNetworkLabel(data.token, data.network)}**.`,
       `Rate: **${prettyAmount(data.quote.rate)} NGN/${data.token}**.`,
       ``,
       `Opening payment page now…`
@@ -170,11 +170,18 @@ export default function BuyModal({ open, onClose, onChatEcho }: BuyModalProps) {
       return
     }
 
+    // 🔧 NEW: Check for auth token
+    if (!authToken) {
+      setInitError('Please sign in first')
+      return
+    }
+
     setInitLoading(true)
     try {
+      // 🔧 UPDATED: Use authToken instead of reading from storage
       const res = await fetch(`${API_BASE}/buy/initiate`, {
         method: 'POST',
-        headers: getHeaders(),
+        headers: getHeaders(authToken),
         body: JSON.stringify({ token, network, walletAddress: walletAddress.trim(), buyAmount: amt }),
       })
       const data: InitiateBuyRes = await res.json()
@@ -208,6 +215,21 @@ export default function BuyModal({ open, onClose, onChatEcho }: BuyModalProps) {
 
   if (!open) return null
 
+  // 🔧 NEW: Show auth required message if no token
+  if (!authToken) {
+    return createPortal(
+      <div style={overlayStyle} role="dialog" aria-modal="true">
+        <div style={{...sheetStyle, padding: 40, textAlign: 'center' as const, minHeight: 200, placeItems: 'center'}}>
+          <div style={{marginBottom: 16, fontSize: 24}}>🔐</div>
+          <h3 style={{margin: '0 0 8px 0', fontSize: 18}}>Authentication Required</h3>
+          <div style={{color: 'var(--muted)', marginBottom: 20}}>Please sign in to continue with your transaction</div>
+          <button style={btnPrimary} onClick={onClose}>Close</button>
+        </div>
+      </div>,
+      document.body
+    )
+  }
+
   return createPortal(
     <div style={overlayStyle} role="dialog" aria-modal="true" aria-labelledby="buy-title" onClick={onClose}>
       <div style={sheetStyle} onClick={(e) => e.stopPropagation()}>
@@ -220,7 +242,7 @@ export default function BuyModal({ open, onClose, onChatEcho }: BuyModalProps) {
             <div>
               <div id="buy-title" style={{ fontWeight: 700 }}>Start a Buy</div>
               <div style={{ fontSize: 12, color: 'var(--muted)' }}>
-                Enter purchase details and we’ll take you to the payment page.
+                Enter purchase details and we'll take you to the payment page.
               </div>
             </div>
           </div>
@@ -292,10 +314,10 @@ export default function BuyModal({ open, onClose, onChatEcho }: BuyModalProps) {
           {redirectUrl && (
             <div style={{ ...card, marginTop: 12 }}>
               <div style={smallMuted}>
-                If you weren’t redirected automatically, <a href={redirectUrl} target="_blank" rel="noopener noreferrer">click here to open the payment page</a>.
+                If you weren't redirected automatically, <a href={redirectUrl} target="_blank" rel="noopener noreferrer">click here to open the payment page</a>.
               </div>
               <div style={{ ...smallMuted, marginTop: 6 }}>
-                You’ll be charged in NGN. On success, we’ll deliver your {token} to the provided wallet address on {toNetworkLabel(token, network)}.
+                You'll be charged in NGN. On success, we'll deliver your {token} to the provided wallet address on {toNetworkLabel(token, network)}.
               </div>
             </div>
           )}

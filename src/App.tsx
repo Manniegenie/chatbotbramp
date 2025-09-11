@@ -546,9 +546,19 @@ export default function App() {
         </main>
       )}
 
-      {/* Modals */}
-      <SellModal open={showSell} onClose={() => setShowSell(false)} onChatEcho={echoFromModalToChat} />
-      <BuyModal  open={showBuy}  onClose={() => setShowBuy(false)}  onChatEcho={echoFromModalToChat} />
+      {/* FIXED: Pass auth tokens directly to modals */}
+      <SellModal 
+        open={showSell} 
+        onClose={() => setShowSell(false)} 
+        onChatEcho={echoFromModalToChat}
+        authToken={auth?.accessToken || null}
+      />
+      <BuyModal  
+        open={showBuy}  
+        onClose={() => setShowBuy(false)}  
+        onChatEcho={echoFromModalToChat}
+        authToken={auth?.accessToken || null}
+      />
 
       <footer className="footer">
         <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
