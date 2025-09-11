@@ -555,6 +555,7 @@ export default function App() {
               />
               <button 
                 type="submit"
+                className="btn"
                 disabled={loading || !input.trim()}
                 style={{
                   width: '44px',
@@ -564,11 +565,12 @@ export default function App() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   padding: '0',
-                  background: loading || !input.trim() ? 'var(--muted)' : 'var(--primary)',
+                  background: loading || !input.trim() ? '#ccc' : '#22c55e',
+                  color: 'white',
                   border: 'none',
                   cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
                   transition: 'all 0.2s ease',
-                  boxShadow: loading || !input.trim() ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.1)',
+                  boxShadow: loading || !input.trim() ? 'none' : '0 2px 8px rgba(34, 197, 94, 0.2)',
                   minWidth: '44px',
                   flexShrink: 0
                 }}
