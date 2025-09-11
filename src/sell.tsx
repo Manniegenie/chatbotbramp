@@ -1,4 +1,4 @@
-// src/sell.tsx - Enhanced version with improved reliability
+// src/sell.tsx
 import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { tokenStore } from './lib/secureStore'
@@ -63,22 +63,6 @@ type SellModalProps = {
   onChatEcho?: (text: string) => void
 }
 
-type ProgressState = {
-  step: 1 | 2
-  initData: InitiateSellRes | null
-  payData: PayoutRes | null
-  formData: {
-    token: string
-    network: string
-    amount: string
-    bankCode: string
-    bankName: string
-    accountNumber: string
-    accountName: string
-  }
-  timestamp: number
-}
-
 const TOKENS = ['USDT','USDC','BTC','ETH','SOL','BNB','MATIC','AVAX'] as const
 type TokenSym =
   | 'USDT' | 'USDC' | 'BTC' | 'ETH'
@@ -102,105 +86,37 @@ const NETWORKS_BY_TOKEN: Record<TokenSym, Array<{ code: string; label: string }>
   ],
 }
 
-// Enhanced token checking with async support and error handling
+// Enhanced token checking with async support for secure storage
 function useTokenStore() {
   const [tokens, setTokens] = useState(() => tokenStore.getTokens())
   const [isWaiting, setIsWaiting] = useState(false)
-  const [tokenError, setTokenError] = useState<string | null>(null)
   
   useEffect(() => {
+    // If we don't have tokens on mount, wait for them
     if (!tokens.access) {
       setIsWaiting(true)
-      setTokenError(null)
-      
-      tokenStore.waitForTokens(5000).then((newTokens) => {
+      tokenStore.waitForTokens(3000).then((newTokens) => {
         setTokens(newTokens)
-        setIsWaiting(false)
-        if (!newTokens.access) {
-          setTokenError('Failed to get authentication token')
-        }
-      }).catch((err) => {
-        console.error('Token wait failed:', err)
-        setTokenError('Authentication timeout - please refresh and try again')
         setIsWaiting(false)
       })
     }
   }, [])
   
-  // Enhanced polling with error detection
+  // Also poll periodically if we still don't have tokens
   useEffect(() => {
     if (tokens.access || isWaiting) return
     
     const interval = setInterval(() => {
-      try {
-        const newTokens = tokenStore.getTokens()
-        if (newTokens.access) {
-          setTokens(newTokens)
-          setTokenError(null)
-        }
-      } catch (err) {
-        console.error('Token polling error:', err)
-        setTokenError('Token retrieval error')
+      const newTokens = tokenStore.getTokens()
+      if (newTokens.access) {
+        setTokens(newTokens)
       }
     }, 200)
     
     return () => clearInterval(interval)
   }, [tokens.access, isWaiting])
   
-  return { ...tokens, isWaiting, tokenError }
-}
-
-// Network status detection
-function useNetworkStatus() {
-  const [isOnline, setIsOnline] = useState(navigator.onLine)
-  
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true)
-    const handleOffline = () => setIsOnline(false)
-    
-    window.addEventListener('online', handleOnline)
-    window.addEventListener('offline', handleOffline)
-    
-    return () => {
-      window.removeEventListener('online', handleOnline)
-      window.removeEventListener('offline', handleOffline)
-    }
-  }, [])
-  
-  return isOnline
-}
-
-// Progress persistence
-function saveProgress(data: ProgressState) {
-  try {
-    const encrypted = btoa(JSON.stringify(data))
-    localStorage.setItem('sell_progress', encrypted)
-  } catch (err) {
-    console.warn('Failed to save progress:', err)
-  }
-}
-
-function restoreProgress(): ProgressState | null {
-  try {
-    const data = localStorage.getItem('sell_progress')
-    if (!data) return null
-    
-    const progress = JSON.parse(atob(data)) as ProgressState
-    // Only restore if less than 30 minutes old
-    if (Date.now() - progress.timestamp < 30 * 60 * 1000) {
-      return progress
-    }
-    localStorage.removeItem('sell_progress')
-    return null
-  } catch (err) {
-    console.warn('Failed to restore progress:', err)
-    localStorage.removeItem('sell_progress')
-    return null
-  }
-}
-
-function clearProgress() {
-  localStorage.removeItem('sell_progress')
+  return { ...tokens, isWaiting }
 }
 
 function getHeaders(accessToken?: string) {
@@ -210,29 +126,16 @@ function getHeaders(accessToken?: string) {
   return h
 }
 
-async function fetchWithAuth(url: string, options: RequestInit = {}, accessToken?: string, timeoutMs: number = 15000): Promise<Response> {
+async function fetchWithAuth(url: string, options: RequestInit = {}, accessToken?: string): Promise<Response> {
   const headers = getHeaders(accessToken)
   
-  // Add timeout using AbortController
-  const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
-  
-  try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal,
-      headers: {
-        ...Object.fromEntries(headers),
-        ...Object.fromEntries(new Headers(options.headers || {}))
-      }
-    })
-    
-    clearTimeout(timeoutId)
-    return response
-  } catch (error) {
-    clearTimeout(timeoutId)
-    throw error
-  }
+  return fetch(url, {
+    ...options,
+    headers: {
+      ...Object.fromEntries(headers),
+      ...Object.fromEntries(new Headers(options.headers || {}))
+    }
+  })
 }
 
 function prettyAmount(n: number) {
@@ -285,54 +188,7 @@ function buildPayoutRecap(init: InitiateSellRes | null, p: PayoutRes) {
   ].join('\n')
 }
 
-// Enhanced error display component
-function ErrorDisplay({ error, onRetry }: { error: string; onRetry?: () => void }) {
-  return (
-    <div role="alert" style={errorBanner}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-        <div style={{ flex: 1 }}>
-          <strong style={{ color: '#ffaaaa' }}>Error:</strong> {error}
-        </div>
-        {onRetry && (
-          <button 
-            style={{ ...btn, padding: '6px 12px', fontSize: 12 }}
-            onClick={onRetry}
-          >
-            Retry
-          </button>
-        )}
-      </div>
-    </div>
-  )
-}
-
-// Debug panel for development
-function DebugPanel({ initData, payData, step }: any) {
-  // Check if we're in development mode (Vite sets this)
-  const isDev = import.meta.env?.DEV || import.meta.env?.MODE === 'development'
-  
-  if (!isDev) return null
-  
-  return (
-    <details style={{ margin: '16px 0', padding: 12, background: '#1a1a1a', borderRadius: 8 }}>
-      <summary style={{ cursor: 'pointer', color: '#888' }}>Debug Info</summary>
-      <pre style={{ fontSize: 11, color: '#ccc', marginTop: 8, overflow: 'auto' }}>
-        {JSON.stringify({
-          step,
-          hasInitData: !!initData,
-          hasPayData: !!payData,
-          initDataKeys: initData ? Object.keys(initData) : [],
-          payDataKeys: payData ? Object.keys(payData) : [],
-          paymentId: initData?.paymentId,
-          payoutStatus: payData?.status,
-          timestamp: Date.now()
-        }, null, 2)}
-      </pre>
-    </details>
-  )
-}
-
-/* ===== Styles ===== */
+/* ===== Minimal inline modal styles ===== */
 const overlayStyle: React.CSSProperties = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', display: 'grid', placeItems: 'center', padding: 16, zIndex: 1000 }
 const sheetStyle: React.CSSProperties = { width: '100%', maxWidth: 760, background: 'var(--card)', color: 'var(--txt)', border: '1px solid var(--border)', borderRadius: 16, boxShadow: 'var(--shadow)', overflow: 'hidden', display: 'grid', gridTemplateRows: 'auto 1fr auto', animation: 'scaleIn 120ms ease-out' }
 const headerStyle: React.CSSProperties = { padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }
@@ -357,14 +213,12 @@ const smallMuted: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' }
 const row: React.CSSProperties = { display: 'flex', gap: 10, flexWrap: 'wrap' }
 const badge: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 12, padding: '6px 10px', borderRadius: 999, border: '1px solid var(--border)', background: '#0d1210' }
 const badgeWarn: React.CSSProperties = { ...badge, background: 'rgba(255, 170, 0, .08)', borderColor: 'rgba(255, 170, 0, .25)' }
-const badgeOffline: React.CSSProperties = { ...badge, background: 'rgba(220, 50, 50, .08)', borderColor: 'rgba(220, 50, 50, .25)' }
 const errorBanner: React.CSSProperties = { ...card, background: 'rgba(220, 50, 50, .1)', borderColor: 'rgba(220, 50, 50, .25)' }
 const successCard: React.CSSProperties = { ...card, background: 'rgba(0, 115, 55, .12)', borderColor: 'rgba(0, 115, 55, .35)' }
 
 export default function SellModal({ open, onClose, onChatEcho }: SellModalProps) {
-  // Enhanced token store with error handling
-  const { access: accessToken, isWaiting: tokenWaiting, tokenError } = useTokenStore()
-  const isOnline = useNetworkStatus()
+  // Use reactive token store with async support
+  const { access: accessToken, isWaiting: tokenWaiting } = useTokenStore()
   
   // Steps: 1 = Start Sell, 2 = Payout. Final summary is a sub-state of step 2.
   const [step, setStep] = useState<1 | 2>(1)
@@ -388,7 +242,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [payError, setPayError] = useState<string | null>(null)
   const [payData, setPayData] = useState<PayoutRes | null>(null)
 
-  // Countdown starts only AFTER payout is saved (local 15-second window)
+  // Countdown should start only AFTER payout is saved (local 10:00 window)
   const [summaryExpiresAt, setSummaryExpiresAt] = useState<string | null>(null)
   const { text: countdown, expired } = useCountdown(summaryExpiresAt)
 
@@ -398,93 +252,31 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [bankOptions, setBankOptions] = useState<BankOption[]>([])
   const banksFetchedRef = useRef(false)
 
-  // Recovery functionality
-  const [isRecovering, setIsRecovering] = useState(false)
-
-  // Reset on open with progress restoration
+  // Reset on open
   useEffect(() => {
     if (!open) return
-    
-    // Try to restore progress first
-    const savedProgress = restoreProgress()
-    if (savedProgress) {
-      console.log('Restoring saved progress:', savedProgress)
-      setStep(savedProgress.step)
-      setToken(savedProgress.formData.token as TokenSym)
-      setNetwork(savedProgress.formData.network)
-      setAmount(savedProgress.formData.amount)
-      setBankCode(savedProgress.formData.bankCode)
-      setBankName(savedProgress.formData.bankName)
-      setAccountNumber(savedProgress.formData.accountNumber)
-      setAccountName(savedProgress.formData.accountName)
-      setInitData(savedProgress.initData)
-      setPayData(savedProgress.payData)
-      
-      // If we have payData, start countdown
-      if (savedProgress.payData) {
-        setSummaryExpiresAt(new Date(Date.now() + 15 * 1000).toISOString())
-      }
-    } else {
-      // Fresh start
-      setStep(1)
-      setToken('USDT')
-      setNetwork(NETWORKS_BY_TOKEN['USDT'][0].code)
-      setAmount('100')
-      setInitData(null)
-      setBankName('')
-      setBankCode('')
-      setAccountNumber('')
-      setAccountName('')
-      setPayData(null)
-      setSummaryExpiresAt(null)
-    }
-    
-    // Reset loading states
+    setStep(1)
+    setToken('USDT')
+    setNetwork(NETWORKS_BY_TOKEN['USDT'][0].code)
+    setAmount('100')
     setInitLoading(false)
     setInitError(null)
+    setInitData(null)
+    setBankName('')
+    setBankCode('')
+    setAccountNumber('')
+    setAccountName('')
     setAccountNameLoading(false)
     setAccountNameError(null)
     setPayLoading(false)
     setPayError(null)
+    setPayData(null)
     setBanksLoading(false)
     setBanksError(null)
     setBankOptions([])
+    setSummaryExpiresAt(null)
     banksFetchedRef.current = false
-    setIsRecovering(false)
   }, [open])
-
-  // Save progress whenever important state changes
-  useEffect(() => {
-    if (!open) return
-    
-    const progress: ProgressState = {
-      step,
-      initData,
-      payData,
-      formData: {
-        token,
-        network,
-        amount,
-        bankCode,
-        bankName,
-        accountNumber,
-        accountName
-      },
-      timestamp: Date.now()
-    }
-    
-    // Only save if we have meaningful progress
-    if (initData || payData) {
-      saveProgress(progress)
-    }
-  }, [open, step, initData, payData, token, network, amount, bankCode, bankName, accountNumber, accountName])
-
-  // Clear progress on successful completion or close
-  useEffect(() => {
-    if (!open || (payData && expired)) {
-      clearProgress()
-    }
-  }, [open, payData, expired])
 
   // Keep network valid
   useEffect(() => {
@@ -528,22 +320,23 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
           .sort((a: BankOption, b: BankOption) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
 
         setBankOptions(opts)
-        if (opts.length && !bankCode) {
+        if (opts.length) {
           setBankCode(opts[0].code)
           setBankName(opts[0].name)
+        } else {
+          setBankCode('')
+          setBankName('')
         }
       } catch (e: any) {
         setBanksError(e?.message || 'Failed to load banks')
         setBankOptions([])
-        if (!bankCode) {
-          setBankCode('')
-          setBankName('')
-        }
+        setBankCode('')
+        setBankName('')
       } finally {
         setBanksLoading(false)
       }
     })()
-  }, [open, step, accessToken, tokenWaiting, bankCode])
+  }, [open, step, accessToken, tokenWaiting])
 
   // Resolve account name when account number is 10+ digits (wait for auth)
   useEffect(() => {
@@ -589,16 +382,9 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     return () => clearTimeout(timeoutId)
   }, [open, step, bankCode, accountNumber, accessToken, tokenWaiting])
 
-  // Enhanced initiate function with retry logic
   async function submitInitiate(e: React.FormEvent) {
     e.preventDefault()
     setInitError(null)
-    
-    if (!isOnline) {
-      setInitError('No internet connection. Please check your network.')
-      return
-    }
-    
     if (!amount || isNaN(+amount) || +amount <= 0) {
       setInitError('Enter a valid amount')
       return
@@ -610,96 +396,27 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     }
     
     setInitLoading(true)
-    
-    const maxRetries = 3
-    let lastError: Error | null = null
-    
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        console.log(`Initiate attempt ${attempt}/${maxRetries}`, {
-          token,
-          network,
-          amount: +amount
-        })
-        
-        const res = await fetchWithAuth(`${API_BASE}/sell/initiate`, {
-          method: 'POST',
-          body: JSON.stringify({ token, network, sellAmount: +amount }),
-        }, accessToken)
-        
-        if (!res.ok) {
-          const errorText = await res.text()
-          console.error('Initiate API error:', {
-            status: res.status,
-            statusText: res.statusText,
-            body: errorText
-          })
-          throw new Error(`Server error (${res.status}): ${errorText}`)
-        }
-        
-        const data: InitiateSellRes = await res.json()
-        
-        if (!data || typeof data !== 'object') {
-          throw new Error('Invalid response format from server')
-        }
-        
-        if (!data.success) {
-          throw new Error(data.message || 'Server reported failure')
-        }
-        
-        // Validate required fields
-        if (!data.paymentId || !data.reference || !data.deposit || !data.quote) {
-          console.error('Incomplete initiate response:', data)
-          throw new Error('Incomplete response from server')
-        }
-        
-        console.log('Initiate successful:', {
-          paymentId: data.paymentId,
-          reference: data.reference
-        })
-        
-        setInitData(data)
-        setStep(2)
-        return
-        
-      } catch (err: any) {
-        lastError = err
-        console.error(`Initiate attempt ${attempt} failed:`, err)
-        
-        // Don't retry for validation/auth errors
-        if (err.message?.includes('Enter a valid') || 
-            err.message?.includes('sign in') ||
-            err.message?.includes('400') ||
-            err.message?.includes('401') ||
-            err.message?.includes('403')) {
-          break
-        }
-        
-        // Wait before retry
-        if (attempt < maxRetries) {
-          const delay = Math.pow(2, attempt - 1) * 1000
-          console.log(`Retrying in ${delay}ms...`)
-          await new Promise(resolve => setTimeout(resolve, delay))
-        }
-      }
+    try {
+      const res = await fetchWithAuth(`${API_BASE}/sell/initiate`, {
+        method: 'POST',
+        body: JSON.stringify({ token, network, sellAmount: +amount }),
+      }, accessToken)
+      
+      const data: InitiateSellRes = await res.json()
+      if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
+      setInitData(data)
+      // Go straight to payout (no deposit-details screen)
+      setStep(2)
+    } catch (err: any) {
+      setInitError(err.message || 'Failed to initiate sell')
+    } finally {
+      setInitLoading(false)
     }
-    
-    const errorMsg = lastError?.message || 'Failed to initiate sell'
-    setInitError(`${errorMsg}${maxRetries > 1 ? ` (tried ${maxRetries} times)` : ''}`)
-    setInitLoading(false)
   }
 
-  // Enhanced payout function with comprehensive error handling and retry
   async function submitPayout(e: React.FormEvent) {
     e.preventDefault()
     setPayError(null)
-    
-    if (!isOnline) {
-      setPayError('No internet connection. Please check your network.')
-      return
-    }
-    
-    // Enhanced validation
     if (!bankName || !bankCode || !accountNumber || !accountName) {
       setPayError('Fill in all bank fields')
       return
@@ -715,156 +432,28 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     }
     
     setPayLoading(true)
-    
-    // Retry mechanism for network issues
-    const maxRetries = 3
-    let lastError: Error | null = null
-    
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        console.log(`Payout attempt ${attempt}/${maxRetries}`, {
-          paymentId: initData.paymentId,
-          bankCode,
-          accountNumber: accountNumber.slice(0, 4) + '****' // Log safely
-        })
-        
-        const res = await fetchWithAuth(`${API_BASE}/sell/payout`, {
-          method: 'POST',
-          body: JSON.stringify({
-            paymentId: initData.paymentId,
-            bankName,
-            bankCode,
-            accountNumber,
-            accountName,
-          }),
-        }, accessToken)
-        
-        // Enhanced response validation
-        if (!res.ok) {
-          const errorText = await res.text()
-          console.error('Payout API error:', {
-            status: res.status,
-            statusText: res.statusText,
-            body: errorText
-          })
-          throw new Error(`Server error (${res.status}): ${errorText}`)
-        }
-        
-        const data: PayoutRes = await res.json()
-        
-        // Strict response validation
-        if (!data || typeof data !== 'object') {
-          throw new Error('Invalid response format from server')
-        }
-        
-        if (!data.success) {
-          throw new Error(data.message || 'Server reported failure')
-        }
-        
-        // Validate required fields in response
-        if (!data.paymentId || !data.status || !data.payout) {
-          console.error('Incomplete payout response:', data)
-          throw new Error('Incomplete response from server')
-        }
-        
-        // Validate payout object structure
-        const { payout } = data
-        if (!payout.bankName || !payout.accountNumber || !payout.accountName) {
-          console.error('Incomplete payout details:', payout)
-          throw new Error('Incomplete payout details in response')
-        }
-        
-        console.log('Payout successful:', {
-          paymentId: data.paymentId,
-          status: data.status,
-          bankName: payout.bankName
-        })
-        
-        // Success! Set the data and trigger summary
-        setPayData(data)
-        
-        // Send to chat with error handling
-        try {
-          onChatEcho?.(buildPayoutRecap(initData, data))
-        } catch (chatError) {
-          console.warn('Chat echo failed:', chatError)
-          // Don't fail the whole flow for chat issues
-        }
-        
-        // Start countdown timer
-        setSummaryExpiresAt(new Date(Date.now() + 15 * 1000).toISOString())
-        setPayLoading(false)
-        
-        // Success - break out of retry loop
-        return
-        
-      } catch (err: any) {
-        lastError = err
-        console.error(`Payout attempt ${attempt} failed:`, err)
-        
-        // Don't retry for validation errors or auth errors
-        if (err.message?.includes('Fill in all') || 
-            err.message?.includes('sign in') ||
-            err.message?.includes('400') ||
-            err.message?.includes('401') ||
-            err.message?.includes('403')) {
-          break
-        }
-        
-        // Wait before retry (exponential backoff)
-        if (attempt < maxRetries) {
-          const delay = Math.pow(2, attempt - 1) * 1000 // 1s, 2s, 4s
-          console.log(`Retrying in ${delay}ms...`)
-          await new Promise(resolve => setTimeout(resolve, delay))
-        }
-      }
-    }
-    
-    // All retries failed
-    const errorMsg = lastError?.message || 'Failed to save payout details'
-    console.error('All payout attempts failed:', lastError)
-    setPayError(`${errorMsg}${maxRetries > 1 ? ` (tried ${maxRetries} times)` : ''}`)
-    setPayLoading(false)
-  }
-
-  // Recovery function for stuck transactions
-  async function recoverTransaction() {
-    if (!initData?.paymentId || !accessToken) return
-    
-    setIsRecovering(true)
-    setPayError(null)
-    
     try {
-      console.log('Attempting transaction recovery for:', initData.paymentId)
-      
-      const res = await fetchWithAuth(`${API_BASE}/sell/status/${initData.paymentId}`, {
-        method: 'GET'
+      const res = await fetchWithAuth(`${API_BASE}/sell/payout`, {
+        method: 'POST',
+        body: JSON.stringify({
+          paymentId: initData.paymentId,
+          bankName,
+          bankCode,
+          accountNumber,
+          accountName,
+        }),
       }, accessToken)
       
-      if (!res.ok) {
-        throw new Error(`Failed to recover transaction: HTTP ${res.status}`)
-      }
-      
-      const data = await res.json()
-      
-      if (data.success && data.payout) {
-        console.log('Transaction recovered successfully')
-        setPayData(data)
-        setSummaryExpiresAt(new Date(Date.now() + 15 * 1000).toISOString())
-        
-        try {
-          onChatEcho?.(buildPayoutRecap(initData, data))
-        } catch (chatError) {
-          console.warn('Chat echo failed during recovery:', chatError)
-        }
-      } else {
-        throw new Error('Transaction not found or incomplete')
-      }
+      const data: PayoutRes = await res.json()
+      if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
+      setPayData(data)
+      onChatEcho?.(buildPayoutRecap(initData, data))
+      // Start a fresh local 10:00 window AFTER payout is captured
+      setSummaryExpiresAt(new Date(Date.now() + 10 * 60 * 1000).toISOString())
     } catch (err: any) {
-      console.error('Recovery failed:', err)
-      setPayError(`Recovery failed: ${err.message}`)
+      setPayError(err.message || 'Failed to save payout details')
     } finally {
-      setIsRecovering(false)
+      setPayLoading(false)
     }
   }
 
@@ -888,7 +477,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   if (!open) return null
 
   // Show loading state while waiting for tokens
-  if (tokenWaiting || (!accessToken && !tokenError)) {
+  if (tokenWaiting || (!accessToken)) {
     return createPortal(
       <div style={overlayStyle} role="dialog" aria-modal="true">
         <div style={{...sheetStyle, padding: 40, textAlign: 'center' as const, minHeight: 200, placeItems: 'center'}}>
@@ -898,11 +487,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
           <div style={{color: 'var(--muted)'}}>
             {tokenWaiting ? 'Waiting for authentication...' : 'Please sign in to continue'}
           </div>
-          {!isOnline && (
-            <div style={{...badgeOffline, marginTop: 12}}>
-              📵 Offline
-            </div>
-          )}
           {!tokenWaiting && (
             <button style={{...btnPrimary, marginTop: 16}} onClick={onClose}>Close</button>
           )}
@@ -910,29 +494,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         <style>
           {`@keyframes spin{from{transform:rotate(0deg)} to{transform:rotate(360deg)}}`}
         </style>
-      </div>,
-      document.body
-    )
-  }
-
-  // Show token error
-  if (tokenError && !accessToken) {
-    return createPortal(
-      <div style={overlayStyle} role="dialog" aria-modal="true">
-        <div style={{...sheetStyle, padding: 40, textAlign: 'center' as const, minHeight: 200}}>
-          <div style={{color: '#ffaaaa', marginBottom: 16, fontSize: 18}}>
-            🔐 Authentication Error
-          </div>
-          <div style={{color: 'var(--muted)', marginBottom: 20}}>
-            {tokenError}
-          </div>
-          <div style={{display: 'flex', gap: 12, justifyContent: 'center'}}>
-            <button style={btn} onClick={() => window.location.reload()}>
-              Refresh Page
-            </button>
-            <button style={btnPrimary} onClick={onClose}>Close</button>
-          </div>
-        </div>
       </div>,
       document.body
     )
@@ -957,8 +518,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                 <span style={dot(step === 1)}></span> Step 1 — Start
                 <span style={{ opacity: .4, padding: '0 6px' }}>•</span>
                 <span style={dot(step === 2)}></span> Step 2 — Payout
-                {/* Status indicators */}
-                {!isOnline && <span style={{...badgeOffline, marginLeft: 8}}>📵 Offline</span>}
               </div>
             </div>
           </div>
@@ -975,10 +534,9 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
               </p>
 
               {!!initError && (
-                <ErrorDisplay 
-                  error={initError} 
-                  onRetry={() => setInitError(null)}
-                />
+                <div role="alert" style={errorBanner}>
+                  <strong style={{ color: '#ffaaaa' }}>Error:</strong> {initError}
+                </div>
               )}
 
               <form onSubmit={submitInitiate} style={gridForm}>
@@ -989,7 +547,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     style={inputBase}
                     value={token}
                     onChange={e => setToken(e.target.value as TokenSym)}
-                    disabled={initLoading}
                   >
                     {TOKENS.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
@@ -1001,7 +558,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     style={inputBase}
                     value={network}
                     onChange={e => setNetwork(e.target.value)}
-                    disabled={initLoading}
                   >
                     {NETWORKS_BY_TOKEN[token].map(n => (
                       <option key={n.code} value={n.code}>{n.label}</option>
@@ -1017,28 +573,15 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     placeholder="e.g. 100"
                     value={amount}
                     onChange={e => setAmount(e.target.value)}
-                    disabled={initLoading}
                   />
                 </label>
 
                 <div style={{ gridColumn: '1 / span 2', display: 'flex', justifyContent: 'flex-end' }}>
-                  <button 
-                    style={btnPrimary} 
-                    disabled={initLoading || !isOnline}
-                  >
-                    {initLoading ? (
-                      <>
-                        <div style={{ width: 12, height: 12, border: '2px solid white', borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 1s linear infinite', marginRight: 8, display: 'inline-block' }}></div>
-                        Starting…
-                      </>
-                    ) : (
-                      'Start & Continue to Payout'
-                    )}
+                  <button style={btnPrimary} disabled={initLoading}>
+                    {initLoading ? 'Starting…' : 'Start & Continue to Payout'}
                   </button>
                 </div>
               </form>
-
-              <DebugPanel initData={initData} payData={payData} step={step} />
             </div>
           )}
 
@@ -1047,12 +590,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
             <div style={{ display: 'grid', gap: 14 }}>
               {!initData && (
                 <div role="alert" style={errorBanner}>
-                  <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
-                    <span>Missing sell reference — please restart.</span>
-                    <button style={{...btn, padding: '6px 12px', fontSize: 12}} onClick={() => setStep(1)}>
-                      Restart
-                    </button>
-                  </div>
+                  Missing sell reference — please restart.
                 </div>
               )}
 
@@ -1083,15 +621,9 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   </div>
 
                   {!!payError && (
-                    <ErrorDisplay 
-                      error={payError} 
-                      onRetry={() => {
-                        setPayError(null)
-                        if (initData?.paymentId) {
-                          recoverTransaction()
-                        }
-                      }}
-                    />
+                    <div role="alert" style={errorBanner}>
+                      <strong style={{ color: '#ffaaaa' }}>Error:</strong> {payError}
+                    </div>
                   )}
 
                   <form onSubmit={submitPayout} style={gridForm}>
@@ -1101,7 +633,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                         ref={firstInputRef as any}
                         style={inputBase}
                         value={bankCode}
-                        disabled={banksLoading || bankOptions.length === 0 || payLoading}
+                        disabled={banksLoading || bankOptions.length === 0}
                         onChange={e => {
                           const code = e.target.value
                           const hit = bankOptions.find((b: BankOption) => b.code === code)
@@ -1128,7 +660,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                         value={accountNumber}
                         onChange={e => setAccountNumber(e.target.value)}
                         placeholder="e.g. 0123456789"
-                        disabled={payLoading}
                       />
                     </label>
 
@@ -1151,24 +682,11 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     </label>
 
                     <div style={{ gridColumn: '1 / span 2', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-                      {isRecovering && (
-                        <button type="button" style={btn} disabled>
-                          <div style={{ width: 12, height: 12, border: '2px solid var(--border)', borderTop: '2px solid var(--accent)', borderRadius: '50%', animation: 'spin 1s linear infinite', marginRight: 8, display: 'inline-block' }}></div>
-                          Recovering...
-                        </button>
-                      )}
                       <button
                         style={btnPrimary}
-                        disabled={payLoading || !bankCode || banksLoading || !accountName || !isOnline || isRecovering}
+                        disabled={payLoading || !bankCode || banksLoading || !accountName}
                       >
-                        {payLoading ? (
-                          <>
-                            <div style={{ width: 12, height: 12, border: '2px solid white', borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 1s linear infinite', marginRight: 8, display: 'inline-block' }}></div>
-                            Saving…
-                          </>
-                        ) : (
-                          'Save Payout & Show Summary'
-                        )}
+                        {payLoading ? 'Saving…' : 'Save Payout & Show Summary'}
                       </button>
                     </div>
                   </form>
@@ -1181,7 +699,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                     <h3 style={{ margin: 0, fontSize: 16 }}>Transaction Summary</h3>
                     <div style={badge}>
-                      ⏱ {expired ? 'Expired' : countdown} <span style={{ opacity: .6 }}>of 00:15</span>
+                      ⏱ {expired ? 'Expired' : countdown} <span style={{ opacity: .6 }}>of 10:00</span>
                     </div>
                   </div>
 
@@ -1258,8 +776,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   </div>
                 </div>
               )}
-
-              <DebugPanel initData={initData} payData={payData} step={step} />
             </div>
           )}
         </div>
@@ -1276,7 +792,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
           <div style={{ display: 'flex', gap: 10 }}>
             {step === 2 ? (
               !showFinalSummary ? (
-                <button style={btn} onClick={() => setStep(1)} disabled={payLoading}>← Back</button>
+                <button style={btn} onClick={() => setStep(1)}>← Back</button>
               ) : (
                 <button style={btn} onClick={onClose}>Close</button>
               )
@@ -1287,7 +803,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         </div>
       </div>
 
-      {/* Animation keyframes */}
+      {/* Tiny animation keyframes */}
       <style>
         {`@keyframes scaleIn{from{transform:translateY(8px) scale(.98); opacity:0} to{transform:none; opacity:1}} @keyframes spin{from{transform:rotate(0deg)} to{transform:rotate(360deg)}}`}
       </style>
