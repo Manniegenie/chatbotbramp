@@ -142,6 +142,60 @@ function buildPayoutRecap(init: InitiateSellRes | null, p: PayoutRes) {
   ].join('\n')
 }
 
+// Simple QR Code generator function
+function generateQRCode(text: string, size: number = 128): string {
+  // Using QR Server API for simplicity - in production you might want to use a client-side library
+  const baseUrl = 'https://api.qrserver.com/v1/create-qr-code/'
+  const params = new URLSearchParams({
+    size: `${size}x${size}`,
+    data: text,
+    format: 'svg',
+    bgcolor: '0f1117',
+    color: 'ffffff',
+    margin: '10'
+  })
+  return `${baseUrl}?${params.toString()}`
+}
+
+// QR Code component
+function QRCode({ data, size = 120 }: { data: string; size?: number }) {
+  const qrUrl = generateQRCode(data, size)
+  
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: 8,
+      padding: 12,
+      background: '#0a0b0f',
+      border: '1px solid var(--border)',
+      borderRadius: 12,
+      minWidth: 'fit-content'
+    }}>
+      <img 
+        src={qrUrl} 
+        alt="QR Code for deposit address"
+        style={{ 
+          width: size, 
+          height: size, 
+          borderRadius: 8,
+          background: 'white',
+          padding: 4
+        }}
+      />
+      <div style={{ 
+        fontSize: 10, 
+        color: 'var(--muted)', 
+        textAlign: 'center',
+        maxWidth: size 
+      }}>
+        Scan to copy address
+      </div>
+    </div>
+  )
+}
+
 /* ===== Minimal inline modal styles ===== */
 const overlayStyle: React.CSSProperties = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', display: 'grid', placeItems: 'center', padding: 16, zIndex: 1000 }
 const sheetStyle: React.CSSProperties = { width: '100%', maxWidth: 760, background: 'var(--card)', color: 'var(--txt)', border: '1px solid var(--border)', borderRadius: 16, boxShadow: 'var(--shadow)', overflow: 'hidden', display: 'grid', gridTemplateRows: 'auto 1fr auto', animation: 'scaleIn 120ms ease-out' }
@@ -402,6 +456,13 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
   const showFinalSummary = !!payData
 
+  // Build QR data - include memo if present for compatible wallets
+  const qrData = initData ? 
+    (initData.deposit.memo ? 
+      `${initData.deposit.address}?memo=${initData.deposit.memo}` : 
+      initData.deposit.address
+    ) : ''
+
   return createPortal(
     <div style={overlayStyle} role="dialog" aria-modal="true" aria-labelledby="sell-title" onClick={onClose}>
       <div style={sheetStyle} onClick={(e) => e.stopPropagation()}>
@@ -602,6 +663,62 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     </div>
                   </div>
 
+                  {/* Enhanced deposit details section with QR code */}
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: '1fr auto', 
+                    gap: 16, 
+                    alignItems: 'start',
+                    background: '#0a0b0f',
+                    padding: 16,
+                    borderRadius: 12,
+                    border: '1px solid var(--border)'
+                  }}>
+                    <div style={{ display: 'grid', gap: 12 }}>
+                      <h4 style={{ margin: 0, fontSize: 14, color: 'var(--accent)' }}>📍 Deposit Details</h4>
+                      
+                      <div>
+                        <div style={kStyle}>Deposit Address</div>
+                        <div style={{ ...vStyle, ...mono, wordBreak: 'break-all', marginBottom: 8 }}>
+                          {initData.deposit.address}
+                        </div>
+                        <div style={row}>
+                          <button
+                            style={btn}
+                            onClick={() => copyToClipboard(initData.deposit.address, 'addr2')}
+                          >
+                            {copiedKey === 'addr2' ? 'Copied ✓' : 'Copy Address'}
+                          </button>
+                        </div>
+                      </div>
+
+                      {!!initData.deposit.memo && (
+                        <div>
+                          <div style={kStyle}>Memo / Tag</div>
+                          <div style={{ ...vStyle, ...mono, wordBreak: 'break-all', marginBottom: 8 }}>
+                            {initData.deposit.memo}
+                          </div>
+                          <div style={row}>
+                            <button
+                              style={btn}
+                              onClick={() => copyToClipboard(initData.deposit.memo!, 'memo2')}
+                            >
+                              {copiedKey === 'memo2' ? 'Copied ✓' : 'Copy Memo'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      <div style={{ ...smallMuted, ...badgeWarn }}>
+                        ⚠️ Send exactly {prettyAmount(initData.deposit.amount)} {initData.deposit.token} on {toNetworkLabel(initData.deposit.token, initData.deposit.network)} before the timer runs out.
+                      </div>
+                    </div>
+
+                    {/* QR Code */}
+                    <QRCode data={qrData} size={120} />
+                  </div>
+
+                  {/* Transaction info grid */}
                   <div style={kvGrid}>
                     <div>
                       <div style={kStyle}>Status</div>
@@ -633,36 +750,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                       <div style={kStyle}>Account</div>
                       <div style={vStyle}>{payData.payout.accountName} — {payData.payout.accountNumber}</div>
                     </div>
-                    <div>
-                      <div style={kStyle}>Deposit Address</div>
-                      <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{initData.deposit.address}</div>
-                      <div style={row}>
-                        <button
-                          style={btn}
-                          onClick={() => copyToClipboard(initData.deposit.address, 'addr2')}
-                        >
-                          {copiedKey === 'addr2' ? 'Copied ✓' : 'Copy Address'}
-                        </button>
-                      </div>
-                    </div>
-                    {!!initData.deposit.memo && (
-                      <div>
-                        <div style={kStyle}>Memo / Tag</div>
-                        <div style={{ ...vStyle, ...mono, wordBreak: 'break-all' }}>{initData.deposit.memo}</div>
-                        <div style={row}>
-                          <button
-                            style={btn}
-                            onClick={() => copyToClipboard(initData.deposit.memo!, 'memo2')}
-                          >
-                            {copiedKey === 'memo2' ? 'Copied ✓' : 'Copy Memo'}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div style={{ ...smallMuted, ...badgeWarn }}>
-                    ⚠️ Send exactly {prettyAmount(initData.deposit.amount)} {initData.deposit.token} on {toNetworkLabel(initData.deposit.token, initData.deposit.network)} before the timer runs out.
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
