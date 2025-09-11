@@ -380,90 +380,90 @@ button, .hint { -webkit-tap-highlight-color: transparent; }
 /* Mobile specific fixes */
 @media (max-width: 480px) {
   :root {
-    --appbar-h: 64px;
-    --composer-h: 64px;
-    --footer-h: 48px;
+    --appbar-h: 68px;
+    --composer-h: 76px;
+    --footer-h: 54px;
   }
 
   html, body {
-    font-size: 14px;                    /* further reduced for mobile */
-    line-height: 1.5;
+    font-size: 16px;                    /* restored original size */
+    line-height: 1.6;
   }
 
   .header {
-    padding: calc(10px + var(--sa-top)) 12px 10px;
+    padding: calc(12px + var(--sa-top)) 12px 12px;
   }
 
-  .logo { width: 30px; height: 30px; }
+  .logo { width: 34px; height: 34px; }
 
   .chat {
-    padding: 8px 12px 0;
-    padding-bottom: calc(var(--composer-h) + var(--footer-h) + var(--sa-bottom) + 50px);
+    padding: 12px 12px 0;
+    height: calc(100vh - var(--appbar-h) - var(--sa-top));
   }
 
   .messages {
-    gap: 10px;
-    padding-bottom: 16px;
+    gap: 14px;
+    margin-bottom: calc(var(--composer-h) + var(--footer-h) + 60px + var(--sa-bottom));
+    padding-bottom: 20px;
   }
 
   .bubble {
     max-width: 96%;
-    padding: 10px 12px;
-    border-radius: 14px;
-    font-size: 13px;                    /* smaller text on mobile */
-    line-height: 1.5;
+    padding: 14px 16px;
+    border-radius: 16px;
+    font-size: 15px;                    /* restored original size */
+    line-height: 1.6;
   }
 
   .bubble .role {
-    font-size: 11px;
-    margin-bottom: 4px;
+    font-size: 13px;
+    margin-bottom: 6px;
   }
 
   .btn {
-    min-height: 42px;
-    padding: 9px 12px;
-    font-size: 13px;
-    border-radius: 10px;
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 15px;                    /* restored original size */
+    border-radius: 12px;
     font-weight: 700;
   }
 
   .composer {
     grid-template-columns: 1fr auto;
-    gap: 8px;
-    padding: 8px 12px;
+    gap: 10px;
+    padding: 10px 12px;
   }
 
   .composer input {
-    height: 42px;
-    min-height: 42px;
-    padding: 0 12px;
-    border-radius: 10px;
-    font-size: 13px;
-    line-height: 1.4;
+    height: 48px;
+    min-height: 48px;
+    padding: 0 14px;
+    border-radius: 12px;
+    font-size: 15px;                    /* restored original size */
+    line-height: 1.45;
   }
 
   .composer .btn {
-    height: 42px;
-    padding: 0 12px;
-    font-size: 13px;
-    border-radius: 10px;
+    height: 48px;
+    padding: 0 14px;
+    font-size: 15px;                    /* restored original size */
+    border-radius: 12px;
   }
 
   .hints {
-    gap: 8px;
-    padding: 6px 12px 8px;
+    gap: 10px;
+    padding: 10px 12px 12px;
   }
 
   .hint {
-    font-size: 12px;
-    padding: 6px 10px;
+    font-size: 14px;                    /* restored original size */
+    padding: 8px 12px;
     border-radius: 999px;
   }
 
   .footer {
-    font-size: 11px;
-    padding: 8px 12px calc(8px + var(--sa-bottom));
-    gap: 8px;
+    font-size: 14px;                    /* restored original size */
+    padding: 16px 12px calc(12px + var(--sa-bottom));
   }
 }
 
