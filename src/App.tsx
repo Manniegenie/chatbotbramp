@@ -364,17 +364,16 @@ export default function App() {
     <>
       <style>
         {`
-          .bubble {
-            opacity: 0;
-            transform: translateY(20px) scale(0.95);
+          /* Message entrance animation - only for new messages */
+          .bubble.isNew {
             animation: messagePopIn 0.3s ease-out forwards;
           }
 
-          .bubble.isNew {
-            animation: messagePopIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-          }
-
           @keyframes messagePopIn {
+            from {
+              opacity: 0;
+              transform: translateY(10px) scale(0.98);
+            }
             to {
               opacity: 1;
               transform: translateY(0) scale(1);
