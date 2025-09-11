@@ -1,6 +1,7 @@
-// src/sell.tsx - FINAL FIX
+// src/sell.tsx
 import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { tokenStore } from './lib/secureStore'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -60,14 +61,15 @@ type SellModalProps = {
   open: boolean
   onClose: () => void
   onChatEcho?: (text: string) => void
-  authToken: string | null
 }
 
 const TOKENS = ['USDT','USDC','BTC','ETH','SOL','BNB','MATIC','AVAX'] as const
+// Use an explicit union for maximum TS compatibility
 type TokenSym =
   | 'USDT' | 'USDC' | 'BTC' | 'ETH'
   | 'SOL'  | 'BNB'  | 'MATIC' | 'AVAX'
 
+// Avoid `[]>` after generics in TSX files; use Array<...> instead
 const NETWORKS_BY_TOKEN: Record<TokenSym, Array<{ code: string; label: string }>> = {
   BTC:   [{ code: 'BTC', label: 'Bitcoin' }],
   ETH:   [{ code: 'ETH', label: 'Ethereum' }],
@@ -86,10 +88,11 @@ const NETWORKS_BY_TOKEN: Record<TokenSym, Array<{ code: string; label: string }>
   ],
 }
 
-function getHeaders(accessToken?: string) {
+function getHeaders() {
+  const { access } = tokenStore.getTokens()
   const h = new Headers()
   h.set('Content-Type', 'application/json')
-  if (accessToken) h.set('Authorization', `Bearer ${accessToken}`)
+  if (access) h.set('Authorization', `Bearer ${access}`)
   return h
 }
 
@@ -171,7 +174,7 @@ const badgeWarn: React.CSSProperties = { ...badge, background: 'rgba(255, 170, 0
 const errorBanner: React.CSSProperties = { ...card, background: 'rgba(220, 50, 50, .1)', borderColor: 'rgba(220, 50, 50, .25)' }
 const successCard: React.CSSProperties = { ...card, background: 'rgba(0, 115, 55, .12)', borderColor: 'rgba(0, 115, 55, .35)' }
 
-export default function SellModal({ open, onClose, onChatEcho, authToken }: SellModalProps) {
+export default function SellModal({ open, onClose, onChatEcho }: SellModalProps) {
   // Steps: 1 = Start Sell, 2 = Payout. Final summary is a sub-state of step 2.
   const [step, setStep] = useState<1 | 2>(1)
 
@@ -204,54 +207,31 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
   const [bankOptions, setBankOptions] = useState<BankOption[]>([])
   const banksFetchedRef = useRef(false)
 
-  // 🔧 FIXED: Clear state immediately when modal closes, reset when it opens
+  // Reset on open
   useEffect(() => {
-    if (open) {
-      // Reset to initial state when opening
-      setStep(1)
-      setToken('USDT')
-      setNetwork(NETWORKS_BY_TOKEN['USDT'][0].code)
-      setAmount('100')
-      setInitLoading(false)
-      setInitError(null)
-      setInitData(null)
-      setBankName('')
-      setBankCode('')
-      setAccountNumber('')
-      setAccountName('')
-      setAccountNameLoading(false)
-      setAccountNameError(null)
-      setPayLoading(false)
-      setPayError(null)
-      setPayData(null)
-      setBanksLoading(false)
-      setBanksError(null)
-      setBankOptions([])
-      setSummaryExpiresAt(null)
-      banksFetchedRef.current = false
-    } else {
-      // 🔧 CRITICAL: Clear transaction data when modal closes
-      setInitData(null)
-      setPayData(null)
-      setSummaryExpiresAt(null)
-    }
+    if (!open) return
+    setStep(1)
+    setToken('USDT')
+    setNetwork(NETWORKS_BY_TOKEN['USDT'][0].code)
+    setAmount('100')
+    setInitLoading(false)
+    setInitError(null)
+    setInitData(null)
+    setBankName('')
+    setBankCode('')
+    setAccountNumber('')
+    setAccountName('')
+    setAccountNameLoading(false)
+    setAccountNameError(null)
+    setPayLoading(false)
+    setPayError(null)
+    setPayData(null)
+    setBanksLoading(false)
+    setBanksError(null)
+    setBankOptions([])
+    setSummaryExpiresAt(null)
+    banksFetchedRef.current = false
   }, [open])
-
-  // 🔧 FIXED: Only trigger onChatEcho when modal is actually open and we have valid data
-  const showFinalSummary = !!payData
-  const hasTriggeredChatRef = useRef(false)
-  
-  useEffect(() => {
-    if (!open) {
-      hasTriggeredChatRef.current = false
-      return
-    }
-    
-    if (showFinalSummary && initData && payData && !hasTriggeredChatRef.current) {
-      hasTriggeredChatRef.current = true
-      onChatEcho?.(buildPayoutRecap(initData, payData))
-    }
-  }, [open, showFinalSummary, initData, payData, onChatEcho])
 
   // Keep network valid
   useEffect(() => {
@@ -273,19 +253,13 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
 
   // Fetch banks once when entering Step 2
   useEffect(() => {
-    if (!open || step !== 2 || banksFetchedRef.current || !authToken) return
+    if (!open || step !== 2 || banksFetchedRef.current) return
     banksFetchedRef.current = true
-    
     ;(async () => {
       setBanksLoading(true)
       setBanksError(null)
       try {
-        const res = await fetch(`${API_BASE}/fetchnaira/naira-accounts`, {
-          method: 'GET',
-          headers: getHeaders(authToken),
-          cache: 'no-store'
-        })
-        
+        const res = await fetch(`${API_BASE}/fetchnaira/naira-accounts`, { method: 'GET', cache: 'no-store' })
         const json = await res.json()
         if (!res.ok) throw new Error(json?.error || `HTTP ${res.status}`)
 
@@ -312,11 +286,11 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
         setBanksLoading(false)
       }
     })()
-  }, [open, step, authToken])
+  }, [open, step])
 
   // Resolve account name when account number is 10+ digits
   useEffect(() => {
-    if (!open || step !== 2 || !bankCode || !accountNumber || !authToken) return
+    if (!open || step !== 2 || !bankCode || !accountNumber) return
     if (accountNumber.length < 10) {
       setAccountName('')
       setAccountNameError(null)
@@ -329,14 +303,10 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
       setAccountName('')
       
       try {
-        const res = await fetch(
-          `${API_BASE}/accountname/resolve?sortCode=${encodeURIComponent(bankCode)}&accountNumber=${encodeURIComponent(accountNumber)}`,
-          {
-            method: 'GET',
-            headers: getHeaders(authToken)
-          }
-        )
-        
+        const res = await fetch(`${API_BASE}/accountname/resolve?sortCode=${encodeURIComponent(bankCode)}&accountNumber=${encodeURIComponent(accountNumber)}`, {
+          method: 'GET',
+          headers: getHeaders(),
+        })
         const data = await res.json()
         
         if (!res.ok || !data.success) {
@@ -355,10 +325,10 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
       } finally {
         setAccountNameLoading(false)
       }
-    }, 500)
+    }, 500) // Debounce for 500ms
 
     return () => clearTimeout(timeoutId)
-  }, [open, step, bankCode, accountNumber, authToken])
+  }, [open, step, bankCode, accountNumber])
 
   async function submitInitiate(e: React.FormEvent) {
     e.preventDefault()
@@ -367,23 +337,17 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
       setInitError('Enter a valid amount')
       return
     }
-    
-    if (!authToken) {
-      setInitError('Please sign in first')
-      return
-    }
-    
     setInitLoading(true)
     try {
       const res = await fetch(`${API_BASE}/sell/initiate`, {
         method: 'POST',
-        headers: getHeaders(authToken),
+        headers: getHeaders(),
         body: JSON.stringify({ token, network, sellAmount: +amount }),
       })
-      
       const data: InitiateSellRes = await res.json()
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
       setInitData(data)
+      // Go straight to payout (no deposit-details screen)
       setStep(2)
     } catch (err: any) {
       setInitError(err.message || 'Failed to initiate sell')
@@ -403,17 +367,11 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
       setPayError('Missing paymentId — restart the sell flow')
       return
     }
-    
-    if (!authToken) {
-      setPayError('Please sign in first')
-      return
-    }
-    
     setPayLoading(true)
     try {
       const res = await fetch(`${API_BASE}/sell/payout`, {
         method: 'POST',
-        headers: getHeaders(authToken),
+        headers: getHeaders(),
         body: JSON.stringify({
           paymentId: initData.paymentId,
           bankName,
@@ -422,11 +380,10 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
           accountName,
         }),
       })
-      
       const data: PayoutRes = await res.json()
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
       setPayData(data)
-      
+      onChatEcho?.(buildPayoutRecap(initData, data))
       // Start a fresh local 10:00 window AFTER payout is captured
       setSummaryExpiresAt(new Date(Date.now() + 10 * 60 * 1000).toISOString())
     } catch (err: any) {
@@ -437,6 +394,7 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
   }
 
   // Auto-close when the countdown expires on the final summary
+  const showFinalSummary = !!payData
   useEffect(() => {
     if (!open) return
     if (showFinalSummary && expired) {
@@ -453,21 +411,6 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
   }
 
   if (!open) return null
-
-  // Show auth required message if no token
-  if (!authToken) {
-    return createPortal(
-      <div style={overlayStyle} role="dialog" aria-modal="true">
-        <div style={{...sheetStyle, padding: 40, textAlign: 'center' as const, minHeight: 200, placeItems: 'center'}}>
-          <div style={{marginBottom: 16, fontSize: 24}}>🔐</div>
-          <h3 style={{margin: '0 0 8px 0', fontSize: 18}}>Authentication Required</h3>
-          <div style={{color: 'var(--muted)', marginBottom: 20}}>Please sign in to continue with your transaction</div>
-          <button style={btnPrimary} onClick={onClose}>Close</button>
-        </div>
-      </div>,
-      document.body
-    )
-  }
 
   const headerTitle =
     step === 1 ? 'Start a Sell'
@@ -645,9 +588,9 @@ export default function SellModal({ open, onClose, onChatEcho, authToken }: Sell
                           <span style={{ color: '#ff6b6b' }}>{accountNameError}</span>
                         ) : accountName ? (
                           accountName
-                        ) : 
+                        ) : (
                           'Enter account number'
-                        }
+                        )}
                       </div>
                     </label>
 
