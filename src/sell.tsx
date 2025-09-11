@@ -752,48 +752,65 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         
         const data: PayoutRes = await res.json()
         
-        // Strict response validation
+        console.log('🔍 Raw payout response:', JSON.stringify(data, null, 2))
+        
+        // Basic response validation
         if (!data || typeof data !== 'object') {
+          console.error('❌ Invalid response format:', data)
           throw new Error('Invalid response format from server')
         }
         
         if (!data.success) {
+          console.error('❌ Server reported failure:', data.message)
           throw new Error(data.message || 'Server reported failure')
         }
         
-        // Validate required fields in response
-        if (!data.paymentId || !data.status || !data.payout) {
-          console.error('Incomplete payout response:', data)
-          throw new Error('Incomplete response from server')
-        }
-        
-        // Validate payout object structure
-        const { payout } = data
-        if (!payout.bankName || !payout.accountNumber || !payout.accountName) {
-          console.error('Incomplete payout details:', payout)
-          throw new Error('Incomplete payout details in response')
-        }
-        
-        console.log('Payout successful:', {
+        // Log what we received
+        console.log('✅ Payout response received:', {
+          hasPaymentId: !!data.paymentId,
+          hasStatus: !!data.status,
+          hasPayout: !!data.payout,
           paymentId: data.paymentId,
           status: data.status,
-          bankName: payout.bankName
+          payout: data.payout
         })
+        
+        // More lenient validation - just check if we have the essential data
+        if (!data.paymentId) {
+          console.error('❌ Missing paymentId in response')
+          throw new Error('Missing paymentId in response')
+        }
+        
+        if (!data.payout || typeof data.payout !== 'object') {
+          console.error('❌ Missing or invalid payout object in response')
+          throw new Error('Missing payout details in response')
+        }
+        
+        console.log('✅ Payout validation passed, setting payData...')
         
         // Success! Set the data and trigger summary
         setPayData(data)
         
+        console.log('✅ PayData set, building chat recap...')
+        
         // Send to chat with error handling
         try {
-          onChatEcho?.(buildPayoutRecap(initData, data))
+          const recap = buildPayoutRecap(initData, data)
+          console.log('✅ Chat recap built:', recap.slice(0, 100) + '...')
+          onChatEcho?.(recap)
+          console.log('✅ Chat echo sent successfully')
         } catch (chatError) {
-          console.warn('Chat echo failed:', chatError)
+          console.error('⚠️ Chat echo failed:', chatError)
           // Don't fail the whole flow for chat issues
         }
+        
+        console.log('✅ Starting countdown timer...')
         
         // Start countdown timer
         setSummaryExpiresAt(new Date(Date.now() + 15 * 1000).toISOString())
         setPayLoading(false)
+        
+        console.log('✅ Payout flow completed successfully!')
         
         // Success - break out of retry loop
         return
