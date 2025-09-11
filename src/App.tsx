@@ -274,8 +274,7 @@ export default function App() {
     return access && refresh && user ? { accessToken: access, refreshToken: refresh, user } : null
   })
 
-  const messagesRef = useRef<HTMLDivElement | null>(null)
-  const endRef = useRef<HTMLDivElement | null>(null)
+  const endRef = useRef<HTMLDivElement>(null)
 
   // Scrub sensitive URL params on load
   useEffect(() => {
@@ -292,21 +291,8 @@ export default function App() {
     } catch { /* noop */ }
   }, [])
 
-  // Scroll the messages container (more reliable than scrolling the whole page)
   useEffect(() => {
-    const ms = messagesRef.current
-    if (ms) {
-      // small timeout gives the browser time to lay out (useful on mobile + keyboard)
-      setTimeout(() => {
-        try {
-          ms.scrollTo({ top: ms.scrollHeight, behavior: 'smooth' })
-        } catch {
-          ms.scrollTop = ms.scrollHeight
-        }
-      }, 50)
-    } else {
-      endRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }
+    endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading, showSignIn, showSignUp, showSell, showBuy])
 
   async function sendMessage(e?: React.FormEvent) {
@@ -485,14 +471,7 @@ export default function App() {
         />
       ) : (
         <main className="chat">
-          {/* Hints are placed above composer so they don't get hidden behind it when composer is fixed */}
-          <div className="hints">
-            <span className="hint" onClick={() => !loading && setInput('Sell 100 USDT to NGN')}>Sell 100 USDT to NGN</span>
-            <span className="hint" onClick={() => !loading && setInput('Show my portfolio balance')}>Show my portfolio balance</span>
-            <span className="hint" onClick={() => !loading && setInput('Current NGN rates')}>Current NGN rates</span>
-          </div>
-
-          <div className="messages" ref={messagesRef}>
+          <div className="messages">
             {messages.map((m) => (
               <div key={m.id} className={`bubble ${m.role}`}>
                 <div className="role">
@@ -558,6 +537,12 @@ export default function App() {
               {loading ? 'Typing…' : 'Send'}
             </button>
           </form>
+
+          <div className="hints">
+            <span className="hint" onClick={() => !loading && setInput('Sell 100 USDT to NGN')}>Sell 100 USDT to NGN</span>
+            <span className="hint" onClick={() => !loading && setInput('Show my portfolio balance')}>Show my portfolio balance</span>
+            <span className="hint" onClick={() => !loading && setInput('Current NGN rates')}>Current NGN rates</span>
+          </div>
         </main>
       )}
 
@@ -568,7 +553,7 @@ export default function App() {
       <footer className="footer">
         <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
         <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
-        <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
+        <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp/drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
         <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
       </footer>
     </div>
