@@ -26,7 +26,6 @@ export type ChatMessage = {
   text: string
   ts: number
   cta?: CTA | null
-  isNew?: boolean // For animation purposes
 }
 
 // --- session id (stable across page loads) ---
@@ -261,14 +260,6 @@ export default function App() {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading, showSignIn, showSignUp, showSell, showBuy])
 
-  // Remove isNew flag after animation
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setMessages(prev => prev.map(msg => ({ ...msg, isNew: false })))
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [messages])
-
   async function sendMessage(e?: React.FormEvent) {
     e?.preventDefault()
     const trimmed = input.trim()
@@ -278,8 +269,7 @@ export default function App() {
       id: crypto.randomUUID(), 
       role: 'user', 
       text: trimmed, 
-      ts: Date.now(),
-      isNew: true
+      ts: Date.now()
     }
     setMessages((prev) => [...prev, userMsg])
     setInput('')
@@ -293,8 +283,7 @@ export default function App() {
         role: 'assistant', 
         text: data.reply, 
         ts: Date.now(),
-        cta: data.cta || null,
-        isNew: true
+        cta: data.cta || null
       }
       
       setMessages((prev) => [...prev, aiMsg])
@@ -305,8 +294,7 @@ export default function App() {
         id: crypto.randomUUID(),
         role: 'assistant',
         text: `Error reaching server: ${getErrorMessage(error)}`,
-        ts: Date.now(),
-        isNew: true
+        ts: Date.now()
       }
       setMessages((prev) => [...prev, errorMsg])
     } finally {
@@ -355,8 +343,7 @@ export default function App() {
       id: crypto.randomUUID(), 
       role: 'assistant', 
       text, 
-      ts: Date.now(),
-      isNew: true
+      ts: Date.now()
     }])
   }
 
@@ -364,22 +351,6 @@ export default function App() {
     <>
       <style>
         {`
-          /* Message entrance animation - only for new messages */
-          .bubble.isNew {
-            animation: messagePopIn 0.3s ease-out forwards;
-          }
-
-          @keyframes messagePopIn {
-            from {
-              opacity: 0;
-              transform: translateY(10px) scale(0.98);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0) scale(1);
-            }
-          }
-
           .three-dot-loader {
             display: flex;
             align-items: center;
@@ -460,8 +431,7 @@ export default function App() {
                 id: crypto.randomUUID(),
                 role: 'assistant',
                 text: `You're in, ${res.user.username || (res.user as any).firstname || 'there'}!`,
-                ts: Date.now(),
-                isNew: true
+                ts: Date.now()
               }])
               if (openSellAfterAuth) { setOpenSellAfterAuth(false); setShowSell(true) }
               if (openBuyAfterAuth)  { setOpenBuyAfterAuth(false);  setShowBuy(true) }
@@ -476,8 +446,7 @@ export default function App() {
                 id: crypto.randomUUID(),
                 role: 'assistant',
                 text: 'Account created. Please verify OTP to complete your signup.',
-                ts: Date.now(),
-                isNew: true
+                ts: Date.now()
               }])
               setShowSignIn(true)
             }}
@@ -486,7 +455,7 @@ export default function App() {
           <main className="chat">
             <div className="messages">
               {messages.map((m) => (
-                <div key={m.id} className={`bubble ${m.role} ${m.isNew ? 'isNew' : ''}`}>
+                <div key={m.id} className={`bubble ${m.role}`}>
                   <div className="role">
                     {m.role === 'user' ? 'You' : 'Bramp AI'}
                   </div>
