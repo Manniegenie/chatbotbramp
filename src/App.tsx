@@ -263,7 +263,7 @@ export default function App() {
       id: crypto.randomUUID(),
       role: 'assistant',
       text:
-        "👋 Hey there! I'm Ada — your personal Bramp assistant for everything crypto. Please Sign up or Sign in for full access😊",
+        "👋 Hey there! I'm Bramp AI — your personal Bramp assistant for everything crypto. Please Sign up or Sign in for full access😊",
       ts: Date.now(),
     },
   ])
@@ -495,7 +495,7 @@ export default function App() {
               {messages.map((m) => (
                 <div key={m.id} className={`bubble ${m.role}`}>
                   <div className="role">
-                    {m.role === 'user' ? 'You' : 'Ada'}
+                    {m.role === 'user' ? 'You' : 'Bramp AI'}
                   </div>
                   <div className="text">
                     {renderMessageText(m.text)}
