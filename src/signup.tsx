@@ -340,7 +340,7 @@ export default function SignUp({
       }, 2000) // 2 second delay to show the loading message
 
     } catch (err: any) {
-      setPinError(`Network error: ${err.message}`)
+      setPinError(`Network errorr: ${err.message}`)
     } finally {
       setLoading(false)
     }
