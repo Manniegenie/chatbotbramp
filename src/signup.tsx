@@ -60,7 +60,7 @@ type ServerError =
   | { success: false; message: string; errors?: any[] }
   | { success: false; message: string }
 
-type StepId = 'firstname' | 'lastname' | 'phone' | 'email' | 'bvn' | 'otp' | 'pin'
+type StepId = 'firstname' | 'lastname' | 'phone' | 'email' | 'bvn' | 'otp' | 'pin' | 'kyc-redirect'
 
 export default function SignUp({
   onSuccess,
@@ -78,7 +78,7 @@ export default function SignUp({
   const KYC_REDIRECT_URL =
     'https://links.sandbox.usesmileid.com/7932/1e917af3-62b5-4cbd-a3a6-4c40f0e0d099'
     
-  const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'bvn', 'otp', 'pin']
+  const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'bvn', 'otp', 'pin', 'kyc-redirect']
   const [stepIndex, setStepIndex] = useState<number>(0)
 
   const [firstname, setFirstname] = useState('')
@@ -136,6 +136,8 @@ export default function SignUp({
         if (!/^\d{6}$/.test(pin)) return 'PIN must be exactly 6 digits.'
         if (pin !== pin2) return 'PINs do not match.'
         if (!pendingUserId) return 'Missing pending user ID. Please repeat verification.'
+        return null
+      case 'kyc-redirect':
         return null
     }
   }
@@ -303,8 +305,14 @@ export default function SignUp({
         },
       })
 
-      // final redirect
-      window.location.replace(KYC_REDIRECT_URL)
+      // Show KYC loading screen
+      setStepIndex(steps.indexOf('kyc-redirect'))
+      
+      // Redirect to KYC after a brief delay
+      setTimeout(() => {
+        window.location.replace(KYC_REDIRECT_URL)
+      }, 2000) // 2 second delay to show the loading message
+
     } catch (err: any) {
       setPinError(`Network error: ${err.message}`)
     } finally {
@@ -314,18 +322,24 @@ export default function SignUp({
 
   // ---------- UI ----------
   function ProgressDots() {
+    // Don't show progress dots on the KYC redirect screen
+    if (currentStepId === 'kyc-redirect') return null
+    
+    const visibleSteps = steps.filter(s => s !== 'kyc-redirect')
+    const currentVisibleIndex = visibleSteps.indexOf(currentStepId)
+    
     return (
       <div style={{ display: 'flex', gap: 6, margin: '6px 0 10px' }} aria-hidden>
-        {steps.map((_, i) => (
+        {visibleSteps.map((_, i) => (
           <span
             key={i}
             style={{
               width: 8,
               height: 8,
               borderRadius: '50%',
-              background: i === stepIndex ? 'var(--accent)' : '#242433',
+              background: i === currentVisibleIndex ? 'var(--accent)' : '#242433',
               display: 'inline-block',
-              opacity: i === stepIndex ? 1 : 0.7,
+              opacity: i === currentVisibleIndex ? 1 : 0.7,
             }}
           />
         ))}
@@ -505,6 +519,47 @@ export default function SignUp({
             </div>
           </>
         )
+      case 'kyc-redirect':
+        return (
+          <div style={{ textAlign: 'center', padding: '20px 0' }}>
+            {/* Loading spinner */}
+            <div style={{
+              width: '40px',
+              height: '40px',
+              border: '3px solid var(--border)',
+              borderTop: '3px solid var(--accent)',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite',
+              margin: '0 auto 16px'
+            }} />
+            
+            <p style={{ 
+              fontSize: '1rem', 
+              color: 'var(--txt)', 
+              margin: '0 0 8px',
+              fontWeight: '500'
+            }}>
+              Account Created Successfully!
+            </p>
+            
+            <p style={{ 
+              fontSize: '0.9rem', 
+              color: 'var(--muted)', 
+              margin: 0 
+            }}>
+              Please wait while we redirect you to complete your KYC verification...
+            </p>
+
+            <style>
+              {`
+                @keyframes spin {
+                  0% { transform: rotate(0deg); }
+                  100% { transform: rotate(360deg); }
+                }
+              `}
+            </style>
+          </div>
+        )
     }
   }
 
@@ -519,6 +574,8 @@ export default function SignUp({
                 ? 'Verify OTP'
                 : currentStepId === 'pin'
                 ? 'Set your PIN'
+                : currentStepId === 'kyc-redirect'
+                ? 'Redirecting to KYC'
                 : 'Create your account'}
             </h2>
             <p style={{ marginTop: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>
@@ -526,7 +583,9 @@ export default function SignUp({
                 ? 'Enter the 6-digit OTP sent to your phone.'
                 : currentStepId === 'pin'
                 ? 'Create a 6-digit PIN for sign-in and transactions.'
-                : 'We’ll collect a few details. One step at a time.'}
+                : currentStepId === 'kyc-redirect'
+                ? 'Completing your registration process...'
+                : "We'll collect a few details. One step at a time."}
             </p>
 
             <ProgressDots />
@@ -579,7 +638,7 @@ export default function SignUp({
 
             {currentStepId === 'firstname' && (
               <p style={{ marginTop: 12, fontSize: '0.8rem', color: 'var(--muted)' }}>
-                We’ll send an OTP to verify your phone.
+                We'll send an OTP to verify your phone.
               </p>
             )}
           </div>
