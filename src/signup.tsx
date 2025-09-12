@@ -308,9 +308,35 @@ export default function SignUp({
       // Show KYC loading screen
       setStepIndex(steps.indexOf('kyc-redirect'))
       
-      // Redirect to KYC after a brief delay
-      setTimeout(() => {
-        window.location.replace(KYC_REDIRECT_URL)
+      // Generate user-specific KYC URL and redirect after delay
+      setTimeout(async () => {
+        try {
+          // Generate personalized KYC URL with user ID
+          const kycUrlResponse = await fetch(`${API_BASE}/smileid-redirect/kyc-url`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${ok.accessToken}`
+            },
+            body: JSON.stringify({ 
+              userId: ok.user?.id,
+              jobId: `job_${ok.user?.id}_${Date.now()}`
+            }),
+          })
+
+          if (kycUrlResponse.ok) {
+            const { kycUrl } = await kycUrlResponse.json()
+            window.location.replace(kycUrl)
+          } else {
+            // Fallback to static URL with user ID as parameter
+            const fallbackUrl = `${KYC_REDIRECT_URL}?user_id=${ok.user?.id}&job_id=job_${ok.user?.id}_${Date.now()}`
+            window.location.replace(fallbackUrl)
+          }
+        } catch (error) {
+          // If API fails, use fallback URL with user parameters
+          const fallbackUrl = `${KYC_REDIRECT_URL}?user_id=${ok.user?.id}&job_id=job_${ok.user?.id}_${Date.now()}`
+          window.location.replace(fallbackUrl)
+        }
       }, 2000) // 2 second delay to show the loading message
 
     } catch (err: any) {
