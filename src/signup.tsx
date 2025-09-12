@@ -312,7 +312,7 @@ export default function SignUp({
       setTimeout(async () => {
         try {
           // Generate personalized KYC URL with user ID
-          const kycUrlResponse = await fetch(`${API_BASE}/api/kyc/generate-kyc-url`, {
+          const kycUrlResponse = await fetch(`${API_BASE}/smileid-redirect/kyc-url`, {
             method: 'POST',
             headers: { 
               'Content-Type': 'application/json',
