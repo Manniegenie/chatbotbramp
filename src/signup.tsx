@@ -1,5 +1,5 @@
 // src/SignUp.tsx
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 
 export type SignUpResult = {
   success: boolean
@@ -56,11 +56,28 @@ type PinSuccess = {
   refreshToken: string
 }
 
+type BiometricVerificationResult = {
+  success: boolean
+  message: string
+  data?: {
+    jobId: string
+    smileJobId: string
+    resultCode: string
+    resultText: string
+    confidenceValue: number
+    isApproved: boolean
+    kycLevel: number
+    kycStatus: string
+  }
+}
+
 type ServerError =
   | { success: false; message: string; errors?: any[] }
   | { success: false; message: string }
 
-type StepId = 'firstname' | 'lastname' | 'phone' | 'email' | 'bvn' | 'otp' | 'pin' | 'kyc-redirect'
+type StepId = 'firstname' | 'lastname' | 'phone' | 'email' | 'bvn' | 'otp' | 'pin' | 'id-type-selection' | 'id-number' | 'selfie-capture' | 'verification-processing' | 'verification-complete'
+
+type IdType = 'nin' | 'drivers_license' | 'passport'
 
 export default function SignUp({
   onSuccess,
@@ -71,14 +88,11 @@ export default function SignUp({
 }) {
   const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
   const SIGNUP_ENDPOINT = `${API_BASE}/chatsignup/add-user`
-  const VERIFY_OTP_ENDPOINT = `${API_BASE}/verify-otp/verify-otp`         // { phonenumber, code }
-  const PASSWORD_PIN_ENDPOINT = `${API_BASE}/passwordpin/password-pin`    // { newPin, renewPin, pendingUserId }
-
-  // Use the latest link from your snippet
-  const KYC_REDIRECT_URL =
-    'https://links.sandbox.usesmileid.com/7932/1e917af3-62b5-4cbd-a3a6-4c40f0e0d099'
+  const VERIFY_OTP_ENDPOINT = `${API_BASE}/verify-otp/verify-otp`         
+  const PASSWORD_PIN_ENDPOINT = `${API_BASE}/passwordpin/password-pin`    
+  const BIOMETRIC_VERIFICATION_ENDPOINT = `${API_BASE}/biometric-verification`
     
-  const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'bvn', 'otp', 'pin', 'kyc-redirect']
+  const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'bvn', 'otp', 'pin', 'id-type-selection', 'id-number', 'selfie-capture', 'verification-processing', 'verification-complete']
   const [stepIndex, setStepIndex] = useState<number>(0)
 
   const [firstname, setFirstname] = useState('')
@@ -98,6 +112,23 @@ export default function SignUp({
   const [pinError, setPinError] = useState<string | null>(null)
 
   const [pendingUserId, setPendingUserId] = useState<string | null>(null)
+  const [accessToken, setAccessToken] = useState<string | null>(null)
+  const [refreshToken, setRefreshToken] = useState<string | null>(null)
+  const [userInfo, setUserInfo] = useState<any>(null)
+
+  // New states for ID verification
+  const [selectedIdType, setSelectedIdType] = useState<IdType | null>(null)
+  const [idNumber, setIdNumber] = useState('')
+  const [selfieImage, setSelfieImage] = useState<string | null>(null)
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null)
+  const [verificationResults, setVerificationResults] = useState<{
+    bvnResult?: BiometricVerificationResult
+    idResult?: BiometricVerificationResult
+  }>({})
+
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const currentStepId = steps[stepIndex]
 
@@ -137,7 +168,20 @@ export default function SignUp({
         if (pin !== pin2) return 'PINs do not match.'
         if (!pendingUserId) return 'Missing pending user ID. Please repeat verification.'
         return null
-      case 'kyc-redirect':
+      case 'id-type-selection':
+        if (!selectedIdType) return 'Please select an ID type.'
+        return null
+      case 'id-number':
+        if (!idNumber.trim()) return 'Please enter your ID number.'
+        // Validate based on selected ID type
+        if (selectedIdType === 'nin' && !/^\d{11}$/.test(idNumber)) return 'NIN must be exactly 11 digits.'
+        if (selectedIdType === 'passport' && !/^[A-Z]\d{8}$/.test(idNumber.toUpperCase())) return 'Passport must be 1 letter followed by 8 digits.'
+        if (selectedIdType === 'drivers_license' && idNumber.length < 8) return 'Please enter a valid driver\'s license number.'
+        return null
+      case 'selfie-capture':
+        if (!selfieImage) return 'Please take a selfie.'
+        return null
+      default:
         return null
     }
   }
@@ -162,6 +206,66 @@ export default function SignUp({
     setStepIndex((i) => Math.max(i - 1, 0))
   }
 
+  // ---------- Camera functions ----------
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: { ideal: 640 }, 
+          height: { ideal: 480 },
+          facingMode: 'user' 
+        } 
+      })
+      setCameraStream(stream)
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+      }
+    } catch (err) {
+      setError('Unable to access camera. Please allow camera permissions or upload a photo instead.')
+    }
+  }
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop())
+      setCameraStream(null)
+    }
+  }
+
+  const takePicture = () => {
+    if (!videoRef.current || !canvasRef.current) return
+
+    const canvas = canvasRef.current
+    const video = videoRef.current
+    const context = canvas.getContext('2d')
+
+    if (!context) return
+
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    context.drawImage(video, 0, 0)
+
+    const imageData = canvas.toDataURL('image/jpeg', 0.8)
+    setSelfieImage(imageData)
+    stopCamera()
+  }
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file.')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setSelfieImage(e.target?.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
+
   // ---------- Submit router ----------
   async function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault()
@@ -182,6 +286,8 @@ export default function SignUp({
         return doVerifyOtp()
       case 'pin':
         return doSetPin()
+      case 'selfie-capture':
+        return doVerification()
       default:
         return goNext()
     }
@@ -289,58 +395,88 @@ export default function SignUp({
 
       const ok: PinSuccess = await res.json()
 
+      // Store user info and tokens for verification step
+      setAccessToken(ok.accessToken)
+      setRefreshToken(ok.refreshToken)
+      setUserInfo(ok.user)
+
+      // Move to ID type selection
+      setStepIndex(steps.indexOf('id-type-selection'))
+
+    } catch (err: any) {
+      setPinError(`Network error: ${err.message}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function doVerification() {
+    if (!accessToken || !selectedIdType || !idNumber || !selfieImage) {
+      setError('Missing required information for verification.')
+      return
+    }
+
+    setLoading(true)
+    setStepIndex(steps.indexOf('verification-processing'))
+
+    try {
+      // First verify BVN with selfie
+      const bvnVerification = await fetch(BIOMETRIC_VERIFICATION_ENDPOINT, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({
+          idType: 'bvn',
+          idNumber: bvn,
+          selfieImage: selfieImage
+        }),
+      })
+
+      const bvnResult: BiometricVerificationResult = await bvnVerification.json()
+      setVerificationResults(prev => ({ ...prev, bvnResult }))
+
+      // Then verify selected ID with selfie
+      const idVerification = await fetch(BIOMETRIC_VERIFICATION_ENDPOINT, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({
+          idType: selectedIdType === 'drivers_license' ? 'drivers_license' : selectedIdType,
+          idNumber: idNumber,
+          selfieImage: selfieImage
+        }),
+      })
+
+      const idResult: BiometricVerificationResult = await idVerification.json()
+      setVerificationResults(prev => ({ ...prev, idResult }))
+
+      // Move to completion screen regardless of results
+      setStepIndex(steps.indexOf('verification-complete'))
+
+      // Call onSuccess with the user info
       onSuccess({
         success: true,
-        message: ok.message,
-        userId: ok.user?.id,
-        accessToken: ok.accessToken,
-        refreshToken: ok.refreshToken,
+        message: 'Account created successfully. Verification submitted.',
+        userId: userInfo?.id,
+        accessToken: accessToken ?? undefined,
+        refreshToken: refreshToken ?? undefined,
         user: {
-          firstname: ok.user?.firstname,
-          lastname: ok.user?.lastname,
-          email: ok.user?.email,
-          phonenumber: ok.user?.phonenumber,
-          bvn: bvn.trim(),
-          username: ok.user?.username,
+          firstname,
+          lastname,
+          email,
+          phonenumber: normalizePhone(phone),
+          bvn,
+          username: userInfo?.username,
         },
       })
 
-      // Show KYC loading screen
-      setStepIndex(steps.indexOf('kyc-redirect'))
-      
-      // Generate user-specific KYC URL and redirect after delay
-      setTimeout(async () => {
-        try {
-          // Generate personalized KYC URL with user ID
-          const kycUrlResponse = await fetch(`${API_BASE}/smileid-redirect/kyc-url`, {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${ok.accessToken}`
-            },
-            body: JSON.stringify({ 
-              userId: ok.user?.id,
-              jobId: `job_${ok.user?.id}_${Date.now()}`
-            }),
-          })
-
-          if (kycUrlResponse.ok) {
-            const { kycUrl } = await kycUrlResponse.json()
-            window.location.replace(kycUrl)
-          } else {
-            // Fallback to static URL with user ID as parameter
-            const fallbackUrl = `${KYC_REDIRECT_URL}?user_id=${ok.user?.id}&job_id=job_${ok.user?.id}_${Date.now()}`
-            window.location.replace(fallbackUrl)
-          }
-        } catch (error) {
-          // If API fails, use fallback URL with user parameters
-          const fallbackUrl = `${KYC_REDIRECT_URL}?user_id=${ok.user?.id}&job_id=job_${ok.user?.id}_${Date.now()}`
-          window.location.replace(fallbackUrl)
-        }
-      }, 2000) // 2 second delay to show the loading message
-
     } catch (err: any) {
-      setPinError(`Network errorr: ${err.message}`)
+      setError(`Verification error: ${err.message}`)
+      setStepIndex(steps.indexOf('selfie-capture'))
     } finally {
       setLoading(false)
     }
@@ -348,10 +484,10 @@ export default function SignUp({
 
   // ---------- UI ----------
   function ProgressDots() {
-    // Don't show progress dots on the KYC redirect screen
-    if (currentStepId === 'kyc-redirect') return null
+    // Don't show progress dots on processing/complete screens
+    if (['verification-processing', 'verification-complete'].includes(currentStepId)) return null
     
-    const visibleSteps = steps.filter(s => s !== 'kyc-redirect')
+    const visibleSteps = steps.filter(s => !['verification-processing', 'verification-complete'].includes(s))
     const currentVisibleIndex = visibleSteps.indexOf(currentStepId)
     
     return (
@@ -478,18 +614,6 @@ export default function SignUp({
               <button className="btn" type="submit" disabled={loading}>
                 {loading ? 'Verifying…' : 'Verify OTP'}
               </button>
-
-              {/* Temporarily disabled to avoid missing function error
-              <button
-                type="button"
-                className="btn btn-outline"
-                onClick={resendOtp}
-                disabled={loading}
-              >
-                Resend OTP
-              </button>
-              */}
-
               <button
                 type="button"
                 className="btn btn-outline"
@@ -540,15 +664,221 @@ export default function SignUp({
                 Back
               </button>
               <button className="btn" type="submit" disabled={loading}>
-                {loading ? 'Saving…' : 'Save PIN & Finish'}
+                {loading ? 'Saving…' : 'Save PIN & Continue'}
               </button>
             </div>
           </>
         )
-      case 'kyc-redirect':
+      case 'id-type-selection':
+        return (
+          <>
+            <label style={{ fontSize: '0.8rem', color: 'var(--muted)', marginBottom: 12, display: 'block' }}>
+              Choose an ID type for verification
+            </label>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {[
+                { value: 'nin', label: 'National Identification Number (NIN)', description: '11-digit number' },
+                { value: 'drivers_license', label: 'Driver\'s License', description: 'Valid Nigerian driver\'s license' },
+                { value: 'passport', label: 'International Passport', description: 'Letter + 8 digits format' }
+              ].map((option) => (
+                <div
+                  key={option.value}
+                  onClick={() => setSelectedIdType(option.value as IdType)}
+                  style={{
+                    padding: 16,
+                    border: `2px solid ${selectedIdType === option.value ? 'var(--accent)' : 'var(--border)'}`,
+                    borderRadius: 8,
+                    cursor: 'pointer',
+                    background: selectedIdType === option.value ? 'rgba(var(--accent-rgb), 0.1)' : 'var(--card)',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <div style={{ fontWeight: '500', color: 'var(--txt)', marginBottom: 4 }}>
+                    {option.label}
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
+                    {option.description}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+              <button type="button" className="btn btn-outline" onClick={goBack} disabled={loading}>
+                Back
+              </button>
+              <button 
+                className="btn" 
+                onClick={goNext} 
+                disabled={!selectedIdType}
+              >
+                Continue
+              </button>
+            </div>
+          </>
+        )
+      case 'id-number':
+        return (
+          <>
+            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
+              {selectedIdType === 'nin' && 'Enter your NIN (11 digits)'}
+              {selectedIdType === 'drivers_license' && 'Enter your Driver\'s License Number'}
+              {selectedIdType === 'passport' && 'Enter your Passport Number (e.g., A12345678)'}
+            </label>
+            <input
+              key="id-number"
+              placeholder={
+                selectedIdType === 'nin' ? '12345678901' :
+                selectedIdType === 'drivers_license' ? 'License number' :
+                'A12345678'
+              }
+              value={idNumber}
+              onChange={(e) => {
+                if (selectedIdType === 'nin') {
+                  setIdNumber(e.target.value.replace(/[^\d]/g, '').slice(0, 11))
+                } else if (selectedIdType === 'passport') {
+                  setIdNumber(e.target.value.toUpperCase().slice(0, 9))
+                } else {
+                  setIdNumber(e.target.value)
+                }
+              }}
+              inputMode={selectedIdType === 'nin' ? 'numeric' : 'text'}
+              maxLength={selectedIdType === 'nin' ? 11 : selectedIdType === 'passport' ? 9 : undefined}
+              autoFocus
+              style={inputStyle}
+              className="no-zoom"
+            />
+          </>
+        )
+      case 'selfie-capture':
+        return (
+          <>
+            <label style={{ fontSize: '0.8rem', color: 'var(--muted)', marginBottom: 12, display: 'block' }}>
+              Take a selfie for verification
+            </label>
+            
+            {!selfieImage ? (
+              <>
+                {cameraStream && (
+                  <div style={{ marginBottom: 16 }}>
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      style={{
+                        width: '100%',
+                        maxWidth: 400,
+                        borderRadius: 8,
+                        border: '2px solid var(--border)'
+                      }}
+                    />
+                    <div style={{ display: 'flex', gap: 8, marginTop: 12, justifyContent: 'center' }}>
+                      <button
+                        type="button"
+                        className="btn"
+                        onClick={takePicture}
+                      >
+                        📷 Take Photo
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        onClick={stopCamera}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {!cameraStream && (
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ 
+                      width: 200, 
+                      height: 200, 
+                      border: '2px dashed var(--border)', 
+                      borderRadius: 8, 
+                      margin: '0 auto 16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 48
+                    }}>
+                      📷
+                    </div>
+                    
+                    <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 12 }}>
+                      <button
+                        type="button"
+                        className="btn"
+                        onClick={startCamera}
+                      >
+                        Use Camera
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        Upload Photo
+                      </button>
+                    </div>
+
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      style={{ display: 'none' }}
+                    />
+                  </div>
+                )}
+
+                <canvas ref={canvasRef} style={{ display: 'none' }} />
+              </>
+            ) : (
+              <>
+                <div style={{ textAlign: 'center', marginBottom: 16 }}>
+                  <img
+                    src={selfieImage}
+                    alt="Selfie"
+                    style={{
+                      maxWidth: 300,
+                      maxHeight: 300,
+                      borderRadius: 8,
+                      border: '2px solid var(--border)'
+                    }}
+                  />
+                </div>
+                
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 16 }}>
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={() => setSelfieImage(null)}
+                  >
+                    Retake Photo
+                  </button>
+                </div>
+              </>
+            )}
+
+            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+              <button type="button" className="btn btn-outline" onClick={goBack} disabled={loading}>
+                Back
+              </button>
+              {selfieImage && (
+                <button className="btn" type="submit" disabled={loading}>
+                  {loading ? 'Submitting…' : 'Submit for Verification'}
+                </button>
+              )}
+            </div>
+          </>
+        )
+      case 'verification-processing':
         return (
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
-            {/* Loading spinner */}
             <div style={{
               width: '40px',
               height: '40px',
@@ -565,7 +895,7 @@ export default function SignUp({
               margin: '0 0 8px',
               fontWeight: '500'
             }}>
-              Account Created Successfully!
+              Processing Verification...
             </p>
             
             <p style={{ 
@@ -573,7 +903,7 @@ export default function SignUp({
               color: 'var(--muted)', 
               margin: 0 
             }}>
-              Please wait while we redirect you to complete your KYC verification...
+              We're verifying your identity. This may take a moment.
             </p>
 
             <style>
@@ -584,6 +914,44 @@ export default function SignUp({
                 }
               `}
             </style>
+          </div>
+        )
+      case 'verification-complete':
+        return (
+          <div style={{ textAlign: 'center', padding: '20px 0' }}>
+            <div style={{ 
+              fontSize: '48px', 
+              marginBottom: '16px' 
+            }}>
+              ✅
+            </div>
+            
+            <p style={{ 
+              fontSize: '1.1rem', 
+              color: 'var(--txt)', 
+              margin: '0 0 8px',
+              fontWeight: '500'
+            }}>
+              Verification Submitted!
+            </p>
+            
+            <p style={{ 
+              fontSize: '0.9rem', 
+              color: 'var(--muted)', 
+              margin: '0 0 16px',
+              lineHeight: '1.5'
+            }}>
+              Your account has been created and your documents are being verified. 
+              You'll receive an email notification once the verification is complete.
+            </p>
+
+            <p style={{ 
+              fontSize: '0.8rem', 
+              color: 'var(--muted)', 
+              margin: 0 
+            }}>
+              This process usually takes 1-2 business days.
+            </p>
           </div>
         )
     }
@@ -600,8 +968,16 @@ export default function SignUp({
                 ? 'Verify OTP'
                 : currentStepId === 'pin'
                 ? 'Set your PIN'
-                : currentStepId === 'kyc-redirect'
-                ? 'Redirecting to KYC'
+                : currentStepId === 'id-type-selection'
+                ? 'Choose ID Type'
+                : currentStepId === 'id-number'
+                ? 'Enter ID Number'
+                : currentStepId === 'selfie-capture'
+                ? 'Take Selfie'
+                : currentStepId === 'verification-processing'
+                ? 'Processing...'
+                : currentStepId === 'verification-complete'
+                ? 'All Done!'
                 : 'Create your account'}
             </h2>
             <p style={{ marginTop: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>
@@ -609,8 +985,16 @@ export default function SignUp({
                 ? 'Enter the 6-digit OTP sent to your phone.'
                 : currentStepId === 'pin'
                 ? 'Create a 6-digit PIN for sign-in and transactions.'
-                : currentStepId === 'kyc-redirect'
-                ? 'Completing your registration process...'
+                : currentStepId === 'id-type-selection'
+                ? 'Select an ID type for identity verification.'
+                : currentStepId === 'id-number'
+                ? 'Enter the number from your selected ID.'
+                : currentStepId === 'selfie-capture'
+                ? 'We need a clear photo of your face to verify your identity.'
+                : currentStepId === 'verification-processing'
+                ? 'Please wait while we process your information.'
+                : currentStepId === 'verification-complete'
+                ? 'Welcome aboard! Your verification is in progress.'
                 : "We'll collect a few details. One step at a time."}
             </p>
 
@@ -620,7 +1004,7 @@ export default function SignUp({
               {renderStep()}
 
               {/* Default nav + error for the first 5 steps */}
-              {['firstname', 'lastname', 'phone', 'email', 'bvn'].includes(currentStepId) && (
+              {['firstname', 'lastname', 'phone', 'email', 'bvn', 'id-number'].includes(currentStepId) && (
                 <>
                   {error && (
                     <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
@@ -664,7 +1048,7 @@ export default function SignUp({
 
             {currentStepId === 'firstname' && (
               <p style={{ marginTop: 12, fontSize: '0.8rem', color: 'var(--muted)' }}>
-                We'll send an OTP to verify your phone.
+                We'll verify your identity using your BVN and a government-issued ID.
               </p>
             )}
           </div>
