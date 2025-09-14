@@ -76,20 +76,9 @@ type ServerError =
   | { success: false; message: string; errors?: any[] }
   | { success: false; message: string }
 
-type StepId = 'firstname' | 'lastname' | 'phone' | 'email' | 'bvn' | 'otp' | 'pin' | 'id-type-selection' | 'id-number' | 'liveness-capture' | 'verification-processing' | 'verification-complete'
+type StepId = 'firstname' | 'lastname' | 'phone' | 'email' | 'bvn' | 'otp' | 'pin' | 'id-type-selection' | 'id-number' | 'photo-capture' | 'verification-processing' | 'verification-complete'
 
 type IdType = 'nin' | 'drivers_license' | 'passport'
-
-const LIVENESS_PROMPTS = [
-  'Look straight at the camera',
-  'Turn your head slightly to the left',
-  'Turn your head slightly to the right', 
-  'Look up slightly',
-  'Look down slightly',
-  'Smile naturally',
-  'Keep a neutral expression',
-  'Look straight again'
-]
 
 export default function SignUp({
   onSuccess,
@@ -104,7 +93,7 @@ export default function SignUp({
   const PASSWORD_PIN_ENDPOINT = `${API_BASE}/passwordpin/password-pin`    
   const BIOMETRIC_VERIFICATION_ENDPOINT = `${API_BASE}/chatbot-kyc`
     
-  const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'bvn', 'otp', 'pin', 'id-type-selection', 'id-number', 'liveness-capture', 'verification-processing', 'verification-complete']
+  const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'bvn', 'otp', 'pin', 'id-type-selection', 'id-number', 'photo-capture', 'verification-processing', 'verification-complete']
   const [stepIndex, setStepIndex] = useState<number>(0)
 
   const [firstname, setFirstname] = useState('')
@@ -131,8 +120,7 @@ export default function SignUp({
   // New states for ID verification
   const [selectedIdType, setSelectedIdType] = useState<IdType | null>(null)
   const [idNumber, setIdNumber] = useState('')
-  const [livenessImages, setLivenessImages] = useState<string[]>([])
-  const [currentLivenessStep, setCurrentLivenessStep] = useState(0)
+  const [selfieImage, setSelfieImage] = useState<string | null>(null)
   const [showCamera, setShowCamera] = useState(false)
   const [verificationResults, setVerificationResults] = useState<{
     bvnResult?: BiometricVerificationResult
@@ -158,6 +146,38 @@ export default function SignUp({
     if (/^234\d{10}$/.test(d)) return '+' + d
     if (/^\+?\d{10,15}$/.test(d)) return d.startsWith('+') ? d : '+' + d
     return d
+  }
+
+  // Compress image to stay under size limit
+  function compressImage(dataUrl: string, maxSizeKB = 80): Promise<string> {
+    return new Promise((resolve) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')!
+        
+        // Calculate new dimensions (max 400px width)
+        const maxWidth = 400
+        const ratio = Math.min(maxWidth / img.width, maxWidth / img.height)
+        canvas.width = img.width * ratio
+        canvas.height = img.height * ratio
+        
+        // Draw and compress
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+        
+        // Try different quality levels to get under size limit
+        let quality = 0.8
+        let compressed = canvas.toDataURL('image/jpeg', quality)
+        
+        while (compressed.length > maxSizeKB * 1024 && quality > 0.1) {
+          quality -= 0.1
+          compressed = canvas.toDataURL('image/jpeg', quality)
+        }
+        
+        resolve(compressed)
+      }
+      img.src = dataUrl
+    })
   }
 
   function validateField(step: StepId): string | null {
@@ -197,8 +217,8 @@ export default function SignUp({
         if (selectedIdType === 'passport' && !/^[A-Z]\d{8}$/.test(idNumber.toUpperCase())) return 'Passport must be 1 letter followed by 8 digits.'
         if (selectedIdType === 'drivers_license' && idNumber.length < 8) return 'Please enter a valid driver\'s license number.'
         return null
-      case 'liveness-capture':
-        if (livenessImages.length < 8) return 'Please complete all liveness photos.'
+      case 'photo-capture':
+        if (!selfieImage) return 'Please take a photo.'
         return null
       default:
         return null
@@ -226,63 +246,54 @@ export default function SignUp({
   }
 
   // ---------- Camera functions ----------
-  const capture = useCallback(() => {
+  const capture = useCallback(async () => {
     const imageSrc = webcamRef.current?.getScreenshot()
     if (imageSrc) {
-      setLivenessImages(prev => [...prev, imageSrc])
-      
-      if (currentLivenessStep < 7) {
-        setCurrentLivenessStep(prev => prev + 1)
-      } else {
-        // All 8 photos taken, hide camera
+      setLoading(true)
+      try {
+        const compressed = await compressImage(imageSrc, 80) // 80KB max
+        setSelfieImage(compressed)
         setShowCamera(false)
+      } catch (err) {
+        setError('Failed to process image. Please try again.')
+      } finally {
+        setLoading(false)
       }
     }
-  }, [currentLivenessStep])
+  }, [])
 
-  const resetLivenessCapture = () => {
-    setLivenessImages([])
-    setCurrentLivenessStep(0)
+  const startCamera = () => {
+    setShowCamera(true)
+    setError(null)
+  }
+
+  const stopCamera = () => {
     setShowCamera(false)
   }
 
-  const startLivenessTest = () => {
-    setShowCamera(true)
-    setCurrentLivenessStep(0)
-    setLivenessImages([])
-  }
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files
-    if (!files || files.length === 0) return
-
-    // Handle multiple file selection for liveness images
-    const fileArray = Array.from(files)
-    if (fileArray.length !== 8) {
-      setError('Please select exactly 8 images for the liveness test.')
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file.')
       return
     }
 
-    const promises = fileArray.map(file => {
-      return new Promise<string>((resolve) => {
-        if (!file.type.startsWith('image/')) {
-          throw new Error('All files must be images.')
-        }
-        
-        const reader = new FileReader()
-        reader.onload = (e) => resolve(e.target?.result as string)
-        reader.readAsDataURL(file)
-      })
-    })
-
-    Promise.all(promises)
-      .then(images => {
-        setLivenessImages(images)
-        setCurrentLivenessStep(8)
-      })
-      .catch(err => {
-        setError(err.message)
-      })
+    setLoading(true)
+    try {
+      const reader = new FileReader()
+      reader.onload = async (e) => {
+        const dataUrl = e.target?.result as string
+        const compressed = await compressImage(dataUrl, 80) // 80KB max
+        setSelfieImage(compressed)
+        setLoading(false)
+      }
+      reader.readAsDataURL(file)
+    } catch (err) {
+      setError('Failed to process image. Please try again.')
+      setLoading(false)
+    }
   }
 
   // ---------- Submit router ----------
@@ -305,7 +316,7 @@ export default function SignUp({
         return doVerifyOtp()
       case 'pin':
         return doSetPin()
-      case 'liveness-capture':
+      case 'photo-capture':
         return doVerification()
       default:
         return goNext()
@@ -430,7 +441,7 @@ export default function SignUp({
   }
 
   async function doVerification() {
-    if (!accessToken || !selectedIdType || !idNumber || livenessImages.length !== 8) {
+    if (!accessToken || !selectedIdType || !idNumber || !selfieImage) {
       setError('Missing required information for verification.')
       return
     }
@@ -439,7 +450,6 @@ export default function SignUp({
     setStepIndex(steps.indexOf('verification-processing'))
 
     try {
-      // Use the first liveness image as the main selfie and all 8 as liveness images
       const verification = await fetch(BIOMETRIC_VERIFICATION_ENDPOINT, {
         method: 'POST',
         headers: { 
@@ -449,8 +459,7 @@ export default function SignUp({
         body: JSON.stringify({
           idType: selectedIdType === 'drivers_license' ? 'drivers_license' : selectedIdType,
           idNumber: idNumber,
-          selfieImage: livenessImages[0], // Use first liveness image as main selfie
-          livenessImages: livenessImages
+          selfieImage: selfieImage
         }),
       })
 
@@ -478,7 +487,7 @@ export default function SignUp({
 
     } catch (err: any) {
       setError(`Verification error: ${err.message}`)
-      setStepIndex(steps.indexOf('liveness-capture'))
+      setStepIndex(steps.indexOf('photo-capture'))
     } finally {
       setLoading(false)
     }
@@ -753,31 +762,15 @@ export default function SignUp({
             />
           </>
         )
-      case 'liveness-capture':
+      case 'photo-capture':
         return (
           <>
             <label style={{ fontSize: '0.8rem', color: 'var(--muted)', marginBottom: 12, display: 'block' }}>
-              Identity Verification - Take 8 photos ({livenessImages.length}/8)
+              Take a clear photo of your face
             </label>
             
-            {livenessImages.length < 8 ? (
+            {!selfieImage ? (
               <>
-                <div style={{ 
-                  padding: 16, 
-                  background: 'var(--card)', 
-                  border: '2px solid var(--accent)', 
-                  borderRadius: 8, 
-                  marginBottom: 16, 
-                  textAlign: 'center' 
-                }}>
-                  <div style={{ fontSize: '1rem', fontWeight: '500', marginBottom: 4 }}>
-                    {LIVENESS_PROMPTS[currentLivenessStep]}
-                  </div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
-                    Hold still and click "Capture" when ready
-                  </div>
-                </div>
-
                 {showCamera ? (
                   <div style={{ marginBottom: 16 }}>
                     <Webcam
@@ -798,20 +791,22 @@ export default function SignUp({
                         type="button"
                         className="btn"
                         onClick={capture}
+                        disabled={loading}
                       >
-                        📷 Capture ({livenessImages.length + 1}/8)
+                        {loading ? 'Processing...' : '📷 Take Photo'}
                       </button>
                       <button
                         type="button"
                         className="btn btn-outline"
-                        onClick={resetLivenessCapture}
+                        onClick={stopCamera}
+                        disabled={loading}
                       >
-                        Start Over
+                        Cancel
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div style={{ textAlign: 'center', marginBottom: 16 }}>
+                  <div style={{ textAlign: 'center' }}>
                     <div style={{ 
                       width: 200, 
                       height: 200, 
@@ -830,16 +825,18 @@ export default function SignUp({
                       <button
                         type="button"
                         className="btn"
-                        onClick={startLivenessTest}
+                        onClick={startCamera}
+                        disabled={loading}
                       >
-                        Start Camera
+                        Use Camera
                       </button>
                       <button
                         type="button"
                         className="btn btn-outline"
                         onClick={() => fileInputRef.current?.click()}
+                        disabled={loading}
                       >
-                        Upload 8 Photos
+                        Upload Photo
                       </button>
                     </div>
 
@@ -847,76 +844,35 @@ export default function SignUp({
                       ref={fileInputRef}
                       type="file"
                       accept="image/*"
-                      multiple
                       onChange={handleFileUpload}
                       style={{ display: 'none' }}
                     />
                   </div>
                 )}
-
-                {/* Show captured images */}
-                {livenessImages.length > 0 && (
-                  <div style={{ marginTop: 16 }}>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--muted)', marginBottom: 8 }}>
-                      Captured photos:
-                    </div>
-                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                      {livenessImages.map((image, index) => (
-                        <img
-                          key={index}
-                          src={image}
-                          alt={`Photo ${index + 1}`}
-                          style={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: 4,
-                            border: '1px solid var(--border)',
-                            objectFit: 'cover'
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
               </>
             ) : (
               <>
-                <div style={{ 
-                  padding: 16, 
-                  background: 'var(--card)', 
-                  border: '2px solid #16a34a', 
-                  borderRadius: 8, 
-                  marginBottom: 16, 
-                  textAlign: 'center' 
-                }}>
-                  <div style={{ fontSize: '1rem', fontWeight: '500', marginBottom: 4, color: '#16a34a' }}>
-                    ✅ All photos captured!
-                  </div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
-                    8 verification photos ready for processing
-                  </div>
+                <div style={{ textAlign: 'center', marginBottom: 16 }}>
+                  <img
+                    src={selfieImage}
+                    alt="Your photo"
+                    style={{
+                      maxWidth: 300,
+                      maxHeight: 300,
+                      borderRadius: 8,
+                      border: '2px solid var(--border)'
+                    }}
+                  />
                 </div>
-
-                <div style={{ marginBottom: 16 }}>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--muted)', marginBottom: 8 }}>
-                    Verification photos:
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-                    {livenessImages.map((image, index) => (
-                      <img
-                        key={index}
-                        src={image}
-                        alt={`Photo ${index + 1}`}
-                        style={{
-                          width: '100%',
-                          aspectRatio: '1',
-                          borderRadius: 4,
-                          border: '1px solid var(--border)',
-                          objectFit: 'cover'
-                        }}
-                      />
-                    ))}
-                  </div>
+                
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 16 }}>
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={() => setSelfieImage(null)}
+                  >
+                    Retake Photo
+                  </button>
                 </div>
               </>
             )}
@@ -925,19 +881,10 @@ export default function SignUp({
               <button type="button" className="btn btn-outline" onClick={goBack} disabled={loading}>
                 Back
               </button>
-              {livenessImages.length >= 8 && (
-                <>
-                  <button
-                    type="button"
-                    className="btn btn-outline"
-                    onClick={resetLivenessCapture}
-                  >
-                    Retake All
-                  </button>
-                  <button className="btn" type="submit" disabled={loading}>
-                    {loading ? 'Submitting…' : 'Submit for Verification'}
-                  </button>
-                </>
+              {selfieImage && (
+                <button className="btn" type="submit" disabled={loading}>
+                  {loading ? 'Submitting…' : 'Submit for Verification'}
+                </button>
               )}
             </div>
           </>
@@ -969,7 +916,7 @@ export default function SignUp({
               color: 'var(--muted)', 
               margin: 0 
             }}>
-              We're verifying your identity using advanced biometric analysis. This may take a moment.
+              We're verifying your identity. This may take a moment.
             </p>
 
             <style>
@@ -1007,7 +954,7 @@ export default function SignUp({
               margin: '0 0 16px',
               lineHeight: '1.5'
             }}>
-              Your account has been created and your biometric verification is being processed. 
+              Your account has been created and your identity verification is being processed. 
               You'll receive an email notification once the verification is complete.
             </p>
 
@@ -1038,8 +985,8 @@ export default function SignUp({
                 ? 'Choose ID Type'
                 : currentStepId === 'id-number'
                 ? 'Enter ID Number'
-                : currentStepId === 'liveness-capture'
-                ? 'Identity Verification'
+                : currentStepId === 'photo-capture'
+                ? 'Take Photo'
                 : currentStepId === 'verification-processing'
                 ? 'Processing...'
                 : currentStepId === 'verification-complete'
@@ -1055,8 +1002,8 @@ export default function SignUp({
                 ? 'Select an ID type for identity verification.'
                 : currentStepId === 'id-number'
                 ? 'Enter the number from your selected ID.'
-                : currentStepId === 'liveness-capture'
-                ? 'Take 8 photos following the prompts for biometric verification.'
+                : currentStepId === 'photo-capture'
+                ? 'We need a clear photo of your face to verify your identity.'
                 : currentStepId === 'verification-processing'
                 ? 'Please wait while we process your information.'
                 : currentStepId === 'verification-complete'
@@ -1114,7 +1061,7 @@ export default function SignUp({
 
             {currentStepId === 'firstname' && (
               <p style={{ marginTop: 12, fontSize: '0.8rem', color: 'var(--muted)' }}>
-                We'll verify your identity using your BVN, a government-issued ID, and biometric photos.
+                We'll verify your identity using your BVN and a government-issued ID.
               </p>
             )}
           </div>
