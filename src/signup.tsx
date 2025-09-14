@@ -1,6 +1,7 @@
 // src/SignUp.tsx
 import React, { useState, useRef, useCallback } from 'react'
 import Webcam from 'react-webcam'
+import { tokenStore } from './lib/secureStore'
 
 export type SignUpResult = {
   success: boolean
@@ -91,7 +92,7 @@ export default function SignUp({
   const SIGNUP_ENDPOINT = `${API_BASE}/chatsignup/add-user`
   const VERIFY_OTP_ENDPOINT = `${API_BASE}/verify-otp/verify-otp`         
   const PASSWORD_PIN_ENDPOINT = `${API_BASE}/passwordpin/password-pin`    
-  const BIOMETRIC_VERIFICATION_ENDPOINT = `${API_BASE}/chatbot-kyc`
+  const BIOMETRIC_VERIFICATION_ENDPOINT = `${API_BASE}/chatbot-kyc/chatbot-kyc`  // UPDATED PATH
     
   const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'bvn', 'otp', 'pin', 'id-type-selection', 'id-number', 'photo-capture', 'verification-processing', 'verification-complete']
   const [stepIndex, setStepIndex] = useState<number>(0)
@@ -425,7 +426,11 @@ export default function SignUp({
 
       const ok: PinSuccess = await res.json()
 
-      // Store user info and tokens for verification step
+      // Store tokens and user info in secure storage (same as SignIn)
+      tokenStore.setTokens(ok.accessToken, ok.refreshToken)
+      tokenStore.setUser(ok.user)
+
+      // Also store in component state for verification step
       setAccessToken(ok.accessToken)
       setRefreshToken(ok.refreshToken)
       setUserInfo(ok.user)
