@@ -329,7 +329,7 @@ export default function App() {
       const { prices = {}, hourlyChanges = {} } = payload.data
 
       // format items: "BTC $xx,xxx (+1.23%) • ETH $x,xxx (-0.45%)"
-      const items = TICKER_SYMBOLS.filter(s => prices[s] || s === 'NGNB').map((s) => {
+      const items = TICKER_SYMBOLS.filter(s => (s === 'NGNB') || typeof prices[s] === 'number').map((s) => {
         const priceVal = prices[s]
         const changeObj = hourlyChanges?.[s]
         const changePct = changeObj?.hourlyChange ?? changeObj?.percentageChange ?? null
@@ -510,7 +510,7 @@ export default function App() {
             position: sticky;
             top: 0;
             z-index: 60;
-            background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.80));
+            background: linear-gradient(180deg, rgba(18,18,26,0.95), rgba(18,18,26,0.8));
             backdrop-filter: blur(6px);
             display: flex;
             align-items: center;
@@ -520,12 +520,21 @@ export default function App() {
             transition: box-shadow 200ms ease, transform 160ms ease;
           }
           .header.pinned {
-            box-shadow: 0 6px 20px rgba(10,10,10,0.08);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
             transform: translateY(0);
           }
 
           .brand { display:flex; align-items:center; gap:12px; min-width:0; flex:1; }
-          .tag { font-size: 14px; color: var(--muted); white-space: nowrap; overflow: hidden; }
+          .static-tag {
+            font-size: 14px;
+            color: var(--muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-right: 12px;
+            flex: 0 0 auto;
+          }
+          .static-tag strong { color: var(--accent); font-weight:700; }
 
           /* Ticker / marquee */
           .ticker-wrap {
@@ -535,18 +544,18 @@ export default function App() {
             align-items: center;
             overflow: hidden;
             width: 100%;
+            min-width: 160px;
           }
           .ticker {
             display: inline-block;
             white-space: nowrap;
             will-change: transform;
-            /* animation duration depends on length; fallback to 18s */
             animation: tickerScroll 18s linear infinite;
             padding-left: 100%;
             box-sizing: content-box;
             font-weight: 600;
             font-size: 13px;
-            color: var(--txt);
+            color: var(--accent); /* use your green for ticker text */
           }
 
           /* fade edges */
@@ -561,11 +570,11 @@ export default function App() {
           }
           .ticker-wrap::before {
             left: 0;
-            background: linear-gradient(90deg, var(--page) 0%, rgba(255,255,255,0) 100%);
+            background: linear-gradient(90deg, rgba(18,18,26,1) 0%, rgba(18,18,26,0) 100%);
           }
           .ticker-wrap::after {
             right: 0;
-            background: linear-gradient(270deg, var(--page) 0%, rgba(255,255,255,0) 100%);
+            background: linear-gradient(270deg, rgba(18,18,26,1) 0%, rgba(18,18,26,0) 100%);
           }
 
           @keyframes tickerScroll {
@@ -573,23 +582,28 @@ export default function App() {
             100% { transform: translateX(-50%); }
           }
 
-          /* If the ticker text is short, keep it still (small screens) */
           .ticker.idle {
             animation: none;
             padding-left: 0;
+            transform: none;
           }
 
           /* small adjustments for mobile */
           @media (max-width: 640px) {
             .ticker { font-size: 12px; }
-            .tag { display:none } /* hide static tag text as we show ticker */
+            .static-tag { display:block; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
           }
         `}
       </style>
       <div className="page">
         <header ref={headerRef} className="header" >
           <div className="brand">
-            {/* Ticker area: marquee that shows live prices */}
+            {/* Static tagline - stays fixed */}
+            <div className="static-tag" aria-hidden="true">
+              <strong>Secure access to digital assets</strong> &amp; payments — via licensed partners.
+            </div>
+
+            {/* Ticker area: marquee that shows live prices (scrolls & fades) */}
             <div style={{ minWidth: 0, flex: 1 }}>
               <div className="ticker-wrap" aria-live="polite" aria-atomic="true">
                 {/* Duplicate the text so the scroll loops smoothly — CSS translates by -50% */}
@@ -621,11 +635,13 @@ export default function App() {
             </div>
           ) : (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <span className="tag">Signed in{auth.user?.username ? ` as ${auth.user.username}` : ''}</span>
-              <button className="btn" onClick={handleBuyClick} style={{ background: 'var(--primary)', color: 'white' }}>
+              <span style={{ color: 'var(--muted)', fontSize: 13 }}>
+                Signed in{auth.user?.username ? ` as ${auth.user.username}` : ''}
+              </span>
+              <button className="btn" onClick={handleBuyClick} style={{ background: 'var(--accent)', color: 'white' }}>
                 Buy
               </button>
-              <button className="btn" onClick={handleSellClick} style={{ background: 'var(--primary)', color: 'white' }}>
+              <button className="btn" onClick={handleSellClick} style={{ background: 'var(--accent)', color: 'white' }}>
                 Sell
               </button>
               <button
@@ -748,24 +764,24 @@ export default function App() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   padding: '0',
-                  background: loading || !input.trim() ? '#ccc' : '#22c55e',
+                  background: loading || !input.trim() ? '#ccc' : 'var(--accent)',
                   color: 'white',
                   border: 'none',
                   cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
                   transition: 'all 0.2s ease',
-                  boxShadow: loading || !input.trim() ? 'none' : '0 2px 8px rgba(34, 197, 94, 0.2)',
+                  boxShadow: loading || !input.trim() ? 'none' : '0 2px 8px rgba(0,115,55,0.18)',
                   minWidth: '44px',
                   flexShrink: 0
                 }}
                 onMouseEnter={(e) => {
                   if (!loading && input.trim()) {
                     e.currentTarget.style.transform = 'scale(1.05)'
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(34, 197, 94, 0.3)'
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,115,55,0.26)'
                   }
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'scale(1)'
-                  e.currentTarget.style.boxShadow = loading || !input.trim() ? 'none' : '0 2px 8px rgba(34, 197, 94, 0.2)'
+                  e.currentTarget.style.boxShadow = loading || !input.trim() ? 'none' : '0 2px 8px rgba(0,115,55,0.18)'
                 }}
               >
                 {loading ? (
@@ -788,8 +804,8 @@ export default function App() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   >
-                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                    <polygon points="22,2 15,22 11,13 2,9"></polygon>
+                    <line x1="22" y1="2" x2="11" y2="13" />
+                    <polygon points="22,2 15,22 11,13 2,9" />
                   </svg>
                 )}
               </button>
