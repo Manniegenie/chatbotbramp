@@ -39,7 +39,7 @@ function getSessionId(): string {
   return sid
 }
 
-// Helper function to get time-based greeting (MOVED TO TOP LEVEL)
+// Helper function to get time-based greeting
 function getTimeBasedGreeting(): string {
   const hour = new Date().getHours()
 
@@ -70,7 +70,7 @@ async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
   return fetch(input, { ...init, headers })
 }
 
-/* ----------------------- Error helper (fixes TS2339) ----------------------- */
+/* ----------------------- Error helper ----------------------- */
 function getErrorMessage(e: unknown): string {
   if (e instanceof Error) return e.message
   if (typeof e === 'string') return e
@@ -287,8 +287,9 @@ export default function App() {
 
   const endRef = useRef<HTMLDivElement>(null)
 
-  // New state: prices for marquee (initially empty — does NOT include the static tagline)
+  // New state: prices for marquee (initially empty)
   const [tickerText, setTickerText] = useState<string>('')
+  // keep a loading flag internally but DO NOT display loading text in UI
   const [tickerLoading, setTickerLoading] = useState<boolean>(false)
 
   // Scrub sensitive URL params on load
@@ -311,7 +312,6 @@ export default function App() {
   }, [messages, loading, showSignIn, showSignUp, showSell, showBuy])
 
   /* ------------------- Price ticker: fetch & formatting ------------------- */
-  // tokens we want in the ticker
   const TICKER_SYMBOLS = ['BTC','ETH','USDT','USDC','BNB','MATIC','AVAX','SOL','NGNB']
 
   async function fetchTickerPrices(signal?: AbortSignal) {
@@ -327,6 +327,7 @@ export default function App() {
       }
       const { prices = {}, hourlyChanges = {} } = payload.data
 
+      // format items without tail text and without emojis
       const items = TICKER_SYMBOLS.filter(s => (s === 'NGNB') || typeof prices[s] === 'number').map((s) => {
         const priceVal = prices[s]
         const changeObj = hourlyChanges?.[s]
@@ -345,15 +346,13 @@ export default function App() {
         return `${s} $${usdStr}${changeText}`
       }).filter(Boolean)
 
-      const tailJoke = " • Prices refreshed every 30s — not financial advice. 😉"
-      const text = items.join('  •  ') + tailJoke
+      // join with bullet separators (no tail text)
+      const text = items.join('  •  ')
       setTickerText(text)
     } catch (err) {
+      // on failure, keep tickerText empty (silent background load)
       console.warn('Ticker fetch failed', err)
-      setTickerText((prev) => {
-        if (prev.includes(' (prices unavailable)')) return prev
-        return prev ? prev + '  •  (prices unavailable)' : '(prices unavailable)'
-      })
+      // do not modify UI visible text; keep it blank if nothing fetched
     } finally {
       setTickerLoading(false)
     }
@@ -361,12 +360,9 @@ export default function App() {
 
   useEffect(() => {
     const ac = new AbortController()
-    fetchTickerPrices(ac.signal)
-    const id = setInterval(() => fetchTickerPrices(), 30_000)
-    return () => {
-      ac.abort()
-      clearInterval(id)
-    }
+    // load once in background on mount (no visible loading placeholder)
+    fetchTickerPrices(ac.signal).catch(() => { /* swallowed */ })
+    return () => ac.abort()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -516,7 +512,6 @@ export default function App() {
           }
 
           .brand { display:flex; align-items:center; gap:12px; min-width:0; flex:1; }
-          /* Reuse existing .tag style from index.css for exact original text */
           .tag { font-size: 14px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
           /* Ticker / marquee */
@@ -538,7 +533,7 @@ export default function App() {
             box-sizing: content-box;
             font-weight: 600;
             font-size: 13px;
-            color: var(--accent); /* use your green for ticker text */
+            color: var(--accent); /* use green accent for ticker text */
           }
 
           /* fade edges */
@@ -571,7 +566,6 @@ export default function App() {
             transform: none;
           }
 
-          /* small adjustments for mobile */
           @media (max-width: 640px) {
             .ticker { font-size: 12px; }
             .tag { display:block; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
@@ -595,8 +589,8 @@ export default function App() {
                     animationDuration: tickerText.length < 80 ? '14s' : `${Math.min(Math.max(tickerText.length / 6, 18), 36)}s`
                   }}
                 >
-                  {/* Duplicate the price-only text for smooth looping */}
-                  {tickerText || (tickerLoading ? 'Loading prices…' : '')} &nbsp;&nbsp; {tickerText || (tickerLoading ? 'Loading prices…' : '')}
+                  {/* Duplicate the price-only text for smooth looping; if tickerText is empty, render nothing */}
+                  {tickerText ? `${tickerText}  ${tickerText}` : ''}
                 </div>
               </div>
             </div>
