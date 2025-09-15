@@ -42,7 +42,7 @@ function getSessionId(): string {
 // Helper function to get time-based greeting (MOVED TO TOP LEVEL)
 function getTimeBasedGreeting(): string {
   const hour = new Date().getHours()
-  
+
   if (hour < 12) {
     return 'Good morning'
   } else if (hour < 18) {
@@ -214,27 +214,27 @@ function ThreeDotLoader() {
   return (
     <div className="typing">
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-        <div style={{ 
-          width: '6px', 
-          height: '6px', 
-          backgroundColor: 'var(--muted)', 
-          borderRadius: '50%', 
+        <div style={{
+          width: '6px',
+          height: '6px',
+          backgroundColor: 'var(--muted)',
+          borderRadius: '50%',
           animation: 'dotBounce 1.4s ease-in-out infinite both',
           animationDelay: '-0.32s'
         }}></div>
-        <div style={{ 
-          width: '6px', 
-          height: '6px', 
-          backgroundColor: 'var(--muted)', 
-          borderRadius: '50%', 
+        <div style={{
+          width: '6px',
+          height: '6px',
+          backgroundColor: 'var(--muted)',
+          borderRadius: '50%',
           animation: 'dotBounce 1.4s ease-in-out infinite both',
           animationDelay: '-0.16s'
         }}></div>
-        <div style={{ 
-          width: '6px', 
-          height: '6px', 
-          backgroundColor: 'var(--muted)', 
-          borderRadius: '50%', 
+        <div style={{
+          width: '6px',
+          height: '6px',
+          backgroundColor: 'var(--muted)',
+          borderRadius: '50%',
           animation: 'dotBounce 1.4s ease-in-out infinite both',
           animationDelay: '0s'
         }}></div>
@@ -287,6 +287,10 @@ export default function App() {
 
   const endRef = useRef<HTMLDivElement>(null)
 
+  // New state: prices for marquee
+  const [tickerText, setTickerText] = useState<string>('Secure access to digital assets & payments — via licensed partners.')
+  const [tickerLoading, setTickerLoading] = useState<boolean>(false)
+
   // Scrub sensitive URL params on load
   useEffect(() => {
     try {
@@ -306,6 +310,89 @@ export default function App() {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading, showSignIn, showSignUp, showSell, showBuy])
 
+  /* ------------------- Price ticker: fetch & formatting ------------------- */
+  // tokens we want in the ticker
+  const TICKER_SYMBOLS = ['BTC','ETH','USDT','USDC','BNB','MATIC','AVAX','SOL','NGNB']
+
+  async function fetchTickerPrices(signal?: AbortSignal) {
+    try {
+      setTickerLoading(true)
+      // request small payload with changes
+      const symbolParam = TICKER_SYMBOLS.join(',')
+      const url = `${API_BASE}/prices/prices?symbols=${encodeURIComponent(symbolParam)}&changes=true&limit=9`
+      const resp = await authFetch(url, { method: 'GET', signal })
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${resp.statusText}`)
+      const payload = await resp.json()
+      if (!payload?.success || !payload?.data) {
+        throw new Error('Invalid prices response')
+      }
+      const { prices = {}, hourlyChanges = {} } = payload.data
+
+      // format items: "BTC $xx,xxx (+1.23%) • ETH $x,xxx (-0.45%)"
+      const items = TICKER_SYMBOLS.filter(s => prices[s] || s === 'NGNB').map((s) => {
+        const priceVal = prices[s]
+        const changeObj = hourlyChanges?.[s]
+        const changePct = changeObj?.hourlyChange ?? changeObj?.percentageChange ?? null
+        // NGNB may be returned as NGN pegged value (we'll show as NGN price)
+        if (s === 'NGNB') {
+          if (typeof priceVal === 'number') {
+            // show like "NGNB ₦X.XX"
+            const ngn = Number(priceVal)
+            return `NGNB ₦${ngn.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+          }
+          return 'NGNB — n/a'
+        }
+        if (typeof priceVal !== 'number') return `${s} — n/a`
+        const usd = Number(priceVal)
+        const changeText = changePct != null ? ` (${changePct > 0 ? '+' : ''}${Number(changePct).toFixed(2)}%)` : ''
+        // shorten large numbers with commas
+        const usdStr = usd >= 1 ? usd.toLocaleString(undefined, { maximumFractionDigits: 2 }) : usd.toFixed(6).replace(/\.?0+$/, '')
+        return `${s} $${usdStr}${changeText}`
+      }).filter(Boolean)
+
+      // join with bullet separators and add a friendly tail
+      const tailJoke = " • Prices refreshed every 30s — not financial advice. 😉"
+      const text = items.join('  •  ') + tailJoke
+      setTickerText(text)
+    } catch (err) {
+      console.warn('Ticker fetch failed', err)
+      // keep existing tickerText but append a short warning
+      setTickerText((prev) => {
+        if (prev.includes(' (prices unavailable)')) return prev
+        return prev + '  •  (prices unavailable)'
+      })
+    } finally {
+      setTickerLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    const ac = new AbortController()
+    // fetch on mount
+    fetchTickerPrices(ac.signal)
+    // refresh every 30s
+    const id = setInterval(() => fetchTickerPrices(), 30_000)
+    return () => {
+      ac.abort()
+      clearInterval(id)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Header pin/shadow logic
+  const headerRef = useRef<HTMLElement | null>(null)
+  useEffect(() => {
+    const h = headerRef.current
+    if (!h) return
+    const onScroll = () => {
+      if (window.scrollY > 8) h.classList.add('pinned')
+      else h.classList.remove('pinned')
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   async function sendMessage(e?: React.FormEvent) {
     e?.preventDefault()
     const trimmed = input.trim()
@@ -318,17 +405,17 @@ export default function App() {
 
     try {
       const data = await sendChatMessage(trimmed, [...messages, userMsg])
-      
-      const aiMsg: ChatMessage = { 
-        id: crypto.randomUUID(), 
-        role: 'assistant', 
-        text: data.reply, 
+
+      const aiMsg: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        text: data.reply,
         ts: Date.now(),
         cta: data.cta || null
       }
-      
+
       setMessages((prev) => [...prev, aiMsg])
-      
+
     } catch (error) {
       console.error('Chat message failed:', error)
       const errorMsg: ChatMessage = {
@@ -401,7 +488,7 @@ export default function App() {
               min-height: -webkit-fill-available;
             }
           }
-          
+
           /* Prevent safe area displacement during scroll */
           @media (max-width: 480px) {
             .composer {
@@ -411,18 +498,114 @@ export default function App() {
               padding-bottom: max(14px, calc(14px + env(safe-area-inset-bottom))) !important;
             }
           }
-          
+
           /* Animation for spinner */
           @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
           }
+
+          /* Header sticky/pinned */
+          .header {
+            position: sticky;
+            top: 0;
+            z-index: 60;
+            background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.80));
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 16px;
+            transition: box-shadow 200ms ease, transform 160ms ease;
+          }
+          .header.pinned {
+            box-shadow: 0 6px 20px rgba(10,10,10,0.08);
+            transform: translateY(0);
+          }
+
+          .brand { display:flex; align-items:center; gap:12px; min-width:0; flex:1; }
+          .tag { font-size: 14px; color: var(--muted); white-space: nowrap; overflow: hidden; }
+
+          /* Ticker / marquee */
+          .ticker-wrap {
+            position: relative;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            width: 100%;
+          }
+          .ticker {
+            display: inline-block;
+            white-space: nowrap;
+            will-change: transform;
+            /* animation duration depends on length; fallback to 18s */
+            animation: tickerScroll 18s linear infinite;
+            padding-left: 100%;
+            box-sizing: content-box;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--txt);
+          }
+
+          /* fade edges */
+          .ticker-wrap::before,
+          .ticker-wrap::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 64px;
+            pointer-events: none;
+          }
+          .ticker-wrap::before {
+            left: 0;
+            background: linear-gradient(90deg, var(--page) 0%, rgba(255,255,255,0) 100%);
+          }
+          .ticker-wrap::after {
+            right: 0;
+            background: linear-gradient(270deg, var(--page) 0%, rgba(255,255,255,0) 100%);
+          }
+
+          @keyframes tickerScroll {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+          }
+
+          /* If the ticker text is short, keep it still (small screens) */
+          .ticker.idle {
+            animation: none;
+            padding-left: 0;
+          }
+
+          /* small adjustments for mobile */
+          @media (max-width: 640px) {
+            .ticker { font-size: 12px; }
+            .tag { display:none } /* hide static tag text as we show ticker */
+          }
         `}
       </style>
       <div className="page">
-        <header className="header">
+        <header ref={headerRef} className="header" >
           <div className="brand">
-            <p className="tag">Secure access to digital assets & payments — via licensed partners.</p>
+            {/* Ticker area: marquee that shows live prices */}
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div className="ticker-wrap" aria-live="polite" aria-atomic="true">
+                {/* Duplicate the text so the scroll loops smoothly — CSS translates by -50% */}
+                <div
+                  className={`ticker ${tickerText.length < 40 ? 'idle' : ''}`}
+                  key={tickerText}
+                  title={tickerText}
+                  style={{
+                    // animation duration scales with text length (longer text => longer loop)
+                    animationDuration: tickerText.length < 80 ? '14s' : `${Math.min(Math.max(tickerText.length / 6, 18), 36)}s`
+                  }}
+                >
+                  {tickerText} &nbsp;&nbsp; {tickerText}
+                </div>
+              </div>
+            </div>
           </div>
 
           {!auth ? (
@@ -553,7 +736,7 @@ export default function App() {
                 autoFocus
                 disabled={loading}
               />
-              <button 
+              <button
                 type="submit"
                 className="btn"
                 disabled={loading || !input.trim()}
@@ -595,14 +778,14 @@ export default function App() {
                     animation: 'spin 1s linear infinite'
                   }} />
                 ) : (
-                  <svg 
-                    width="18" 
-                    height="18" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="white" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
                     strokeLinejoin="round"
                   >
                     <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -625,7 +808,7 @@ export default function App() {
         <BuyModal  open={showBuy}  onClose={() => setShowBuy(false)}  onChatEcho={echoFromModalToChat} />
 
         <footer className="footer">
-          <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
+          <a href="https://drive.google.com/file/d/11qmXGhossotF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
           <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
           <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
           <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
