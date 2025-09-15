@@ -287,8 +287,8 @@ export default function App() {
 
   const endRef = useRef<HTMLDivElement>(null)
 
-  // New state: prices for marquee
-  const [tickerText, setTickerText] = useState<string>('Secure access to digital assets & payments — via licensed partners.')
+  // New state: prices for marquee (initially empty — does NOT include the static tagline)
+  const [tickerText, setTickerText] = useState<string>('')
   const [tickerLoading, setTickerLoading] = useState<boolean>(false)
 
   // Scrub sensitive URL params on load
@@ -317,7 +317,6 @@ export default function App() {
   async function fetchTickerPrices(signal?: AbortSignal) {
     try {
       setTickerLoading(true)
-      // request small payload with changes
       const symbolParam = TICKER_SYMBOLS.join(',')
       const url = `${API_BASE}/prices/prices?symbols=${encodeURIComponent(symbolParam)}&changes=true&limit=9`
       const resp = await authFetch(url, { method: 'GET', signal })
@@ -328,15 +327,12 @@ export default function App() {
       }
       const { prices = {}, hourlyChanges = {} } = payload.data
 
-      // format items: "BTC $xx,xxx (+1.23%) • ETH $x,xxx (-0.45%)"
       const items = TICKER_SYMBOLS.filter(s => (s === 'NGNB') || typeof prices[s] === 'number').map((s) => {
         const priceVal = prices[s]
         const changeObj = hourlyChanges?.[s]
         const changePct = changeObj?.hourlyChange ?? changeObj?.percentageChange ?? null
-        // NGNB may be returned as NGN pegged value (we'll show as NGN price)
         if (s === 'NGNB') {
           if (typeof priceVal === 'number') {
-            // show like "NGNB ₦X.XX"
             const ngn = Number(priceVal)
             return `NGNB ₦${ngn.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
           }
@@ -345,21 +341,18 @@ export default function App() {
         if (typeof priceVal !== 'number') return `${s} — n/a`
         const usd = Number(priceVal)
         const changeText = changePct != null ? ` (${changePct > 0 ? '+' : ''}${Number(changePct).toFixed(2)}%)` : ''
-        // shorten large numbers with commas
         const usdStr = usd >= 1 ? usd.toLocaleString(undefined, { maximumFractionDigits: 2 }) : usd.toFixed(6).replace(/\.?0+$/, '')
         return `${s} $${usdStr}${changeText}`
       }).filter(Boolean)
 
-      // join with bullet separators and add a friendly tail
       const tailJoke = " • Prices refreshed every 30s — not financial advice. 😉"
       const text = items.join('  •  ') + tailJoke
       setTickerText(text)
     } catch (err) {
       console.warn('Ticker fetch failed', err)
-      // keep existing tickerText but append a short warning
       setTickerText((prev) => {
         if (prev.includes(' (prices unavailable)')) return prev
-        return prev + '  •  (prices unavailable)'
+        return prev ? prev + '  •  (prices unavailable)' : '(prices unavailable)'
       })
     } finally {
       setTickerLoading(false)
@@ -368,9 +361,7 @@ export default function App() {
 
   useEffect(() => {
     const ac = new AbortController()
-    // fetch on mount
     fetchTickerPrices(ac.signal)
-    // refresh every 30s
     const id = setInterval(() => fetchTickerPrices(), 30_000)
     return () => {
       ac.abort()
@@ -525,16 +516,8 @@ export default function App() {
           }
 
           .brand { display:flex; align-items:center; gap:12px; min-width:0; flex:1; }
-          .static-tag {
-            font-size: 14px;
-            color: var(--muted);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-right: 12px;
-            flex: 0 0 auto;
-          }
-          .static-tag strong { color: var(--accent); font-weight:700; }
+          /* Reuse existing .tag style from index.css for exact original text */
+          .tag { font-size: 14px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
           /* Ticker / marquee */
           .ticker-wrap {
@@ -591,32 +574,29 @@ export default function App() {
           /* small adjustments for mobile */
           @media (max-width: 640px) {
             .ticker { font-size: 12px; }
-            .static-tag { display:block; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
+            .tag { display:block; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
           }
         `}
       </style>
       <div className="page">
         <header ref={headerRef} className="header" >
           <div className="brand">
-            {/* Static tagline - stays fixed */}
-            <div className="static-tag" aria-hidden="true">
-              <strong>Secure access to digital assets</strong> &amp; payments — via licensed partners.
-            </div>
+            {/* EXACT original static tagline — left unchanged */}
+            <p className="tag">Secure access to digital assets & payments — via licensed partners.</p>
 
-            {/* Ticker area: marquee that shows live prices (scrolls & fades) */}
+            {/* Ticker area: marquee that shows live prices (only prices — NOT the tagline) */}
             <div style={{ minWidth: 0, flex: 1 }}>
               <div className="ticker-wrap" aria-live="polite" aria-atomic="true">
-                {/* Duplicate the text so the scroll loops smoothly — CSS translates by -50% */}
                 <div
                   className={`ticker ${tickerText.length < 40 ? 'idle' : ''}`}
                   key={tickerText}
                   title={tickerText}
                   style={{
-                    // animation duration scales with text length (longer text => longer loop)
                     animationDuration: tickerText.length < 80 ? '14s' : `${Math.min(Math.max(tickerText.length / 6, 18), 36)}s`
                   }}
                 >
-                  {tickerText} &nbsp;&nbsp; {tickerText}
+                  {/* Duplicate the price-only text for smooth looping */}
+                  {tickerText || (tickerLoading ? 'Loading prices…' : '')} &nbsp;&nbsp; {tickerText || (tickerLoading ? 'Loading prices…' : '')}
                 </div>
               </div>
             </div>
@@ -663,7 +643,6 @@ export default function App() {
               setShowSignIn(false)
               const greeting = getTimeBasedGreeting()
               const name = res.user.username || (res.user as any).firstname || 'there'
-              // Clear previous messages and start fresh with personalized greeting
               setMessages([{
                 id: crypto.randomUUID(),
                 role: 'assistant',
@@ -824,7 +803,7 @@ export default function App() {
         <BuyModal  open={showBuy}  onClose={() => setShowBuy(false)}  onChatEcho={echoFromModalToChat} />
 
         <footer className="footer">
-          <a href="https://drive.google.com/file/d/11qmXGhossotF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
+          <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
           <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
           <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
           <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
