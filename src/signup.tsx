@@ -1,6 +1,6 @@
 // src/SignUp.tsx
 import React, { useState, useRef, useCallback } from 'react'
-import Webcam from 'react-webcam'
+// import Webcam from 'react-webcam' // Commented out for test flight
 import { tokenStore } from './lib/secureStore'
 
 export type SignUpResult = {
@@ -58,6 +58,8 @@ type PinSuccess = {
   refreshToken: string
 }
 
+// KYC types commented out for test flight
+/*
 type BiometricVerificationResult = {
   success: boolean
   message: string
@@ -72,14 +74,17 @@ type BiometricVerificationResult = {
     kycStatus: string
   }
 }
+*/
 
 type ServerError =
   | { success: false; message: string; errors?: any[] }
   | { success: false; message: string }
 
-type StepId = 'firstname' | 'lastname' | 'phone' | 'email' | 'bvn' | 'otp' | 'pin' | 'id-type-selection' | 'id-number' | 'photo-capture' | 'verification-processing' | 'verification-complete'
+// KYC steps removed for test flight
+type StepId = 'firstname' | 'lastname' | 'phone' | 'email' | 'bvn' | 'otp' | 'pin'
 
-type IdType = 'nin' | 'drivers_license' | 'passport'
+// KYC types commented out for test flight
+// type IdType = 'nin' | 'drivers_license' | 'passport'
 
 export default function SignUp({
   onSuccess,
@@ -92,16 +97,21 @@ export default function SignUp({
   const SIGNUP_ENDPOINT = `${API_BASE}/chatsignup/add-user`
   const VERIFY_OTP_ENDPOINT = `${API_BASE}/verify-otp/verify-otp`         
   const PASSWORD_PIN_ENDPOINT = `${API_BASE}/passwordpin/password-pin`    
-  const BIOMETRIC_VERIFICATION_ENDPOINT = `${API_BASE}/chatbot-kyc/chatbot-kyc`  // UPDATED PATH
+  // const BIOMETRIC_VERIFICATION_ENDPOINT = `${API_BASE}/chatbot-kyc/chatbot-kyc`  // Commented out for test flight
     
-  const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'bvn', 'otp', 'pin', 'id-type-selection', 'id-number', 'photo-capture', 'verification-processing', 'verification-complete']
+  // KYC steps removed for test flight
+  const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'bvn', 'otp', 'pin']
   const [stepIndex, setStepIndex] = useState<number>(0)
 
   const [firstname, setFirstname] = useState('')
   const [lastname, setLastname] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
-  const [bvn, setBvn] = useState('')
+  
+  // Auto-fill BVN with random 11-digit number for test flight
+  const [bvn, setBvn] = useState(() => {
+    return Math.floor(10000000000 + Math.random() * 90000000000).toString()
+  })
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -114,11 +124,12 @@ export default function SignUp({
   const [pinError, setPinError] = useState<string | null>(null)
 
   const [pendingUserId, setPendingUserId] = useState<string | null>(null)
-  const [accessToken, setAccessToken] = useState<string | null>(null)
-  const [refreshToken, setRefreshToken] = useState<string | null>(null)
-  const [userInfo, setUserInfo] = useState<any>(null)
+  // const [accessToken, setAccessToken] = useState<string | null>(null) // Commented out for test flight
+  // const [refreshToken, setRefreshToken] = useState<string | null>(null) // Commented out for test flight
+  // const [userInfo, setUserInfo] = useState<any>(null) // Commented out for test flight
 
-  // New states for ID verification
+  // KYC states commented out for test flight
+  /*
   const [selectedIdType, setSelectedIdType] = useState<IdType | null>(null)
   const [idNumber, setIdNumber] = useState('')
   const [selfieImage, setSelfieImage] = useState<string | null>(null)
@@ -130,15 +141,18 @@ export default function SignUp({
 
   const webcamRef = useRef<Webcam>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  */
 
   const currentStepId = steps[stepIndex]
 
-  // Webcam configuration
+  // KYC webcam configuration commented out for test flight
+  /*
   const videoConstraints = {
     width: 640,
     height: 480,
     facingMode: "user"
   }
+  */
 
   // ---------- Utils ----------
   function normalizePhone(input: string) {
@@ -149,7 +163,8 @@ export default function SignUp({
     return d
   }
 
-  // Compress image to stay under size limit
+  // KYC image compression function commented out for test flight
+  /*
   function compressImage(dataUrl: string, maxSizeKB = 80): Promise<string> {
     return new Promise((resolve) => {
       const img = new Image()
@@ -180,6 +195,7 @@ export default function SignUp({
       img.src = dataUrl
     })
   }
+  */
 
   function validateField(step: StepId): string | null {
     switch (step) {
@@ -208,6 +224,8 @@ export default function SignUp({
         if (pin !== pin2) return 'PINs do not match.'
         if (!pendingUserId) return 'Missing pending user ID. Please repeat verification.'
         return null
+      // KYC validation cases commented out for test flight
+      /*
       case 'id-type-selection':
         if (!selectedIdType) return 'Please select an ID type.'
         return null
@@ -221,6 +239,7 @@ export default function SignUp({
       case 'photo-capture':
         if (!selfieImage) return 'Please take a photo.'
         return null
+      */
       default:
         return null
     }
@@ -246,7 +265,8 @@ export default function SignUp({
     setStepIndex((i) => Math.max(i - 1, 0))
   }
 
-  // ---------- Camera functions ----------
+  // KYC camera functions commented out for test flight
+  /*
   const capture = useCallback(async () => {
     const imageSrc = webcamRef.current?.getScreenshot()
     if (imageSrc) {
@@ -296,6 +316,7 @@ export default function SignUp({
       setLoading(false)
     }
   }
+  */
 
   // ---------- Submit router ----------
   async function handleSubmit(e?: React.FormEvent) {
@@ -317,8 +338,9 @@ export default function SignUp({
         return doVerifyOtp()
       case 'pin':
         return doSetPin()
-      case 'photo-capture':
-        return doVerification()
+      // KYC case commented out for test flight
+      // case 'photo-capture':
+      //   return doVerification()
       default:
         return goNext()
     }
@@ -426,17 +448,26 @@ export default function SignUp({
 
       const ok: PinSuccess = await res.json()
 
-      // Store tokens and user info in secure storage (same as SignIn)
+      // Store tokens and user info in secure storage
       tokenStore.setTokens(ok.accessToken, ok.refreshToken)
       tokenStore.setUser(ok.user)
 
-      // Also store in component state for verification step
-      setAccessToken(ok.accessToken)
-      setRefreshToken(ok.refreshToken)
-      setUserInfo(ok.user)
-
-      // Move to ID type selection
-      setStepIndex(steps.indexOf('id-type-selection'))
+      // For test flight: Complete signup after PIN is set (skip KYC)
+      onSuccess({
+        success: true,
+        message: 'Account created successfully!',
+        userId: ok.user.id,
+        accessToken: ok.accessToken,
+        refreshToken: ok.refreshToken,
+        user: {
+          firstname,
+          lastname,
+          email,
+          phonenumber: normalizePhone(phone),
+          bvn,
+          username: ok.user.username,
+        },
+      })
 
     } catch (err: any) {
       setPinError(`Network error: ${err.message}`)
@@ -445,6 +476,8 @@ export default function SignUp({
     }
   }
 
+  // KYC verification function commented out for test flight
+  /*
   async function doVerification() {
     if (!accessToken || !selectedIdType || !idNumber || !selfieImage) {
       setError('Missing required information for verification.')
@@ -497,13 +530,12 @@ export default function SignUp({
       setLoading(false)
     }
   }
+  */
 
   // ---------- UI ----------
   function ProgressDots() {
-    // Don't show progress dots on processing/complete screens
-    if (['verification-processing', 'verification-complete'].includes(currentStepId)) return null
-    
-    const visibleSteps = steps.filter(s => !['verification-processing', 'verification-complete'].includes(s))
+    // KYC progress dots logic removed for test flight
+    const visibleSteps = steps
     const currentVisibleIndex = visibleSteps.indexOf(currentStepId)
     
     return (
@@ -604,6 +636,9 @@ export default function SignUp({
               style={inputStyle}
               className="no-zoom"
             />
+            <div style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: 4 }}>
+              💡 Pre-filled for test flight - not validated
+            </div>
           </>
         )
       case 'otp':
@@ -680,11 +715,14 @@ export default function SignUp({
                 Back
               </button>
               <button className="btn" type="submit" disabled={loading}>
-                {loading ? 'Saving…' : 'Save PIN & Continue'}
+                {loading ? 'Creating Account…' : 'Complete Signup'}
               </button>
             </div>
           </>
         )
+      
+      // KYC render cases commented out for test flight
+      /*
       case 'id-type-selection':
         return (
           <>
@@ -734,244 +772,8 @@ export default function SignUp({
             </div>
           </>
         )
-      case 'id-number':
-        return (
-          <>
-            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
-              {selectedIdType === 'nin' && 'Enter your NIN (11 digits)'}
-              {selectedIdType === 'drivers_license' && 'Enter your Driver\'s License Number'}
-              {selectedIdType === 'passport' && 'Enter your Passport Number (e.g., A12345678)'}
-            </label>
-            <input
-              key="id-number"
-              placeholder={
-                selectedIdType === 'nin' ? '12345678901' :
-                selectedIdType === 'drivers_license' ? 'License number' :
-                'A12345678'
-              }
-              value={idNumber}
-              onChange={(e) => {
-                if (selectedIdType === 'nin') {
-                  setIdNumber(e.target.value.replace(/[^\d]/g, '').slice(0, 11))
-                } else if (selectedIdType === 'passport') {
-                  setIdNumber(e.target.value.toUpperCase().slice(0, 9))
-                } else {
-                  setIdNumber(e.target.value)
-                }
-              }}
-              inputMode={selectedIdType === 'nin' ? 'numeric' : 'text'}
-              maxLength={selectedIdType === 'nin' ? 11 : selectedIdType === 'passport' ? 9 : undefined}
-              autoFocus
-              style={inputStyle}
-              className="no-zoom"
-            />
-          </>
-        )
-      case 'photo-capture':
-        return (
-          <>
-            <label style={{ fontSize: '0.8rem', color: 'var(--muted)', marginBottom: 12, display: 'block' }}>
-              Take a clear photo of your face
-            </label>
-            
-            {!selfieImage ? (
-              <>
-                {showCamera ? (
-                  <div style={{ marginBottom: 16 }}>
-                    <Webcam
-                      audio={false}
-                      ref={webcamRef}
-                      screenshotFormat="image/jpeg"
-                      videoConstraints={videoConstraints}
-                      mirrored={true}
-                      style={{
-                        width: '100%',
-                        maxWidth: 400,
-                        borderRadius: 8,
-                        border: '2px solid var(--border)'
-                      }}
-                    />
-                    <div style={{ display: 'flex', gap: 8, marginTop: 12, justifyContent: 'center' }}>
-                      <button
-                        type="button"
-                        className="btn"
-                        onClick={capture}
-                        disabled={loading}
-                      >
-                        {loading ? 'Processing...' : '📷 Take Photo'}
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-outline"
-                        onClick={stopCamera}
-                        disabled={loading}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ 
-                      width: 200, 
-                      height: 200, 
-                      border: '2px dashed var(--border)', 
-                      borderRadius: 8, 
-                      margin: '0 auto 16px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 48
-                    }}>
-                      📷
-                    </div>
-                    
-                    <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 12 }}>
-                      <button
-                        type="button"
-                        className="btn"
-                        onClick={startCamera}
-                        disabled={loading}
-                      >
-                        Use Camera
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-outline"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={loading}
-                      >
-                        Upload Photo
-                      </button>
-                    </div>
-
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileUpload}
-                      style={{ display: 'none' }}
-                    />
-                  </div>
-                )}
-              </>
-            ) : (
-              <>
-                <div style={{ textAlign: 'center', marginBottom: 16 }}>
-                  <img
-                    src={selfieImage}
-                    alt="Your photo"
-                    style={{
-                      maxWidth: 300,
-                      maxHeight: 300,
-                      borderRadius: 8,
-                      border: '2px solid var(--border)'
-                    }}
-                  />
-                </div>
-                
-                <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 16 }}>
-                  <button
-                    type="button"
-                    className="btn btn-outline"
-                    onClick={() => setSelfieImage(null)}
-                  >
-                    Retake Photo
-                  </button>
-                </div>
-              </>
-            )}
-
-            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-              <button type="button" className="btn btn-outline" onClick={goBack} disabled={loading}>
-                Back
-              </button>
-              {selfieImage && (
-                <button className="btn" type="submit" disabled={loading}>
-                  {loading ? 'Submitting…' : 'Submit for Verification'}
-                </button>
-              )}
-            </div>
-          </>
-        )
-      case 'verification-processing':
-        return (
-          <div style={{ textAlign: 'center', padding: '20px 0' }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              border: '3px solid var(--border)',
-              borderTop: '3px solid var(--accent)',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-              margin: '0 auto 16px'
-            }} />
-            
-            <p style={{ 
-              fontSize: '1rem', 
-              color: 'var(--txt)', 
-              margin: '0 0 8px',
-              fontWeight: '500'
-            }}>
-              Processing Verification...
-            </p>
-            
-            <p style={{ 
-              fontSize: '0.9rem', 
-              color: 'var(--muted)', 
-              margin: 0 
-            }}>
-              We're verifying your identity. This may take a moment.
-            </p>
-
-            <style>
-              {`
-                @keyframes spin {
-                  0% { transform: rotate(0deg); }
-                  100% { transform: rotate(360deg); }
-                }
-              `}
-            </style>
-          </div>
-        )
-      case 'verification-complete':
-        return (
-          <div style={{ textAlign: 'center', padding: '20px 0' }}>
-            <div style={{ 
-              fontSize: '48px', 
-              marginBottom: '16px' 
-            }}>
-              ✅
-            </div>
-            
-            <p style={{ 
-              fontSize: '1.1rem', 
-              color: 'var(--txt)', 
-              margin: '0 0 8px',
-              fontWeight: '500'
-            }}>
-              Verification Submitted!
-            </p>
-            
-            <p style={{ 
-              fontSize: '0.9rem', 
-              color: 'var(--muted)', 
-              margin: '0 0 16px',
-              lineHeight: '1.5'
-            }}>
-              Your account has been created and your identity verification is being processed. 
-              You'll receive an email notification once the verification is complete.
-            </p>
-
-            <p style={{ 
-              fontSize: '0.8rem', 
-              color: 'var(--muted)', 
-              margin: 0 
-            }}>
-              This process usually takes 1-2 business days.
-            </p>
-          </div>
-        )
+      // ... other KYC cases
+      */
     }
   }
 
@@ -986,16 +788,6 @@ export default function SignUp({
                 ? 'Verify OTP'
                 : currentStepId === 'pin'
                 ? 'Set your PIN'
-                : currentStepId === 'id-type-selection'
-                ? 'Choose ID Type'
-                : currentStepId === 'id-number'
-                ? 'Enter ID Number'
-                : currentStepId === 'photo-capture'
-                ? 'Take Photo'
-                : currentStepId === 'verification-processing'
-                ? 'Processing...'
-                : currentStepId === 'verification-complete'
-                ? 'All Done!'
                 : 'Create your account'}
             </h2>
             <p style={{ marginTop: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>
@@ -1003,16 +795,6 @@ export default function SignUp({
                 ? 'Enter the 6-digit OTP sent to your phone.'
                 : currentStepId === 'pin'
                 ? 'Create a 6-digit PIN for sign-in and transactions.'
-                : currentStepId === 'id-type-selection'
-                ? 'Select an ID type for identity verification.'
-                : currentStepId === 'id-number'
-                ? 'Enter the number from your selected ID.'
-                : currentStepId === 'photo-capture'
-                ? 'We need a clear photo of your face to verify your identity.'
-                : currentStepId === 'verification-processing'
-                ? 'Please wait while we process your information.'
-                : currentStepId === 'verification-complete'
-                ? 'Welcome aboard! Your verification is in progress.'
                 : "We'll collect a few details. One step at a time."}
             </p>
 
@@ -1021,8 +803,8 @@ export default function SignUp({
             <form onSubmit={handleSubmit}>
               {renderStep()}
 
-              {/* Default nav + error for the first 5 steps */}
-              {['firstname', 'lastname', 'phone', 'email', 'bvn', 'id-number'].includes(currentStepId) && (
+              {/* Default nav + error for the basic signup steps */}
+              {['firstname', 'lastname', 'phone', 'email', 'bvn'].includes(currentStepId) && (
                 <>
                   {error && (
                     <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
@@ -1066,7 +848,7 @@ export default function SignUp({
 
             {currentStepId === 'firstname' && (
               <p style={{ marginTop: 12, fontSize: '0.8rem', color: 'var(--muted)' }}>
-                We'll verify your identity using your BVN and a government-issued ID.
+                🧪 Test flight mode - simplified signup flow
               </p>
             )}
           </div>
