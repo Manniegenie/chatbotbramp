@@ -629,10 +629,10 @@ export default function App() {
               <span style={{ color: 'var(--muted)', fontSize: 13 }}>
                 Signed in{auth.user?.username ? ` as ${auth.user.username}` : ''}
               </span>
-              <button className="btn" onClick={handleBuyClick} style={{ background: 'var(--accent)', color: 'white' }}>
+              <button className="btn" onClick={handleBuyClick} style={{ background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)' }}>
                 Buy
               </button>
-              <button className="btn" onClick={handleSellClick} style={{ background: 'var(--accent)', color: 'white' }}>
+              <button className="btn" onClick={handleSellClick} style={{ background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)' }}>
                 Sell
               </button>
               <button
