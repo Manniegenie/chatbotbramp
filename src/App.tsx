@@ -286,6 +286,7 @@ export default function App() {
   })
 
   const endRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null) // Add ref for input focus management
 
   // New state: prices for marquee (initially empty)
   const [tickerText, setTickerText] = useState<string>('')
@@ -390,6 +391,11 @@ export default function App() {
     setInput('')
     setLoading(true)
 
+    // Maintain focus on input after clearing
+    setTimeout(() => {
+      inputRef.current?.focus()
+    }, 0)
+
     try {
       const data = await sendChatMessage(trimmed, [...messages, userMsg])
 
@@ -414,6 +420,10 @@ export default function App() {
       setMessages((prev) => [...prev, errorMsg])
     } finally {
       setLoading(false)
+      // Ensure focus is maintained even after loading is complete
+      setTimeout(() => {
+        inputRef.current?.focus()
+      }, 0)
     }
   }
 
@@ -455,6 +465,17 @@ export default function App() {
   function echoFromModalToChat(text: string) {
     if (!text) return
     setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'assistant', text, ts: Date.now() }])
+  }
+
+  // Helper function for hint clicks
+  function handleHintClick(hintText: string) {
+    if (!loading) {
+      setInput(hintText)
+      // Focus input after setting hint text
+      setTimeout(() => {
+        inputRef.current?.focus()
+      }, 0)
+    }
   }
 
   return (
@@ -573,12 +594,9 @@ export default function App() {
         `}
       </style>
       <div className="page">
-        <header ref={headerRef} className="header" >
+        <header ref={headerRef} className="header">
           <div className="brand">
-            {/* EXACT original static tagline — left unchanged */}
             <p className="tag">Secure access to digital assets & payments — via licensed partners.</p>
-
-            {/* Ticker area: marquee that shows live prices (only prices — NOT the tagline) */}
             <div style={{ minWidth: 0, flex: 1 }}>
               <div className="ticker-wrap" aria-live="polite" aria-atomic="true">
                 <div
@@ -589,7 +607,6 @@ export default function App() {
                     animationDuration: tickerText.length < 80 ? '14s' : `${Math.min(Math.max(tickerText.length / 6, 18), 36)}s`
                   }}
                 >
-                  {/* Duplicate the price-only text for smooth looping; if tickerText is empty, render nothing */}
                   {tickerText ? `${tickerText}  ${tickerText}` : ''}
                 </div>
               </div>
@@ -719,6 +736,7 @@ export default function App() {
 
             <form className="composer" onSubmit={sendMessage}>
               <input
+                ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={loading ? 'Please wait…' : 'Try: Sell 100 USDT to NGN'}
@@ -785,14 +803,13 @@ export default function App() {
             </form>
 
             <div className="hints">
-              <span className="hint" onClick={() => !loading && setInput('Sell 100 USDT to NGN')}>Sell 100 USDT to NGN</span>
-              <span className="hint" onClick={() => !loading && setInput('Show my portfolio balance')}>Show my portfolio balance</span>
-              <span className="hint" onClick={() => !loading && setInput('Current NGN rates')}>Current NGN rates</span>
+              <span className="hint" onClick={() => handleHintClick('Sell 100 USDT to NGN')}>Sell 100 USDT to NGN</span>
+              <span className="hint" onClick={() => handleHintClick('Show my portfolio balance')}>Show my portfolio balance</span>
+              <span className="hint" onClick={() => handleHintClick('Current NGN rates')}>Current NGN rates</span>
             </div>
           </main>
         )}
 
-        {/* Modals */}
         <SellModal open={showSell} onClose={() => setShowSell(false)} onChatEcho={echoFromModalToChat} />
         <BuyModal  open={showBuy}  onClose={() => setShowBuy(false)}  onChatEcho={echoFromModalToChat} />
 
