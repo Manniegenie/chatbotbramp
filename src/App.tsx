@@ -77,7 +77,6 @@ function getErrorMessage(e: unknown): string {
   try { return JSON.stringify(e) } catch { return String(e) }
 }
 
-// Simple API call without streaming
 async function sendChatMessage(
   message: string,
   history: ChatMessage[]
@@ -99,17 +98,21 @@ async function sendChatMessage(
     cache: 'no-store',
   })
 
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+  const data = await response.json()
+
+  // Check backend success flag
+  if (!data?.success) {
+    // Throw error so catch block handles it
+    throw new Error(data?.error || 'AI could not process your request.')
   }
 
-  const data = await response.json()
   return {
-    reply: data?.reply ?? 'Sorry, I could not process that.',
+    reply: data?.reply || '',
     cta: data.cta || null,
     metadata: data.metadata
   }
 }
+
 
 /* ----------------------- Linkify + Markdown-lite helpers ----------------------- */
 
