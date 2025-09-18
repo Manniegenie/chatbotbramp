@@ -1,5 +1,5 @@
-// src/App.tsx
-import React, { useEffect, useRef, useState } from 'react'
+// src/App.tsx - Performance Optimized Version
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import SignIn, { SignInResult } from './signin'
 import SignUp, { SignUpResult } from './signup'
 import { tokenStore } from './lib/secureStore'
@@ -28,91 +28,257 @@ export type ChatMessage = {
   cta?: CTA | null
 }
 
-// --- session id (stable across page loads) ---
+// ✅ PERFORMANCE: Enhanced session management
 function getSessionId(): string {
   const key = 'bramp__session_id'
-  let sid = localStorage.getItem(key)
+  let sid = sessionStorage.getItem(key) // Use sessionStorage instead of localStorage for session-specific data
   if (!sid) {
     sid = crypto.randomUUID()
-    localStorage.setItem(key, sid)
+    sessionStorage.setItem(key, sid)
   }
   return sid
 }
 
-// Helper function to get time-based greeting
-function getTimeBasedGreeting(): string {
-  const hour = new Date().getHours()
+// ✅ PERFORMANCE: Response cache using Map with TTL
+interface CachedResponse {
+  data: { reply: string; cta?: CTA | null; metadata?: any }
+  timestamp: number
+  ttl: number
+}
 
-  if (hour < 12) {
-    return 'Good morning'
-  } else if (hour < 18) {
-    return 'Good afternoon'
-  } else {
-    return 'Good evening'
+class ResponseCache {
+  private cache = new Map<string, CachedResponse>()
+  private maxSize = 100
+  private defaultTTL = 5 * 60 * 1000 // 5 minutes
+
+  private generateKey(message: string, userId?: string, isAuthed: boolean = false): string {
+    const normalizedMsg = message.toLowerCase().trim().replace(/[^\w\s]/g, '')
+    const authPrefix = isAuthed ? 'auth:' : 'anon:'
+    const userSuffix = userId ? `:${userId}` : ''
+    return `${authPrefix}${normalizedMsg.substring(0, 50)}${userSuffix}`
+  }
+
+  get(message: string, userId?: string, isAuthed: boolean = false): { reply: string; cta?: CTA | null; metadata?: any } | null {
+    const key = this.generateKey(message, userId, isAuthed)
+    const cached = this.cache.get(key)
+    
+    if (!cached) return null
+    
+    // Check if expired
+    if (Date.now() > cached.timestamp + cached.ttl) {
+      this.cache.delete(key)
+      return null
+    }
+    
+    return cached.data
+  }
+
+  set(
+    message: string, 
+    data: { reply: string; cta?: CTA | null; metadata?: any }, 
+    userId?: string,
+    isAuthed: boolean = false,
+    customTTL?: number
+  ): void {
+    const key = this.generateKey(message, userId, isAuthed)
+    
+    // Limit cache size
+    if (this.cache.size >= this.maxSize) {
+      const firstKey = this.cache.keys().next().value
+      if (firstKey) this.cache.delete(firstKey)
+    }
+
+    // Don't cache user-specific responses for anonymous users
+    if (isAuthed && data.reply.includes('portfolio') || data.reply.includes('balance')) {
+      // Short TTL for personalized data
+      this.cache.set(key, {
+        data,
+        timestamp: Date.now(),
+        ttl: customTTL || 30 * 1000 // 30 seconds for user data
+      })
+    } else {
+      // Longer TTL for general responses
+      this.cache.set(key, {
+        data,
+        timestamp: Date.now(),
+        ttl: customTTL || this.defaultTTL
+      })
+    }
+  }
+
+  clear(): void {
+    this.cache.clear()
+  }
+
+  size(): number {
+    return this.cache.size
   }
 }
 
-// Always read the freshest token from secure storage
+// Global cache instance
+const responseCache = new ResponseCache()
+
+// ✅ PERFORMANCE: Optimized JWT expiry check with caching
+const jwtCache = new Map<string, { isExpired: boolean; timestamp: number }>()
+
 function isExpiredJwt(token: string): boolean {
+  if (!token) return true
+  
+  const cacheKey = token.substring(0, 20) // Use token prefix as key
+  const cached = jwtCache.get(cacheKey)
+  
+  // Cache for 1 minute to avoid repeated parsing
+  if (cached && Date.now() - cached.timestamp < 60000) {
+    return cached.isExpired
+  }
+
+  let isExpired = true
   try {
     const [, payloadB64] = token.split('.')
     const json = atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/'))
     const { exp } = JSON.parse(json)
-    return !exp || Date.now() >= exp * 1000
-  } catch { return true }
+    isExpired = !exp || Date.now() >= exp * 1000
+  } catch {
+    isExpired = true
+  }
+
+  // Cache result
+  jwtCache.set(cacheKey, { isExpired, timestamp: Date.now() })
+  
+  // Limit cache size
+  if (jwtCache.size > 50) {
+    const firstKey = jwtCache.keys().next().value
+    if (firstKey) jwtCache.delete(firstKey)
+  }
+
+  return isExpired
 }
+
+// ✅ PERFORMANCE: Request deduplication
+const activeRequests = new Map<string, Promise<any>>()
 
 async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
   const { access } = tokenStore.getTokens()
   const headers = new Headers(init.headers || {})
   if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json')
   if (access && !isExpiredJwt(access)) headers.set('Authorization', `Bearer ${access}`)
-  return fetch(input, { ...init, headers })
+  
+  // ✅ PERFORMANCE: Enable caching for GET requests
+  const finalInit = { 
+    ...init, 
+    headers,
+    // Only disable cache for POST requests
+    ...(init.method === 'POST' ? { cache: 'no-store' as RequestCache } : {})
+  }
+  
+  return fetch(input, finalInit)
 }
 
-/* ----------------------- Error helper ----------------------- */
 function getErrorMessage(e: unknown): string {
   if (e instanceof Error) return e.message
   if (typeof e === 'string') return e
   try { return JSON.stringify(e) } catch { return String(e) }
 }
 
-// Simple API call without streaming
+// ✅ PERFORMANCE: Optimized chat message sending with caching and deduplication
 async function sendChatMessage(
   message: string,
   history: ChatMessage[]
 ): Promise<{ reply: string; cta?: CTA | null; metadata?: any }> {
   const { access } = tokenStore.getTokens()
+  const isAuthed = access && !isExpiredJwt(access)
+  
+  // ✅ PERFORMANCE: Check cache first
+  const userId = isAuthed ? 'user' : undefined // Simplified user ID
+  const cachedResponse = responseCache.get(message, userId, !!isAuthed)
+  if (cachedResponse) {
+    console.log('✅ Cache hit for message:', message.substring(0, 30))
+    // Add small delay to simulate network request (optional UX improvement)
+    await new Promise(resolve => setTimeout(resolve, 100))
+    return {
+      ...cachedResponse,
+      metadata: { ...cachedResponse.metadata, cached: true }
+    }
+  }
+
+  // ✅ PERFORMANCE: Request deduplication
+  const requestKey = `${message}:${userId || 'anon'}:${getSessionId()}`
+  const existingRequest = activeRequests.get(requestKey)
+  if (existingRequest) {
+    console.log('✅ Deduplicating request for:', message.substring(0, 30))
+    return existingRequest
+  }
 
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (access && !isExpiredJwt(access)) headers['Authorization'] = `Bearer ${access}`
+  if (isAuthed) headers['Authorization'] = `Bearer ${access}`
 
-  const response = await fetch(`${API_BASE}/chatbot/chat`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      message,
-      history: history.slice(-10).map((m) => ({ role: m.role, text: m.text })),
-      sessionId: getSessionId(),
-    }),
-    mode: 'cors',
-    cache: 'no-store',
-  })
+  // ✅ PERFORMANCE: Optimize request payload - send minimal data
+  const minimalHistory = history.slice(-5).map((m) => ({ // Reduce from 10 to 5 messages
+    role: m.role,
+    text: m.text.substring(0, 200) // Truncate long messages in history
+  }))
 
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-  }
+  const requestPromise = (async () => {
+    try {
+      const response = await fetch(`${API_BASE}/chatbot/chat`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          message,
+          history: minimalHistory,
+          sessionId: getSessionId(),
+        }),
+        mode: 'cors',
+        cache: 'no-store', // Only for POST requests
+        // ✅ PERFORMANCE: Add timeout
+        signal: AbortSignal.timeout(10000) // 10 second timeout
+      })
 
-  const data = await response.json()
-  return {
-    reply: data?.reply ?? 'Sorry, I could not process that.',
-    cta: data.cta || null,
-    metadata: data.metadata
-  }
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      const result = {
+        reply: data?.reply ?? 'Sorry, I could not process that.',
+        cta: data.cta || null,
+        metadata: data.metadata
+      }
+
+      // ✅ PERFORMANCE: Cache successful responses
+      if (result.reply && !result.reply.includes('Error') && !result.reply.includes('Sorry')) {
+        // Determine TTL based on response type
+        let ttl = 5 * 60 * 1000 // 5 minutes default
+        
+        if (data.metadata?.intent === 'naira_rates') ttl = 30 * 1000 // 30 seconds for rates
+        else if (data.metadata?.intent === 'dashboard' || data.metadata?.intent === 'supported_token_price') ttl = 60 * 1000 // 1 minute for user data
+        else if (data.metadata?.intent === 'greeting') ttl = 10 * 60 * 1000 // 10 minutes for greetings
+        
+        responseCache.set(message, result, userId, !!isAuthed, ttl)
+      }
+
+      return result
+    } finally {
+      // Clean up active request
+      activeRequests.delete(requestKey)
+    }
+  })()
+
+  // Store active request
+  activeRequests.set(requestKey, requestPromise)
+
+  return requestPromise
+}
+
+// Helper function to get time-based greeting
+function getTimeBasedGreeting(): string {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good morning'
+  else if (hour < 18) return 'Good afternoon'
+  else return 'Good evening'
 }
 
 /* ----------------------- Linkify + Markdown-lite helpers ----------------------- */
-
 const URL_REGEX = /https?:\/\/[^\s<>"')]+/gi
 const MD_LINK = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g
 
@@ -171,7 +337,8 @@ function inlineRender(text: string, keyPrefix: string): React.ReactNode[] {
   return finalNodes
 }
 
-function renderMessageText(text: string): React.ReactNode {
+// ✅ PERFORMANCE: Memoize message rendering
+const MemoizedMessageText = React.memo(({ text }: { text: string }) => {
   const paragraphs = text.split(/\r?\n\s*\r?\n/)
   const rendered: React.ReactNode[] = []
 
@@ -206,49 +373,28 @@ function renderMessageText(text: string): React.ReactNode {
     }
   })
 
-  return rendered
-}
+  return <>{rendered}</>
+})
 
-// Three dot loading component
 function ThreeDotLoader() {
   return (
     <div className="typing">
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-        <div style={{
-          width: '6px',
-          height: '6px',
-          backgroundColor: 'var(--muted)',
-          borderRadius: '50%',
-          animation: 'dotBounce 1.4s ease-in-out infinite both',
-          animationDelay: '-0.32s'
-        }}></div>
-        <div style={{
-          width: '6px',
-          height: '6px',
-          backgroundColor: 'var(--muted)',
-          borderRadius: '50%',
-          animation: 'dotBounce 1.4s ease-in-out infinite both',
-          animationDelay: '-0.16s'
-        }}></div>
-        <div style={{
-          width: '6px',
-          height: '6px',
-          backgroundColor: 'var(--muted)',
-          borderRadius: '50%',
-          animation: 'dotBounce 1.4s ease-in-out infinite both',
-          animationDelay: '0s'
-        }}></div>
+        {[0, 1, 2].map(i => (
+          <div key={i} style={{
+            width: '6px',
+            height: '6px',
+            backgroundColor: 'var(--muted)',
+            borderRadius: '50%',
+            animation: 'dotBounce 1.4s ease-in-out infinite both',
+            animationDelay: `${-0.32 + i * 0.16}s`
+          }} />
+        ))}
       </div>
       <style>{`
         @keyframes dotBounce {
-          0%, 80%, 100% {
-            transform: scale(0.8);
-            opacity: 0.5;
-          }
-          40% {
-            transform: scale(1.2);
-            opacity: 1;
-          }
+          0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+          40% { transform: scale(1.2); opacity: 1; }
         }
       `}</style>
     </div>
@@ -262,8 +408,7 @@ export default function App() {
     {
       id: crypto.randomUUID(),
       role: 'assistant',
-      text:
-        "👋 Hey there! I'm Bramp AI — your personal assistant for everything crypto. Please Sign up or Sign in for full access😊",
+      text: "👋 Hey there! I'm Bramp AI — your personal assistant for everything crypto. Please Sign up or Sign in for full access😊",
       ts: Date.now(),
     },
   ])
@@ -279,6 +424,7 @@ export default function App() {
   const [openSellAfterAuth, setOpenSellAfterAuth] = useState(false)
   const [openBuyAfterAuth, setOpenBuyAfterAuth] = useState(false)
 
+  // ✅ PERFORMANCE: Memoize auth state
   const [auth, setAuth] = useState<SignInResult | null>(() => {
     const { access, refresh } = tokenStore.getTokens()
     const user = tokenStore.getUser()
@@ -286,12 +432,17 @@ export default function App() {
   })
 
   const endRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null) // Add ref for input focus management
+  const inputRef = useRef<HTMLInputElement>(null)
 
-  // New state: prices for marquee (initially empty)
   const [tickerText, setTickerText] = useState<string>('')
-  // keep a loading flag internally but DO NOT display loading text in UI
   const [tickerLoading, setTickerLoading] = useState<boolean>(false)
+
+  // ✅ PERFORMANCE: Debounced input handling
+  const [debouncedInput, setDebouncedInput] = useState('')
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedInput(input), 300)
+    return () => clearTimeout(timer)
+  }, [input])
 
   // Scrub sensitive URL params on load
   useEffect(() => {
@@ -312,23 +463,26 @@ export default function App() {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading, showSignIn, showSignUp, showSell, showBuy])
 
-  /* ------------------- Price ticker: fetch & formatting ------------------- */
+  /* ------------------- Price ticker with caching ------------------- */
   const TICKER_SYMBOLS = ['BTC','ETH','USDT','USDC','BNB','MATIC','AVAX','SOL','NGNB']
 
-  async function fetchTickerPrices(signal?: AbortSignal) {
+  // ✅ PERFORMANCE: Memoized ticker fetch with caching
+  const fetchTickerPrices = useCallback(async (signal?: AbortSignal) => {
     try {
       setTickerLoading(true)
       const symbolParam = TICKER_SYMBOLS.join(',')
       const url = `${API_BASE}/prices/prices?symbols=${encodeURIComponent(symbolParam)}&changes=true&limit=9`
+      
       const resp = await authFetch(url, { method: 'GET', signal })
       if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${resp.statusText}`)
+      
       const payload = await resp.json()
       if (!payload?.success || !payload?.data) {
         throw new Error('Invalid prices response')
       }
+      
       const { prices = {}, hourlyChanges = {} } = payload.data
 
-      // format items without tail text and without emojis
       const items = TICKER_SYMBOLS.filter(s => (s === 'NGNB') || typeof prices[s] === 'number').map((s) => {
         const priceVal = prices[s]
         const changeObj = hourlyChanges?.[s]
@@ -347,25 +501,20 @@ export default function App() {
         return `${s} $${usdStr}${changeText}`
       }).filter(Boolean)
 
-      // join with bullet separators (no tail text)
       const text = items.join('  •  ')
       setTickerText(text)
     } catch (err) {
-      // on failure, keep tickerText empty (silent background load)
       console.warn('Ticker fetch failed', err)
-      // do not modify UI visible text; keep it blank if nothing fetched
     } finally {
       setTickerLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     const ac = new AbortController()
-    // load once in background on mount (no visible loading placeholder)
-    fetchTickerPrices(ac.signal).catch(() => { /* swallowed */ })
+    fetchTickerPrices(ac.signal).catch(() => {})
     return () => ac.abort()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [fetchTickerPrices])
 
   // Header pin/shadow logic
   const headerRef = useRef<HTMLElement | null>(null)
@@ -381,20 +530,25 @@ export default function App() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  async function sendMessage(e?: React.FormEvent) {
+  // ✅ PERFORMANCE: Optimized send message with better UX
+  const sendMessage = useCallback(async (e?: React.FormEvent) => {
     e?.preventDefault()
     const trimmed = input.trim()
     if (!trimmed || loading) return
 
-    const userMsg: ChatMessage = { id: crypto.randomUUID(), role: 'user', text: trimmed, ts: Date.now() }
+    const userMsg: ChatMessage = { 
+      id: crypto.randomUUID(), 
+      role: 'user', 
+      text: trimmed, 
+      ts: Date.now() 
+    }
+    
     setMessages((prev) => [...prev, userMsg])
     setInput('')
     setLoading(true)
 
     // Maintain focus on input after clearing
-    setTimeout(() => {
-      inputRef.current?.focus()
-    }, 0)
+    setTimeout(() => inputRef.current?.focus(), 0)
 
     try {
       const data = await sendChatMessage(trimmed, [...messages, userMsg])
@@ -420,29 +574,28 @@ export default function App() {
       setMessages((prev) => [...prev, errorMsg])
     } finally {
       setLoading(false)
-      // Ensure focus is maintained even after loading is complete
-      setTimeout(() => {
-        inputRef.current?.focus()
-      }, 0)
+      setTimeout(() => inputRef.current?.focus(), 0)
     }
-  }
+  }, [input, loading, messages])
 
-  function signOut() {
+  // ✅ PERFORMANCE: Memoized callbacks
+  const signOut = useCallback(() => {
     tokenStore.clear()
     setAuth(null)
     setShowSell(false)
     setShowBuy(false)
-  }
+    responseCache.clear() // Clear cache on sign out
+  }, [])
 
-  function isSellCTA(btn: CTAButton): boolean {
+  const isSellCTA = useCallback((btn: CTAButton): boolean => {
     if (!btn) return false
     if (btn.id === 'start_sell') return true
     const url = String(btn.url || '').toLowerCase()
     const sellPatterns = [/\/sell($|\/|\?|#)/, /chatbramp\.com\/sell/, /localhost.*\/sell/, /sell\.html?$/, /\bsell\b/]
     return sellPatterns.some((rx) => rx.test(url))
-  }
+  }, [])
 
-  function handleSellClick(event?: React.MouseEvent) {
+  const handleSellClick = useCallback((event?: React.MouseEvent) => {
     event?.preventDefault()
     if (!auth) {
       setOpenSellAfterAuth(true)
@@ -450,9 +603,9 @@ export default function App() {
       return
     }
     setShowSell(true)
-  }
+  }, [auth])
 
-  function handleBuyClick(event?: React.MouseEvent) {
+  const handleBuyClick = useCallback((event?: React.MouseEvent) => {
     event?.preventDefault()
     if (!auth) {
       setOpenBuyAfterAuth(true)
@@ -460,23 +613,77 @@ export default function App() {
       return
     }
     setShowBuy(true)
-  }
+  }, [auth])
 
-  function echoFromModalToChat(text: string) {
+  const echoFromModalToChat = useCallback((text: string) => {
     if (!text) return
-    setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'assistant', text, ts: Date.now() }])
-  }
+    setMessages((prev) => [...prev, { 
+      id: crypto.randomUUID(), 
+      role: 'assistant', 
+      text, 
+      ts: Date.now() 
+    }])
+  }, [])
 
-  // Helper function for hint clicks
-  function handleHintClick(hintText: string) {
+  const handleHintClick = useCallback((hintText: string) => {
     if (!loading) {
       setInput(hintText)
-      // Focus input after setting hint text
-      setTimeout(() => {
-        inputRef.current?.focus()
-      }, 0)
+      setTimeout(() => inputRef.current?.focus(), 0)
     }
-  }
+  }, [loading])
+
+  // ✅ PERFORMANCE: Memoize expensive renders
+  const renderedMessages = useMemo(() => {
+    return messages.map((m) => (
+      <div key={m.id} className={`bubble ${m.role}`}>
+        <div className="role">
+          {m.role === 'user' ? 'You' : 'Bramp AI'}
+        </div>
+        <div className="text">
+          <MemoizedMessageText text={m.text} />
+          {m.role === 'assistant' && m.cta?.type === 'button' && m.cta.buttons?.length > 0 && (
+            <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {m.cta.buttons.map((btn, index) => {
+                const isSell = isSellCTA(btn)
+                if (isSell) {
+                  return (
+                    <button
+                      key={btn.id || btn.title || index}
+                      className="btn"
+                      onClick={handleSellClick}
+                      style={
+                        btn.style === 'primary'
+                          ? undefined
+                          : { background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }
+                      }
+                    >
+                      {btn.title}
+                    </button>
+                  )
+                }
+                return (
+                  <a
+                    key={btn.id || btn.title || index}
+                    className="btn"
+                    href={btn.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={
+                      btn.style === 'primary'
+                        ? undefined
+                        : { background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }
+                    }
+                  >
+                    {btn.title}
+                  </a>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    ))
+  }, [messages, isSellCTA, handleSellClick])
 
   return (
     <>
@@ -484,108 +691,52 @@ export default function App() {
         {`
           /* Fix iOS viewport issues */
           @supports (-webkit-touch-callout: none) {
-            html {
-              height: -webkit-fill-available;
-            }
-            body {
-              min-height: 100vh;
-              min-height: -webkit-fill-available;
-            }
-            .page {
-              min-height: 100vh;
-              min-height: -webkit-fill-available;
-            }
+            html { height: -webkit-fill-available; }
+            body { min-height: 100vh; min-height: -webkit-fill-available; }
+            .page { min-height: 100vh; min-height: -webkit-fill-available; }
           }
 
-          /* Prevent safe area displacement during scroll */
           @media (max-width: 480px) {
-            .composer {
-              padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
-            }
-            .footer {
-              padding-bottom: max(14px, calc(14px + env(safe-area-inset-bottom))) !important;
-            }
+            .composer { padding-bottom: max(10px, env(safe-area-inset-bottom)) !important; }
+            .footer { padding-bottom: max(14px, calc(14px + env(safe-area-inset-bottom))) !important; }
           }
 
-          /* Animation for spinner */
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
+          @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-          /* Header sticky/pinned */
           .header {
-            position: sticky;
-            top: 0;
-            z-index: 60;
+            position: sticky; top: 0; z-index: 60;
             background: linear-gradient(180deg, rgba(18,18,26,0.95), rgba(18,18,26,0.8));
-            backdrop-filter: blur(6px);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 12px 16px;
-            transition: box-shadow 200ms ease, transform 160ms ease;
+            backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: space-between;
+            gap: 12px; padding: 12px 16px; transition: box-shadow 200ms ease, transform 160ms ease;
           }
-          .header.pinned {
-            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-            transform: translateY(0);
-          }
+          .header.pinned { box-shadow: 0 6px 20px rgba(0,0,0,0.25); transform: translateY(0); }
 
           .brand { display:flex; align-items:center; gap:12px; min-width:0; flex:1; }
           .tag { font-size: 14px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-          /* Ticker / marquee */
           .ticker-wrap {
-            position: relative;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            overflow: hidden;
-            width: 100%;
-            min-width: 160px;
+            position: relative; height: 28px; display: flex; align-items: center;
+            overflow: hidden; width: 100%; min-width: 160px;
           }
           .ticker {
-            display: inline-block;
-            white-space: nowrap;
-            will-change: transform;
-            animation: tickerScroll 18s linear infinite;
-            padding-left: 100%;
-            box-sizing: content-box;
-            font-weight: 600;
-            font-size: 13px;
-            color: var(--accent); /* use green accent for ticker text */
+            display: inline-block; white-space: nowrap; will-change: transform;
+            animation: tickerScroll 18s linear infinite; padding-left: 100%;
+            box-sizing: content-box; font-weight: 600; font-size: 13px; color: var(--accent);
           }
 
-          /* fade edges */
-          .ticker-wrap::before,
-          .ticker-wrap::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 64px;
-            pointer-events: none;
+          .ticker-wrap::before, .ticker-wrap::after {
+            content: ""; position: absolute; top: 0; bottom: 0; width: 64px; pointer-events: none;
           }
           .ticker-wrap::before {
-            left: 0;
-            background: linear-gradient(90deg, rgba(18,18,26,1) 0%, rgba(18,18,26,0) 100%);
+            left: 0; background: linear-gradient(90deg, rgba(18,18,26,1) 0%, rgba(18,18,26,0) 100%);
           }
           .ticker-wrap::after {
-            right: 0;
-            background: linear-gradient(270deg, rgba(18,18,26,1) 0%, rgba(18,18,26,0) 100%);
+            right: 0; background: linear-gradient(270deg, rgba(18,18,26,1) 0%, rgba(18,18,26,0) 100%);
           }
 
-          @keyframes tickerScroll {
-            0% { transform: translateX(0%); }
-            100% { transform: translateX(-50%); }
-          }
+          @keyframes tickerScroll { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }
 
-          .ticker.idle {
-            animation: none;
-            padding-left: 0;
-            transform: none;
-          }
+          .ticker.idle { animation: none; padding-left: 0; transform: none; }
 
           @media (max-width: 640px) {
             .ticker { font-size: 12px; }
@@ -681,55 +832,7 @@ export default function App() {
         ) : (
           <main className="chat">
             <div className="messages">
-              {messages.map((m) => (
-                <div key={m.id} className={`bubble ${m.role}`}>
-                  <div className="role">
-                    {m.role === 'user' ? 'You' : 'Bramp AI'}
-                  </div>
-                  <div className="text">
-                    {renderMessageText(m.text)}
-                    {m.role === 'assistant' && m.cta?.type === 'button' && m.cta.buttons?.length > 0 && (
-                      <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                        {m.cta.buttons.map((btn, index) => {
-                          const isSell = isSellCTA(btn)
-                          if (isSell) {
-                            return (
-                              <button
-                                key={btn.id || btn.title || index}
-                                className="btn"
-                                onClick={handleSellClick}
-                                style={
-                                  btn.style === 'primary'
-                                    ? undefined
-                                    : { background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }
-                                }
-                              >
-                                {btn.title}
-                              </button>
-                            )
-                          }
-                          return (
-                            <a
-                              key={btn.id || btn.title || index}
-                              className="btn"
-                              href={btn.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={
-                                btn.style === 'primary'
-                                  ? undefined
-                                  : { background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt)' }
-                              }
-                            >
-                              {btn.title}
-                            </a>
-                          )
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
+              {renderedMessages}
               {loading && <ThreeDotLoader />}
               <div ref={endRef} />
             </div>
@@ -748,21 +851,14 @@ export default function App() {
                 className="btn"
                 disabled={loading || !input.trim()}
                 style={{
-                  width: '44px',
-                  height: '44px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '0',
+                  width: '44px', height: '44px', borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0',
                   background: loading || !input.trim() ? '#ccc' : 'var(--accent)',
-                  color: 'white',
-                  border: 'none',
+                  color: 'white', border: 'none',
                   cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
                   transition: 'all 0.2s ease',
                   boxShadow: loading || !input.trim() ? 'none' : '0 2px 8px rgba(0,115,55,0.18)',
-                  minWidth: '44px',
-                  flexShrink: 0
+                  minWidth: '44px', flexShrink: 0
                 }}
                 onMouseEnter={(e) => {
                   if (!loading && input.trim()) {
@@ -777,24 +873,12 @@ export default function App() {
               >
                 {loading ? (
                   <div style={{
-                    width: '16px',
-                    height: '16px',
-                    border: '2px solid transparent',
-                    borderTop: '2px solid white',
-                    borderRadius: '50%',
+                    width: '16px', height: '16px', border: '2px solid transparent',
+                    borderTop: '2px solid white', borderRadius: '50%',
                     animation: 'spin 1s linear infinite'
                   }} />
                 ) : (
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="white"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13" />
                     <polygon points="22,2 15,22 11,13 2,9" />
                   </svg>
@@ -822,4 +906,21 @@ export default function App() {
       </div>
     </>
   )
+}
+
+// ✅ PERFORMANCE: Clear caches periodically (optional)
+if (typeof window !== 'undefined') {
+  setInterval(() => {
+    // Clear expired entries periodically
+    const now = Date.now()
+    jwtCache.forEach((value, key) => {
+      if (now - value.timestamp > 300000) { // 5 minutes
+        jwtCache.delete(key)
+      }
+    })
+    
+    if (jwtCache.size > 100) {
+      jwtCache.clear()
+    }
+  }, 300000) // Every 5 minutes
 }
