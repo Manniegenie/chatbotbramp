@@ -6,7 +6,7 @@ import { tokenStore } from './lib/secureStore'
 import SellModal from './sell'
 import BuyModal from './buy'
 // Import logo from assets
-import BrampLogo from './assets/logo.jpeg' // Placeholder path
+import BrampLogo from './assets/bramp-logo.png' // Placeholder path
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -618,7 +618,7 @@ export default function App() {
             text-align: center;
             font-size: 12px;
             color: var(--muted);
-            margin-top: 8px;
+            margin-top: 12px;
           }
         `}
       </style>
@@ -848,11 +848,16 @@ export default function App() {
           <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
           <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
           
+          {/* Copyright notice directly below policy links */}
+          <div className="footer-copyright">
+            © 2025 Bramp Africa Limited. Bramp Platforms, LLC.
+          </div>
+          
           {/* Bramp Africa section */}
           <div className="footer-brand">
             <img 
               src={BrampLogo} 
-              alt="Bramp Africa Logo" 
+              alt="Bramp Logo" 
               width="24" 
               height="24"
               onError={(e) => {
@@ -860,12 +865,7 @@ export default function App() {
                 e.currentTarget.style.display = 'none';
               }}
             />
-            <span>Bramp Africa</span>
-          </div>
-          
-          {/* Copyright notice */}
-          <div className="footer-copyright">
-            © 2025 Bramp Africa Limited. Bramp Platforms, LLC.
+            <span>Bramp</span>
           </div>
         </footer>
       </div>
