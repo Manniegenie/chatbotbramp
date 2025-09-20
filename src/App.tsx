@@ -6,7 +6,7 @@ import { tokenStore } from './lib/secureStore'
 import SellModal from './sell'
 import BuyModal from './buy'
 // Import logo from assets
-import BrampLogo from './assets/bramp-logo.png' // Placeholder path
+import BrampLogo from './assets/logo.jpeg' // Placeholder path
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
