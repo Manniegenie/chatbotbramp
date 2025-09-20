@@ -924,7 +924,7 @@ export default function App() {
                   e.currentTarget.style.display = 'none';
                 }}
               />
-              <span>Bramp</span>
+              <span></span>
             </div>
           </div>
         </footer>
