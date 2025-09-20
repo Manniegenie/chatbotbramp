@@ -5,6 +5,8 @@ import SignUp, { SignUpResult } from './signup'
 import { tokenStore } from './lib/secureStore'
 import SellModal from './sell'
 import BuyModal from './buy'
+// Import logo from assets
+import BrampLogo from './assets/logo.jpeg' // Placeholder path
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -591,6 +593,33 @@ export default function App() {
             .ticker { font-size: 12px; }
             .tag { display:block; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
           }
+
+          /* Footer branding styles */
+          .footer-brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 16px 0 8px;
+            padding: 12px 0;
+            border-top: 1px solid var(--border);
+          }
+          .footer-brand img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+          }
+          .footer-brand span {
+            font-size: 14px;
+            color: var(--txt);
+            font-weight: 500;
+          }
+          .footer-copyright {
+            text-align: center;
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 8px;
+          }
         `}
       </style>
       <div className="page">
@@ -818,6 +847,26 @@ export default function App() {
           <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
           <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
           <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
+          
+          {/* Bramp Africa section */}
+          <div className="footer-brand">
+            <img 
+              src={BrampLogo} 
+              alt="Bramp Africa Logo" 
+              width="24" 
+              height="24"
+              onError={(e) => {
+                // Fallback to a placeholder if logo fails to load
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+            <span>Bramp Africa</span>
+          </div>
+          
+          {/* Copyright notice */}
+          <div className="footer-copyright">
+            © 2025 Bramp Africa Limited. Bramp Platforms, LLC.
+          </div>
         </footer>
       </div>
     </>
