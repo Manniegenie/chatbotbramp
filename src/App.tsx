@@ -5,6 +5,8 @@ import SignUp, { SignUpResult } from './signup'
 import { tokenStore } from './lib/secureStore'
 import SellModal from './sell'
 import BuyModal from './buy'
+// Import logo from assets
+import BrampLogo from './assets/bramp-logo.png' // Placeholder path
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -591,6 +593,89 @@ export default function App() {
             .ticker { font-size: 12px; }
             .tag { display:block; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
           }
+
+          /* Footer: responsive layout and alignment fixes */
+          .footer {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            background: transparent;
+          }
+
+          /* groups inside footer for layout control */
+          .footer-left,
+          .footer-center,
+          .footer-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }
+
+          /* policy links row */
+          .footer-links {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .footer a {
+            font-size: 13px;
+            color: var(--muted);
+            text-decoration: none;
+            padding: 6px 0;
+          }
+          .footer a:hover {
+            text-decoration: underline;
+            color: var(--txt);
+          }
+
+          .footer-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+          }
+          .footer-brand img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+          }
+          .footer-brand span {
+            font-size: 14px;
+            color: var(--txt);
+            font-weight: 500;
+          }
+
+          .footer-center {
+            text-align: center;
+          }
+          .footer-center .copyright {
+            font-size: 12px;
+            color: var(--muted);
+            white-space: nowrap;
+          }
+
+          /* On small screens stack nicely */
+          @media (max-width: 640px) {
+            .footer {
+              justify-content: center;
+              text-align: center;
+            }
+            .footer-left, .footer-right {
+              width: 100%;
+              justify-content: center;
+            }
+            .footer-center {
+              width: 100%;
+              margin-top: 6px;
+            }
+          }
         `}
       </style>
       <div className="page">
@@ -814,10 +899,34 @@ export default function App() {
         <BuyModal  open={showBuy}  onClose={() => setShowBuy(false)}  onChatEcho={echoFromModalToChat} />
 
         <footer className="footer">
-          <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
-          <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
-          <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
-          <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
+          <div className="footer-left">
+            <div className="footer-links">
+              <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
+              <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
+              <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
+              <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
+            </div>
+          </div>
+
+          <div className="footer-center">
+            <div className="copyright">© 2025 Bramp Africa Limited. Bramp Platforms, LLC.</div>
+          </div>
+
+          <div className="footer-right">
+            <div className="footer-brand">
+              <img 
+                src={BrampLogo} 
+                alt="Bramp Africa Logo" 
+                width="24" 
+                height="24"
+                onError={(e) => {
+                  // Fallback to a placeholder if logo fails to load
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+              <span>Bramp</span>
+            </div>
+          </div>
         </footer>
       </div>
     </>
