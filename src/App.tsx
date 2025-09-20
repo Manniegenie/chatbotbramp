@@ -6,7 +6,7 @@ import { tokenStore } from './lib/secureStore'
 import SellModal from './sell'
 import BuyModal from './buy'
 // Import logo from assets
-import BrampLogo from './assets/logo.jpeg' // Placeholder path
+import BrampLogo from './assets/bramp-logo.png' // Placeholder path
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -843,13 +843,12 @@ export default function App() {
         <BuyModal  open={showBuy}  onClose={() => setShowBuy(false)}  onChatEcho={echoFromModalToChat} />
 
         <footer className="footer">
-          <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
-          <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
-          <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
-          <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
-          
-          {/* Copyright notice directly below policy links */}
-          <div className="footer-copyright">
+          <div>
+            <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
+            <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
+            <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
+            <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
+            <br />
             © 2025 Bramp Africa Limited. Bramp Platforms, LLC.
           </div>
           
@@ -857,7 +856,7 @@ export default function App() {
           <div className="footer-brand">
             <img 
               src={BrampLogo} 
-              alt="Bramp Logo" 
+              alt="Bramp Africa Logo" 
               width="24" 
               height="24"
               onError={(e) => {
