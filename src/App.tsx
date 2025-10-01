@@ -4,7 +4,6 @@ import SignIn, { SignInResult } from './signin'
 import SignUp, { SignUpResult } from './signup'
 import { tokenStore } from './lib/secureStore'
 import SellModal from './sell'
-import BuyModal from './buy'
 // Import logo from assets
 import BrampLogo from './assets/logo.jpeg' // Placeholder path
 
@@ -265,7 +264,7 @@ export default function App() {
       id: crypto.randomUUID(),
       role: 'assistant',
       text:
-        "👋 Hey there! I'm Bramp AI — your personal assistant for everything crypto. Please Sign up or Sign in for full access😊",
+        "👋 Hey there! I'm Bramp AI — your personal assistant for selling crypto. Please Sign up or Sign in for full access😊",
       ts: Date.now(),
     },
   ])
@@ -276,10 +275,8 @@ export default function App() {
   const [showSignIn, setShowSignIn] = useState(false)
   const [showSignUp, setShowSignUp] = useState(false)
   const [showSell, setShowSell] = useState(false)
-  const [showBuy, setShowBuy] = useState(false)
 
   const [openSellAfterAuth, setOpenSellAfterAuth] = useState(false)
-  const [openBuyAfterAuth, setOpenBuyAfterAuth] = useState(false)
 
   const [auth, setAuth] = useState<SignInResult | null>(() => {
     const { access, refresh } = tokenStore.getTokens()
@@ -312,7 +309,7 @@ export default function App() {
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, loading, showSignIn, showSignUp, showSell, showBuy])
+  }, [messages, loading, showSignIn, showSignUp, showSell])
 
   /* ------------------- Price ticker: fetch & formatting ------------------- */
   const TICKER_SYMBOLS = ['BTC','ETH','USDT','USDC','BNB','MATIC','AVAX','SOL','NGNB']
@@ -433,7 +430,6 @@ export default function App() {
     tokenStore.clear()
     setAuth(null)
     setShowSell(false)
-    setShowBuy(false)
   }
 
   function isSellCTA(btn: CTAButton): boolean {
@@ -452,16 +448,6 @@ export default function App() {
       return
     }
     setShowSell(true)
-  }
-
-  function handleBuyClick(event?: React.MouseEvent) {
-    event?.preventDefault()
-    if (!auth) {
-      setOpenBuyAfterAuth(true)
-      setShowSignIn(true)
-      return
-    }
-    setShowBuy(true)
   }
 
   function echoFromModalToChat(text: string) {
@@ -714,9 +700,6 @@ export default function App() {
               <span style={{ color: 'var(--muted)', fontSize: 13 }}>
                 Signed in{auth.user?.username ? ` as ${auth.user.username}` : ''}
               </span>
-              <button className="btn" onClick={handleBuyClick} style={{ background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)' }}>
-                Buy
-              </button>
               <button className="btn" onClick={handleSellClick} style={{ background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)' }}>
                 Sell
               </button>
@@ -733,7 +716,7 @@ export default function App() {
 
         {showSignIn ? (
           <SignIn
-            onCancel={() => { setShowSignIn(false); setOpenSellAfterAuth(false); setOpenBuyAfterAuth(false) }}
+            onCancel={() => { setShowSignIn(false); setOpenSellAfterAuth(false) }}
             onSuccess={(res) => {
               setAuth(res)
               setShowSignIn(false)
@@ -746,7 +729,6 @@ export default function App() {
                 ts: Date.now(),
               }])
               if (openSellAfterAuth) { setOpenSellAfterAuth(false); setShowSell(true) }
-              if (openBuyAfterAuth)  { setOpenBuyAfterAuth(false);  setShowBuy(true) }
             }}
           />
         ) : showSignUp ? (
@@ -896,7 +878,6 @@ export default function App() {
         )}
 
         <SellModal open={showSell} onClose={() => setShowSell(false)} onChatEcho={echoFromModalToChat} />
-        <BuyModal  open={showBuy}  onClose={() => setShowBuy(false)}  onChatEcho={echoFromModalToChat} />
 
         <footer className="footer">
           <div className="footer-left">
