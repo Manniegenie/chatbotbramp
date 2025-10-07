@@ -1,7 +1,9 @@
 // src/SignUp.tsx
-import React, { useState, useRef, useCallback } from 'react'
-// import Webcam from 'react-webcam' // Commented out for test flight
-import { tokenStore } from './lib/secureStore'
+import React, { useState, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { setUser } from './features/user/userSlice';
+import api from './lib/api';
 
 export type SignUpResult = {
   success: boolean
@@ -86,13 +88,9 @@ type StepId = 'firstname' | 'lastname' | 'phone' | 'email' | 'bvn' | 'otp' | 'pi
 // KYC types commented out for test flight
 // type IdType = 'nin' | 'drivers_license' | 'passport'
 
-export default function SignUp({
-  onSuccess,
-  onCancel,
-}: {
-  onSuccess: (result: SignUpResult) => void
-  onCancel: () => void
-}) {
+export default function SignUp() {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
   const SIGNUP_ENDPOINT = `${API_BASE}/chatsignup/add-user`
   const VERIFY_OTP_ENDPOINT = `${API_BASE}/verify-otp/verify-otp`         
@@ -155,13 +153,13 @@ export default function SignUp({
   */
 
   // ---------- Utils ----------
-  function normalizePhone(input: string) {
-    const d = input.replace(/[^\d+]/g, '')
-    if (/^0\d{10}$/.test(d)) return '+234' + d.slice(1)
-    if (/^234\d{10}$/.test(d)) return '+' + d
-    if (/^\+?\d{10,15}$/.test(d)) return d.startsWith('+') ? d : '+' + d
-    return d
-  }
+  const normalizePhone = React.useCallback((input: string) => {
+    const d = input.replace(/[^\d+]/g, '');
+    if (/^0\d{10}$/.test(d)) return '+234' + d.slice(1);
+    if (/^234\d{10}$/.test(d)) return '+' + d;
+    if (/^\+?\d{10,15}$/.test(d)) return d.startsWith('+') ? d : '+' + d;
+    return d;
+  }, []);
 
   // KYC image compression function commented out for test flight
   /*
@@ -348,131 +346,97 @@ export default function SignUp({
 
   // ---------- API handlers ----------
   async function doSignup() {
-    setLoading(true)
+    setLoading(true);
     try {
-      const phonenumber = normalizePhone(phone)
+      const phonenumber = normalizePhone(phone);
       const payload = {
         email: email.trim().toLowerCase(),
         firstname: firstname.trim(),
         lastname: lastname.trim(),
         phonenumber,
         bvn: bvn.trim(),
-      }
+      };
 
-      const res = await fetch(SIGNUP_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
+      const res = await api.post(SIGNUP_ENDPOINT, payload);
+      const data: ServerSuccess | ServerError = res.data;
 
-      const data: ServerSuccess | ServerError = await res.json().catch(
-        () => ({ success: false, message: 'Unexpected server response.' }) as ServerError
-      )
-
-      if (!res.ok || !('success' in data) || data.success === false) {
+      if (!('success' in data) || data.success === false) {
         const msg =
           (data as any)?.message ||
           (Array.isArray((data as any)?.errors) ? (data as any).errors[0]?.msg : null) ||
-          `Signup failed (HTTP ${res.status}).`
-        setError(msg)
-        return
+          `Signup failed.`;
+        setError(msg);
+        return;
       }
 
-      const ok = data as ServerSuccess
-      if (ok.userId) setPendingUserId(ok.userId)
+      const ok = data as ServerSuccess;
+      if (ok.userId) setPendingUserId(ok.userId);
 
       // move to OTP page
-      setStepIndex(steps.indexOf('otp'))
+      setStepIndex(steps.indexOf('otp'));
     } catch (err: any) {
-      setError(`Network error: ${err.message}`)
+      setError(`Network error: ${err.message}`);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   async function doVerifyOtp() {
-    setOtpError(null)
+    setOtpError(null);
 
-    const phonenumber = normalizePhone(phone)
+    const phonenumber = normalizePhone(phone);
     if (!/^\+?\d{10,15}$/.test(phonenumber)) {
-      setOtpError('Invalid phone number format.')
-      return
+      setOtpError('Invalid phone number format.');
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
-      const res = await fetch(VERIFY_OTP_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phonenumber, code: otp }),
-      })
+      const res = await api.post(VERIFY_OTP_ENDPOINT, { phonenumber, code: otp });
+      const data = res.data;
 
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}))
-        setOtpError(errJson?.message || `OTP verification failed (HTTP ${res.status}).`)
-        return
+      if (!('pendingUserId' in data)) {
+        setOtpError(data?.message || 'OTP verification failed.');
+        return;
       }
 
-      const ok: VerifySuccess = await res.json()
-      setPendingUserId(ok.pendingUserId)
+      const ok: VerifySuccess = data;
+      setPendingUserId(ok.pendingUserId);
 
       // move to PIN page
-      setStepIndex(steps.indexOf('pin'))
+      setStepIndex(steps.indexOf('pin'));
     } catch (err: any) {
-      setOtpError(`Network error: ${err.message}`)
+      setOtpError(`Network error: ${err.message}`);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   async function doSetPin() {
-    setPinError(null)
+    setPinError(null);
 
-    setLoading(true)
+    setLoading(true);
     try {
-      const res = await fetch(PASSWORD_PIN_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          newPin: pin,
-          renewPin: pin2,
-          pendingUserId,
-        }),
-      })
+      const res = await api.post(PASSWORD_PIN_ENDPOINT, {
+        newPin: pin,
+        renewPin: pin2,
+        pendingUserId,
+      });
+      const data = res.data;
 
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}))
-        setPinError(errJson?.message || `Failed to set PIN (HTTP ${res.status}).`)
-        return
+      if (!('accessToken' in data)) {
+        setPinError(data?.message || 'Failed to set PIN.');
+        return;
       }
 
-      const ok: PinSuccess = await res.json()
-
-      // Store tokens and user info in secure storage
-      tokenStore.setTokens(ok.accessToken, ok.refreshToken)
-      tokenStore.setUser(ok.user)
-
-      // For test flight: Complete signup after PIN is set (skip KYC)
-      onSuccess({
-        success: true,
-        message: 'Account created successfully!',
-        userId: ok.user.id,
-        accessToken: ok.accessToken,
-        refreshToken: ok.refreshToken,
-        user: {
-          firstname,
-          lastname,
-          email,
-          phonenumber: normalizePhone(phone),
-          bvn,
-          username: ok.user.username,
-        },
-      })
+      const ok: PinSuccess = data;
+      dispatch(setUser(ok.user));
+      navigate('/signin');
 
     } catch (err: any) {
-      setPinError(`Network error: ${err.message}`)
+      setPinError(`Network error: ${err.message}`);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -825,7 +789,7 @@ export default function SignUp({
                       <button
                         type="button"
                         className="btn btn-outline"
-                        onClick={onCancel}
+                        onClick={() => navigate('/')}
                         disabled={loading}
                       >
                         Cancel

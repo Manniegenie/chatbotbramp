@@ -9,11 +9,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.9.0",
+    "axios": "^1.12.2",
     "crypto-js": "^4.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-hook-form": "^7.64.0",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.9.3",
     "react-webcam": "^7.2.0",
-    "secure-web-storage": "^1.0.2"
+    "secure-web-storage": "^1.0.2",
+    "yup": "^1.7.1"
   },
   "devDependencies": {
     "@types/crypto-js": "^4.2.2",
