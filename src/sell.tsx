@@ -1,5 +1,16 @@
 // src/sell.tsx
 import React, { useEffect, useRef, useState } from 'react'
+// Helper to detect mobile view
+function useIsMobile(breakpoint = 600) {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= breakpoint)
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= breakpoint)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [breakpoint])
+  return isMobile
+}
+import './sell-modal-responsive.css'
 import { createPortal } from 'react-dom'
 import { tokenStore } from './lib/secureStore'
 
@@ -211,7 +222,7 @@ const btnDangerGhost: React.CSSProperties = { ...btn, borderColor: 'var(--border
 const gridForm: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }
 const inputWrap: React.CSSProperties = { display: 'grid', gap: 6 }
 const labelText: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' }
-const inputBase: React.CSSProperties = { background: '#0f1117', color: 'var(--txt)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 12px', outline: 'none' }
+const inputBase: React.CSSProperties = { background: '#0f1117', color: 'var(--txt)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 12px', outline: 'none', width: '100%' }
 const card: React.CSSProperties = { border: '1px solid var(--border)', borderRadius: 12, padding: 14, background: '#0e0f15', display: 'grid', gap: 10 }
 const kvGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }
 const kStyle: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' }
@@ -225,6 +236,7 @@ const errorBanner: React.CSSProperties = { ...card, background: 'rgba(220, 50, 5
 const successCard: React.CSSProperties = { ...card, background: 'rgba(0, 115, 55, .12)', borderColor: 'rgba(0, 115, 55, .35)' }
 
 export default function SellModal({ open, onClose, onChatEcho }: SellModalProps) {
+  const isMobile = useIsMobile()
   // Steps: 1 = Start Sell, 2 = Payout. Final summary is a sub-state of step 2.
   const [step, setStep] = useState<1 | 2>(1)
 
@@ -485,7 +497,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         </div>
 
         {/* Body */}
-        <div style={bodyStyle}>
+  <div className="sell-modal-body">
           {/* STEP 1 — Start a Sell (no deposit-details screen; goes straight to payout on success) */}
           {step === 1 && (
             <div style={{ display: 'grid', gap: 14 }}>
@@ -556,9 +568,9 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
               {initData && !showFinalSummary && (
                 <>
-                  <div style={card}>
+                  <div className="sell-modal-card">
                     <h3 style={{ margin: 0, fontSize: 16 }}>Sell Summary</h3>
-                    <div style={kvGrid}>
+                    <div className="sell-modal-kvgrid">
                       <div>
                         <div style={kStyle}>Payment ID</div>
                         <div style={{ ...vStyle, ...mono }}>{initData.paymentId}</div>
@@ -587,6 +599,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   )}
 
                   <form onSubmit={submitPayout} style={gridForm}>
+                    <div  style={{ gridColumn: '1 / span 2', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
                     <label style={inputWrap}>
                       <span style={labelText}>Bank</span>
                       <select
@@ -616,12 +629,18 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     <label style={inputWrap}>
                       <span style={labelText}>Account Number</span>
                       <input
+                        type="tel"
                         style={inputBase}
                         value={accountNumber}
-                        onChange={e => setAccountNumber(e.target.value)}
+                        onChange={e => setAccountNumber(e.target.value.replace(/[^0-9]/g, ''))}
                         placeholder="e.g. 0123456789"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={10}
+                        autoComplete="one-time-code"
                       />
                     </label>
+                    </div>
 
                     <label style={{ ...inputWrap, gridColumn: '1 / span 2' }}>
                       <span style={labelText}>Account Name</span>
@@ -655,7 +674,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
               {/* FINAL SUMMARY (countdown starts here) */}
               {initData && showFinalSummary && payData && (
-                <div style={successCard}>
+                <div className="sell-modal-success-card">
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                     <h3 style={{ margin: 0, fontSize: 16 }}>Transaction Summary</h3>
                     <div style={badge}>
@@ -664,16 +683,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   </div>
 
                   {/* Enhanced deposit details section with QR code */}
-                  <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: '1fr auto', 
-                    gap: 16, 
-                    alignItems: 'start',
-                    background: '#0a0b0f',
-                    padding: 16,
-                    borderRadius: 12,
-                    border: '1px solid var(--border)'
-                  }}>
+                  <div className="sell-modal-deposit-row">
                     <div style={{ display: 'grid', gap: 12 }}>
                       <h4 style={{ margin: 0, fontSize: 14, color: 'var(--accent)' }}>📍 Deposit Details</h4>
                       
@@ -719,7 +729,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   </div>
 
                   {/* Transaction info grid */}
-                  <div style={kvGrid}>
+                  <div className="sell-modal-kvgrid">
                     <div>
                       <div style={kStyle}>Status</div>
                       <div style={vStyle}>{payData.status}</div>
