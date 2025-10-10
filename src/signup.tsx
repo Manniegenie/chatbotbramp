@@ -1,6 +1,5 @@
 // src/SignUp.tsx
-import React, { useState, useRef, useCallback } from 'react'
-// import Webcam from 'react-webcam' // Commented out for test flight
+import React, { useState } from 'react'
 import { tokenStore } from './lib/secureStore'
 
 export type SignUpResult = {
@@ -32,7 +31,7 @@ type ServerSuccess = {
   success: true
   message: string
   otpSent?: boolean
-  userId?: string              // pending user id
+  userId?: string
   user?: {
     email: string
     phonenumber: string
@@ -58,33 +57,11 @@ type PinSuccess = {
   refreshToken: string
 }
 
-// KYC types commented out for test flight
-/*
-type BiometricVerificationResult = {
-  success: boolean
-  message: string
-  data?: {
-    jobId: string
-    smileJobId: string
-    resultCode: string
-    resultText: string
-    confidenceValue: number
-    isApproved: boolean
-    kycLevel: number
-    kycStatus: string
-  }
-}
-*/
-
 type ServerError =
   | { success: false; message: string; errors?: any[] }
   | { success: false; message: string }
 
-// KYC steps removed for test flight
 type StepId = 'firstname' | 'lastname' | 'phone' | 'email' | 'bvn' | 'otp' | 'pin'
-
-// KYC types commented out for test flight
-// type IdType = 'nin' | 'drivers_license' | 'passport'
 
 export default function SignUp({
   onSuccess,
@@ -95,11 +72,9 @@ export default function SignUp({
 }) {
   const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
   const SIGNUP_ENDPOINT = `${API_BASE}/chatsignup/add-user`
-  const VERIFY_OTP_ENDPOINT = `${API_BASE}/verify-otp/verify-otp`         
-  const PASSWORD_PIN_ENDPOINT = `${API_BASE}/passwordpin/password-pin`    
-  // const BIOMETRIC_VERIFICATION_ENDPOINT = `${API_BASE}/chatbot-kyc/chatbot-kyc`  // Commented out for test flight
-    
-  // KYC steps removed for test flight
+  const VERIFY_OTP_ENDPOINT = `${API_BASE}/verify-otp/verify-otp`
+  const PASSWORD_PIN_ENDPOINT = `${API_BASE}/passwordpin/password-pin`
+
   const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'bvn', 'otp', 'pin']
   const [stepIndex, setStepIndex] = useState<number>(0)
 
@@ -124,35 +99,8 @@ export default function SignUp({
   const [pinError, setPinError] = useState<string | null>(null)
 
   const [pendingUserId, setPendingUserId] = useState<string | null>(null)
-  // const [accessToken, setAccessToken] = useState<string | null>(null) // Commented out for test flight
-  // const [refreshToken, setRefreshToken] = useState<string | null>(null) // Commented out for test flight
-  // const [userInfo, setUserInfo] = useState<any>(null) // Commented out for test flight
-
-  // KYC states commented out for test flight
-  /*
-  const [selectedIdType, setSelectedIdType] = useState<IdType | null>(null)
-  const [idNumber, setIdNumber] = useState('')
-  const [selfieImage, setSelfieImage] = useState<string | null>(null)
-  const [showCamera, setShowCamera] = useState(false)
-  const [verificationResults, setVerificationResults] = useState<{
-    bvnResult?: BiometricVerificationResult
-    idResult?: BiometricVerificationResult
-  }>({})
-
-  const webcamRef = useRef<Webcam>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  */
 
   const currentStepId = steps[stepIndex]
-
-  // KYC webcam configuration commented out for test flight
-  /*
-  const videoConstraints = {
-    width: 640,
-    height: 480,
-    facingMode: "user"
-  }
-  */
 
   // ---------- Utils ----------
   function normalizePhone(input: string) {
@@ -162,40 +110,6 @@ export default function SignUp({
     if (/^\+?\d{10,15}$/.test(d)) return d.startsWith('+') ? d : '+' + d
     return d
   }
-
-  // KYC image compression function commented out for test flight
-  /*
-  function compressImage(dataUrl: string, maxSizeKB = 80): Promise<string> {
-    return new Promise((resolve) => {
-      const img = new Image()
-      img.onload = () => {
-        const canvas = document.createElement('canvas')
-        const ctx = canvas.getContext('2d')!
-        
-        // Calculate new dimensions (max 400px width)
-        const maxWidth = 400
-        const ratio = Math.min(maxWidth / img.width, maxWidth / img.height)
-        canvas.width = img.width * ratio
-        canvas.height = img.height * ratio
-        
-        // Draw and compress
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-        
-        // Try different quality levels to get under size limit
-        let quality = 0.8
-        let compressed = canvas.toDataURL('image/jpeg', quality)
-        
-        while (compressed.length > maxSizeKB * 1024 && quality > 0.1) {
-          quality -= 0.1
-          compressed = canvas.toDataURL('image/jpeg', quality)
-        }
-        
-        resolve(compressed)
-      }
-      img.src = dataUrl
-    })
-  }
-  */
 
   function validateField(step: StepId): string | null {
     switch (step) {
@@ -224,22 +138,6 @@ export default function SignUp({
         if (pin !== pin2) return 'PINs do not match.'
         if (!pendingUserId) return 'Missing pending user ID. Please repeat verification.'
         return null
-      // KYC validation cases commented out for test flight
-      /*
-      case 'id-type-selection':
-        if (!selectedIdType) return 'Please select an ID type.'
-        return null
-      case 'id-number':
-        if (!idNumber.trim()) return 'Please enter your ID number.'
-        // Validate based on selected ID type
-        if (selectedIdType === 'nin' && !/^\d{11}$/.test(idNumber)) return 'NIN must be exactly 11 digits.'
-        if (selectedIdType === 'passport' && !/^[A-Z]\d{8}$/.test(idNumber.toUpperCase())) return 'Passport must be 1 letter followed by 8 digits.'
-        if (selectedIdType === 'drivers_license' && idNumber.length < 8) return 'Please enter a valid driver\'s license number.'
-        return null
-      case 'photo-capture':
-        if (!selfieImage) return 'Please take a photo.'
-        return null
-      */
       default:
         return null
     }
@@ -265,59 +163,6 @@ export default function SignUp({
     setStepIndex((i) => Math.max(i - 1, 0))
   }
 
-  // KYC camera functions commented out for test flight
-  /*
-  const capture = useCallback(async () => {
-    const imageSrc = webcamRef.current?.getScreenshot()
-    if (imageSrc) {
-      setLoading(true)
-      try {
-        const compressed = await compressImage(imageSrc, 80) // 80KB max
-        setSelfieImage(compressed)
-        setShowCamera(false)
-      } catch (err) {
-        setError('Failed to process image. Please try again.')
-      } finally {
-        setLoading(false)
-      }
-    }
-  }, [])
-
-  const startCamera = () => {
-    setShowCamera(true)
-    setError(null)
-  }
-
-  const stopCamera = () => {
-    setShowCamera(false)
-  }
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    if (!file.type.startsWith('image/')) {
-      setError('Please select an image file.')
-      return
-    }
-
-    setLoading(true)
-    try {
-      const reader = new FileReader()
-      reader.onload = async (e) => {
-        const dataUrl = e.target?.result as string
-        const compressed = await compressImage(dataUrl, 80) // 80KB max
-        setSelfieImage(compressed)
-        setLoading(false)
-      }
-      reader.readAsDataURL(file)
-    } catch (err) {
-      setError('Failed to process image. Please try again.')
-      setLoading(false)
-    }
-  }
-  */
-
   // ---------- Submit router ----------
   async function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault()
@@ -338,9 +183,6 @@ export default function SignUp({
         return doVerifyOtp()
       case 'pin':
         return doSetPin()
-      // KYC case commented out for test flight
-      // case 'photo-capture':
-      //   return doVerification()
       default:
         return goNext()
     }
@@ -381,7 +223,6 @@ export default function SignUp({
       const ok = data as ServerSuccess
       if (ok.userId) setPendingUserId(ok.userId)
 
-      // move to OTP page
       setStepIndex(steps.indexOf('otp'))
     } catch (err: any) {
       setError(`Network error: ${err.message}`)
@@ -416,7 +257,6 @@ export default function SignUp({
       const ok: VerifySuccess = await res.json()
       setPendingUserId(ok.pendingUserId)
 
-      // move to PIN page
       setStepIndex(steps.indexOf('pin'))
     } catch (err: any) {
       setOtpError(`Network error: ${err.message}`)
@@ -448,11 +288,9 @@ export default function SignUp({
 
       const ok: PinSuccess = await res.json()
 
-      // Store tokens and user info in secure storage
       tokenStore.setTokens(ok.accessToken, ok.refreshToken)
       tokenStore.setUser(ok.user)
 
-      // For test flight: Complete signup after PIN is set (skip KYC)
       onSuccess({
         success: true,
         message: 'Account created successfully!',
@@ -476,70 +314,13 @@ export default function SignUp({
     }
   }
 
-  // KYC verification function commented out for test flight
-  /*
-  async function doVerification() {
-    if (!accessToken || !selectedIdType || !idNumber || !selfieImage) {
-      setError('Missing required information for verification.')
-      return
-    }
-
-    setLoading(true)
-    setStepIndex(steps.indexOf('verification-processing'))
-
-    try {
-      const verification = await fetch(BIOMETRIC_VERIFICATION_ENDPOINT, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        },
-        body: JSON.stringify({
-          idType: selectedIdType === 'drivers_license' ? 'drivers_license' : selectedIdType,
-          idNumber: idNumber,
-          selfieImage: selfieImage
-        }),
-      })
-
-      const result: BiometricVerificationResult = await verification.json()
-
-      // Move to completion screen regardless of results
-      setStepIndex(steps.indexOf('verification-complete'))
-
-      // Call onSuccess with the user info
-      onSuccess({
-        success: true,
-        message: 'Account created successfully. Verification submitted.',
-        userId: userInfo?.id,
-        accessToken: accessToken ?? undefined,
-        refreshToken: refreshToken ?? undefined,
-        user: {
-          firstname,
-          lastname,
-          email,
-          phonenumber: normalizePhone(phone),
-          bvn,
-          username: userInfo?.username,
-        },
-      })
-
-    } catch (err: any) {
-      setError(`Verification error: ${err.message}`)
-      setStepIndex(steps.indexOf('photo-capture'))
-    } finally {
-      setLoading(false)
-    }
-  }
-  */
-
   // ---------- UI ----------
   function ProgressDots() {
-    // KYC progress dots logic removed for test flight
     const visibleSteps = steps
     const currentVisibleIndex = visibleSteps.indexOf(currentStepId)
     
     return (
-      <div style={{ display: 'flex', gap: 6, margin: '6px 0 10px' }} aria-hidden>
+      <div style={{ display: 'flex', gap: 6, margin: '8px 0 12px' }} aria-hidden>
         {visibleSteps.map((_, i) => (
           <span
             key={i}
@@ -562,7 +343,7 @@ export default function SignUp({
       case 'firstname':
         return (
           <>
-            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>First name</label>
+            <label style={labelStyle}>First name</label>
             <input
               key="fn"
               placeholder="Chibuike"
@@ -577,7 +358,7 @@ export default function SignUp({
       case 'lastname':
         return (
           <>
-            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Surname</label>
+            <label style={labelStyle}>Surname</label>
             <input
               key="ln"
               placeholder="Nwogbo"
@@ -592,7 +373,7 @@ export default function SignUp({
       case 'phone':
         return (
           <>
-            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Phone number</label>
+            <label style={labelStyle}>Phone number</label>
             <input
               key="ph"
               placeholder="+2348100000000"
@@ -608,7 +389,7 @@ export default function SignUp({
       case 'email':
         return (
           <>
-            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Email address</label>
+            <label style={labelStyle}>Email address</label>
             <input
               key="em"
               placeholder="you@example.com"
@@ -624,7 +405,7 @@ export default function SignUp({
       case 'bvn':
         return (
           <>
-            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>BVN (11 digits)</label>
+            <label style={labelStyle}>BVN (11 digits)</label>
             <input
               key="bvn"
               placeholder="12345678901"
@@ -636,7 +417,7 @@ export default function SignUp({
               style={inputStyle}
               className="no-zoom"
             />
-            <div style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: 4 }}>
+            <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 6, lineHeight: 1.4 }}>
               💡 Pre-filled for test flight - not validated
             </div>
           </>
@@ -644,7 +425,7 @@ export default function SignUp({
       case 'otp':
         return (
           <>
-            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Enter OTP</label>
+            <label style={labelStyle}>Enter OTP</label>
             <input
               key="otp"
               placeholder="123456"
@@ -657,12 +438,10 @@ export default function SignUp({
               className="no-zoom"
             />
             {otpError && (
-              <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
-                ⚠️ {otpError}
-              </div>
+              <div style={errorStyle}>⚠️ {otpError}</div>
             )}
-            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              <button className="btn" type="submit" disabled={loading}>
+            <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
+              <button className="btn" type="submit" disabled={loading} style={{ flex: 1, minWidth: 120 }}>
                 {loading ? 'Verifying…' : 'Verify OTP'}
               </button>
               <button
@@ -670,6 +449,7 @@ export default function SignUp({
                 className="btn btn-outline"
                 onClick={goBack}
                 disabled={loading}
+                style={{ flex: 1, minWidth: 120 }}
               >
                 Back
               </button>
@@ -679,7 +459,7 @@ export default function SignUp({
       case 'pin':
         return (
           <>
-            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>PIN (6 digits)</label>
+            <label style={labelStyle}>PIN (6 digits)</label>
             <input
               key="pin1"
               placeholder="••••••"
@@ -689,11 +469,10 @@ export default function SignUp({
               maxLength={6}
               type="password"
               autoFocus
-              style={inputStyle}
+              style={{...inputStyle, marginBottom: 14}}
               className="no-zoom"
             />
-            <div style={{ height: 8 }} />
-            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Confirm PIN</label>
+            <label style={labelStyle}>Confirm PIN</label>
             <input
               key="pin2"
               placeholder="••••••"
@@ -706,74 +485,18 @@ export default function SignUp({
               className="no-zoom"
             />
             {pinError && (
-              <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
-                ⚠️ {pinError}
-              </div>
+              <div style={errorStyle}>⚠️ {pinError}</div>
             )}
-            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              <button type="button" className="btn btn-outline" onClick={goBack} disabled={loading}>
+            <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
+              <button type="button" className="btn btn-outline" onClick={goBack} disabled={loading} style={{ flex: 1, minWidth: 120 }}>
                 Back
               </button>
-              <button className="btn" type="submit" disabled={loading}>
+              <button className="btn" type="submit" disabled={loading} style={{ flex: 1, minWidth: 120 }}>
                 {loading ? 'Creating Account…' : 'Complete Signup'}
               </button>
             </div>
           </>
         )
-      
-      // KYC render cases commented out for test flight
-      /*
-      case 'id-type-selection':
-        return (
-          <>
-            <label style={{ fontSize: '0.8rem', color: 'var(--muted)', marginBottom: 12, display: 'block' }}>
-              Choose an ID type for verification
-            </label>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {[
-                { value: 'nin', label: 'National Identification Number (NIN)', description: '11-digit number' },
-                { value: 'drivers_license', label: 'Driver\'s License', description: 'Valid Nigerian driver\'s license' },
-                { value: 'passport', label: 'International Passport', description: 'Letter + 8 digits format' }
-              ].map((option) => (
-                <div
-                  key={option.value}
-                  onClick={() => setSelectedIdType(option.value as IdType)}
-                  style={{
-                    padding: 16,
-                    border: `2px solid ${selectedIdType === option.value ? 'var(--accent)' : 'var(--border)'}`,
-                    borderRadius: 8,
-                    cursor: 'pointer',
-                    background: selectedIdType === option.value ? 'rgba(var(--accent-rgb), 0.1)' : 'var(--card)',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  <div style={{ fontWeight: '500', color: 'var(--txt)', marginBottom: 4 }}>
-                    {option.label}
-                  </div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
-                    {option.description}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-              <button type="button" className="btn btn-outline" onClick={goBack} disabled={loading}>
-                Back
-              </button>
-              <button 
-                className="btn" 
-                onClick={goNext} 
-                disabled={!selectedIdType}
-              >
-                Continue
-              </button>
-            </div>
-          </>
-        )
-      // ... other KYC cases
-      */
     }
   }
 
@@ -783,14 +506,14 @@ export default function SignUp({
         <div className="bubble" style={{ maxWidth: '95%' }}>
           <div className="role">Security</div>
           <div className="text">
-            <h2 id="signup-title" style={{ marginTop: 0, marginBottom: 6, fontSize: '1.2rem' }}>
+            <h2 id="signup-title" style={{ marginTop: 0, marginBottom: 8, fontSize: 18, fontWeight: 600 }}>
               {currentStepId === 'otp'
                 ? 'Verify OTP'
                 : currentStepId === 'pin'
                 ? 'Set your PIN'
                 : 'Create your account'}
             </h2>
-            <p style={{ marginTop: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>
+            <p style={{ marginTop: 0, marginBottom: 12, color: 'var(--muted)', fontSize: 15, lineHeight: 1.5 }}>
               {currentStepId === 'otp'
                 ? 'Enter the 6-digit OTP sent to your phone.'
                 : currentStepId === 'pin'
@@ -803,21 +526,19 @@ export default function SignUp({
             <form onSubmit={handleSubmit}>
               {renderStep()}
 
-              {/* Default nav + error for the basic signup steps */}
               {['firstname', 'lastname', 'phone', 'email', 'bvn'].includes(currentStepId) && (
                 <>
                   {error && (
-                    <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
-                      ⚠️ {error}
-                    </div>
+                    <div style={errorStyle}>⚠️ {error}</div>
                   )}
-                  <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                  <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
                     {stepIndex > 0 ? (
                       <button
                         type="button"
                         className="btn btn-outline"
                         onClick={goBack}
                         disabled={loading}
+                        style={{ flex: 1, minWidth: 120 }}
                       >
                         Back
                       </button>
@@ -827,12 +548,13 @@ export default function SignUp({
                         className="btn btn-outline"
                         onClick={onCancel}
                         disabled={loading}
+                        style={{ flex: 1, minWidth: 120 }}
                       >
                         Cancel
                       </button>
                     )}
 
-                    <button type="submit" className="btn" disabled={loading}>
+                    <button type="submit" className="btn" disabled={loading} style={{ flex: 1, minWidth: 120 }}>
                       {loading
                         ? currentStepId === 'bvn'
                           ? 'Creating…'
@@ -847,7 +569,7 @@ export default function SignUp({
             </form>
 
             {currentStepId === 'firstname' && (
-              <p style={{ marginTop: 12, fontSize: '0.8rem', color: 'var(--muted)' }}>
+              <p style={{ marginTop: 14, fontSize: 13, color: 'var(--muted)', lineHeight: 1.5 }}>
                 🧪 Test flight mode - simplified signup flow
               </p>
             )}
@@ -863,11 +585,33 @@ const inputStyle: React.CSSProperties = {
   background: 'var(--card)',
   border: '1px solid var(--border)',
   color: 'var(--txt)',
-  padding: '10px 12px',
-  borderRadius: 8,
+  padding: '12px 14px',
+  borderRadius: 10,
   outline: 'none',
   fontSize: 16,
   WebkitTextSizeAdjust: '100%',
-  minHeight: '40px',
-  lineHeight: '1.35',
+  textSizeAdjust: '100%',
+  minHeight: 44,
+  lineHeight: 1.4,
+  touchAction: 'manipulation',
+  transition: 'border-color 0.2s ease',
+}
+
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  marginBottom: 6,
+  fontSize: 14,
+  color: 'var(--muted)',
+  fontWeight: 500,
+}
+
+const errorStyle: React.CSSProperties = {
+  color: '#fda4af',
+  marginTop: 12,
+  fontSize: 14,
+  padding: 12,
+  background: 'rgba(220, 50, 50, 0.1)',
+  border: '1px solid rgba(220, 50, 50, 0.25)',
+  borderRadius: 8,
+  lineHeight: 1.4,
 }

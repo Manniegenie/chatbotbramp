@@ -5,7 +5,7 @@ import SignUp, { SignUpResult } from './signup'
 import { tokenStore } from './lib/secureStore'
 import SellModal from './sell'
 // Import logo from assets
-import BrampLogo from './assets/logo.jpeg' // Placeholder path
+import BrampLogo from './assets/logo.jpeg'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -285,11 +285,9 @@ export default function App() {
   })
 
   const endRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null) // Add ref for input focus management
+  const inputRef = useRef<HTMLInputElement>(null)
 
-  // New state: prices for marquee (initially empty)
   const [tickerText, setTickerText] = useState<string>('')
-  // keep a loading flag internally but DO NOT display loading text in UI
   const [tickerLoading, setTickerLoading] = useState<boolean>(false)
 
   // Scrub sensitive URL params on load
@@ -327,7 +325,6 @@ export default function App() {
       }
       const { prices = {}, hourlyChanges = {} } = payload.data
 
-      // format items without tail text and without emojis
       const items = TICKER_SYMBOLS.filter(s => (s === 'NGNB') || typeof prices[s] === 'number').map((s) => {
         const priceVal = prices[s]
         const changeObj = hourlyChanges?.[s]
@@ -346,13 +343,10 @@ export default function App() {
         return `${s} $${usdStr}${changeText}`
       }).filter(Boolean)
 
-      // join with bullet separators (no tail text)
       const text = items.join('  •  ')
       setTickerText(text)
     } catch (err) {
-      // on failure, keep tickerText empty (silent background load)
       console.warn('Ticker fetch failed', err)
-      // do not modify UI visible text; keep it blank if nothing fetched
     } finally {
       setTickerLoading(false)
     }
@@ -360,7 +354,6 @@ export default function App() {
 
   useEffect(() => {
     const ac = new AbortController()
-    // load once in background on mount (no visible loading placeholder)
     fetchTickerPrices(ac.signal).catch(() => { /* swallowed */ })
     return () => ac.abort()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -390,7 +383,6 @@ export default function App() {
     setInput('')
     setLoading(true)
 
-    // Maintain focus on input after clearing
     setTimeout(() => {
       inputRef.current?.focus()
     }, 0)
@@ -419,7 +411,6 @@ export default function App() {
       setMessages((prev) => [...prev, errorMsg])
     } finally {
       setLoading(false)
-      // Ensure focus is maintained even after loading is complete
       setTimeout(() => {
         inputRef.current?.focus()
       }, 0)
@@ -455,11 +446,9 @@ export default function App() {
     setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'assistant', text, ts: Date.now() }])
   }
 
-  // Helper function for hint clicks
   function handleHintClick(hintText: string) {
     if (!loading) {
       setInput(hintText)
-      // Focus input after setting hint text
       setTimeout(() => {
         inputRef.current?.focus()
       }, 0)
@@ -470,7 +459,6 @@ export default function App() {
     <>
       <style>
         {`
-          /* Fix iOS viewport issues */
           @supports (-webkit-touch-callout: none) {
             html {
               height: -webkit-fill-available;
@@ -485,23 +473,11 @@ export default function App() {
             }
           }
 
-          /* Prevent safe area displacement during scroll */
-          @media (max-width: 480px) {
-            .composer {
-              padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
-            }
-            .footer {
-              padding-bottom: max(14px, calc(14px + env(safe-area-inset-bottom))) !important;
-            }
-          }
-
-          /* Animation for spinner */
           @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
           }
 
-          /* Header sticky/pinned */
           .header {
             position: sticky;
             top: 0;
@@ -514,6 +490,7 @@ export default function App() {
             gap: 12px;
             padding: 12px 16px;
             transition: box-shadow 200ms ease, transform 160ms ease;
+            flex-shrink: 0;
           }
           .header.pinned {
             box-shadow: 0 6px 20px rgba(0,0,0,0.25);
@@ -523,7 +500,6 @@ export default function App() {
           .brand { display:flex; align-items:center; gap:12px; min-width:0; flex:1; }
           .tag { font-size: 14px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-          /* Ticker / marquee */
           .ticker-wrap {
             position: relative;
             height: 28px;
@@ -542,10 +518,9 @@ export default function App() {
             box-sizing: content-box;
             font-weight: 600;
             font-size: 13px;
-            color: var(--accent); /* use green accent for ticker text */
+            color: var(--accent);
           }
 
-          /* fade edges */
           .ticker-wrap::before,
           .ticker-wrap::after {
             content: "";
@@ -578,89 +553,6 @@ export default function App() {
           @media (max-width: 640px) {
             .ticker { font-size: 12px; }
             .tag { display:block; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
-          }
-
-          /* Footer: responsive layout and alignment fixes */
-          .footer {
-            padding: 12px 16px;
-            border-top: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            flex-wrap: wrap;
-            background: transparent;
-          }
-
-          /* groups inside footer for layout control */
-          .footer-left,
-          .footer-center,
-          .footer-right {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          }
-
-          /* policy links row */
-          .footer-links {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: center;
-          }
-
-          .footer a {
-            font-size: 13px;
-            color: var(--muted);
-            text-decoration: none;
-            padding: 6px 0;
-          }
-          .footer a:hover {
-            text-decoration: underline;
-            color: var(--txt);
-          }
-
-          .footer-brand {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 0;
-          }
-          .footer-brand img {
-            width: 24px;
-            height: 24px;
-            object-fit: contain;
-          }
-          .footer-brand span {
-            font-size: 14px;
-            color: var(--txt);
-            font-weight: 500;
-          }
-
-          .footer-center {
-            text-align: center;
-          }
-          .footer-center .copyright {
-            font-size: 12px;
-            color: var(--muted);
-            white-space: nowrap;
-          }
-
-          /* On small screens stack nicely */
-          @media (max-width: 640px) {
-            .footer {
-              justify-content: center;
-              text-align: center;
-            }
-            .footer-left, .footer-right {
-              width: 100%;
-              justify-content: center;
-            }
-            .footer-center {
-              width: 100%;
-              margin-top: 6px;
-            }
           }
         `}
       </style>
@@ -809,6 +701,7 @@ export default function App() {
                 placeholder={loading ? 'Please wait…' : 'Try: Sell 100 USDT to NGN'}
                 autoFocus
                 disabled={loading}
+                className="no-zoom"
               />
               <button
                 type="submit"
@@ -881,19 +774,6 @@ export default function App() {
 
         <footer className="footer">
           <div className="footer-left">
-            <div className="footer-links">
-              <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
-              <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
-              <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
-              <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
-            </div>
-          </div>
-
-          <div className="footer-center">
-            <div className="copyright">© 2025 Bramp Africa Limited. Bramp Platforms, LLC.</div>
-          </div>
-
-          <div className="footer-right">
             <div className="footer-brand">
               <img 
                 src={BrampLogo} 
@@ -901,11 +781,21 @@ export default function App() {
                 width="24" 
                 height="24"
                 onError={(e) => {
-                  // Fallback to a placeholder if logo fails to load
                   e.currentTarget.style.display = 'none';
                 }}
               />
-              <span></span>
+              <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+                © 2025 Bramp Africa Limited. Bramp Platforms, LLC.
+              </span>
+            </div>
+          </div>
+
+          <div className="footer-center">
+            <div className="footer-links">
+              <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
+              <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
+              <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
+              <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
             </div>
           </div>
         </footer>

@@ -129,22 +129,25 @@ export default function SignIn({
         <div className="bubble" style={{ maxWidth: '95%' }}>
           <div className="role">Security</div>
           <div className="text">
-            <h2 id="signin-title" style={{ marginTop: 0, marginBottom: 6, fontSize: '1.2rem' }}>
+            <h2 id="signin-title" style={{ marginTop: 0, marginBottom: 8, fontSize: 18, fontWeight: 600 }}>
               Sign in
             </h2>
-            <p style={{ marginTop: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>
+            <p style={{ marginTop: 0, marginBottom: 16, color: 'var(--muted)', fontSize: 15, lineHeight: 1.5 }}>
               Use your phone number and 6-digit PIN to continue.
             </p>
 
             <form onSubmit={submit}>
-              <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Phone number</label>
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <label style={{ display: 'block', marginBottom: 6, fontSize: 14, color: 'var(--muted)', fontWeight: 500 }}>
+                Phone number
+              </label>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginBottom: 14 }}>
                 <span
                   style={{
                     position: 'absolute',
-                    left: '12px',
+                    left: 14,
                     color: 'var(--txt)',
-                    fontSize: '16px',
+                    fontSize: 16,
+                    fontWeight: 500,
                     pointerEvents: 'none',
                     zIndex: 1,
                   }}
@@ -159,35 +162,44 @@ export default function SignIn({
                   autoFocus
                   style={{
                     ...inputStyle,
-                    paddingLeft: '60px',
+                    paddingLeft: 64,
                   }}
                   className="no-zoom"
                   maxLength={10}
                 />
               </div>
 
-              <div style={{ height: 8 }} />
-
-              <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>PIN (6 digits)</label>
+              <label style={{ display: 'block', marginBottom: 6, fontSize: 14, color: 'var(--muted)', fontWeight: 500 }}>
+                PIN (6 digits)
+              </label>
               <input
-                placeholder="******"
+                placeholder="Enter your 6-digit PIN"
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
                 type="password"
                 inputMode="numeric"
                 maxLength={6}
-                style={inputStyle}
+                style={{...inputStyle, marginBottom: 12}}
                 className="no-zoom"
               />
 
               {error && (
-                <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
+                <div style={{ 
+                  color: '#fda4af', 
+                  marginBottom: 14, 
+                  fontSize: 14, 
+                  padding: 12,
+                  background: 'rgba(220, 50, 50, 0.1)',
+                  border: '1px solid rgba(220, 50, 50, 0.25)',
+                  borderRadius: 8,
+                  lineHeight: 1.4
+                }}>
                   ⚠️ {error}
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                <button className="btn" type="submit" disabled={loading}>
+              <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
+                <button className="btn" type="submit" disabled={loading} style={{ flex: 1, minWidth: 120 }}>
                   {loading ? 'Signing in…' : 'Sign in'}
                 </button>
                 <button
@@ -195,13 +207,14 @@ export default function SignIn({
                   className="btn btn-outline"
                   onClick={onCancel}
                   disabled={loading}
+                  style={{ flex: 1, minWidth: 120 }}
                 >
                   Cancel
                 </button>
               </div>
             </form>
 
-            <p style={{ marginTop: 12, fontSize: '0.8rem', color: 'var(--muted)' }}>
+            <p style={{ marginTop: 14, fontSize: 13, color: 'var(--muted)', lineHeight: 1.5 }}>
               Too many failed attempts can temporarily lock your account.
             </p>
           </div>
@@ -216,11 +229,14 @@ const inputStyle: React.CSSProperties = {
   background: 'var(--card)',
   border: '1px solid var(--border)',
   color: 'var(--txt)',
-  padding: '10px 12px',
-  borderRadius: 8,
+  padding: '12px 14px',
+  borderRadius: 10,
   outline: 'none',
-  fontSize: '16px !important',
+  fontSize: 16,
   WebkitTextSizeAdjust: '100%',
-  minHeight: '40px',
-  lineHeight: '1.35',
+  textSizeAdjust: '100%',
+  minHeight: 44,
+  lineHeight: 1.4,
+  touchAction: 'manipulation',
+  transition: 'border-color 0.2s ease',
 }
