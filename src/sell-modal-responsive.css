@@ -47,6 +47,7 @@
   }
   .sell-modal-success-card {
     padding: 8px !important;
+    overflow-y: auto;
   }
   .sell-modal-card {
     padding: 8px !important;
