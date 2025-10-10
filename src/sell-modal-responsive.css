@@ -1,0 +1,55 @@
+.sell-modal-body {
+  padding: 18px;
+  overflow: auto;
+}
+.sell-modal-kvgrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.sell-modal-deposit-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: start;
+  background: #0a0b0f;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+.sell-modal-success-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  background: rgba(0, 115, 55, .12);
+  border-color: rgba(0, 115, 55, .35);
+}
+.sell-modal-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  background: #0e0f15;
+  display: grid;
+  gap: 10px;
+}
+@media (max-width: 600px) {
+  .sell-modal-body {
+    padding: 10px !important;
+  }
+  .sell-modal-kvgrid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  .sell-modal-deposit-row {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    padding: 10px !important;
+  }
+  .sell-modal-success-card {
+    padding: 8px !important;
+    overflow-y: auto;
+  }
+  .sell-modal-card {
+    padding: 8px !important;
+  }
+}

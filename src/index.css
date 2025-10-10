@@ -84,7 +84,7 @@ select:focus {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  height: -webkit-fill-available;
+  /* height: -webkit-fill-available; */
   overflow: hidden;
   width: 100%;
   max-width: 1200px;
@@ -458,10 +458,10 @@ a:hover {
     min-height: 34px;
   }
 
-  .footer-links {
+  /* .footer-links {
     flex-direction: column;
     gap: 8px;
-  }
+  } */
 }
 
 /* Prevent horizontal scroll */
