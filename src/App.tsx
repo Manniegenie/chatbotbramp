@@ -6,6 +6,7 @@ import { tokenStore } from './lib/secureStore'
 import SellModal from './sell'
 // Import logo from assets
 import BrampLogo from './assets/logo.jpeg'
+import Logo from './assets/logo.png';
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -559,6 +560,13 @@ export default function App() {
       <div className="page">
         <header ref={headerRef} className="header">
           <div className="brand">
+            <img 
+              src={Logo} 
+              alt="Bramp AI Logo"
+              width="48" 
+              height="48" 
+              style={{ borderRadius: 6, objectFit: 'contain' }}
+            />
             <p className="tag">Secure access to digital assets & payments — via licensed partners.</p>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div className="ticker-wrap" aria-live="polite" aria-atomic="true">
