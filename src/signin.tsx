@@ -46,35 +46,23 @@ export default function SignIn({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  function handlePhoneChange(value: string) {
-    // Remove all non-digits
-    let digits = value.replace(/\D/g, '')
-    
-    // If starts with 0, remove it (e.g., 08141751569 becomes 8141751569)
-    if (digits.startsWith('0')) {
-      digits = digits.slice(1)
-    }
-    
-    // Limit to 10 digits
-    digits = digits.slice(0, 10)
-    
-    setPhone(digits)
+  function normalizePhone(input: string) {
+    const d = input.replace(/[^\d+]/g, '')
+    if (/^0\d{10}$/.test(d)) return '+234' + d.slice(1)
+    if (/^234\d{10}$/.test(d)) return '+' + d
+    if (/^\+?\d{10,15}$/.test(d)) return d.startsWith('+') ? d : '+' + d
+    return d
   }
 
   async function submit(e?: React.FormEvent) {
     e?.preventDefault()
     setError(null)
 
-    // Build final phone number with +234 prefix
-    const phonenumber = '+234' + phone
+    const phonenumber = normalizePhone(phone)
     const passwordpin = String(pin).replace(/[^\d]/g, '').padStart(6, '0')
 
-    if (phone.length !== 10) {
-      return setError('Enter a valid 10-digit phone number.')
-    }
-    if (!/^\d{6}$/.test(passwordpin)) {
-      return setError('PIN must be exactly 6 digits.')
-    }
+    if (!/^\+?\d{10,15}$/.test(phonenumber)) return setError('Enter a valid phone number (e.g. +2348100000000).')
+    if (!/^\d{6}$/.test(passwordpin)) return setError('PIN must be exactly 6 digits.')
 
     setLoading(true)
     try {
@@ -129,77 +117,47 @@ export default function SignIn({
         <div className="bubble" style={{ maxWidth: '95%' }}>
           <div className="role">Security</div>
           <div className="text">
-            <h2 id="signin-title" style={{ marginTop: 0, marginBottom: 8, fontSize: 18, fontWeight: 600 }}>
+            <h2 id="signin-title" style={{ marginTop: 0, marginBottom: 6, fontSize: '1.2rem' }}>
               Sign in
             </h2>
-            <p style={{ marginTop: 0, marginBottom: 16, color: 'var(--muted)', fontSize: 15, lineHeight: 1.5 }}>
+            <p style={{ marginTop: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>
               Use your phone number and 6-digit PIN to continue.
             </p>
 
             <form onSubmit={submit}>
-              <label style={{ display: 'block', marginBottom: 6, fontSize: 14, color: 'var(--muted)', fontWeight: 500 }}>
-                Phone number
-              </label>
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginBottom: 14 }}>
-                <span
-                  style={{
-                    position: 'absolute',
-                    left: 14,
-                    color: 'var(--txt)',
-                    fontSize: 16,
-                    fontWeight: 500,
-                    pointerEvents: 'none',
-                    zIndex: 1,
-                  }}
-                >
-                  +234
-                </span>
-                <input
-                  placeholder="8141751569"
-                  value={phone}
-                  onChange={(e) => handlePhoneChange(e.target.value)}
-                  inputMode="numeric"
-                  autoFocus
-                  style={{
-                    ...inputStyle,
-                    paddingLeft: 64,
-                  }}
-                  className="no-zoom"
-                  maxLength={10}
-                />
-              </div>
-
-              <label style={{ display: 'block', marginBottom: 6, fontSize: 14, color: 'var(--muted)', fontWeight: 500 }}>
-                PIN (6 digits)
-              </label>
+              <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Phone number</label>
               <input
-                placeholder="Enter your 6-digit PIN"
+                placeholder="+2348100000000"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                inputMode="tel"
+                autoFocus
+                style={inputStyle}
+                className="no-zoom"
+              />
+
+              <div style={{ height: 8 }} />
+
+              <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>PIN (6 digits)</label>
+              <input
+                placeholder="******"
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
                 type="password"
                 inputMode="numeric"
                 maxLength={6}
-                style={{...inputStyle, marginBottom: 12}}
+                style={inputStyle}
                 className="no-zoom"
               />
 
               {error && (
-                <div style={{ 
-                  color: '#fda4af', 
-                  marginBottom: 14, 
-                  fontSize: 14, 
-                  padding: 12,
-                  background: 'rgba(220, 50, 50, 0.1)',
-                  border: '1px solid rgba(220, 50, 50, 0.25)',
-                  borderRadius: 8,
-                  lineHeight: 1.4
-                }}>
+                <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
                   ⚠️ {error}
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
-                <button className="btn" type="submit" disabled={loading} style={{ flex: 1, minWidth: 120 }}>
+              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                <button className="btn" type="submit" disabled={loading}>
                   {loading ? 'Signing in…' : 'Sign in'}
                 </button>
                 <button
@@ -207,14 +165,13 @@ export default function SignIn({
                   className="btn btn-outline"
                   onClick={onCancel}
                   disabled={loading}
-                  style={{ flex: 1, minWidth: 120 }}
                 >
                   Cancel
                 </button>
               </div>
             </form>
 
-            <p style={{ marginTop: 14, fontSize: 13, color: 'var(--muted)', lineHeight: 1.5 }}>
+            <p style={{ marginTop: 12, fontSize: '0.8rem', color: 'var(--muted)' }}>
               Too many failed attempts can temporarily lock your account.
             </p>
           </div>
@@ -229,14 +186,11 @@ const inputStyle: React.CSSProperties = {
   background: 'var(--card)',
   border: '1px solid var(--border)',
   color: 'var(--txt)',
-  padding: '12px 14px',
-  borderRadius: 10,
+  padding: '10px 12px',
+  borderRadius: 8,
   outline: 'none',
-  fontSize: 16,
+  fontSize: '16px !important',
   WebkitTextSizeAdjust: '100%',
-  textSizeAdjust: '100%',
-  minHeight: 44,
-  lineHeight: 1.4,
-  touchAction: 'manipulation',
-  transition: 'border-color 0.2s ease',
+  minHeight: '40px',
+  lineHeight: '1.35',
 }
