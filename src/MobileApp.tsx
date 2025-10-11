@@ -442,6 +442,161 @@ export default function MobileApp() {
     }
   }
 
+  const renderMainContent = () => {
+    if (showSignIn) {
+      return (
+        <SignIn
+          onCancel={() => {
+            setShowSignIn(false)
+            setOpenSellAfterAuth(false)
+          }}
+          onSuccess={(res) => {
+            setAuth(res)
+            setShowSignIn(false)
+            const greeting = getTimeBasedGreeting()
+            const name = res.user.username || (res.user as any).firstname || 'there'
+            setMessages([
+              {
+                id: crypto.randomUUID(),
+                role: 'assistant',
+                text: `${greeting}, ${name}! How can I help you today?`,
+                ts: Date.now(),
+              },
+            ])
+            if (openSellAfterAuth) {
+              setOpenSellAfterAuth(false)
+              setShowSell(true)
+            }
+          }}
+        />
+      )
+    }
+
+    if (showSignUp) {
+      return (
+        <SignUp
+          onCancel={() => setShowSignUp(false)}
+          onSuccess={(_res: SignUpResult) => {
+            setShowSignUp(false)
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: crypto.randomUUID(),
+                role: 'assistant',
+                text: 'Account created! Please verify your OTP to complete signup.',
+                ts: Date.now(),
+              },
+            ])
+            setShowSignIn(true)
+          }}
+        />
+      )
+    }
+
+    return (
+      <main className="mobile-chat">
+        <div className="mobile-messages">
+          {messages.map((m) => (
+            <div key={m.id} className={`mobile-bubble ${m.role}`}>
+              <div className="mobile-bubble-content">
+                {renderMessageText(m.text)}
+                {m.role === 'assistant' &&
+                  m.cta?.type === 'button' &&
+                  m.cta.buttons?.length > 0 && (
+                    <div className="mobile-cta-buttons">
+                      {m.cta.buttons.map((btn, index) => {
+                        const isSell = isSellCTA(btn)
+                        if (isSell) {
+                          return (
+                            <button
+                              key={btn.id || btn.title || index}
+                              className="mobile-cta-btn"
+                              onClick={handleSellClick}
+                            >
+                              {btn.title}
+                            </button>
+                          )
+                        }
+                        return (
+                          
+                            key={btn.id || btn.title || index}
+                            className="mobile-cta-btn"
+                            href={btn.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {btn.title}
+                          </a>
+                        )
+                      })}
+                    </div>
+                  )}
+              </div>
+            </div>
+          ))}
+          {loading && <ThreeDotLoader />}
+          <div ref={endRef} />
+        </div>
+
+        <div className="mobile-hints">
+          <button
+            className="mobile-hint"
+            onClick={() => handleHintClick('Sell 100 USDT to NGN')}
+          >
+            💰 Sell USDT
+          </button>
+          <button
+            className="mobile-hint"
+            onClick={() => handleHintClick('Show my portfolio balance')}
+          >
+            📊 Portfolio
+          </button>
+          <button
+            className="mobile-hint"
+            onClick={() => handleHintClick('Current NGN rates')}
+          >
+            💱 NGN Rates
+          </button>
+        </div>
+
+        <form className="mobile-composer" onSubmit={sendMessage}>
+          <input
+            ref={inputRef}
+            className="mobile-input"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={loading ? 'Please wait…' : 'Message Bramp AI...'}
+            disabled={loading}
+          />
+          <button
+            type="submit"
+            className="mobile-send-btn"
+            disabled={loading || !input.trim()}
+            aria-label="Send message"
+          >
+            {loading ? (
+              <div className="mobile-spinner" />
+            ) : (
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22,2 15,22 11,13 2,9" />
+              </svg>
+            )}
+          </button>
+        </form>
+      </main>
+    )
+  }
+
   return (
     <div className="mobile-page">
       <header className="mobile-header">
@@ -548,150 +703,7 @@ export default function MobileApp() {
         </div>
       )}
 
-      {showSignIn ? (
-        <SignIn
-          onCancel={() => {
-            setShowSignIn(false)
-            setOpenSellAfterAuth(false)
-          }}
-          onSuccess={(res) => {
-            setAuth(res)
-            setShowSignIn(false)
-            const greeting = getTimeBasedGreeting()
-            const name = res.user.username || (res.user as any).firstname || 'there'
-            setMessages([
-              {
-                id: crypto.randomUUID(),
-                role: 'assistant',
-                text: `${greeting}, ${name}! How can I help you today?`,
-                ts: Date.now(),
-              },
-            ])
-            if (openSellAfterAuth) {
-              setOpenSellAfterAuth(false)
-              setShowSell(true)
-            }
-          }}
-        />
-      ) : showSignUp ? (
-        <SignUp
-          onCancel={() => setShowSignUp(false)}
-          onSuccess={(_res: SignUpResult) => {
-            setShowSignUp(false)
-            setMessages((prev) => [
-              ...prev,
-              {
-                id: crypto.randomUUID(),
-                role: 'assistant',
-                text: 'Account created! Please verify your OTP to complete signup.',
-                ts: Date.now(),
-              },
-            ])
-            setShowSignIn(true)
-          }}
-        />
-      ) : (
-        <main className="mobile-chat">
-          <div className="mobile-messages">
-            {messages.map((m) => (
-              <div key={m.id} className={`mobile-bubble ${m.role}`}>
-                <div className="mobile-bubble-content">
-                  {renderMessageText(m.text)}
-                  {m.role === 'assistant' &&
-                    m.cta?.type === 'button' &&
-                    m.cta.buttons?.length > 0 && (
-                      <div className="mobile-cta-buttons">
-                        {m.cta.buttons.map((btn, index) => {
-                          const isSell = isSellCTA(btn)
-                          if (isSell) {
-                            return (
-                              <button
-                                key={btn.id || btn.title || index}
-                                className="mobile-cta-btn"
-                                onClick={handleSellClick}
-                              >
-                                {btn.title}
-                              </button>
-                            )
-                          }
-                          return (
-                            
-                              key={btn.id || btn.title || index}
-                              className="mobile-cta-btn"
-                              href={btn.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              {btn.title}
-                            </a>
-                          )
-                        })}
-                      </div>
-                    )}
-                </div>
-              </div>
-            ))}
-            {loading && <ThreeDotLoader />}
-            <div ref={endRef} />
-          </div>
-
-          <div className="mobile-hints">
-            <button
-              className="mobile-hint"
-              onClick={() => handleHintClick('Sell 100 USDT to NGN')}
-            >
-              💰 Sell USDT
-            </button>
-            <button
-              className="mobile-hint"
-              onClick={() => handleHintClick('Show my portfolio balance')}
-            >
-              📊 Portfolio
-            </button>
-            <button
-              className="mobile-hint"
-              onClick={() => handleHintClick('Current NGN rates')}
-            >
-              💱 NGN Rates
-            </button>
-          </div>
-
-          <form className="mobile-composer" onSubmit={sendMessage}>
-            <input
-              ref={inputRef}
-              className="mobile-input"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder={loading ? 'Please wait…' : 'Message Bramp AI...'}
-              disabled={loading}
-            />
-            <button
-              type="submit"
-              className="mobile-send-btn"
-              disabled={loading || !input.trim()}
-              aria-label="Send message"
-            >
-              {loading ? (
-                <div className="mobile-spinner" />
-              ) : (
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="22" y1="2" x2="11" y2="13" />
-                  <polygon points="22,2 15,22 11,13 2,9" />
-                </svg>
-              )}
-            </button>
-          </form>
-        </main>
-      )}
+      {renderMainContent()}
 
       <SellModal
         open={showSell}
