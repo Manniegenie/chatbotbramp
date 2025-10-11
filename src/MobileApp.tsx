@@ -165,7 +165,7 @@ function inlineRender(text: string, keyPrefix: string): React.ReactNode[] {
       const trailing = url.slice(trimmed.length)
       if (offset > idx) finalNodes.push(node.slice(idx, offset))
       finalNodes.push(
-        <a
+        
           key={`${keyPrefix}-url-${i}-${offset}`}
           href={trimmed}
           target="_blank"
@@ -263,7 +263,7 @@ export default function MobileApp() {
 
   const endRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const [tickerText, setTickerText] = useState<string>('')
+  const [tickerText, setTickerText] = useState<string>('Loading prices...')
 
   // Clean up sensitive URL params on load
   useEffect(() => {
@@ -339,9 +339,16 @@ export default function MobileApp() {
       })
 
       const text = items.join('  •  ')
-      setTickerText(text)
+      if (text) {
+        setTickerText(text)
+      } else {
+        // Fallback text if no prices available
+        setTickerText('BTC • ETH • USDT • Live crypto prices loading...')
+      }
     } catch (err) {
       console.warn('Ticker fetch failed', err)
+      // Set fallback text on error
+      setTickerText('BTC • ETH • USDT • Live crypto prices')
     }
   }
 
@@ -472,72 +479,67 @@ export default function MobileApp() {
             <span className="mobile-brand-text">Bramp AI</span>
           </div>
 
-          <button
-            className="mobile-menu-btn"
-            onClick={() => setShowMenu(!showMenu)}
-            aria-label="Menu"
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
+          {/* Auth Buttons */}
+          {!auth ? (
+            <div className="mobile-auth-buttons">
+              <button
+                className="mobile-auth-btn"
+                onClick={() => setShowSignIn(true)}
+              >
+                Sign in
+              </button>
+              <button
+                className="mobile-auth-btn mobile-auth-btn-secondary"
+                onClick={() => setShowSignUp(true)}
+              >
+                Sign up
+              </button>
+            </div>
+          ) : (
+            <button
+              className="mobile-menu-btn"
+              onClick={() => setShowMenu(!showMenu)}
+              aria-label="Menu"
             >
-              <line x1="3" y1="12" x2="21" y2="12"></line>
-              <line x1="3" y1="6" x2="21" y2="6"></line>
-              <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-          </button>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+          )}
         </div>
 
         {/* Ticker */}
-        <div className="mobile-ticker-wrap">
-          <div className="mobile-ticker" key={tickerText}>
-            {tickerText ? `${tickerText}  ${tickerText}` : ''}
+        {tickerText && (
+          <div className="mobile-ticker-wrap">
+            <div className="mobile-ticker">
+              {tickerText}  •  {tickerText}
+            </div>
           </div>
-        </div>
+        )}
       </header>
 
-      {/* Mobile Menu Overlay */}
-      {showMenu && (
+      {/* Mobile Menu Overlay - Only for authenticated users */}
+      {showMenu && auth && (
         <div className="mobile-menu-overlay" onClick={() => setShowMenu(false)}>
           <div className="mobile-menu" onClick={(e) => e.stopPropagation()}>
-            {!auth ? (
-              <>
-                <button
-                  className="mobile-menu-item"
-                  onClick={() => {
-                    setShowSignIn(true)
-                    setShowMenu(false)
-                  }}
-                >
-                  Sign In
-                </button>
-                <button
-                  className="mobile-menu-item"
-                  onClick={() => {
-                    setShowSignUp(true)
-                    setShowMenu(false)
-                  }}
-                >
-                  Sign Up
-                </button>
-              </>
-            ) : (
-              <>
-                <div className="mobile-menu-user">{auth.user?.username || 'User'}</div>
-                <button className="mobile-menu-item primary" onClick={handleSellClick}>
-                  Sell Crypto
-                </button>
-                <button className="mobile-menu-item" onClick={signOut}>
-                  Sign Out
-                </button>
-              </>
-            )}
+            <div className="mobile-menu-user">{auth.user?.username || 'User'}</div>
+            <button className="mobile-menu-item primary" onClick={handleSellClick}>
+              Sell Crypto
+            </button>
+            <button className="mobile-menu-item" onClick={signOut}>
+              Sign Out
+            </button>
             <div className="mobile-menu-divider"></div>
-            <a
+            
               className="mobile-menu-item"
               href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view"
               target="_blank"
@@ -545,7 +547,7 @@ export default function MobileApp() {
             >
               AML/CFT Policy
             </a>
-            <a
+            
               className="mobile-menu-item"
               href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view"
               target="_blank"
@@ -553,7 +555,7 @@ export default function MobileApp() {
             >
               Risk Disclaimer
             </a>
-            <a
+            
               className="mobile-menu-item"
               href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view"
               target="_blank"
@@ -561,7 +563,7 @@ export default function MobileApp() {
             >
               Privacy Policy
             </a>
-            <a
+            
               className="mobile-menu-item"
               href="/terms"
               target="_blank"
@@ -641,7 +643,7 @@ export default function MobileApp() {
                             )
                           }
                           return (
-                            <a
+                            
                               key={btn.id || btn.title || index}
                               className="mobile-cta-btn"
                               href={btn.url}

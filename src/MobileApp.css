@@ -193,6 +193,42 @@ a {
   text-overflow: ellipsis;
 }
 
+/* Auth Buttons in Header */
+.mobile-auth-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.mobile-auth-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  background: var(--accent);
+  color: white;
+  min-height: 36px;
+}
+
+.mobile-auth-btn-secondary {
+  background: transparent;
+  color: var(--txt);
+  border: 1px solid var(--border);
+}
+
+.mobile-auth-btn:active {
+  transform: scale(0.95);
+}
+
+.mobile-auth-btn-secondary:active {
+  background: rgba(255, 255, 255, 0.05);
+}
+
 .mobile-menu-btn {
   width: 44px;
   height: 44px;
@@ -231,26 +267,44 @@ a {
   border-radius: 8px;
   background: rgba(0, 115, 55, 0.08);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
 }
 
 .mobile-ticker {
   display: inline-block;
   white-space: nowrap;
-  will-change: transform;
-  animation: mobileTickerScroll 25s linear infinite;
-  padding-left: 100%;
+  animation: mobileTickerScroll 30s linear infinite;
   font-size: 12px;
   font-weight: 600;
   color: var(--accent);
   line-height: 32px;
+  padding-right: 100%;
+  transform: translateZ(0); /* Force GPU acceleration on iOS */
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 @keyframes mobileTickerScroll {
   0% {
-    transform: translateX(0%);
+    transform: translate3d(100%, 0, 0);
+    -webkit-transform: translate3d(100%, 0, 0);
   }
   100% {
-    transform: translateX(-50%);
+    transform: translate3d(-100%, 0, 0);
+    -webkit-transform: translate3d(-100%, 0, 0);
+  }
+}
+
+/* Safari/iOS specific animation */
+@-webkit-keyframes mobileTickerScroll {
+  0% {
+    -webkit-transform: translate3d(100%, 0, 0);
+  }
+  100% {
+    -webkit-transform: translate3d(-100%, 0, 0);
   }
 }
 
@@ -260,19 +314,19 @@ a {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 32px;
+  width: 40px;
   pointer-events: none;
   z-index: 2;
 }
 
 .mobile-ticker-wrap::before {
   left: 0;
-  background: linear-gradient(90deg, rgba(11, 11, 16, 0.9) 0%, transparent 100%);
+  background: linear-gradient(90deg, rgba(18, 18, 26, 0.95) 0%, transparent 100%);
 }
 
 .mobile-ticker-wrap::after {
   right: 0;
-  background: linear-gradient(270deg, rgba(11, 11, 16, 0.9) 0%, transparent 100%);
+  background: linear-gradient(270deg, rgba(18, 18, 26, 0.95) 0%, transparent 100%);
 }
 
 /* ============================================
@@ -735,6 +789,16 @@ a {
 @media screen and (max-width: 374px) {
   .mobile-brand-text {
     font-size: 16px;
+  }
+
+  .mobile-auth-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+    min-height: 32px;
+  }
+
+  .mobile-auth-buttons {
+    gap: 6px;
   }
 
   .mobile-bubble {
