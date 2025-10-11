@@ -30,7 +30,6 @@ export type ChatMessage = {
   cta?: CTA | null
 }
 
-// Session ID management
 function getSessionId(): string {
   const key = 'bramp__session_id'
   let sid = localStorage.getItem(key)
@@ -41,7 +40,6 @@ function getSessionId(): string {
   return sid
 }
 
-// Time-based greeting
 function getTimeBasedGreeting(): string {
   const hour = new Date().getHours()
   if (hour < 12) return 'Good morning'
@@ -49,7 +47,6 @@ function getTimeBasedGreeting(): string {
   else return 'Good evening'
 }
 
-// JWT expiration check
 function isExpiredJwt(token: string): boolean {
   try {
     const [, payloadB64] = token.split('.')
@@ -61,7 +58,6 @@ function isExpiredJwt(token: string): boolean {
   }
 }
 
-// Authenticated fetch wrapper
 async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
   const { access } = tokenStore.getTokens()
   const headers = new Headers(init.headers || {})
@@ -70,7 +66,6 @@ async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
   return fetch(input, { ...init, headers })
 }
 
-// Error message helper
 function getErrorMessage(e: unknown): string {
   if (e instanceof Error) return e.message
   if (typeof e === 'string') return e
@@ -81,7 +76,6 @@ function getErrorMessage(e: unknown): string {
   }
 }
 
-// Send chat message to API
 async function sendChatMessage(
   message: string,
   history: ChatMessage[]
@@ -114,7 +108,6 @@ async function sendChatMessage(
   }
 }
 
-// URL and markdown rendering helpers
 const URL_REGEX = /https?:\/\/[^\s<>"')]+/gi
 const MD_LINK = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g
 
@@ -223,7 +216,6 @@ function renderMessageText(text: string): React.ReactNode {
   return rendered
 }
 
-// Three dot typing indicator
 function ThreeDotLoader() {
   return (
     <div className="typing-mobile">
@@ -236,7 +228,6 @@ function ThreeDotLoader() {
   )
 }
 
-// Main Mobile App Component
 export default function MobileApp() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -265,7 +256,6 @@ export default function MobileApp() {
   const inputRef = useRef<HTMLInputElement>(null)
   const [tickerText, setTickerText] = useState<string>('Loading prices...')
 
-  // Clean up sensitive URL params on load
   useEffect(() => {
     try {
       const url = new URL(window.location.href)
@@ -286,12 +276,10 @@ export default function MobileApp() {
     } catch {}
   }, [])
 
-  // Auto-scroll to bottom on new messages
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading])
 
-  // Fetch ticker prices
   const TICKER_SYMBOLS = ['BTC', 'ETH', 'USDT', 'USDC', 'BNB', 'MATIC', 'AVAX', 'SOL', 'NGNB']
 
   async function fetchTickerPrices(signal?: AbortSignal) {
@@ -342,12 +330,10 @@ export default function MobileApp() {
       if (text) {
         setTickerText(text)
       } else {
-        // Fallback text if no prices available
         setTickerText('BTC • ETH • USDT • Live crypto prices loading...')
       }
     } catch (err) {
       console.warn('Ticker fetch failed', err)
-      // Set fallback text on error
       setTickerText('BTC • ETH • USDT • Live crypto prices')
     }
   }
@@ -358,7 +344,6 @@ export default function MobileApp() {
     return () => ac.abort()
   }, [])
 
-  // Send message handler
   async function sendMessage(e?: React.FormEvent) {
     e?.preventDefault()
     const trimmed = input.trim()
@@ -402,7 +387,6 @@ export default function MobileApp() {
     }
   }
 
-  // Sign out handler
   function signOut() {
     tokenStore.clear()
     setAuth(null)
@@ -418,7 +402,6 @@ export default function MobileApp() {
     ])
   }
 
-  // Check if button is a sell CTA
   function isSellCTA(btn: CTAButton): boolean {
     if (!btn) return false
     if (btn.id === 'start_sell') return true
@@ -433,7 +416,6 @@ export default function MobileApp() {
     return sellPatterns.some((rx) => rx.test(url))
   }
 
-  // Handle sell button click
   function handleSellClick(event?: React.MouseEvent) {
     event?.preventDefault()
     setShowMenu(false)
@@ -445,7 +427,6 @@ export default function MobileApp() {
     setShowSell(true)
   }
 
-  // Echo message from modal to chat
   function echoFromModalToChat(text: string) {
     if (!text) return
     setMessages((prev) => [
@@ -454,7 +435,6 @@ export default function MobileApp() {
     ])
   }
 
-  // Handle hint click
   function handleHintClick(hintText: string) {
     if (!loading) {
       setInput(hintText)
@@ -464,7 +444,6 @@ export default function MobileApp() {
 
   return (
     <div className="mobile-page">
-      {/* Mobile Header */}
       <header className="mobile-header">
         <div className="mobile-header-top">
           <div className="mobile-brand">
@@ -479,13 +458,9 @@ export default function MobileApp() {
             <span className="mobile-brand-text">Bramp AI</span>
           </div>
 
-          {/* Auth Buttons */}
           {!auth ? (
             <div className="mobile-auth-buttons">
-              <button
-                className="mobile-auth-btn"
-                onClick={() => setShowSignIn(true)}
-              >
+              <button className="mobile-auth-btn" onClick={() => setShowSignIn(true)}>
                 Sign in
               </button>
               <button
@@ -517,7 +492,6 @@ export default function MobileApp() {
           )}
         </div>
 
-        {/* Ticker */}
         {tickerText && (
           <div className="mobile-ticker-wrap">
             <div className="mobile-ticker">
@@ -527,7 +501,6 @@ export default function MobileApp() {
         )}
       </header>
 
-      {/* Mobile Menu Overlay - Only for authenticated users */}
       {showMenu && auth && (
         <div className="mobile-menu-overlay" onClick={() => setShowMenu(false)}>
           <div className="mobile-menu" onClick={(e) => e.stopPropagation()}>
@@ -575,7 +548,6 @@ export default function MobileApp() {
         </div>
       )}
 
-      {/* Main Content */}
       {showSignIn ? (
         <SignIn
           onCancel={() => {
@@ -663,7 +635,6 @@ export default function MobileApp() {
             <div ref={endRef} />
           </div>
 
-          {/* Quick Action Hints */}
           <div className="mobile-hints">
             <button
               className="mobile-hint"
@@ -685,7 +656,6 @@ export default function MobileApp() {
             </button>
           </div>
 
-          {/* Message Composer */}
           <form className="mobile-composer" onSubmit={sendMessage}>
             <input
               ref={inputRef}
@@ -723,14 +693,12 @@ export default function MobileApp() {
         </main>
       )}
 
-      {/* Sell Modal */}
       <SellModal
         open={showSell}
         onClose={() => setShowSell(false)}
         onChatEcho={echoFromModalToChat}
       />
 
-      {/* Mobile Footer */}
       <footer className="mobile-footer">
         <div className="mobile-footer-text">© 2025 Bramp Africa Limited</div>
       </footer>

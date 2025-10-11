@@ -38,7 +38,6 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* iOS-specific viewport fix */
 @supports (-webkit-touch-callout: none) {
   html {
     height: -webkit-fill-available;
@@ -64,8 +63,6 @@ body {
   touch-action: pan-y;
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
-  
-  /* Background image support */
   background-image: var(--bg-image-url);
   background-size: cover;
   background-position: center;
@@ -73,27 +70,24 @@ body {
   background-attachment: fixed;
 }
 
-/* Additional iOS fixes */
 @supports (-webkit-touch-callout: none) {
   body {
     min-height: 100vh;
     min-height: -webkit-fill-available;
+    background-attachment: scroll;
   }
 }
 
-/* Remove default button styles */
 button {
   font-family: inherit;
   cursor: pointer;
 }
 
-/* Remove default input styles */
 input,
 textarea {
   font-family: inherit;
 }
 
-/* Improve link tap targets */
 a {
   -webkit-tap-highlight-color: transparent;
 }
@@ -110,15 +104,14 @@ a {
   flex-direction: column;
   overflow: hidden;
   position: relative;
-  background: transparent; /* Allow body background to show through */
+  background: transparent;
 }
 
-/* Optional: Add subtle overlay for better readability */
 .mobile-page::before {
   content: '';
   position: fixed;
   inset: 0;
-  background: rgba(11, 11, 16, 0.7); /* Semi-transparent dark overlay */
+  background: rgba(11, 11, 16, 0.7);
   z-index: -1;
   pointer-events: none;
 }
@@ -130,7 +123,6 @@ a {
   }
 }
 
-/* Safe area padding for notch devices */
 @supports (padding: max(0px)) {
   .mobile-page {
     padding-left: var(--safe-left);
@@ -193,7 +185,6 @@ a {
   text-overflow: ellipsis;
 }
 
-/* Auth Buttons in Header */
 .mobile-auth-buttons {
   display: flex;
   gap: 8px;
@@ -256,7 +247,7 @@ a {
 }
 
 /* ============================================
-   Mobile Ticker (Price Marquee)
+   Mobile Ticker (Price Marquee) - iOS Fixed
    ============================================ */
 
 .mobile-ticker-wrap {
@@ -275,12 +266,13 @@ a {
   display: inline-block;
   white-space: nowrap;
   animation: mobileTickerScroll 30s linear infinite;
+  -webkit-animation: mobileTickerScroll 30s linear infinite;
   font-size: 12px;
   font-weight: 600;
   color: var(--accent);
   line-height: 32px;
   padding-right: 100%;
-  transform: translateZ(0); /* Force GPU acceleration on iOS */
+  transform: translateZ(0);
   -webkit-transform: translateZ(0);
   will-change: transform;
   backface-visibility: hidden;
@@ -290,15 +282,12 @@ a {
 @keyframes mobileTickerScroll {
   0% {
     transform: translate3d(100%, 0, 0);
-    -webkit-transform: translate3d(100%, 0, 0);
   }
   100% {
     transform: translate3d(-100%, 0, 0);
-    -webkit-transform: translate3d(-100%, 0, 0);
   }
 }
 
-/* Safari/iOS specific animation */
 @-webkit-keyframes mobileTickerScroll {
   0% {
     -webkit-transform: translate3d(100%, 0, 0);
@@ -445,7 +434,6 @@ a {
   overscroll-behavior: contain;
 }
 
-/* Custom scrollbar for WebKit browsers */
 .mobile-messages::-webkit-scrollbar {
   width: 4px;
 }
@@ -785,7 +773,6 @@ a {
    Responsive Adjustments
    ============================================ */
 
-/* Small phones (< 375px) */
 @media screen and (max-width: 374px) {
   .mobile-brand-text {
     font-size: 16px;
@@ -820,12 +807,10 @@ a {
   }
 }
 
-/* Standard phones (375px - 480px) */
 @media screen and (min-width: 375px) and (max-width: 480px) {
-  /* Already optimized for this range */
+  /* Already optimized */
 }
 
-/* Large phones and small tablets (481px - 768px) */
 @media screen and (min-width: 481px) and (max-width: 768px) {
   .mobile-chat {
     max-width: 600px;
@@ -858,7 +843,6 @@ a {
   }
 }
 
-/* Landscape mode on mobile devices */
 @media screen and (orientation: landscape) and (max-height: 500px) {
   .mobile-header {
     padding-top: 8px;
@@ -895,22 +879,11 @@ a {
    iOS Specific Fixes
    ============================================ */
 
-/* Fix background-attachment on iOS (doesn't support fixed properly) */
-@supports (-webkit-touch-callout: none) {
-  body {
-    background-attachment: scroll;
-  }
-}
-
-/* Prevent text size adjustment on rotation */
 @supports (-webkit-touch-callout: none) {
   html {
     -webkit-text-size-adjust: 100%;
   }
-}
 
-/* Fix for iOS input zoom */
-@supports (-webkit-touch-callout: none) {
   input,
   select,
   textarea {
@@ -918,7 +891,6 @@ a {
   }
 }
 
-/* Fix for iOS momentum scrolling */
 @supports (-webkit-overflow-scrolling: touch) {
   .mobile-messages,
   .mobile-menu {
@@ -930,7 +902,6 @@ a {
    Accessibility
    ============================================ */
 
-/* Focus visible states */
 button:focus-visible,
 input:focus-visible,
 a:focus-visible,
@@ -939,7 +910,6 @@ a:focus-visible,
   outline-offset: 2px;
 }
 
-/* Reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -951,7 +921,6 @@ a:focus-visible,
   }
 }
 
-/* High contrast mode */
 @media (prefers-contrast: high) {
   .mobile-bubble-content {
     border-width: 2px;
@@ -967,7 +936,6 @@ a:focus-visible,
   }
 }
 
-/* Forced colors mode (Windows High Contrast) */
 @media (forced-colors: active) {
   button,
   input,
@@ -1014,7 +982,6 @@ a:focus-visible,
    Performance Optimizations
    ============================================ */
 
-/* GPU acceleration for animations */
 .mobile-ticker,
 .mobile-menu,
 .mobile-bubble,
@@ -1022,37 +989,14 @@ a:focus-visible,
   will-change: transform;
 }
 
-/* Contain layout shifts */
 .mobile-header,
 .mobile-composer,
 .mobile-footer {
   contain: layout;
 }
 
-/* Optimize repaints */
 .mobile-messages {
   contain: layout style paint;
-}
-
-/* ============================================
-   Dark Mode (Default)
-   ============================================ */
-
-/* Already optimized for dark mode by default */
-/* Light mode can be added if needed */
-
-@media (prefers-color-scheme: light) {
-  /* Uncomment and customize if light mode is desired
-  :root {
-    --bg: #ffffff;
-    --card: #f5f5f5;
-    --muted: #666666;
-    --accent: #007337;
-    --border: #e0e0e0;
-    --txt: #1a1a1a;
-    --shadow: rgba(0, 0, 0, 0.1);
-  }
-  */
 }
 
 /* ============================================
