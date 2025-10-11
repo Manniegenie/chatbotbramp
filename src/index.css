@@ -32,7 +32,12 @@ body {
   padding: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  background: var(--bg);
+    background-image: url('./assets/bg.jpg');
+  background-size: cover;
+  background-position: bottom;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  /* background: #000000; */
   color: var(--txt);
   overflow: hidden;
   min-height: 100vh;
@@ -148,12 +153,14 @@ select:focus {
   border: 1px solid var(--border);
   font-size: 15px;
   line-height: 1.5;
+  width: fit-content;
 }
 
 .bubble.user .text {
   background: var(--accent);
   color: white;
   border-color: var(--accent);
+  width: fit-content;
 }
 
 /* Composer - FIXED AT BOTTOM */
@@ -209,6 +216,7 @@ select:focus {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   flex-shrink: 0;
+  text-align: center;
 }
 
 .hint {
@@ -394,7 +402,7 @@ a:hover {
   }
 
   .hints {
-    padding: 0 12px 12px;
+    padding: 0 6px 6px;
   }
 
   .btn {
@@ -407,7 +415,7 @@ a:hover {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 10px;
+    gap: 0px;
   }
 
   .footer-left,
@@ -419,6 +427,7 @@ a:hover {
   .footer-center {
     width: 100%;
   }
+  
 }
 
 /* Extra small screens */
@@ -448,14 +457,18 @@ a:hover {
   }
 
   .btn {
-    padding: 10px 14px;
-    font-size: 16px !important;
+    padding: 4px 12px;
+    font-size: 13px !important;
   }
 
   .hint {
     font-size: 13px;
-    padding: 7px 12px;
+    padding: 5px 10px;
     min-height: 34px;
+    text-align: 12px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   /* .footer-links {
@@ -474,7 +487,7 @@ html,
 .hints,
 .footer {
   overflow-x: hidden !important;
-  max-width: 100vw;
+  /* max-width: 100vw; */
 }
 
 /* Safe area support for iOS */
@@ -499,4 +512,9 @@ html,
   display: flex;
   align-items: center;
   margin-bottom: 16px;
+}
+.overlay{
+  background-color: #000000c7;
+  width: 100vw;
+  height: 100vh;
 }

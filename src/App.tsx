@@ -196,7 +196,7 @@ function renderMessageText(text: string): React.ReactNode {
     } else {
       const pieces = para.split(/\r?\n/)
       rendered.push(
-        <p key={`p-${pi}`} style={{ margin: '8px 0' }}>
+        <p key={`p-${pi}`} style={{ margin: '-7px 0' }}>
           {pieces.map((line, li) => (
             <React.Fragment key={`p-${pi}-line-${li}`}>
               {inlineRender(line, `p-${pi}-line-${li}`)}
@@ -553,7 +553,7 @@ export default function App() {
 
           @media (max-width: 640px) {
             .ticker { font-size: 12px; }
-            .tag { display:block; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
+            .tag { display:none; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
           }
         `}
       </style>
@@ -596,20 +596,22 @@ export default function App() {
               </button>
             </div>
           ) : (
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '5px'}}>
+                <button className="btn" onClick={handleSellClick} style={{ background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)' }}>
+                  Sell
+                </button>
+                <button
+                  className="btn"
+                  style={{ background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border)' }}
+                  onClick={signOut}
+                >
+                  Sign out
+                </button>
+              </div>
               <span style={{ color: 'var(--muted)', fontSize: 13 }}>
                 Signed in{auth.user?.username ? ` as ${auth.user.username}` : ''}
               </span>
-              <button className="btn" onClick={handleSellClick} style={{ background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)' }}>
-                Sell
-              </button>
-              <button
-                className="btn"
-                style={{ background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border)' }}
-                onClick={signOut}
-              >
-                Sign out
-              </button>
             </div>
           )}
         </header>
@@ -770,10 +772,39 @@ export default function App() {
               </button>
             </form>
 
-            <div className="hints">
-              <span className="hint" onClick={() => handleHintClick('Sell 100 USDT to NGN')}>Sell 100 USDT to NGN</span>
-              <span className="hint" onClick={() => handleHintClick('Show my portfolio balance')}>Show my portfolio balance</span>
-              <span className="hint" onClick={() => handleHintClick('Current NGN rates')}>Current NGN rates</span>
+            <div
+              className="hints"
+              style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: 3,
+              marginTop: 8,
+              maxWidth: 480,
+              marginLeft: 'auto',
+              marginRight: 'auto'
+              }}
+            >
+              <span
+              className="hint"
+              style={{ gridColumn: '1' }}
+              onClick={() => handleHintClick('Sell 100 USDT to NGN')}
+              >
+              Sell 100 USDT to NGN
+              </span>
+              <span
+              className="hint"
+              style={{ gridColumn: '2' }}
+              onClick={() => handleHintClick('Show my portfolio balance')}
+              >
+              Show my portfolio balance
+              </span>
+              <span
+              className="hint"
+              style={{ gridColumn: '1 / span 2' }}
+              onClick={() => handleHintClick('Current NGN rates')}
+              >
+              Current NGN rates
+              </span>
             </div>
           </main>
         )}
