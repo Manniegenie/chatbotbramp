@@ -4,7 +4,8 @@ import SignIn, { SignInResult } from './signin'
 import SignUp, { SignUpResult } from './signup'
 import { tokenStore } from './lib/secureStore'
 import SellModal from './sell'
-import BuyModal from './buy'
+// Import logo from assets
+import BrampLogo from './assets/logo.jpeg' // Placeholder path
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -39,10 +40,10 @@ function getSessionId(): string {
   return sid
 }
 
-// Helper function to get time-based greeting (MOVED TO TOP LEVEL)
+// Helper function to get time-based greeting
 function getTimeBasedGreeting(): string {
   const hour = new Date().getHours()
-  
+
   if (hour < 12) {
     return 'Good morning'
   } else if (hour < 18) {
@@ -70,7 +71,7 @@ async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
   return fetch(input, { ...init, headers })
 }
 
-/* ----------------------- Error helper (fixes TS2339) ----------------------- */
+/* ----------------------- Error helper ----------------------- */
 function getErrorMessage(e: unknown): string {
   if (e instanceof Error) return e.message
   if (typeof e === 'string') return e
@@ -214,27 +215,27 @@ function ThreeDotLoader() {
   return (
     <div className="typing">
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-        <div style={{ 
-          width: '6px', 
-          height: '6px', 
-          backgroundColor: 'var(--muted)', 
-          borderRadius: '50%', 
+        <div style={{
+          width: '6px',
+          height: '6px',
+          backgroundColor: 'var(--muted)',
+          borderRadius: '50%',
           animation: 'dotBounce 1.4s ease-in-out infinite both',
           animationDelay: '-0.32s'
         }}></div>
-        <div style={{ 
-          width: '6px', 
-          height: '6px', 
-          backgroundColor: 'var(--muted)', 
-          borderRadius: '50%', 
+        <div style={{
+          width: '6px',
+          height: '6px',
+          backgroundColor: 'var(--muted)',
+          borderRadius: '50%',
           animation: 'dotBounce 1.4s ease-in-out infinite both',
           animationDelay: '-0.16s'
         }}></div>
-        <div style={{ 
-          width: '6px', 
-          height: '6px', 
-          backgroundColor: 'var(--muted)', 
-          borderRadius: '50%', 
+        <div style={{
+          width: '6px',
+          height: '6px',
+          backgroundColor: 'var(--muted)',
+          borderRadius: '50%',
           animation: 'dotBounce 1.4s ease-in-out infinite both',
           animationDelay: '0s'
         }}></div>
@@ -263,7 +264,7 @@ export default function App() {
       id: crypto.randomUUID(),
       role: 'assistant',
       text:
-        "👋 Hey there! I'm Bramp AI — your personal assistant for everything crypto. Please Sign up or Sign in for full access😊",
+        "👋 Hey there! I'm Bramp AI — your personal assistant for buying & selling crypto. Please Sign up or Sign in for full access😊",
       ts: Date.now(),
     },
   ])
@@ -274,10 +275,8 @@ export default function App() {
   const [showSignIn, setShowSignIn] = useState(false)
   const [showSignUp, setShowSignUp] = useState(false)
   const [showSell, setShowSell] = useState(false)
-  const [showBuy, setShowBuy] = useState(false)
 
   const [openSellAfterAuth, setOpenSellAfterAuth] = useState(false)
-  const [openBuyAfterAuth, setOpenBuyAfterAuth] = useState(false)
 
   const [auth, setAuth] = useState<SignInResult | null>(() => {
     const { access, refresh } = tokenStore.getTokens()
@@ -286,6 +285,12 @@ export default function App() {
   })
 
   const endRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null) // Add ref for input focus management
+
+  // New state: prices for marquee (initially empty)
+  const [tickerText, setTickerText] = useState<string>('')
+  // keep a loading flag internally but DO NOT display loading text in UI
+  const [tickerLoading, setTickerLoading] = useState<boolean>(false)
 
   // Scrub sensitive URL params on load
   useEffect(() => {
@@ -304,7 +309,76 @@ export default function App() {
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, loading, showSignIn, showSignUp, showSell, showBuy])
+  }, [messages, loading, showSignIn, showSignUp, showSell])
+
+  /* ------------------- Price ticker: fetch & formatting ------------------- */
+  const TICKER_SYMBOLS = ['BTC','ETH','USDT','USDC','BNB','MATIC','AVAX','SOL','NGNB']
+
+  async function fetchTickerPrices(signal?: AbortSignal) {
+    try {
+      setTickerLoading(true)
+      const symbolParam = TICKER_SYMBOLS.join(',')
+      const url = `${API_BASE}/prices/prices?symbols=${encodeURIComponent(symbolParam)}&changes=true&limit=9`
+      const resp = await authFetch(url, { method: 'GET', signal })
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${resp.statusText}`)
+      const payload = await resp.json()
+      if (!payload?.success || !payload?.data) {
+        throw new Error('Invalid prices response')
+      }
+      const { prices = {}, hourlyChanges = {} } = payload.data
+
+      // format items without tail text and without emojis
+      const items = TICKER_SYMBOLS.filter(s => (s === 'NGNB') || typeof prices[s] === 'number').map((s) => {
+        const priceVal = prices[s]
+        const changeObj = hourlyChanges?.[s]
+        const changePct = changeObj?.hourlyChange ?? changeObj?.percentageChange ?? null
+        if (s === 'NGNB') {
+          if (typeof priceVal === 'number') {
+            const ngn = Number(priceVal)
+            return `NGNB ₦${ngn.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+          }
+          return 'NGNB — n/a'
+        }
+        if (typeof priceVal !== 'number') return `${s} — n/a`
+        const usd = Number(priceVal)
+        const changeText = changePct != null ? ` (${changePct > 0 ? '+' : ''}${Number(changePct).toFixed(2)}%)` : ''
+        const usdStr = usd >= 1 ? usd.toLocaleString(undefined, { maximumFractionDigits: 2 }) : usd.toFixed(6).replace(/\.?0+$/, '')
+        return `${s} $${usdStr}${changeText}`
+      }).filter(Boolean)
+
+      // join with bullet separators (no tail text)
+      const text = items.join('  •  ')
+      setTickerText(text)
+    } catch (err) {
+      // on failure, keep tickerText empty (silent background load)
+      console.warn('Ticker fetch failed', err)
+      // do not modify UI visible text; keep it blank if nothing fetched
+    } finally {
+      setTickerLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    const ac = new AbortController()
+    // load once in background on mount (no visible loading placeholder)
+    fetchTickerPrices(ac.signal).catch(() => { /* swallowed */ })
+    return () => ac.abort()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Header pin/shadow logic
+  const headerRef = useRef<HTMLElement | null>(null)
+  useEffect(() => {
+    const h = headerRef.current
+    if (!h) return
+    const onScroll = () => {
+      if (window.scrollY > 8) h.classList.add('pinned')
+      else h.classList.remove('pinned')
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   async function sendMessage(e?: React.FormEvent) {
     e?.preventDefault()
@@ -316,19 +390,24 @@ export default function App() {
     setInput('')
     setLoading(true)
 
+    // Maintain focus on input after clearing
+    setTimeout(() => {
+      inputRef.current?.focus()
+    }, 0)
+
     try {
       const data = await sendChatMessage(trimmed, [...messages, userMsg])
-      
-      const aiMsg: ChatMessage = { 
-        id: crypto.randomUUID(), 
-        role: 'assistant', 
-        text: data.reply, 
+
+      const aiMsg: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        text: data.reply,
         ts: Date.now(),
         cta: data.cta || null
       }
-      
+
       setMessages((prev) => [...prev, aiMsg])
-      
+
     } catch (error) {
       console.error('Chat message failed:', error)
       const errorMsg: ChatMessage = {
@@ -340,6 +419,10 @@ export default function App() {
       setMessages((prev) => [...prev, errorMsg])
     } finally {
       setLoading(false)
+      // Ensure focus is maintained even after loading is complete
+      setTimeout(() => {
+        inputRef.current?.focus()
+      }, 0)
     }
   }
 
@@ -347,7 +430,6 @@ export default function App() {
     tokenStore.clear()
     setAuth(null)
     setShowSell(false)
-    setShowBuy(false)
   }
 
   function isSellCTA(btn: CTAButton): boolean {
@@ -368,19 +450,20 @@ export default function App() {
     setShowSell(true)
   }
 
-  function handleBuyClick(event?: React.MouseEvent) {
-    event?.preventDefault()
-    if (!auth) {
-      setOpenBuyAfterAuth(true)
-      setShowSignIn(true)
-      return
-    }
-    setShowBuy(true)
-  }
-
   function echoFromModalToChat(text: string) {
     if (!text) return
     setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'assistant', text, ts: Date.now() }])
+  }
+
+  // Helper function for hint clicks
+  function handleHintClick(hintText: string) {
+    if (!loading) {
+      setInput(hintText)
+      // Focus input after setting hint text
+      setTimeout(() => {
+        inputRef.current?.focus()
+      }, 0)
+    }
   }
 
   return (
@@ -401,7 +484,7 @@ export default function App() {
               min-height: -webkit-fill-available;
             }
           }
-          
+
           /* Prevent safe area displacement during scroll */
           @media (max-width: 480px) {
             .composer {
@@ -411,18 +494,194 @@ export default function App() {
               padding-bottom: max(14px, calc(14px + env(safe-area-inset-bottom))) !important;
             }
           }
-          
+
           /* Animation for spinner */
           @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
           }
+
+          /* Header sticky/pinned */
+          .header {
+            position: sticky;
+            top: 0;
+            z-index: 60;
+            background: linear-gradient(180deg, rgba(18,18,26,0.95), rgba(18,18,26,0.8));
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 16px;
+            transition: box-shadow 200ms ease, transform 160ms ease;
+          }
+          .header.pinned {
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            transform: translateY(0);
+          }
+
+          .brand { display:flex; align-items:center; gap:12px; min-width:0; flex:1; }
+          .tag { font-size: 14px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+          /* Ticker / marquee */
+          .ticker-wrap {
+            position: relative;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            width: 100%;
+            min-width: 160px;
+          }
+          .ticker {
+            display: inline-block;
+            white-space: nowrap;
+            will-change: transform;
+            animation: tickerScroll 18s linear infinite;
+            padding-left: 100%;
+            box-sizing: content-box;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--accent); /* use green accent for ticker text */
+          }
+
+          /* fade edges */
+          .ticker-wrap::before,
+          .ticker-wrap::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 64px;
+            pointer-events: none;
+          }
+          .ticker-wrap::before {
+            left: 0;
+            background: linear-gradient(90deg, rgba(18,18,26,1) 0%, rgba(18,18,26,0) 100%);
+          }
+          .ticker-wrap::after {
+            right: 0;
+            background: linear-gradient(270deg, rgba(18,18,26,1) 0%, rgba(18,18,26,0) 100%);
+          }
+
+          @keyframes tickerScroll {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+          }
+
+          .ticker.idle {
+            animation: none;
+            padding-left: 0;
+            transform: none;
+          }
+
+          @media (max-width: 640px) {
+            .ticker { font-size: 12px; }
+            .tag { display:block; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
+          }
+
+          /* Footer: responsive layout and alignment fixes */
+          .footer {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            background: transparent;
+          }
+
+          /* groups inside footer for layout control */
+          .footer-left,
+          .footer-center,
+          .footer-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }
+
+          /* policy links row */
+          .footer-links {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .footer a {
+            font-size: 13px;
+            color: var(--muted);
+            text-decoration: none;
+            padding: 6px 0;
+          }
+          .footer a:hover {
+            text-decoration: underline;
+            color: var(--txt);
+          }
+
+          .footer-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+          }
+          .footer-brand img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+          }
+          .footer-brand span {
+            font-size: 14px;
+            color: var(--txt);
+            font-weight: 500;
+          }
+
+          .footer-center {
+            text-align: center;
+          }
+          .footer-center .copyright {
+            font-size: 12px;
+            color: var(--muted);
+            white-space: nowrap;
+          }
+
+          /* On small screens stack nicely */
+          @media (max-width: 640px) {
+            .footer {
+              justify-content: center;
+              text-align: center;
+            }
+            .footer-left, .footer-right {
+              width: 100%;
+              justify-content: center;
+            }
+            .footer-center {
+              width: 100%;
+              margin-top: 6px;
+            }
+          }
         `}
       </style>
       <div className="page">
-        <header className="header">
+        <header ref={headerRef} className="header">
           <div className="brand">
             <p className="tag">Secure access to digital assets & payments — via licensed partners.</p>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div className="ticker-wrap" aria-live="polite" aria-atomic="true">
+                <div
+                  className={`ticker ${tickerText.length < 40 ? 'idle' : ''}`}
+                  key={tickerText}
+                  title={tickerText}
+                  style={{
+                    animationDuration: tickerText.length < 80 ? '14s' : `${Math.min(Math.max(tickerText.length / 6, 18), 36)}s`
+                  }}
+                >
+                  {tickerText ? `${tickerText}  ${tickerText}` : ''}
+                </div>
+              </div>
+            </div>
           </div>
 
           {!auth ? (
@@ -438,11 +697,10 @@ export default function App() {
             </div>
           ) : (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <span className="tag">Signed in{auth.user?.username ? ` as ${auth.user.username}` : ''}</span>
-              <button className="btn" onClick={handleBuyClick} style={{ background: 'var(--primary)', color: 'white' }}>
-                Buy
-              </button>
-              <button className="btn" onClick={handleSellClick} style={{ background: 'var(--primary)', color: 'white' }}>
+              <span style={{ color: 'var(--muted)', fontSize: 13 }}>
+                Signed in{auth.user?.username ? ` as ${auth.user.username}` : ''}
+              </span>
+              <button className="btn" onClick={handleSellClick} style={{ background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)' }}>
                 Sell
               </button>
               <button
@@ -458,13 +716,12 @@ export default function App() {
 
         {showSignIn ? (
           <SignIn
-            onCancel={() => { setShowSignIn(false); setOpenSellAfterAuth(false); setOpenBuyAfterAuth(false) }}
+            onCancel={() => { setShowSignIn(false); setOpenSellAfterAuth(false) }}
             onSuccess={(res) => {
               setAuth(res)
               setShowSignIn(false)
               const greeting = getTimeBasedGreeting()
               const name = res.user.username || (res.user as any).firstname || 'there'
-              // Clear previous messages and start fresh with personalized greeting
               setMessages([{
                 id: crypto.randomUUID(),
                 role: 'assistant',
@@ -472,7 +729,6 @@ export default function App() {
                 ts: Date.now(),
               }])
               if (openSellAfterAuth) { setOpenSellAfterAuth(false); setShowSell(true) }
-              if (openBuyAfterAuth)  { setOpenBuyAfterAuth(false);  setShowBuy(true) }
             }}
           />
         ) : showSignUp ? (
@@ -547,13 +803,14 @@ export default function App() {
 
             <form className="composer" onSubmit={sendMessage}>
               <input
+                ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={loading ? 'Please wait…' : 'Try: Sell 100 USDT to NGN'}
                 autoFocus
                 disabled={loading}
               />
-              <button 
+              <button
                 type="submit"
                 className="btn"
                 disabled={loading || !input.trim()}
@@ -565,24 +822,24 @@ export default function App() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   padding: '0',
-                  background: loading || !input.trim() ? '#ccc' : '#22c55e',
+                  background: loading || !input.trim() ? '#ccc' : 'var(--accent)',
                   color: 'white',
                   border: 'none',
                   cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
                   transition: 'all 0.2s ease',
-                  boxShadow: loading || !input.trim() ? 'none' : '0 2px 8px rgba(34, 197, 94, 0.2)',
+                  boxShadow: loading || !input.trim() ? 'none' : '0 2px 8px rgba(0,115,55,0.18)',
                   minWidth: '44px',
                   flexShrink: 0
                 }}
                 onMouseEnter={(e) => {
                   if (!loading && input.trim()) {
                     e.currentTarget.style.transform = 'scale(1.05)'
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(34, 197, 94, 0.3)'
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,115,55,0.26)'
                   }
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'scale(1)'
-                  e.currentTarget.style.boxShadow = loading || !input.trim() ? 'none' : '0 2px 8px rgba(34, 197, 94, 0.2)'
+                  e.currentTarget.style.boxShadow = loading || !input.trim() ? 'none' : '0 2px 8px rgba(0,115,55,0.18)'
                 }}
               >
                 {loading ? (
@@ -595,40 +852,62 @@ export default function App() {
                     animation: 'spin 1s linear infinite'
                   }} />
                 ) : (
-                  <svg 
-                    width="18" 
-                    height="18" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="white" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
                     strokeLinejoin="round"
                   >
-                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                    <polygon points="22,2 15,22 11,13 2,9"></polygon>
+                    <line x1="22" y1="2" x2="11" y2="13" />
+                    <polygon points="22,2 15,22 11,13 2,9" />
                   </svg>
                 )}
               </button>
             </form>
 
             <div className="hints">
-              <span className="hint" onClick={() => !loading && setInput('Sell 100 USDT to NGN')}>Sell 100 USDT to NGN</span>
-              <span className="hint" onClick={() => !loading && setInput('Show my portfolio balance')}>Show my portfolio balance</span>
-              <span className="hint" onClick={() => !loading && setInput('Current NGN rates')}>Current NGN rates</span>
+              <span className="hint" onClick={() => handleHintClick('Sell 100 USDT to NGN')}>Sell 100 USDT to NGN</span>
+              <span className="hint" onClick={() => handleHintClick('Show my portfolio balance')}>Show my portfolio balance</span>
+              <span className="hint" onClick={() => handleHintClick('Current NGN rates')}>Current NGN rates</span>
             </div>
           </main>
         )}
 
-        {/* Modals */}
         <SellModal open={showSell} onClose={() => setShowSell(false)} onChatEcho={echoFromModalToChat} />
-        <BuyModal  open={showBuy}  onClose={() => setShowBuy(false)}  onChatEcho={echoFromModalToChat} />
 
         <footer className="footer">
-          <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
-          <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
-          <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
-          <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
+          <div className="footer-left">
+            <div className="footer-links">
+              <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
+              <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
+              <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
+              <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
+            </div>
+          </div>
+
+          <div className="footer-center">
+            <div className="copyright">© 2025 Bramp Africa Limited. Bramp Platforms, LLC.</div>
+          </div>
+
+          <div className="footer-right">
+            <div className="footer-brand">
+              <img 
+                src={BrampLogo} 
+                alt="Bramp Africa Logo" 
+                width="24" 
+                height="24"
+                onError={(e) => {
+                  // Fallback to a placeholder if logo fails to load
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+              <span></span>
+            </div>
+          </div>
         </footer>
       </div>
     </>

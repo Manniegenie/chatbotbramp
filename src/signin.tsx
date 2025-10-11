@@ -46,23 +46,35 @@ export default function SignIn({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  function normalizePhone(input: string) {
-    const d = input.replace(/[^\d+]/g, '')
-    if (/^0\d{10}$/.test(d)) return '+234' + d.slice(1)
-    if (/^234\d{10}$/.test(d)) return '+' + d
-    if (/^\+?\d{10,15}$/.test(d)) return d.startsWith('+') ? d : '+' + d
-    return d
+  function handlePhoneChange(value: string) {
+    // Remove all non-digits
+    let digits = value.replace(/\D/g, '')
+    
+    // If starts with 0, remove it (e.g., 08141751569 becomes 8141751569)
+    if (digits.startsWith('0')) {
+      digits = digits.slice(1)
+    }
+    
+    // Limit to 10 digits
+    digits = digits.slice(0, 10)
+    
+    setPhone(digits)
   }
 
   async function submit(e?: React.FormEvent) {
     e?.preventDefault()
     setError(null)
 
-    const phonenumber = normalizePhone(phone)
+    // Build final phone number with +234 prefix
+    const phonenumber = '+234' + phone
     const passwordpin = String(pin).replace(/[^\d]/g, '').padStart(6, '0')
 
-    if (!/^\+?\d{10,15}$/.test(phonenumber)) return setError('Enter a valid phone number (e.g. +2348100000000).')
-    if (!/^\d{6}$/.test(passwordpin)) return setError('PIN must be exactly 6 digits.')
+    if (phone.length !== 10) {
+      return setError('Enter a valid 10-digit phone number.')
+    }
+    if (!/^\d{6}$/.test(passwordpin)) {
+      return setError('PIN must be exactly 6 digits.')
+    }
 
     setLoading(true)
     try {
@@ -126,15 +138,33 @@ export default function SignIn({
 
             <form onSubmit={submit}>
               <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Phone number</label>
-              <input
-                placeholder="+2348100000000"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                inputMode="tel"
-                autoFocus
-                style={inputStyle}
-                className="no-zoom"
-              />
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <span
+                  style={{
+                    position: 'absolute',
+                    left: '12px',
+                    color: 'var(--txt)',
+                    fontSize: '16px',
+                    pointerEvents: 'none',
+                    zIndex: 1,
+                  }}
+                >
+                  +234
+                </span>
+                <input
+                  placeholder="8141751569"
+                  value={phone}
+                  onChange={(e) => handlePhoneChange(e.target.value)}
+                  inputMode="numeric"
+                  autoFocus
+                  style={{
+                    ...inputStyle,
+                    paddingLeft: '60px',
+                  }}
+                  className="no-zoom"
+                  maxLength={10}
+                />
+              </div>
 
               <div style={{ height: 8 }} />
 
