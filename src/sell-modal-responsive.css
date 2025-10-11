@@ -37,7 +37,7 @@
     padding: 10px !important;
   }
   .sell-modal-kvgrid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 2fr 1fr !important;
     gap: 8px !important;
   }
   .sell-modal-deposit-row {

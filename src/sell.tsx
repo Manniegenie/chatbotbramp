@@ -13,6 +13,8 @@ function useIsMobile(breakpoint = 600) {
 import './sell-modal-responsive.css'
 import { createPortal } from 'react-dom'
 import { tokenStore } from './lib/secureStore'
+import Logo from './assets/logo.png';
+import Select from 'react-select'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -210,23 +212,23 @@ function QRCode({ data, size = 120 }: { data: string; size?: number }) {
 /* ===== Minimal inline modal styles ===== */
 const overlayStyle: React.CSSProperties = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', display: 'grid', placeItems: 'center', padding: 16, zIndex: 1000 }
 const sheetStyle: React.CSSProperties = { width: '100%', maxWidth: 760, background: 'var(--card)', color: 'var(--txt)', border: '1px solid var(--border)', borderRadius: 16, boxShadow: 'var(--shadow)', overflow: 'hidden', display: 'grid', gridTemplateRows: 'auto 1fr auto', animation: 'scaleIn 120ms ease-out' }
-const headerStyle: React.CSSProperties = { padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }
+const headerStyle: React.CSSProperties = { padding: '10px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }
 const titleRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10 }
 const stepperStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--muted)' }
 const dot = (active: boolean): React.CSSProperties => ({ width: 8, height: 8, borderRadius: 999, background: active ? 'var(--accent)' : 'var(--border)' })
 const bodyStyle: React.CSSProperties = { padding: 18, overflow: 'auto' }
 const footerStyle: React.CSSProperties = { padding: 16, display: 'flex', justifyContent: 'space-between', gap: 12, borderTop: '1px solid var(--border)', background: 'linear-gradient(180deg, transparent, rgba(0,0,0,.05))' }
-const btn: React.CSSProperties = { appearance: 'none', border: '1px solid var(--border)', background: 'transparent', color: 'var(--txt)', padding: '10px 14px', borderRadius: 10, cursor: 'pointer' }
+const btn: React.CSSProperties = { appearance: 'none', border: '1px solid var(--border)', background: 'transparent', color: 'var(--txt)', padding: '10px 14px', fontSize: '13px', borderRadius: 10, cursor: 'pointer' }
 const btnPrimary: React.CSSProperties = { ...btn, border: 'none', background: 'var(--accent)', color: 'white' }
-const btnDangerGhost: React.CSSProperties = { ...btn, borderColor: 'var(--border)', color: 'var(--muted)' }
+const btnDangerGhost: React.CSSProperties = { ...btn, borderColor: 'var(--border)', color: 'var(--muted)', padding: '4px 6px', fontSize: 16, lineHeight: 1 }
 const gridForm: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }
 const inputWrap: React.CSSProperties = { display: 'grid', gap: 6 }
 const labelText: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' }
-const inputBase: React.CSSProperties = { background: '#0f1117', color: 'var(--txt)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 12px', outline: 'none', width: '100%' }
+const inputBase: React.CSSProperties = { background: '#0f1117', color: 'var(--txt)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 12px', outline: 'none', width: '100%', fontSize: '12px' }
 const card: React.CSSProperties = { border: '1px solid var(--border)', borderRadius: 12, padding: 14, background: '#0e0f15', display: 'grid', gap: 10 }
 const kvGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }
 const kStyle: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' }
-const vStyle: React.CSSProperties = { fontWeight: 600 }
+const vStyle: React.CSSProperties = { fontWeight: 500, fontSize: 14, wordBreak: 'break-all' }
 const mono: React.CSSProperties = { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace' }
 const smallMuted: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' }
 const row: React.CSSProperties = { display: 'flex', gap: 10, flexWrap: 'wrap' }
@@ -482,7 +484,13 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         <div style={headerStyle}>
           <div style={titleRowStyle}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: '#0d1512', display: 'grid', placeItems: 'center', border: '1px solid var(--border)' }}>
-              💱
+              <img 
+                src={Logo} 
+                alt="Bramp AI Logo"
+                width="36" 
+                height="36" 
+                style={{ borderRadius: 6, objectFit: 'contain' }}
+              />
             </div>
             <div>
               <div id="sell-title" style={{ fontWeight: 700 }}>{headerTitle}</div>
@@ -501,7 +509,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
           {/* STEP 1 — Start a Sell (no deposit-details screen; goes straight to payout on success) */}
           {step === 1 && (
             <div style={{ display: 'grid', gap: 14 }}>
-              <p style={{ margin: 0, color: 'var(--muted)' }}>
+              <p style={{ margin: 0, fontSize: '13px', color: 'var(--muted)' }}>
                 Choose token, network, and amount. We'll capture payout next.
               </p>
 
@@ -602,7 +610,71 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     <div  style={{ gridColumn: '1 / span 2', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
                     <label style={inputWrap}>
                       <span style={labelText}>Bank</span>
-                      <select
+                      import Select from 'react-select';
+
+                      <Select
+                        ref={firstInputRef as any}
+                        value={
+                          bankOptions.find(b => b.code === bankCode)
+                            ? { value: bankCode, label: bankName }
+                            : null
+                        }
+                        isDisabled={banksLoading || bankOptions.length === 0}
+                        isLoading={banksLoading}
+                        options={bankOptions.map(b => ({ value: b.code, label: b.name }))}
+                        onChange={option => {
+                          if (option && !Array.isArray(option)) {
+                            setBankCode(option.value);
+                            setBankName(option.label);
+                          }
+                        }}
+                        placeholder={banksLoading ? 'Loading…' : (banksError || 'Select a bank')}
+                        // inputValue=""
+                        // onInputChange={() => {}}
+                        onMenuOpen={() => {}}
+                        onMenuClose={() => {}}
+                        styles={{
+                          control: (base, state) => ({
+                            ...base,
+                            backgroundColor: '#0f1117',
+                            borderColor: state.isFocused ? '#4CAF50' : '#444',
+                            color: '#fff',
+                            boxShadow: state.isFocused ? '0 0 0 1px #4CAF50' : 'none',
+                            '&:hover': { borderColor: '#4CAF50' },
+                          }),
+                          singleValue: (base) => ({
+                            ...base,
+                            color: '#fff',
+                          }),
+                          menu: (base) => ({
+                            ...base,
+                            backgroundColor: '#252525',
+                            color: '#fff',
+                          }),
+                          option: (base, state) => ({
+                            ...base,
+                            backgroundColor: state.isSelected
+                              ? '#4CAF50'
+                              : state.isFocused
+                              ? '#333'
+                              : '#252525',
+                            color: '#fff',
+                            '&:active': {
+                              backgroundColor: '#4CAF50',
+                            },
+                          }),
+                          placeholder: (base) => ({
+                            ...base,
+                            color: '#aaa',
+                          }),
+                          input: (base) => ({
+                            ...base,
+                            color: '#fff',
+                          }),
+                        }}
+                      />
+
+                      {/* <select
                         ref={firstInputRef as any}
                         style={inputBase}
                         value={bankCode}
@@ -623,7 +695,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                             <option key={b.code} value={b.code}>{b.name}</option>
                           ))
                         )}
-                      </select>
+                      </select> */}
                     </label>
 
                     <label style={inputWrap}>
@@ -687,18 +759,20 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     <div style={{ display: 'grid', gap: 12 }}>
                       <h4 style={{ margin: 0, fontSize: 14, color: 'var(--accent)' }}>📍 Deposit Details</h4>
                       
-                      <div>
+                      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '5px'}}>
                         <div style={kStyle}>Deposit Address</div>
-                        <div style={{ ...vStyle, ...mono, wordBreak: 'break-all', marginBottom: 8 }}>
-                          {initData.deposit.address}
-                        </div>
-                        <div style={row}>
-                          <button
-                            style={btn}
-                            onClick={() => copyToClipboard(initData.deposit.address, 'addr2')}
-                          >
-                            {copiedKey === 'addr2' ? 'Copied ✓' : 'Copy Address'}
-                          </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%' }}>
+                          <div style={{ ...vStyle, ...mono, width: '75%', overflow: 'hidden', marginBottom: 8 }}>
+                            {initData.deposit.address}
+                          </div>
+                          <div style={row}>
+                            <button
+                              style={btn}
+                              onClick={() => copyToClipboard(initData.deposit.address, 'addr2')}
+                            >
+                              {copiedKey === 'addr2' ? 'Copied ✓' : 'Copy'}
+                            </button>
+                          </div>
                         </div>
                       </div>
 
@@ -730,33 +804,33 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
                   {/* Transaction info grid */}
                   <div className="sell-modal-kvgrid">
-                    <div>
+                    <div style={{padding: '4px 8px', backgroundColor: '#0a0b0f', borderRadius: 6}}>
                       <div style={kStyle}>Status</div>
                       <div style={vStyle}>{payData.status}</div>
                     </div>
-                    <div>
+                    <div style={{padding: '4px 8px', backgroundColor: '#0a0b0f', borderRadius: 6}}>
                       <div style={kStyle}>Payment ID</div>
                       <div style={{ ...vStyle, ...mono }}>{payData.paymentId}</div>
                     </div>
-                    <div>
+                    <div style={{padding: '4px 8px', backgroundColor: '#0a0b0f', borderRadius: 6}}>
                       <div style={kStyle}>Reference</div>
                       <div style={{ ...vStyle, ...mono }}>{initData.reference}</div>
                     </div>
-                    <div>
+                    <div style={{padding: '4px 8px', backgroundColor: '#0a0b0f', borderRadius: 6}}>
                       <div style={kStyle}>You Receive</div>
                       <div style={vStyle}>
                         {prettyNgn((initData.quote.receiveAmount) || 0)} ({initData.quote.receiveCurrency})
                       </div>
                     </div>
-                    <div>
+                    <div style={{padding: '4px 8px', backgroundColor: '#0a0b0f', borderRadius: 6}}>
                       <div style={kStyle}>Rate</div>
                       <div style={vStyle}>{prettyAmount(initData.quote.rate)} NGN/{initData.deposit.token}</div>
                     </div>
-                    <div>
+                    <div style={{padding: '4px 8px', backgroundColor: '#0a0b0f', borderRadius: 6}}>
                       <div style={kStyle}>Bank</div>
                       <div style={vStyle}>{payData.payout.bankName}</div>
                     </div>
-                    <div>
+                    <div style={{padding: '4px 8px', backgroundColor: '#0a0b0f', borderRadius: 6}}>
                       <div style={kStyle}>Account</div>
                       <div style={vStyle}>{payData.payout.accountName} — {payData.payout.accountNumber}</div>
                     </div>
