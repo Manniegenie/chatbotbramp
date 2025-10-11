@@ -1,0 +1,972 @@
+/* ============================================
+   MOBILE APP CSS - Complete Styles
+   Optimized for iOS and Android devices
+   ============================================ */
+
+/* CSS Custom Properties */
+:root {
+  --bg: #0b0b10;
+  --card: #12121a;
+  --muted: #9aa3af;
+  --accent: #007337;
+  --border: #1f2330;
+  --txt: #e5e7eb;
+  --shadow: rgba(0, 0, 0, 0.3);
+  --gradient-start: rgba(11, 11, 16, 0.98);
+  --gradient-end: rgba(11, 11, 16, 0.95);
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+  --safe-left: env(safe-area-inset-left);
+  --safe-right: env(safe-area-inset-right);
+}
+
+/* ============================================
+   Global Reset & Base Styles
+   ============================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* iOS-specific viewport fix */
+@supports (-webkit-touch-callout: none) {
+  html {
+    height: -webkit-fill-available;
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--txt);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue',
+    'Arial', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  touch-action: pan-y;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Additional iOS fixes */
+@supports (-webkit-touch-callout: none) {
+  body {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Remove default button styles */
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* Remove default input styles */
+input,
+textarea {
+  font-family: inherit;
+}
+
+/* Improve link tap targets */
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ============================================
+   Mobile Page Container
+   ============================================ */
+
+.mobile-page {
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  background: var(--bg);
+}
+
+@supports (-webkit-touch-callout: none) {
+  .mobile-page {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Safe area padding for notch devices */
+@supports (padding: max(0px)) {
+  .mobile-page {
+    padding-left: var(--safe-left);
+    padding-right: var(--safe-right);
+  }
+}
+
+/* ============================================
+   Mobile Header
+   ============================================ */
+
+.mobile-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: linear-gradient(180deg, var(--gradient-start), var(--gradient-end));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding-top: max(12px, var(--safe-top));
+  box-shadow: 0 2px 10px var(--shadow);
+  flex-shrink: 0;
+}
+
+.mobile-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  gap: 12px;
+  min-height: 56px;
+}
+
+.mobile-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.mobile-logo {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 115, 55, 0.3);
+}
+
+.mobile-brand-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--txt);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mobile-menu-btn {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 12px;
+  border: none;
+  background: var(--card);
+  color: var(--txt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.mobile-menu-btn:active {
+  transform: scale(0.95);
+  background: var(--border);
+}
+
+.mobile-menu-btn svg {
+  flex-shrink: 0;
+}
+
+/* ============================================
+   Mobile Ticker (Price Marquee)
+   ============================================ */
+
+.mobile-ticker-wrap {
+  height: 32px;
+  overflow: hidden;
+  position: relative;
+  margin: 0 16px 8px;
+  border-radius: 8px;
+  background: rgba(0, 115, 55, 0.08);
+  flex-shrink: 0;
+}
+
+.mobile-ticker {
+  display: inline-block;
+  white-space: nowrap;
+  will-change: transform;
+  animation: mobileTickerScroll 25s linear infinite;
+  padding-left: 100%;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  line-height: 32px;
+}
+
+@keyframes mobileTickerScroll {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.mobile-ticker-wrap::before,
+.mobile-ticker-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 32px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.mobile-ticker-wrap::before {
+  left: 0;
+  background: linear-gradient(90deg, rgba(11, 11, 16, 0.9) 0%, transparent 100%);
+}
+
+.mobile-ticker-wrap::after {
+  right: 0;
+  background: linear-gradient(270deg, rgba(11, 11, 16, 0.9) 0%, transparent 100%);
+}
+
+/* ============================================
+   Mobile Menu (Slide-in Drawer)
+   ============================================ */
+
+.mobile-menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 100;
+  animation: fadeIn 0.2s ease-out;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.mobile-menu {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 280px;
+  max-width: 85vw;
+  height: 100%;
+  background: var(--card);
+  border-left: 1px solid var(--border);
+  padding-top: max(16px, var(--safe-top));
+  padding-bottom: max(16px, var(--safe-bottom));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: -4px 0 20px var(--shadow);
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.mobile-menu-user {
+  padding: 20px 20px 16px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--txt);
+  border-bottom: 1px solid var(--border);
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.mobile-menu-item {
+  width: 100%;
+  padding: 16px 20px;
+  border: none;
+  background: transparent;
+  color: var(--txt);
+  text-align: left;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  min-height: 54px;
+}
+
+.mobile-menu-item:active {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mobile-menu-item.primary {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.mobile-menu-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 8px 0;
+}
+
+/* ============================================
+   Mobile Chat Container
+   ============================================ */
+
+.mobile-chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  min-height: 0;
+}
+
+.mobile-messages {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px 12px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+
+/* Custom scrollbar for WebKit browsers */
+.mobile-messages::-webkit-scrollbar {
+  width: 4px;
+}
+
+.mobile-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mobile-messages::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+/* ============================================
+   Message Bubbles
+   ============================================ */
+
+.mobile-bubble {
+  max-width: 85%;
+  animation: bubbleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes bubbleIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mobile-bubble.user {
+  align-self: flex-end;
+}
+
+.mobile-bubble.assistant {
+  align-self: flex-start;
+}
+
+.mobile-bubble-content {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 12px 16px;
+  font-size: 15px;
+  line-height: 1.5;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  box-shadow: 0 1px 3px var(--shadow);
+}
+
+.mobile-bubble.user .mobile-bubble-content {
+  background: linear-gradient(135deg, rgba(0, 115, 55, 0.15), rgba(0, 115, 55, 0.08));
+  border-color: rgba(0, 115, 55, 0.3);
+}
+
+.mobile-bubble-content p {
+  margin: 0 0 8px 0;
+}
+
+.mobile-bubble-content p:last-child {
+  margin-bottom: 0;
+}
+
+.mobile-bubble-content a {
+  color: var(--accent);
+  text-decoration: underline;
+  word-break: break-word;
+}
+
+.mobile-bubble-content a:active {
+  opacity: 0.7;
+}
+
+.mobile-bubble-content ul {
+  margin: 8px 0;
+  padding-left: 20px;
+  list-style-type: disc;
+}
+
+.mobile-bubble-content ol {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.mobile-bubble-content li {
+  margin: 4px 0;
+}
+
+.mobile-bubble-content code {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+}
+
+/* ============================================
+   CTA Buttons in Messages
+   ============================================ */
+
+.mobile-cta-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.mobile-cta-btn {
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  min-height: 44px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 115, 55, 0.2);
+}
+
+.mobile-cta-btn:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+/* ============================================
+   Typing Indicator
+   ============================================ */
+
+.typing-mobile {
+  align-self: flex-start;
+  padding: 12px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  max-width: 80px;
+  box-shadow: 0 1px 3px var(--shadow);
+  animation: bubbleIn 0.3s ease;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background: var(--muted);
+  border-radius: 50%;
+  animation: dotBounce 1.4s ease-in-out infinite;
+  animation-delay: -0.32s;
+}
+
+@keyframes dotBounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+/* ============================================
+   Quick Action Hints
+   ============================================ */
+
+.mobile-hints {
+  display: flex;
+  gap: 8px;
+  padding: 0 12px 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+
+.mobile-hints::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-hint {
+  flex-shrink: 0;
+  padding: 10px 16px;
+  border-radius: 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--txt);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-hint:active {
+  transform: scale(0.95);
+  background: var(--border);
+}
+
+/* ============================================
+   Message Composer (Input Area)
+   ============================================ */
+
+.mobile-composer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  padding-bottom: max(12px, var(--safe-bottom));
+  background: linear-gradient(0deg, var(--bg) 70%, transparent);
+  border-top: 1px solid var(--border);
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.mobile-input {
+  flex: 1;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 12px 18px;
+  color: var(--txt);
+  font-size: 16px;
+  min-height: 48px;
+  outline: none;
+  transition: border-color 0.2s ease;
+  resize: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.mobile-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(0, 115, 55, 0.1);
+}
+
+.mobile-input::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+.mobile-input:disabled {
+  opacity: 0.6;
+  background: rgba(18, 18, 26, 0.5);
+  cursor: not-allowed;
+}
+
+/* ============================================
+   Send Button
+   ============================================ */
+
+.mobile-send-btn {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 115, 55, 0.3);
+  flex-shrink: 0;
+}
+
+.mobile-send-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.mobile-send-btn:disabled {
+  background: var(--border);
+  opacity: 0.5;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.mobile-send-btn svg {
+  flex-shrink: 0;
+}
+
+.mobile-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid transparent;
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================
+   Mobile Footer
+   ============================================ */
+
+.mobile-footer {
+  padding: 12px 16px;
+  padding-bottom: max(12px, var(--safe-bottom));
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.mobile-footer-text {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* ============================================
+   Responsive Adjustments
+   ============================================ */
+
+/* Small phones (< 375px) */
+@media screen and (max-width: 374px) {
+  .mobile-brand-text {
+    font-size: 16px;
+  }
+
+  .mobile-bubble {
+    max-width: 90%;
+  }
+
+  .mobile-bubble-content {
+    font-size: 14px;
+    padding: 10px 14px;
+  }
+
+  .mobile-composer {
+    padding: 10px;
+  }
+
+  .mobile-input {
+    font-size: 16px;
+    padding: 10px 16px;
+  }
+}
+
+/* Standard phones (375px - 480px) */
+@media screen and (min-width: 375px) and (max-width: 480px) {
+  /* Already optimized for this range */
+}
+
+/* Large phones and small tablets (481px - 768px) */
+@media screen and (min-width: 481px) and (max-width: 768px) {
+  .mobile-chat {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .mobile-bubble {
+    max-width: 75%;
+  }
+
+  .mobile-header-top {
+    padding: 12px 24px;
+  }
+
+  .mobile-ticker-wrap {
+    margin: 0 24px 8px;
+  }
+
+  .mobile-composer {
+    padding: 12px 24px;
+    padding-bottom: max(12px, var(--safe-bottom));
+  }
+
+  .mobile-hints {
+    padding: 0 24px 12px;
+  }
+
+  .mobile-messages {
+    padding: 16px 24px 80px;
+  }
+}
+
+/* Landscape mode on mobile devices */
+@media screen and (orientation: landscape) and (max-height: 500px) {
+  .mobile-header {
+    padding-top: 8px;
+  }
+
+  .mobile-header-top {
+    padding: 8px 16px;
+    min-height: 48px;
+  }
+
+  .mobile-ticker-wrap {
+    display: none;
+  }
+
+  .mobile-messages {
+    padding: 12px 12px 60px;
+  }
+
+  .mobile-hints {
+    padding: 0 12px 8px;
+  }
+
+  .mobile-composer {
+    padding: 8px 12px;
+    padding-bottom: max(8px, var(--safe-bottom));
+  }
+
+  .mobile-bubble-content {
+    font-size: 14px;
+  }
+}
+
+/* ============================================
+   iOS Specific Fixes
+   ============================================ */
+
+/* Prevent text size adjustment on rotation */
+@supports (-webkit-touch-callout: none) {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+}
+
+/* Fix for iOS input zoom */
+@supports (-webkit-touch-callout: none) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Fix for iOS momentum scrolling */
+@supports (-webkit-overflow-scrolling: touch) {
+  .mobile-messages,
+  .mobile-menu {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ============================================
+   Accessibility
+   ============================================ */
+
+/* Focus visible states */
+button:focus-visible,
+input:focus-visible,
+a:focus-visible,
+.mobile-hint:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .mobile-bubble-content {
+    border-width: 2px;
+  }
+
+  .mobile-input {
+    border-width: 2px;
+  }
+
+  .mobile-cta-btn,
+  .mobile-send-btn {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Forced colors mode (Windows High Contrast) */
+@media (forced-colors: active) {
+  button,
+  input,
+  a {
+    forced-color-adjust: auto;
+  }
+}
+
+/* ============================================
+   Print Styles
+   ============================================ */
+
+@media print {
+  .mobile-header,
+  .mobile-composer,
+  .mobile-hints,
+  .mobile-footer,
+  .mobile-menu,
+  .mobile-menu-overlay,
+  .mobile-send-btn {
+    display: none !important;
+  }
+
+  .mobile-page {
+    height: auto;
+  }
+
+  .mobile-messages {
+    overflow: visible;
+    padding: 20px;
+  }
+
+  .mobile-bubble {
+    max-width: 100%;
+    page-break-inside: avoid;
+  }
+
+  .mobile-bubble-content {
+    border: 1px solid #000;
+  }
+}
+
+/* ============================================
+   Performance Optimizations
+   ============================================ */
+
+/* GPU acceleration for animations */
+.mobile-ticker,
+.mobile-menu,
+.mobile-bubble,
+.typing-mobile {
+  will-change: transform;
+}
+
+/* Contain layout shifts */
+.mobile-header,
+.mobile-composer,
+.mobile-footer {
+  contain: layout;
+}
+
+/* Optimize repaints */
+.mobile-messages {
+  contain: layout style paint;
+}
+
+/* ============================================
+   Dark Mode (Default)
+   ============================================ */
+
+/* Already optimized for dark mode by default */
+/* Light mode can be added if needed */
+
+@media (prefers-color-scheme: light) {
+  /* Uncomment and customize if light mode is desired
+  :root {
+    --bg: #ffffff;
+    --card: #f5f5f5;
+    --muted: #666666;
+    --accent: #007337;
+    --border: #e0e0e0;
+    --txt: #1a1a1a;
+    --shadow: rgba(0, 0, 0, 0.1);
+  }
+  */
+}
+
+/* ============================================
+   End of Mobile App CSS
+   ============================================ */
