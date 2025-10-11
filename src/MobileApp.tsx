@@ -158,7 +158,7 @@ function inlineRender(text: string, keyPrefix: string): React.ReactNode[] {
       const trailing = url.slice(trimmed.length)
       if (offset > idx) finalNodes.push(node.slice(idx, offset))
       finalNodes.push(
-        
+        <a
           key={`${keyPrefix}-url-${i}-${offset}`}
           href={trimmed}
           target="_blank"
@@ -518,7 +518,7 @@ export default function MobileApp() {
                           )
                         }
                         return (
-                          
+                          <a
                             key={btn.id || btn.title || index}
                             className="mobile-cta-btn"
                             href={btn.url}
@@ -667,7 +667,7 @@ export default function MobileApp() {
               Sign Out
             </button>
             <div className="mobile-menu-divider"></div>
-            
+            <a
               className="mobile-menu-item"
               href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view"
               target="_blank"
@@ -675,7 +675,7 @@ export default function MobileApp() {
             >
               AML/CFT Policy
             </a>
-            
+            <a
               className="mobile-menu-item"
               href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view"
               target="_blank"
@@ -683,7 +683,7 @@ export default function MobileApp() {
             >
               Risk Disclaimer
             </a>
-            
+            <a
               className="mobile-menu-item"
               href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view"
               target="_blank"
@@ -691,7 +691,7 @@ export default function MobileApp() {
             >
               Privacy Policy
             </a>
-            
+            <a
               className="mobile-menu-item"
               href="/terms"
               target="_blank"
