@@ -64,6 +64,13 @@ body {
   touch-action: pan-y;
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
+  
+  /* Background image support */
+  background-image: var(--bg-image-url);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 /* Additional iOS fixes */
@@ -103,7 +110,17 @@ a {
   flex-direction: column;
   overflow: hidden;
   position: relative;
-  background: var(--bg);
+  background: transparent; /* Allow body background to show through */
+}
+
+/* Optional: Add subtle overlay for better readability */
+.mobile-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 11, 16, 0.7); /* Semi-transparent dark overlay */
+  z-index: -1;
+  pointer-events: none;
 }
 
 @supports (-webkit-touch-callout: none) {
@@ -813,6 +830,13 @@ a {
 /* ============================================
    iOS Specific Fixes
    ============================================ */
+
+/* Fix background-attachment on iOS (doesn't support fixed properly) */
+@supports (-webkit-touch-callout: none) {
+  body {
+    background-attachment: scroll;
+  }
+}
 
 /* Prevent text size adjustment on rotation */
 @supports (-webkit-touch-callout: none) {
