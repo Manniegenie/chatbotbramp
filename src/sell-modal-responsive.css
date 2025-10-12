@@ -18,7 +18,7 @@
 
 .mobile-sell-container {
   width: 100%;
-  max-width: 760px;
+  max-width: 480px;
   background: var(--card);
   color: var(--txt);
   border: 1px solid var(--border);
@@ -28,7 +28,8 @@
   display: grid;
   grid-template-rows: auto 1fr auto;
   animation: scaleIn 120ms ease-out;
-  max-height: calc(100vh - 32px);
+  max-height: min(calc(100vh - 32px), 700px);
+  margin: auto;
 }
 
 .mobile-sell-header {
@@ -272,10 +273,11 @@
 .mobile-sell-success-card {
   background: rgba(0, 115, 55, 0.12);
   border: 1px solid rgba(0, 115, 55, 0.35);
-  border-radius: 12px;
-  padding: 14px;
+  border-radius: 10px;
+  padding: 12px;
   display: grid;
-  gap: 14px;
+  gap: 10px;
+  font-size: 13px;
 }
 
 .mobile-sell-success-header {
@@ -303,12 +305,13 @@
 .mobile-sell-deposit-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   background: #0a0b0f;
-  padding: 16px;
-  border-radius: 12px;
+  padding: 12px;
+  border-radius: 10px;
   border: 1px solid var(--border);
   width: 100%;
+  font-size: 13px;
 }
 
 .mobile-sell-deposit-details {
@@ -330,28 +333,28 @@
 .mobile-sell-warning {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-size: 12px;
-  padding: 10px;
-  border-radius: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
   background: rgba(255, 170, 0, 0.08);
   border: 1px solid rgba(255, 170, 0, 0.25);
   width: 100%;
   text-align: left;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
 .mobile-qr-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 12px;
+  gap: 6px;
+  padding: 10px;
   background: #0a0b0f;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 10px;
   width: 100%;
-  max-width: 160px;
+  max-width: 140px;
   margin: 0 auto;
 }
 
