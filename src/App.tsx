@@ -552,7 +552,7 @@ export default function App() {
           }
 
           @media (max-width: 640px) {
-            .header{ margin-top: 20px; padding: 5px; }
+            .header{ padding-top: 25px; padding-left: 5px; padding-right: 5px; }
             .ticker { font-size: 12px; }
             .tag { display:none; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
           }
@@ -779,7 +779,7 @@ export default function App() {
               display: 'grid',
               gridTemplateColumns: 'repeat(2, 1fr)',
               gap: 3,
-              marginTop: 8,
+              marginTop: 0,
               maxWidth: 480,
               marginLeft: 'auto',
               marginRight: 'auto'
