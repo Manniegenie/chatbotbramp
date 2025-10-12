@@ -489,7 +489,7 @@ export default function App() {
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            padding: 12px 16px;
+            padding: max(12px, env(safe-area-inset-top)) 16px 12px 16px;
             transition: box-shadow 200ms ease, transform 160ms ease;
             flex-shrink: 0;
           }
@@ -508,7 +508,7 @@ export default function App() {
             align-items: center;
             overflow: hidden;
             width: 100%;
-            min-width: 160px;
+            min-width: 140px;
           }
           .ticker {
             display: inline-block;
@@ -528,7 +528,7 @@ export default function App() {
             position: absolute;
             top: 0;
             bottom: 0;
-            width: 64px;
+            width: 58px;
             pointer-events: none;
           }
           .ticker-wrap::before {
@@ -552,6 +552,7 @@ export default function App() {
           }
 
           @media (max-width: 640px) {
+            .header{ margin-top: 20px; padding: 5px; }
             .ticker { font-size: 12px; }
             .tag { display:none; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
           }
