@@ -22,7 +22,7 @@ type SignUpProps = {
 
 export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
   const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
-  const ENDPOINT = `${API_BASE}/signup/signup-pin`
+  const ENDPOINT = `${API_BASE}/chatsignup/add-user`
 
   const [phone, setPhone] = useState('')
   const [pin, setPin] = useState('')
