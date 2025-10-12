@@ -613,47 +613,58 @@ export default function MobileApp() {
             <span className="mobile-brand-text">Bramp AI</span>
           </div>
 
-          {!auth ? (
-            <div className="mobile-auth-buttons">
-              <button className="mobile-auth-btn" onClick={() => setShowSignIn(true)}>
-                Sign in
-              </button>
-              <button
-                className="mobile-auth-btn mobile-auth-btn-secondary"
-                onClick={() => setShowSignUp(true)}
-              >
-                Sign up
-              </button>
-            </div>
-          ) : (
-            <div className="mobile-nav-buttons">
-              <button
-                className="mobile-sell-btn"
-                onClick={handleSellClick}
-                aria-label="Sell Crypto"
-              >
-                Sell
-              </button>
-              <button
-                className="mobile-menu-btn"
-                onClick={() => setShowMenu(!showMenu)}
-                aria-label="Menu"
-              >
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
+          <div className="mobile-nav-buttons">
+            {!auth ? (
+              <>
+                <button
+                  className="mobile-sell-btn disabled"
+                  onClick={() => setShowSignIn(true)}
+                  aria-label="Sign in to Sell Crypto"
                 >
-                  <line x1="3" y1="12" x2="21" y2="12"></line>
-                  <line x1="3" y1="6" x2="21" y2="6"></line>
-                  <line x1="3" y1="18" x2="21" y2="18"></line>
-                </svg>
-              </button>
-            </div>
-          )}
+                  Sell
+                </button>
+                <div className="mobile-auth-buttons">
+                  <button className="mobile-auth-btn" onClick={() => setShowSignIn(true)}>
+                    Sign in
+                  </button>
+                  <button
+                    className="mobile-auth-btn mobile-auth-btn-secondary"
+                    onClick={() => setShowSignUp(true)}
+                  >
+                    Sign up
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <button
+                  className="mobile-sell-btn"
+                  onClick={handleSellClick}
+                  aria-label="Sell Crypto"
+                >
+                  Sell
+                </button>
+                <button
+                  className="mobile-menu-btn"
+                  onClick={() => setShowMenu(!showMenu)}
+                  aria-label="Menu"
+                >
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                  </svg>
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         {tickerText && (

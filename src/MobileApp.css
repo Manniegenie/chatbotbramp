@@ -240,8 +240,24 @@ a {
   min-height: 36px;
 }
 
-.mobile-sell-btn:active {
+.mobile-sell-btn:active:not(.disabled) {
   transform: scale(0.95);
+}
+
+.mobile-sell-btn.disabled {
+  opacity: 0.6;
+  background: var(--border);
+  cursor: pointer;
+  position: relative;
+}
+
+.mobile-sell-btn.disabled::after {
+  content: '🔒';
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
 }
 
 .mobile-menu-btn {

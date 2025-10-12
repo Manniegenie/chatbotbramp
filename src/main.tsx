@@ -33,9 +33,9 @@ import bg from './assets/bg.jpg' // <-- import your background image (adjust fil
 document.documentElement.style.setProperty('--bg-image-url', `url(${bg})`)
 
 //
-// --- Prevent iOS focus zoom only while editing (keeps pinch-zoom otherwise) ---
+// --- Prevent unwanted zooming while maintaining usability ---
 //
-const BASE_VIEWPORT = 'width=device-width, initial-scale=1, viewport-fit=cover'
+const BASE_VIEWPORT = 'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover'
 
 function getOrCreateViewportMeta(): HTMLMetaElement {
   let meta = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null
@@ -48,52 +48,129 @@ function getOrCreateViewportMeta(): HTMLMetaElement {
   return meta
 }
 
-function setViewportNoZoom(active: boolean) {
-  const meta = getOrCreateViewportMeta()
-  const noZoom = `${BASE_VIEWPORT}, maximum-scale=1, user-scalable=no`
-  meta.setAttribute('content', active ? noZoom : BASE_VIEWPORT)
-}
+// Initialize viewport with zoom restrictions
+getOrCreateViewportMeta()
 
-function isEditable(el: Element | null) {
-  if (!el) return false
-  const tag = el.tagName.toLowerCase()
-  return (
-    tag === 'input' ||
-    tag === 'select' ||
-    tag === 'textarea' ||
-    (el as HTMLElement).isContentEditable === true
-  )
-}
+// Double-tap prevention
+document.addEventListener('touchend', (e) => {
+  const now = Date.now()
+  const DOUBLE_TAP_DELAY = 300
+  
+  if (document.documentElement.hasAttribute('data-last-tap')) {
+    const lastTap = parseInt(document.documentElement.getAttribute('data-last-tap') || '0')
+    if (now - lastTap < DOUBLE_TAP_DELAY) {
+      e.preventDefault()
+    }
+  }
+  
+  document.documentElement.setAttribute('data-last-tap', now.toString())
+}, { passive: false })
 
-const onFocusIn = (e: FocusEvent) => {
-  const t = e.target as Element | null
-  if (isEditable(t)) setViewportNoZoom(true)
-}
+// Prevent pinch zoom on touch devices
+document.addEventListener('gesturestart', (e) => {
+  e.preventDefault()
+}, { passive: false })
 
-const onFocusOut = (e: FocusEvent) => {
-  const t = e.target as Element | null
-  if (isEditable(t)) setViewportNoZoom(false)
-}
+document.addEventListener('gesturechange', (e) => {
+  e.preventDefault()
+}, { passive: false })
 
-window.addEventListener('focusin', onFocusIn)
-window.addEventListener('focusout', onFocusOut)
-
-// If page loads when an input is already focused (rare), ensure no-zoom is active
-if (isEditable(document.activeElement)) setViewportNoZoom(true)
+document.addEventListener('gestureend', (e) => {
+  e.preventDefault()
+}, { passive: false })
 
 // HMR cleanup (Vite)
 const hot = (import.meta as any).hot as { dispose(cb: () => void): void } | undefined
 if (hot) {
   hot.dispose(() => {
-    window.removeEventListener('focusin', onFocusIn)
-    window.removeEventListener('focusout', onFocusOut)
-    setViewportNoZoom(false)
+    // Clean up event listeners
+    document.removeEventListener('touchend', () => {})
+    document.removeEventListener('gesturestart', () => {})
+    document.removeEventListener('gesturechange', () => {})
+    document.removeEventListener('gestureend', () => {})
   })
 }
 
+//
+// --- Mobile Device Detection & Routing ---
+//
+function isMobileDevice(): boolean {
+  // Check user agent
+  const userAgent = navigator.userAgent.toLowerCase()
+  const mobileKeywords = [
+    'android',
+    'iphone',
+    'ipad',
+    'ipod',
+    'blackberry',
+    'windows phone',
+    'webos',
+  ]
+  const isMobileUA = mobileKeywords.some((keyword) => userAgent.includes(keyword))
+
+  // Check screen size
+  const isSmallScreen = window.innerWidth <= 768
+
+  // Check for touch capability
+  const isTouchDevice =
+    'ontouchstart' in window || navigator.maxTouchPoints > 0
+
+  // Consider it mobile if it has mobile UA OR (small screen AND touch)
+  return isMobileUA || (isSmallScreen && isTouchDevice)
+}
+
+// Check for URL parameter overrides (?mobile=true or ?desktop=true)
+function getDeviceOverride(): 'mobile' | 'desktop' | null {
+  const params = new URLSearchParams(window.location.search)
+  if (params.get('mobile') === 'true') return 'mobile'
+  if (params.get('desktop') === 'true') return 'desktop'
+  return null
+}
+
+// Determine which app to load
+function shouldLoadMobileApp(): boolean {
+  const override = getDeviceOverride()
+  if (override === 'mobile') return true
+  if (override === 'desktop') return false
+  return isMobileDevice()
+}
+
+// Root element
 const root = document.getElementById('root')!
-createRoot(root).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-)
+
+// Load the appropriate app version
+if (shouldLoadMobileApp()) {
+  console.log('📱 Loading Mobile App...')
+  
+  // Dynamically import mobile app
+  import('./MobileApp').then(({ default: MobileApp }) => {
+    createRoot(root).render(
+      <StrictMode>
+        <MobileApp />
+      </StrictMode>
+    )
+  }).catch((err) => {
+    console.error('Failed to load Mobile App:', err)
+    // Fallback to desktop app if mobile fails
+    import('./App').then(({ default: App }) => {
+      createRoot(root).render(
+        <StrictMode>
+          <App />
+        </StrictMode>
+      )
+    })
+  })
+} else {
+  console.log('🖥️ Loading Desktop App...')
+  
+  // Load desktop app
+  import('./App').then(({ default: App }) => {
+    createRoot(root).render(
+      <StrictMode>
+        <App />
+      </StrictMode>
+    )
+  }).catch((err) => {
+    console.error('Failed to load Desktop App:', err)
+  })
+}

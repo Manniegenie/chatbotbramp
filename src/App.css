@@ -5,9 +5,70 @@ body{ margin:0; background:var(--bg); color:var(--txt); font-family: Inter, syst
 
 .page{ min-height:100%; display:flex; flex-direction:column }
 .header{ position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); background:linear-gradient(180deg, rgba(18,18,26,.9), rgba(18,18,26,.4) 60%, transparent) }
-.brand{ display:flex; gap:12px; align-items:center }
+.brand{ display:flex; gap:12px; align-items:center; min-width:0; flex:1 }
 .logo{ width:36px; height:36px; border-radius:10px; background:var(--accent); display:grid; place-items:center; box-shadow:0 8px 24px rgba(124,58,237,.35) }
 .tag{ margin:0; color:var(--muted); font-size:12px }
+
+/* Ticker styles */
+.ticker-wrap {
+  position: relative;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  width: 100%;
+  min-width: 160px;
+}
+
+.ticker {
+  display: inline-block;
+  white-space: nowrap;
+  will-change: transform;
+  animation: tickerScroll 18s linear infinite;
+  padding-left: 100%;
+  box-sizing: content-box;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--accent);
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
+}
+
+.ticker.idle {
+  animation: none;
+  padding-left: 0;
+  transform: none;
+}
+
+@keyframes tickerScroll {
+  0% { transform: translate3d(0%, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+/* fade edges */
+.ticker-wrap::before,
+.ticker-wrap::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 64px;
+  pointer-events: none;
+}
+
+.ticker-wrap::before {
+  left: 0;
+  background: linear-gradient(90deg, rgba(18,18,26,1) 0%, rgba(18,18,26,0) 100%);
+}
+
+.ticker-wrap::after {
+  right: 0;
+  background: linear-gradient(270deg, rgba(18,18,26,1) 0%, rgba(18,18,26,0) 100%);
+}
 .btn{ appearance:none; background:var(--accent); color:white; border:0; padding:10px 14px; border-radius:10px; font-weight:600; text-decoration:none; cursor:pointer }
 .btn[disabled]{ opacity:.6; cursor:not-allowed }
 
