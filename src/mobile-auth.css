@@ -181,6 +181,33 @@
   text-align: center;
 }
 
+.mobile-auth-progress {
+  display: flex;
+  gap: 6px;
+  margin: 6px 0 10px;
+}
+
+.mobile-auth-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #242433;
+  display: inline-block;
+  opacity: 0.7;
+  transition: all 0.2s ease;
+}
+
+.mobile-auth-dot.active {
+  background: var(--accent);
+  opacity: 1;
+}
+
+.mobile-auth-hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
 /* Animations */
 @keyframes fadeIn {
   from {
