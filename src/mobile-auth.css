@@ -1,0 +1,231 @@
+/* ============================================
+   Mobile Auth Modal Styles
+   ============================================ */
+
+.mobile-auth-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 100;
+  animation: fadeIn 0.2s ease-out;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.mobile-auth-container {
+  width: 100%;
+  max-width: 400px;
+  background: var(--card);
+  color: var(--txt);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  animation: scaleIn 120ms ease-out;
+}
+
+.mobile-auth-header {
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+
+.mobile-auth-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mobile-auth-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #0d1512;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+}
+
+.mobile-auth-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.mobile-auth-close {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--txt);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.mobile-auth-body {
+  padding: 18px;
+}
+
+.mobile-auth-description {
+  margin: 0 0 20px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.mobile-auth-form {
+  display: grid;
+  gap: 16px;
+}
+
+.mobile-auth-input-wrap {
+  display: grid;
+  gap: 6px;
+}
+
+.mobile-auth-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.mobile-auth-input {
+  background: #0f1117;
+  color: var(--txt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  outline: none;
+  font-size: 16px;
+  min-height: 48px;
+  width: 100%;
+}
+
+.mobile-auth-input:focus {
+  border-color: var(--accent);
+}
+
+.mobile-auth-phone-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.mobile-auth-phone-prefix {
+  position: absolute;
+  left: 12px;
+  color: var(--txt);
+  font-size: 16px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.mobile-auth-phone-input .mobile-auth-input {
+  padding-left: 60px;
+}
+
+.mobile-auth-error {
+  color: #fda4af;
+  font-size: 14px;
+  padding: 12px;
+  background: rgba(255, 0, 0, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 0, 0, 0.2);
+}
+
+.mobile-auth-button-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.mobile-auth-button {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 48px;
+  transition: all 0.2s ease;
+}
+
+.mobile-auth-button.primary {
+  background: var(--accent);
+  color: white;
+  border: none;
+}
+
+.mobile-auth-button.outline {
+  background: transparent;
+  color: var(--txt);
+  border: 1px solid var(--border);
+}
+
+.mobile-auth-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mobile-auth-button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.mobile-auth-note {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: translateY(8px) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 480px) {
+  .mobile-auth-container {
+    max-height: 100vh;
+    border-radius: 0;
+    margin: -16px;
+  }
+
+  .mobile-auth-header {
+    padding: 16px;
+  }
+
+  .mobile-auth-body {
+    padding: 16px;
+  }
+
+  .mobile-auth-button {
+    padding: 10px;
+  }
+}
+
+/* iOS-specific adjustments */
+@supports (-webkit-touch-callout: none) {
+  .mobile-auth-input {
+    font-size: 16px !important;
+  }
+}

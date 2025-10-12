@@ -1,9 +1,9 @@
 // src/MobileApp.tsx
 import React, { useEffect, useRef, useState } from 'react'
-import SignIn, { SignInResult } from './signin'
-import SignUp, { SignUpResult } from './signup'
 import { tokenStore } from './lib/secureStore'
-import SellModal from './sell'
+import MobileSignIn, { SignInResult } from './MobileSignIn'
+import MobileSignUp, { SignUpResult } from './MobileSignUp'
+import MobileSell from './MobileSell'
 import BrampLogo from './assets/logo.jpeg'
 import './MobileApp.css'
 
@@ -443,9 +443,9 @@ export default function MobileApp() {
   }
 
   const renderMainContent = () => {
-    if (showSignIn) {
+      if (showSignIn) {
       return (
-        <SignIn
+        <MobileSignIn
           onCancel={() => {
             setShowSignIn(false)
             setOpenSellAfterAuth(false)
@@ -474,7 +474,7 @@ export default function MobileApp() {
 
     if (showSignUp) {
       return (
-        <SignUp
+        <MobileSignUp
           onCancel={() => setShowSignUp(false)}
           onSuccess={(_res: SignUpResult) => {
             setShowSignUp(false)
@@ -626,24 +626,33 @@ export default function MobileApp() {
               </button>
             </div>
           ) : (
-            <button
-              className="mobile-menu-btn"
-              onClick={() => setShowMenu(!showMenu)}
-              aria-label="Menu"
-            >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
+            <div className="mobile-nav-buttons">
+              <button
+                className="mobile-sell-btn"
+                onClick={handleSellClick}
+                aria-label="Sell Crypto"
               >
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
-              </svg>
-            </button>
+                Sell
+              </button>
+              <button
+                className="mobile-menu-btn"
+                onClick={() => setShowMenu(!showMenu)}
+                aria-label="Menu"
+              >
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <line x1="3" y1="12" x2="21" y2="12"></line>
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+              </button>
+            </div>
           )}
         </div>
 
@@ -705,7 +714,7 @@ export default function MobileApp() {
 
       {renderMainContent()}
 
-      <SellModal
+      <MobileSell
         open={showSell}
         onClose={() => setShowSell(false)}
         onChatEcho={echoFromModalToChat}

@@ -1,13 +1,291 @@
-.sell-modal-body {
+/* ============================================
+   Mobile Sell Modal Styles
+   ============================================ */
+
+.mobile-sell-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 100;
+  animation: fadeIn 0.2s ease-out;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.mobile-sell-container {
+  width: 100%;
+  max-width: 760px;
+  background: var(--card);
+  color: var(--txt);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  animation: scaleIn 120ms ease-out;
+  max-height: calc(100vh - 32px);
+}
+
+.mobile-sell-header {
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+
+.mobile-sell-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mobile-sell-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #0d1512;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+}
+
+.mobile-sell-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.mobile-sell-stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.mobile-sell-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--border);
+}
+
+.mobile-sell-dot.active {
+  background: var(--accent);
+}
+
+.mobile-sell-dot-separator {
+  opacity: 0.4;
+  padding: 0 6px;
+}
+
+.mobile-sell-close {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--txt);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.mobile-sell-body {
   padding: 18px;
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
-.sell-modal-kvgrid {
+
+.mobile-sell-section {
+  display: grid;
+  gap: 14px;
+}
+
+.mobile-sell-description {
+  margin: 0;
+  color: var(--muted);
+}
+
+.mobile-sell-error {
+  background: rgba(220, 50, 50, 0.1);
+  border: 1px solid rgba(220, 50, 50, 0.25);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.mobile-sell-error strong {
+  color: #ffaaaa;
+}
+
+.mobile-sell-form {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
-.sell-modal-deposit-row {
+
+.mobile-sell-input-wrap {
+  display: grid;
+  gap: 6px;
+}
+
+.mobile-sell-input-wrap.full-width {
+  grid-column: 1 / -1;
+}
+
+.mobile-sell-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.mobile-sell-input {
+  background: #0f1117;
+  color: var(--txt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  outline: none;
+  font-size: 16px;
+  min-height: 44px;
+}
+
+.mobile-sell-input:focus {
+  border-color: var(--accent);
+}
+
+.mobile-sell-account-name {
+  background: #1a1d23;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+
+.mobile-sell-account-name.error {
+  color: #ff6b6b;
+}
+
+.mobile-sell-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--border);
+  border-top: 2px solid var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.mobile-sell-button-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.mobile-sell-button {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  min-height: 44px;
+  transition: all 0.2s ease;
+}
+
+.mobile-sell-button.primary {
+  background: var(--accent);
+  color: white;
+  border: none;
+}
+
+.mobile-sell-button.outline {
+  background: transparent;
+  color: var(--txt);
+  border: 1px solid var(--border);
+}
+
+.mobile-sell-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mobile-sell-button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.mobile-sell-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  background: #0e0f15;
+  display: grid;
+  gap: 10px;
+}
+
+.mobile-sell-card-title {
+  margin: 0;
+  font-size: 16px;
+}
+
+.mobile-sell-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.mobile-sell-key {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.mobile-sell-value {
+  font-weight: 600;
+}
+
+.mobile-sell-value.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.mobile-sell-value.wrap {
+  word-break: break-all;
+}
+
+.mobile-sell-success-card {
+  background: rgba(0, 115, 55, 0.12);
+  border: 1px solid rgba(0, 115, 55, 0.35);
+  border-radius: 12px;
+  padding: 14px;
+  display: grid;
+  gap: 14px;
+}
+
+.mobile-sell-success-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mobile-sell-countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #0d1210;
+}
+
+.mobile-sell-countdown span {
+  opacity: 0.6;
+}
+
+.mobile-sell-deposit-section {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 16px;
@@ -17,39 +295,131 @@
   border-radius: 12px;
   border: 1px solid var(--border);
 }
-.sell-modal-success-card {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px;
-  background: rgba(0, 115, 55, .12);
-  border-color: rgba(0, 115, 55, .35);
-}
-.sell-modal-card {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px;
-  background: #0e0f15;
+
+.mobile-sell-deposit-details {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
-@media (max-width: 600px) {
-  .sell-modal-body {
-    padding: 10px !important;
+
+.mobile-sell-deposit-title {
+  margin: 0;
+  font-size: 14px;
+  color: var(--accent);
+}
+
+.mobile-sell-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 170, 0, 0.08);
+  border: 1px solid rgba(255, 170, 0, 0.25);
+}
+
+.mobile-qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: #0a0b0f;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  min-width: fit-content;
+}
+
+.mobile-qr-code {
+  border-radius: 8px;
+  background: white;
+  padding: 4px;
+}
+
+.mobile-qr-label {
+  font-size: 10px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.mobile-sell-footer {
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--border);
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.05));
+}
+
+.mobile-sell-footer-text {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
   }
-  .sell-modal-kvgrid {
-    grid-template-columns: 2fr 1fr !important;
-    gap: 8px !important;
+  to {
+    opacity: 1;
   }
-  .sell-modal-deposit-row {
-    grid-template-columns: 1fr !important;
-    gap: 10px !important;
-    padding: 10px !important;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: translateY(8px) scale(0.98);
+    opacity: 0;
   }
-  .sell-modal-success-card {
-    padding: 8px !important;
-    overflow-y: auto;
+  to {
+    transform: none;
+    opacity: 1;
   }
-  .sell-modal-card {
-    padding: 8px !important;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 480px) {
+  .mobile-sell-container {
+    max-height: 100vh;
+    border-radius: 0;
+    margin: -16px;
+  }
+
+  .mobile-sell-form {
+    grid-template-columns: 1fr;
+  }
+
+  .mobile-sell-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mobile-sell-deposit-section {
+    grid-template-columns: 1fr;
+  }
+
+  .mobile-qr-container {
+    margin: 0 auto;
+  }
+}
+
+@media screen and (max-height: 600px) {
+  .mobile-sell-body {
+    padding: 12px;
+  }
+
+  .mobile-sell-header {
+    padding: 12px;
+  }
+
+  .mobile-sell-footer {
+    padding: 12px;
   }
 }

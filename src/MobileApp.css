@@ -220,6 +220,30 @@ a {
   background: rgba(255, 255, 255, 0.05);
 }
 
+.mobile-nav-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.mobile-sell-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  background: var(--accent);
+  color: white;
+  min-height: 36px;
+}
+
+.mobile-sell-btn:active {
+  transform: scale(0.95);
+}
+
 .mobile-menu-btn {
   width: 44px;
   height: 44px;
@@ -272,15 +296,23 @@ a {
   color: var(--accent);
   line-height: 32px;
   padding-right: 100%;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
   will-change: transform;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
 }
 
 @keyframes mobileTickerScroll {
   0% {
+    transform: translate3d(100%, 0, 0);
+  }
+  50% {
+    transform: translate3d(-100%, 0, 0);
+  }
+  50.01% {
     transform: translate3d(100%, 0, 0);
   }
   100% {
@@ -290,6 +322,12 @@ a {
 
 @-webkit-keyframes mobileTickerScroll {
   0% {
+    -webkit-transform: translate3d(100%, 0, 0);
+  }
+  50% {
+    -webkit-transform: translate3d(-100%, 0, 0);
+  }
+  50.01% {
     -webkit-transform: translate3d(100%, 0, 0);
   }
   100% {
