@@ -1,5 +1,6 @@
 // src/MobileSignUp.tsx
 import React, { useState } from 'react'
+import { tokenStore } from './lib/secureStore'
 import './mobile-auth.css'
 
 export type SignUpResult = {
