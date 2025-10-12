@@ -122,18 +122,18 @@
 }
 
 .mobile-sell-form {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .mobile-sell-input-wrap {
   display: grid;
   gap: 6px;
-}
-
-.mobile-sell-input-wrap.full-width {
-  grid-column: 1 / -1;
+  width: 100%;
 }
 
 .mobile-sell-label {
@@ -232,9 +232,17 @@
 }
 
 .mobile-sell-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
+  width: 100%;
+}
+
+.mobile-sell-grid-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
 }
 
 .mobile-sell-key {
@@ -244,14 +252,21 @@
 
 .mobile-sell-value {
   font-weight: 600;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mobile-sell-value.mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-all;
 }
 
 .mobile-sell-value.wrap {
   word-break: break-all;
+  white-space: normal;
 }
 
 .mobile-sell-success-card {
@@ -286,36 +301,44 @@
 }
 
 .mobile-sell-deposit-section {
-  display: grid;
-  grid-template-columns: 1fr auto;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
-  align-items: start;
   background: #0a0b0f;
   padding: 16px;
   border-radius: 12px;
   border: 1px solid var(--border);
+  width: 100%;
 }
 
 .mobile-sell-deposit-details {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
+  width: 100%;
 }
 
 .mobile-sell-deposit-title {
   margin: 0;
   font-size: 14px;
   color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .mobile-sell-warning {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  padding: 6px 10px;
-  border-radius: 999px;
+  padding: 10px;
+  border-radius: 12px;
   background: rgba(255, 170, 0, 0.08);
   border: 1px solid rgba(255, 170, 0, 0.25);
+  width: 100%;
+  text-align: left;
+  line-height: 1.4;
 }
 
 .mobile-qr-container {
@@ -327,19 +350,26 @@
   background: #0a0b0f;
   border: 1px solid var(--border);
   border-radius: 12px;
-  min-width: fit-content;
+  width: 100%;
+  max-width: 160px;
+  margin: 0 auto;
 }
 
 .mobile-qr-code {
   border-radius: 8px;
   background: white;
   padding: 4px;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
 }
 
 .mobile-qr-label {
   font-size: 10px;
   color: var(--muted);
   text-align: center;
+  width: 100%;
 }
 
 .mobile-sell-footer {
