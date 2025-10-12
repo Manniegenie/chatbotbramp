@@ -1,6 +1,7 @@
 // src/main.tsx
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import App from './App'
 import './index.css'
 import bg from './assets/bg.jpg' // <-- import your background image (adjust filename)
 
@@ -90,86 +91,9 @@ if (hot) {
   })
 }
 
-//
-// --- Mobile Device Detection & Routing ---
-//
-function isMobileDevice(): boolean {
-  // Check user agent
-  const userAgent = navigator.userAgent.toLowerCase()
-  const mobileKeywords = [
-    'android',
-    'iphone',
-    'ipad',
-    'ipod',
-    'blackberry',
-    'windows phone',
-    'webos',
-  ]
-  const isMobileUA = mobileKeywords.some((keyword) => userAgent.includes(keyword))
-
-  // Check screen size
-  const isSmallScreen = window.innerWidth <= 768
-
-  // Check for touch capability
-  const isTouchDevice =
-    'ontouchstart' in window || navigator.maxTouchPoints > 0
-
-  // Consider it mobile if it has mobile UA OR (small screen AND touch)
-  return isMobileUA || (isSmallScreen && isTouchDevice)
-}
-
-// Check for URL parameter overrides (?mobile=true or ?desktop=true)
-function getDeviceOverride(): 'mobile' | 'desktop' | null {
-  const params = new URLSearchParams(window.location.search)
-  if (params.get('mobile') === 'true') return 'mobile'
-  if (params.get('desktop') === 'true') return 'desktop'
-  return null
-}
-
-// Determine which app to load
-function shouldLoadMobileApp(): boolean {
-  const override = getDeviceOverride()
-  if (override === 'mobile') return true
-  if (override === 'desktop') return false
-  return isMobileDevice()
-}
-
-// Root element
 const root = document.getElementById('root')!
-
-// Load the appropriate app version
-if (shouldLoadMobileApp()) {
-  console.log('📱 Loading Mobile App...')
-  
-  // Dynamically import mobile app
-  import('./MobileApp').then(({ default: MobileApp }) => {
-    createRoot(root).render(
-      <StrictMode>
-        <MobileApp />
-      </StrictMode>
-    )
-  }).catch((err) => {
-    console.error('Failed to load Mobile App:', err)
-    // Fallback to desktop app if mobile fails
-    import('./App').then(({ default: App }) => {
-      createRoot(root).render(
-        <StrictMode>
-          <App />
-        </StrictMode>
-      )
-    })
-  })
-} else {
-  console.log('🖥️ Loading Desktop App...')
-  
-  // Load desktop app
-  import('./App').then(({ default: App }) => {
-    createRoot(root).render(
-      <StrictMode>
-        <App />
-      </StrictMode>
-    )
-  }).catch((err) => {
-    console.error('Failed to load Desktop App:', err)
-  })
-}
+createRoot(root).render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+)
