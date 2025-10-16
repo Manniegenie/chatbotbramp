@@ -1,24 +1,16 @@
 // src/lib/tokenManager.ts
-// Enhanced token management with automatic refresh and expiry handling
+// Enhanced token management with automatic logout on expiry
 
 import { tokenStore } from './secureStore'
-
-const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
-
-// Token refresh state to prevent multiple simultaneous refresh attempts
-let refreshPromise: Promise<{ access: string; refresh: string } | null> | null = null
-
-export interface TokenRefreshResult {
-  access: string
-  refresh: string
-  user?: any
-}
 
 export interface AuthState {
   isAuthenticated: boolean
   isTokenExpired: boolean
-  isRefreshing: boolean
-  lastRefreshAttempt?: number
+  timeUntilLogout?: number // milliseconds until auto-logout
+}
+
+export interface AutoLogoutCallback {
+  (reason: 'token_expired' | 'session_timeout'): void
 }
 
 /**
@@ -51,114 +43,107 @@ export function getTokenExpiryTime(token: string): number {
 }
 
 /**
- * Check if token will expire soon (within next 5 minutes)
+ * Check if token will expire soon (within next 15 minutes for auto-logout)
  */
-export function isTokenExpiringSoon(token: string, thresholdMs = 5 * 60 * 1000): boolean {
+export function isTokenExpiringSoon(token: string, thresholdMs = 15 * 60 * 1000): boolean {
   const timeUntilExpiry = getTokenExpiryTime(token)
   return timeUntilExpiry > 0 && timeUntilExpiry <= thresholdMs
 }
 
 /**
- * Refresh access token using refresh token
+ * Check if user should be logged out (45 minutes after token creation)
  */
-async function refreshAccessToken(): Promise<TokenRefreshResult | null> {
-  const { refresh } = tokenStore.getTokens()
-  
-  if (!refresh || isExpiredJwt(refresh)) {
-    console.warn('No valid refresh token available')
-    return null
-  }
-
+export function shouldAutoLogout(token: string): boolean {
   try {
-    const response = await fetch(`${API_BASE}/auth/refresh`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${refresh}`
-      },
-      body: JSON.stringify({ refreshToken: refresh })
-    })
-
-    if (!response.ok) {
-      console.error('Token refresh failed:', response.status, response.statusText)
-      return null
-    }
-
-    const data = await response.json()
+    const [, payloadB64] = token.split('.')
+    const json = atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/'))
+    const { iat } = JSON.parse(json) // issued at time
     
-    if (!data.accessToken) {
-      console.error('No access token in refresh response')
-      return null
-    }
-
-    // Store new tokens
-    await tokenStore.setTokens(data.accessToken, data.refreshToken || refresh)
+    if (!iat) return false
     
-    // Update user data if provided
-    if (data.user) {
-      tokenStore.setUser(data.user)
-    }
-
-    return {
-      access: data.accessToken,
-      refresh: data.refreshToken || refresh,
-      user: data.user
-    }
-  } catch (error) {
-    console.error('Token refresh error:', error)
-    return null
+    const tokenCreatedAt = iat * 1000 // convert to milliseconds
+    const currentTime = Date.now()
+    const timeSinceCreation = currentTime - tokenCreatedAt
+    const autoLogoutTime = 45 * 60 * 1000 // 45 minutes in milliseconds
+    
+    return timeSinceCreation >= autoLogoutTime
+  } catch {
+    return false
   }
 }
 
 /**
- * Get valid access token, refreshing if necessary
+ * Get time until auto-logout (45 minutes after token creation)
  */
-export async function getValidAccessToken(): Promise<string | null> {
-  const { access, refresh } = tokenStore.getTokens()
+export function getTimeUntilAutoLogout(token: string): number {
+  try {
+    const [, payloadB64] = token.split('.')
+    const json = atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/'))
+    const { iat } = JSON.parse(json)
+    
+    if (!iat) return 0
+    
+    const tokenCreatedAt = iat * 1000
+    const currentTime = Date.now()
+    const timeSinceCreation = currentTime - tokenCreatedAt
+    const autoLogoutTime = 45 * 60 * 1000 // 45 minutes
+    
+    return Math.max(0, autoLogoutTime - timeSinceCreation)
+  } catch {
+    return 0
+  }
+}
+
+/**
+ * Check if user should be logged out and clear tokens if needed
+ */
+function checkAndHandleAutoLogout(onLogout?: AutoLogoutCallback): boolean {
+  const { access } = tokenStore.getTokens()
   
-  // If no access token, return null
+  if (!access) {
+    return false
+  }
+
+  // Check if token is expired or should auto-logout
+  if (isExpiredJwt(access) || shouldAutoLogout(access)) {
+    console.log('Token expired or session timeout reached, logging out user')
+    tokenStore.clear()
+    
+    if (onLogout) {
+      const reason = isExpiredJwt(access) ? 'token_expired' : 'session_timeout'
+      onLogout(reason)
+    }
+    
+    return true
+  }
+  
+  return false
+}
+
+/**
+ * Get valid access token, returns null if expired or should logout
+ */
+export function getValidAccessToken(): string | null {
+  const { access } = tokenStore.getTokens()
+  
   if (!access) {
     return null
   }
 
-  // If access token is still valid, return it
-  if (!isExpiredJwt(access)) {
-    // Check if it's expiring soon and refresh proactively
-    if (isTokenExpiringSoon(access)) {
-      // Refresh in background without waiting
-      refreshAccessToken().catch(console.error)
-    }
-    return access
-  }
-
-  // Access token is expired, try to refresh
-  if (!refresh || isExpiredJwt(refresh)) {
-    console.warn('Access token expired and no valid refresh token')
+  // Check if token is expired or should auto-logout
+  if (isExpiredJwt(access) || shouldAutoLogout(access)) {
+    console.log('Token is invalid or session timeout reached')
     return null
   }
 
-  // Use existing refresh promise if one is in progress
-  if (refreshPromise) {
-    const result = await refreshPromise
-    return result?.access || null
-  }
-
-  // Start new refresh
-  refreshPromise = refreshAccessToken()
-  
-  try {
-    const result = await refreshPromise
-    return result?.access || null
-  } finally {
-    refreshPromise = null
-  }
+  return access
 }
 
 /**
- * Enhanced auth fetch that handles token refresh automatically
+ * Enhanced auth fetch that handles auto-logout on token expiry
  */
-export async function authFetch(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
-  const accessToken = await getValidAccessToken()
+export async function authFetch(input: RequestInfo | URL, init: RequestInit = {}, onLogout?: AutoLogoutCallback): Promise<Response> {
+  const accessToken = getValidAccessToken()
   
   const headers = new Headers(init.headers || {})
   if (!headers.has('Content-Type')) {
@@ -171,22 +156,10 @@ export async function authFetch(input: RequestInfo | URL, init: RequestInit = {}
 
   const response = await fetch(input, { ...init, headers })
 
-  // If we get a 401/403, try refreshing the token once
+  // If we get a 401/403, check for auto-logout
   if ((response.status === 401 || response.status === 403) && accessToken) {
-    console.warn('Received auth error, attempting token refresh')
-    
-    // Try to refresh token
-    const refreshResult = await refreshAccessToken()
-    
-    if (refreshResult?.access) {
-      // Retry the request with new token
-      headers.set('Authorization', `Bearer ${refreshResult.access}`)
-      return fetch(input, { ...init, headers })
-    } else {
-      // Refresh failed, clear tokens and return original response
-      tokenStore.clear()
-      console.error('Token refresh failed, clearing auth state')
-    }
+    console.warn('Received auth error, checking for auto-logout')
+    checkAndHandleAutoLogout(onLogout)
   }
 
   return response
@@ -196,14 +169,17 @@ export async function authFetch(input: RequestInfo | URL, init: RequestInit = {}
  * Get current authentication state
  */
 export function getAuthState(): AuthState {
-  const { access, refresh } = tokenStore.getTokens()
+  const { access } = tokenStore.getTokens()
   const user = tokenStore.getUser()
   
+  const isExpired = access ? isExpiredJwt(access) : false
+  const shouldLogout = access ? shouldAutoLogout(access) : false
+  const timeUntilLogout = access ? getTimeUntilAutoLogout(access) : undefined
+  
   return {
-    isAuthenticated: Boolean(access && refresh && user && !isExpiredJwt(access)),
-    isTokenExpired: Boolean(access && isExpiredJwt(access)),
-    isRefreshing: Boolean(refreshPromise),
-    lastRefreshAttempt: refreshPromise ? Date.now() : undefined
+    isAuthenticated: Boolean(access && user && !isExpired && !shouldLogout),
+    isTokenExpired: isExpired || shouldLogout,
+    timeUntilLogout: timeUntilLogout
   }
 }
 
@@ -212,38 +188,20 @@ export function getAuthState(): AuthState {
  */
 export function clearAuth(): void {
   tokenStore.clear()
-  refreshPromise = null
 }
 
 /**
- * Set up automatic token refresh timer
+ * Set up automatic logout timer that checks every minute
  */
-export function setupTokenRefreshTimer(callback?: (newTokens: TokenRefreshResult) => void): () => void {
+export function setupAutoLogoutTimer(onLogout?: AutoLogoutCallback): () => void {
   const checkInterval = 60000 // Check every minute
   
-  const intervalId = setInterval(async () => {
-    const { access } = tokenStore.getTokens()
-    
-    if (access && isTokenExpiringSoon(access)) {
-      console.log('Token expiring soon, refreshing...')
-      const result = await refreshAccessToken()
-      
-      if (result && callback) {
-        callback(result)
-      }
-    }
+  const intervalId = setInterval(() => {
+    checkAndHandleAutoLogout(onLogout)
   }, checkInterval)
 
   // Return cleanup function
   return () => {
     clearInterval(intervalId)
   }
-}
-
-/**
- * Force token refresh (useful for manual refresh)
- */
-export async function forceTokenRefresh(): Promise<TokenRefreshResult | null> {
-  refreshPromise = null // Clear any existing promise
-  return await refreshAccessToken()
 }

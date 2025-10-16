@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import SignIn, { SignInResult } from './signin'
 import SignUp, { SignUpResult } from './signup'
 import { tokenStore } from './lib/secureStore'
-import { authFetch, getAuthState, setupTokenRefreshTimer, clearAuth } from './lib/tokenManager'
+import { authFetch, getAuthState, setupAutoLogoutTimer, clearAuth } from './lib/tokenManager'
 import SellModal from './sell'
 // Import logo from assets
 import BrampLogo from './assets/logo.jpeg' // Placeholder path
@@ -289,14 +289,24 @@ export default function App() {
       }
     } catch { /* noop */ }
 
-    // Setup automatic token refresh timer
-    const cleanup = setupTokenRefreshTimer((newTokens) => {
-      // Update auth state when tokens are refreshed
-      const { access, refresh } = tokenStore.getTokens()
-      const user = tokenStore.getUser()
-      if (access && refresh && user) {
-        setAuth({ accessToken: access, refreshToken: refresh, user })
-      }
+    // Setup automatic logout timer
+    const cleanup = setupAutoLogoutTimer((reason) => {
+      // Handle auto-logout
+      console.log('Auto-logout triggered:', reason)
+      setAuth(null)
+      setShowSell(false)
+      
+      // Show appropriate message based on reason
+      const message = reason === 'token_expired' 
+        ? 'Your session has expired. Please sign in again.'
+        : 'Session timeout reached. Please sign in again.'
+      
+      setMessages((prev) => [...prev, {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        text: message,
+        ts: Date.now(),
+      }])
     })
 
     return cleanup

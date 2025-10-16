@@ -5,6 +5,8 @@ import {
   isExpiredJwt, 
   getTokenExpiryTime, 
   isTokenExpiringSoon, 
+  shouldAutoLogout,
+  getTimeUntilAutoLogout,
   getAuthState,
   getValidAccessToken,
   authFetch 
@@ -12,9 +14,10 @@ import {
 import { tokenStore } from './secureStore'
 
 // Mock JWT tokens for testing
-const createMockJWT = (exp: number): string => {
+const createMockJWT = (exp: number, iat?: number): string => {
   const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
-  const payload = btoa(JSON.stringify({ exp, iat: Math.floor(Date.now() / 1000) }))
+  const issuedAt = iat || Math.floor(Date.now() / 1000)
+  const payload = btoa(JSON.stringify({ exp, iat: issuedAt }))
   const signature = 'mock_signature'
   return `${header}.${payload}.${signature}`
 }
@@ -48,6 +51,35 @@ export function testTokenExpiryFunctions() {
   console.log('✅ Token expiry function tests completed')
 }
 
+// Test auto-logout functions
+export function testAutoLogoutFunctions() {
+  console.log('🧪 Testing auto-logout functions...')
+  
+  // Test token that should trigger auto-logout (created 50 minutes ago)
+  const oldToken = createMockJWT(
+    Math.floor((Date.now() + 3600000) / 1000), // expires in 1 hour
+    Math.floor((Date.now() - 50 * 60 * 1000) / 1000) // created 50 minutes ago
+  )
+  console.log('Auto-logout test (50 min old):', {
+    shouldLogout: shouldAutoLogout(oldToken),
+    timeUntilLogout: getTimeUntilAutoLogout(oldToken),
+    expected: true
+  })
+  
+  // Test token that should NOT trigger auto-logout (created 30 minutes ago)
+  const newToken = createMockJWT(
+    Math.floor((Date.now() + 3600000) / 1000), // expires in 1 hour
+    Math.floor((Date.now() - 30 * 60 * 1000) / 1000) // created 30 minutes ago
+  )
+  console.log('No auto-logout test (30 min old):', {
+    shouldLogout: shouldAutoLogout(newToken),
+    timeUntilLogout: getTimeUntilAutoLogout(newToken),
+    expected: false
+  })
+  
+  console.log('✅ Auto-logout function tests completed')
+}
+
 // Test auth state management
 export function testAuthStateManagement() {
   console.log('🧪 Testing auth state management...')
@@ -75,8 +107,8 @@ export function testAuthStateManagement() {
   console.log('Authenticated state:', {
     isAuthenticated: authenticatedState.isAuthenticated,
     isTokenExpired: authenticatedState.isTokenExpired,
-    isRefreshing: authenticatedState.isRefreshing,
-    expected: { isAuthenticated: true, isTokenExpired: false, isRefreshing: false }
+    timeUntilLogout: authenticatedState.timeUntilLogout,
+    expected: { isAuthenticated: true, isTokenExpired: false, timeUntilLogout: expect.any(Number) }
   })
   
   // Test with expired access token
