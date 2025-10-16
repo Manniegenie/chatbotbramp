@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import SignIn, { SignInResult } from './signin'
 import SignUp, { SignUpResult } from './signup'
 import { tokenStore } from './lib/secureStore'
+import { authFetch, getAuthState, setupTokenRefreshTimer, clearAuth } from './lib/tokenManager'
 import SellModal from './sell'
 // Import logo from assets
 import BrampLogo from './assets/logo.jpeg' // Placeholder path
@@ -53,23 +54,7 @@ function getTimeBasedGreeting(): string {
   }
 }
 
-// Always read the freshest token from secure storage
-function isExpiredJwt(token: string): boolean {
-  try {
-    const [, payloadB64] = token.split('.')
-    const json = atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/'))
-    const { exp } = JSON.parse(json)
-    return !exp || Date.now() >= exp * 1000
-  } catch { return true }
-}
-
-async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
-  const { access } = tokenStore.getTokens()
-  const headers = new Headers(init.headers || {})
-  if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json')
-  if (access && !isExpiredJwt(access)) headers.set('Authorization', `Bearer ${access}`)
-  return fetch(input, { ...init, headers })
-}
+// Token management functions are now imported from tokenManager.ts
 
 /* ----------------------- Error helper ----------------------- */
 function getErrorMessage(e: unknown): string {
@@ -83,14 +68,8 @@ async function sendChatMessage(
   message: string,
   history: ChatMessage[]
 ): Promise<{ reply: string; cta?: CTA | null; metadata?: any }> {
-  const { access } = tokenStore.getTokens()
-
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (access && !isExpiredJwt(access)) headers['Authorization'] = `Bearer ${access}`
-
-  const response = await fetch(`${API_BASE}/chatbot/chat`, {
+  const response = await authFetch(`${API_BASE}/chatbot/chat`, {
     method: 'POST',
-    headers,
     body: JSON.stringify({
       message,
       history: history.slice(-10).map((m) => ({ role: m.role, text: m.text })),
@@ -279,9 +258,13 @@ export default function App() {
   const [openSellAfterAuth, setOpenSellAfterAuth] = useState(false)
 
   const [auth, setAuth] = useState<SignInResult | null>(() => {
-    const { access, refresh } = tokenStore.getTokens()
-    const user = tokenStore.getUser()
-    return access && refresh && user ? { accessToken: access, refreshToken: refresh, user } : null
+    const authState = getAuthState()
+    if (authState.isAuthenticated) {
+      const { access, refresh } = tokenStore.getTokens()
+      const user = tokenStore.getUser()
+      return { accessToken: access!, refreshToken: refresh!, user }
+    }
+    return null
   })
 
   const endRef = useRef<HTMLDivElement>(null)
@@ -292,7 +275,7 @@ export default function App() {
   // keep a loading flag internally but DO NOT display loading text in UI
   const [tickerLoading, setTickerLoading] = useState<boolean>(false)
 
-  // Scrub sensitive URL params on load
+  // Scrub sensitive URL params on load and setup token refresh timer
   useEffect(() => {
     try {
       const url = new URL(window.location.href)
@@ -305,6 +288,18 @@ export default function App() {
         window.history.replaceState({}, '', clean)
       }
     } catch { /* noop */ }
+
+    // Setup automatic token refresh timer
+    const cleanup = setupTokenRefreshTimer((newTokens) => {
+      // Update auth state when tokens are refreshed
+      const { access, refresh } = tokenStore.getTokens()
+      const user = tokenStore.getUser()
+      if (access && refresh && user) {
+        setAuth({ accessToken: access, refreshToken: refresh, user })
+      }
+    })
+
+    return cleanup
   }, [])
 
   useEffect(() => {
@@ -427,7 +422,7 @@ export default function App() {
   }
 
   function signOut() {
-    tokenStore.clear()
+    clearAuth()
     setAuth(null)
     setShowSell(false)
   }

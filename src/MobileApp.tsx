@@ -1,6 +1,7 @@
 // src/MobileApp.tsx
 import React, { useEffect, useRef, useState } from 'react'
 import { tokenStore } from './lib/secureStore'
+import { authFetch, getAuthState, setupTokenRefreshTimer, clearAuth } from './lib/tokenManager'
 import MobileSignIn, { SignInResult } from './MobileSignIn'
 import MobileSignUp, { SignUpResult } from './MobileSignUp'
 import MobileSell from './MobileSell'
@@ -47,24 +48,7 @@ function getTimeBasedGreeting(): string {
   else return 'Good evening'
 }
 
-function isExpiredJwt(token: string): boolean {
-  try {
-    const [, payloadB64] = token.split('.')
-    const json = atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/'))
-    const { exp } = JSON.parse(json)
-    return !exp || Date.now() >= exp * 1000
-  } catch {
-    return true
-  }
-}
-
-async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
-  const { access } = tokenStore.getTokens()
-  const headers = new Headers(init.headers || {})
-  if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json')
-  if (access && !isExpiredJwt(access)) headers.set('Authorization', `Bearer ${access}`)
-  return fetch(input, { ...init, headers })
-}
+// Token management functions are now imported from tokenManager.ts
 
 function getErrorMessage(e: unknown): string {
   if (e instanceof Error) return e.message
@@ -80,13 +64,8 @@ async function sendChatMessage(
   message: string,
   history: ChatMessage[]
 ): Promise<{ reply: string; cta?: CTA | null; metadata?: any }> {
-  const { access } = tokenStore.getTokens()
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (access && !isExpiredJwt(access)) headers['Authorization'] = `Bearer ${access}`
-
-  const response = await fetch(`${API_BASE}/chatbot/chat`, {
+  const response = await authFetch(`${API_BASE}/chatbot/chat`, {
     method: 'POST',
-    headers,
     body: JSON.stringify({
       message,
       history: history.slice(-10).map((m) => ({ role: m.role, text: m.text })),
@@ -247,9 +226,13 @@ export default function MobileApp() {
   const [openSellAfterAuth, setOpenSellAfterAuth] = useState(false)
 
   const [auth, setAuth] = useState<SignInResult | null>(() => {
-    const { access, refresh } = tokenStore.getTokens()
-    const user = tokenStore.getUser()
-    return access && refresh && user ? { accessToken: access, refreshToken: refresh, user } : null
+    const authState = getAuthState()
+    if (authState.isAuthenticated) {
+      const { access, refresh } = tokenStore.getTokens()
+      const user = tokenStore.getUser()
+      return { accessToken: access!, refreshToken: refresh!, user }
+    }
+    return null
   })
 
   const endRef = useRef<HTMLDivElement>(null)
@@ -274,6 +257,18 @@ export default function MobileApp() {
         window.history.replaceState({}, '', clean)
       }
     } catch {}
+
+    // Setup automatic token refresh timer
+    const cleanup = setupTokenRefreshTimer((newTokens) => {
+      // Update auth state when tokens are refreshed
+      const { access, refresh } = tokenStore.getTokens()
+      const user = tokenStore.getUser()
+      if (access && refresh && user) {
+        setAuth({ accessToken: access, refreshToken: refresh, user })
+      }
+    })
+
+    return cleanup
   }, [])
 
   useEffect(() => {
@@ -388,7 +383,7 @@ export default function MobileApp() {
   }
 
   function signOut() {
-    tokenStore.clear()
+    clearAuth()
     setAuth(null)
     setShowSell(false)
     setShowMenu(false)
