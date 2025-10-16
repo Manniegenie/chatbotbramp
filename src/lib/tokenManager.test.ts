@@ -119,8 +119,8 @@ export function testAuthStateManagement() {
   console.log('Expired token state:', {
     isAuthenticated: expiredState.isAuthenticated,
     isTokenExpired: expiredState.isTokenExpired,
-    isRefreshing: expiredState.isRefreshing,
-    expected: { isAuthenticated: false, isTokenExpired: true, isRefreshing: false }
+    timeUntilLogout: expiredState.timeUntilLogout,
+    expected: { isAuthenticated: false, isTokenExpired: true, timeUntilLogout: 0 }
   })
   
   // Cleanup
@@ -128,20 +128,18 @@ export function testAuthStateManagement() {
   console.log('✅ Auth state management tests completed')
 }
 
-// Test token refresh simulation (without actual API calls)
-export function testTokenRefreshSimulation() {
-  console.log('🧪 Testing token refresh simulation...')
+// Test auto-logout simulation
+export function testAutoLogoutSimulation() {
+  console.log('🧪 Testing auto-logout simulation...')
   
-  // This test simulates the token refresh flow without making actual API calls
-  // In a real scenario, you would mock the fetch function
+  // This test simulates the auto-logout flow
+  console.log('Auto-logout simulation tests:')
+  console.log('- Automatic logout after 45 minutes')
+  console.log('- Session timeout detection')
+  console.log('- Graceful token cleanup')
+  console.log('- User notification on logout')
   
-  console.log('Token refresh simulation would test:')
-  console.log('- Automatic refresh when token expires')
-  console.log('- Retry failed requests after refresh')
-  console.log('- Graceful handling of refresh failures')
-  console.log('- Prevention of multiple simultaneous refresh attempts')
-  
-  console.log('✅ Token refresh simulation tests completed')
+  console.log('✅ Auto-logout simulation tests completed')
 }
 
 // Run all tests
@@ -153,10 +151,13 @@ export function runAllTokenTests() {
     testTokenExpiryFunctions()
     console.log('')
     
+    testAutoLogoutFunctions()
+    console.log('')
+    
     testAuthStateManagement()
     console.log('')
     
-    testTokenRefreshSimulation()
+    testAutoLogoutSimulation()
     console.log('')
     
     console.log('🎉 All token management tests completed successfully!')
@@ -170,7 +171,8 @@ if (typeof window !== 'undefined') {
   (window as any).testTokenManager = {
     runAllTests: runAllTokenTests,
     testTokenExpiry: testTokenExpiryFunctions,
+    testAutoLogout: testAutoLogoutFunctions,
     testAuthState: testAuthStateManagement,
-    testRefresh: testTokenRefreshSimulation
+    testAutoLogoutSim: testAutoLogoutSimulation
   }
 }

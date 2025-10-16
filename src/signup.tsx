@@ -157,9 +157,18 @@ export default function SignUp({
   // ---------- Utils ----------
   function normalizePhone(input: string) {
     const d = input.replace(/[^\d+]/g, '')
-    if (/^0\d{10}$/.test(d)) return '+234' + d.slice(1)
-    if (/^234\d{10}$/.test(d)) return '+' + d
+    
+    // Handle Nigerian phone numbers specifically
+    if (/^0\d{10}$/.test(d)) return '+234' + d.slice(1) // 08123456789 -> +2348123456789
+    if (/^234\d{10}$/.test(d)) return '+' + d // 2348123456789 -> +2348123456789
+    if (/^\+234\d{10}$/.test(d)) return d // +2348123456789 -> +2348123456789
+    
+    // Handle 10-digit numbers that could be Nigerian (starting with 7, 8, or 9)
+    if (/^[789]\d{9}$/.test(d)) return '+234' + d // 8123456789 -> +2348123456789
+    
+    // Handle other international formats
     if (/^\+?\d{10,15}$/.test(d)) return d.startsWith('+') ? d : '+' + d
+    
     return d
   }
 
