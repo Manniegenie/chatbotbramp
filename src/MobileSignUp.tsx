@@ -348,7 +348,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
             <span className="mobile-auth-label">First name</span>
             <input
               className="mobile-auth-input"
-              placeholder="Chibuike"
+              placeholder="Kemi"
               value={firstname}
               onChange={(e) => setFirstname(e.target.value)}
               autoFocus
@@ -361,7 +361,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
             <span className="mobile-auth-label">Surname</span>
             <input
               className="mobile-auth-input"
-              placeholder="Nwogbo"
+              placeholder="Adebayo"
               value={lastname}
               onChange={(e) => setLastname(e.target.value)}
               autoFocus
@@ -376,7 +376,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
               <span className="mobile-auth-phone-prefix">+234</span>
               <input
                 className="mobile-auth-input"
-                placeholder="8141751569"
+                placeholder="9034567890"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 inputMode="tel"
@@ -391,7 +391,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
             <span className="mobile-auth-label">Email address</span>
             <input
               className="mobile-auth-input"
-              placeholder="you@example.com"
+              placeholder="kemi.adebayo@yahoo.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               type="email"
@@ -405,7 +405,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
             <span className="mobile-auth-label">BVN (11 digits)</span>
             <input
               className="mobile-auth-input"
-              placeholder="12345678901"
+              placeholder="22345678901"
               value={bvn}
               onChange={(e) => setBvn(e.target.value.replace(/[^\d]/g, '').slice(0, 11))}
               inputMode="numeric"

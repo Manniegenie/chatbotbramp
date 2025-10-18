@@ -157,7 +157,7 @@ export default function MobileSignIn({
                 <span className="mobile-auth-phone-prefix">+234</span>
                 <input
                   className="mobile-auth-input"
-                  placeholder="8141751569"
+                  placeholder="9076543210"
                   value={phone}
                   onChange={(e) => handlePhoneChange(e.target.value)}
                   inputMode="numeric"
@@ -171,7 +171,7 @@ export default function MobileSignIn({
               <span className="mobile-auth-label">PIN (6 digits)</span>
               <input
                 className="mobile-auth-input"
-                placeholder="******"
+                placeholder="••••••"
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
                 type="password"

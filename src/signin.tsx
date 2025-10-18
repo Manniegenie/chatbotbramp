@@ -171,7 +171,7 @@ export default function SignIn({
                   +234
                 </span>
                 <input
-                  placeholder="8141751569"
+                  placeholder="8023456789"
                   value={phone}
                   onChange={(e) => handlePhoneChange(e.target.value)}
                   inputMode="numeric"
@@ -189,7 +189,7 @@ export default function SignIn({
 
               <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>PIN (6 digits)</label>
               <input
-                placeholder="******"
+                placeholder="••••••"
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
                 type="password"

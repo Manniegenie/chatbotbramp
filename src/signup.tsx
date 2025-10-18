@@ -574,7 +574,7 @@ export default function SignUp({
             <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>First name</label>
             <input
               key="fn"
-              placeholder="Chibuike"
+              placeholder="Adunni"
               value={firstname}
               onChange={(e) => setFirstname(e.target.value)}
               autoFocus
@@ -589,7 +589,7 @@ export default function SignUp({
             <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Surname</label>
             <input
               key="ln"
-              placeholder="Nwogbo"
+              placeholder="Okafor"
               value={lastname}
               onChange={(e) => setLastname(e.target.value)}
               autoFocus
@@ -604,7 +604,7 @@ export default function SignUp({
             <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Phone number</label>
             <input
               key="ph"
-              placeholder="+2348100000000"
+              placeholder="+2348172345678"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               inputMode="tel"
@@ -620,7 +620,7 @@ export default function SignUp({
             <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Email address</label>
             <input
               key="em"
-              placeholder="you@example.com"
+              placeholder="adunni.okafor@gmail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               type="email"
@@ -636,7 +636,7 @@ export default function SignUp({
             <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>BVN (11 digits)</label>
             <input
               key="bvn"
-              placeholder="12345678901"
+              placeholder="22345678901"
               value={bvn}
               onChange={(e) => setBvn(e.target.value.replace(/[^\d]/g, '').slice(0, 11))}
               inputMode="numeric"
