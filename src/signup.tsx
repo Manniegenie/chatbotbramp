@@ -118,6 +118,8 @@ export default function SignUp({
 
   const [otp, setOtp] = useState('')
   const [otpError, setOtpError] = useState<string | null>(null)
+  const [resendLoading, setResendLoading] = useState(false)
+  const [resendError, setResendError] = useState<string | null>(null)
 
   const [pin, setPin] = useState('')
   const [pin2, setPin2] = useState('')
@@ -125,6 +127,42 @@ export default function SignUp({
 
   const [pendingUserId, setPendingUserId] = useState<string | null>(null)
   // const [accessToken, setAccessToken] = useState<string | null>(null) // Commented out for test flight
+
+  // Resend OTP function
+  const handleResendOtp = async () => {
+    if (!phone) {
+      setResendError('Phone number is required')
+      return
+    }
+    
+    setResendLoading(true)
+    setResendError(null)
+    
+    try {
+      const response = await fetch(`${API_BASE}/resend-otp/resend-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phonenumber: phone }),
+      })
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to resend OTP')
+      }
+      
+      // Clear any existing OTP error and show success
+      setOtpError(null)
+      // You could add a success message here if needed
+      
+    } catch (err: any) {
+      setResendError(err.message || 'Failed to resend OTP')
+    } finally {
+      setResendLoading(false)
+    }
+  }
   // const [refreshToken, setRefreshToken] = useState<string | null>(null) // Commented out for test flight
   // const [userInfo, setUserInfo] = useState<any>(null) // Commented out for test flight
 
@@ -670,9 +708,23 @@ export default function SignUp({
                 ⚠️ {otpError}
               </div>
             )}
+            {resendError && (
+              <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
+                ⚠️ {resendError}
+              </div>
+            )}
             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
               <button className="btn" type="submit" disabled={loading}>
                 {loading ? 'Verifying…' : 'Verify OTP'}
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={handleResendOtp}
+                disabled={resendLoading || loading}
+                style={{ fontSize: '0.8rem' }}
+              >
+                {resendLoading ? 'Sending…' : 'Resend OTP'}
               </button>
               <button
                 type="button"

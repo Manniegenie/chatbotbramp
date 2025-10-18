@@ -93,6 +93,8 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
 
   const [otp, setOtp] = useState('')
   const [otpError, setOtpError] = useState<string | null>(null)
+  const [resendLoading, setResendLoading] = useState(false)
+  const [resendError, setResendError] = useState<string | null>(null)
 
   const [pin, setPin] = useState('')
   const [pin2, setPin2] = useState('')
@@ -101,6 +103,42 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
   const [pendingUserId, setPendingUserId] = useState<string | null>(null)
 
   const currentStepId = steps[stepIndex]
+
+  // Resend OTP function
+  const handleResendOtp = async () => {
+    if (!phone) {
+      setResendError('Phone number is required')
+      return
+    }
+    
+    setResendLoading(true)
+    setResendError(null)
+    
+    try {
+      const response = await fetch(`${API_BASE}/resend-otp/resend-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phonenumber: phone }),
+      })
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to resend OTP')
+      }
+      
+      // Clear any existing OTP error and show success
+      setOtpError(null)
+      // You could add a success message here if needed
+      
+    } catch (err: any) {
+      setResendError(err.message || 'Failed to resend OTP')
+    } finally {
+      setResendLoading(false)
+    }
+  }
 
   function normalizePhone(input: string) {
     const d = input.replace(/[^\d+]/g, '')
@@ -437,6 +475,21 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
                 ⚠️ {otpError}
               </div>
             )}
+            {resendError && (
+              <div className="mobile-auth-error">
+                ⚠️ {resendError}
+              </div>
+            )}
+            <div className="mobile-auth-button-row">
+              <button
+                type="button"
+                className="mobile-auth-button outline"
+                onClick={handleResendOtp}
+                disabled={resendLoading || loading}
+              >
+                {resendLoading ? 'Sending…' : 'Resend OTP'}
+              </button>
+            </div>
           </>
         )
       case 'pin':

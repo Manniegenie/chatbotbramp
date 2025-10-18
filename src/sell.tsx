@@ -384,12 +384,20 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       setInitError('Enter a valid amount')
       return
     }
+    
+    // Test flight compliance: $50 daily sell limit validation
+    const amountNum = +amount;
+    if (amountNum > 50) {
+      setInitError('Daily sell limit is $50 during test flight. Please reduce your amount.')
+      return
+    }
+    
     setInitLoading(true)
     try {
       const res = await fetch(`${API_BASE}/sell/initiate`, {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify({ token, network, sellAmount: +amount }),
+        body: JSON.stringify({ token, network, sellAmount: amountNum }),
       })
       const data: InitiateSellRes = await res.json()
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
@@ -492,6 +500,10 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
               <p style={{ margin: 0, color: 'var(--muted)' }}>
                 Choose token, network, and amount. We'll capture payout next.
               </p>
+              
+              <div style={{ ...badgeWarn, margin: '8px 0' }}>
+                ⚠️ Test Flight: Maximum $50 per day during testing phase
+              </div>
 
               {!!initError && (
                 <div role="alert" style={errorBanner}>
@@ -502,27 +514,53 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
               <form onSubmit={submitInitiate} style={gridForm}>
                 <label style={inputWrap}>
                   <span style={labelText}>Token</span>
-                  <select
-                    ref={firstInputRef as any}
-                    style={inputBase}
-                    value={token}
-                    onChange={e => setToken(e.target.value as TokenSym)}
-                  >
-                    {TOKENS.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
+                  <div style={{ position: 'relative' }}>
+                    <select
+                      ref={firstInputRef as any}
+                      style={inputBase}
+                      value={token}
+                      onChange={e => setToken(e.target.value as TokenSym)}
+                    >
+                      {TOKENS.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                    <div style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      pointerEvents: 'none',
+                      color: 'var(--muted)',
+                      fontSize: '12px'
+                    }}>
+                      ▼
+                    </div>
+                  </div>
                 </label>
 
                 <label style={inputWrap}>
                   <span style={labelText}>Network</span>
-                  <select
-                    style={inputBase}
-                    value={network}
-                    onChange={e => setNetwork(e.target.value)}
-                  >
-                    {NETWORKS_BY_TOKEN[token].map(n => (
-                      <option key={n.code} value={n.code}>{n.label}</option>
-                    ))}
-                  </select>
+                  <div style={{ position: 'relative' }}>
+                    <select
+                      style={inputBase}
+                      value={network}
+                      onChange={e => setNetwork(e.target.value)}
+                    >
+                      {NETWORKS_BY_TOKEN[token].map(n => (
+                        <option key={n.code} value={n.code}>{n.label}</option>
+                      ))}
+                    </select>
+                    <div style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      pointerEvents: 'none',
+                      color: 'var(--muted)',
+                      fontSize: '12px'
+                    }}>
+                      ▼
+                    </div>
+                  </div>
                 </label>
 
                 <label style={{ ...inputWrap, gridColumn: '1 / span 2' }}>
@@ -589,28 +627,41 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   <form onSubmit={submitPayout} style={gridForm}>
                     <label style={inputWrap}>
                       <span style={labelText}>Bank</span>
-                      <select
-                        ref={firstInputRef as any}
-                        style={inputBase}
-                        value={bankCode}
-                        disabled={banksLoading || bankOptions.length === 0}
-                        onChange={e => {
-                          const code = e.target.value
-                          const hit = bankOptions.find((b: BankOption) => b.code === code)
-                          if (hit) {
-                            setBankCode(hit.code)
-                            setBankName(hit.name)
-                          }
-                        }}
-                      >
-                        {bankOptions.length === 0 ? (
-                          <option value="">{banksLoading ? 'Loading…' : (banksError || 'No banks')}</option>
-                        ) : (
-                          bankOptions.map((b: BankOption) => (
-                            <option key={b.code} value={b.code}>{b.name}</option>
-                          ))
-                        )}
-                      </select>
+                      <div style={{ position: 'relative' }}>
+                        <select
+                          ref={firstInputRef as any}
+                          style={inputBase}
+                          value={bankCode}
+                          disabled={banksLoading || bankOptions.length === 0}
+                          onChange={e => {
+                            const code = e.target.value
+                            const hit = bankOptions.find((b: BankOption) => b.code === code)
+                            if (hit) {
+                              setBankCode(hit.code)
+                              setBankName(hit.name)
+                            }
+                          }}
+                        >
+                          {bankOptions.length === 0 ? (
+                            <option value="">{banksLoading ? 'Loading…' : (banksError || 'No banks')}</option>
+                          ) : (
+                            bankOptions.map((b: BankOption) => (
+                              <option key={b.code} value={b.code}>{b.name}</option>
+                            ))
+                          )}
+                        </select>
+                        <div style={{
+                          position: 'absolute',
+                          right: '12px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          pointerEvents: 'none',
+                          color: 'var(--muted)',
+                          fontSize: '12px'
+                        }}>
+                          ▼
+                        </div>
+                      </div>
                     </label>
 
                     <label style={inputWrap}>

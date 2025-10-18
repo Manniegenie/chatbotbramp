@@ -157,6 +157,23 @@
   border-color: var(--accent);
 }
 
+.mobile-sell-select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.mobile-sell-dropdown-arrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--muted);
+  font-size: 12px;
+  z-index: 1;
+}
+
 .mobile-sell-account-name {
   background: #1a1d23;
   color: var(--muted);
