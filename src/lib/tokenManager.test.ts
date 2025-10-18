@@ -92,8 +92,8 @@ export function testAuthStateManagement() {
   console.log('Unauthenticated state:', {
     isAuthenticated: unauthenticatedState.isAuthenticated,
     isTokenExpired: unauthenticatedState.isTokenExpired,
-    isRefreshing: unauthenticatedState.isRefreshing,
-    expected: { isAuthenticated: false, isTokenExpired: false, isRefreshing: false }
+    timeUntilLogout: unauthenticatedState.timeUntilLogout,
+    expected: { isAuthenticated: false, isTokenExpired: false, timeUntilLogout: undefined }
   })
   
   // Test with valid tokens
@@ -108,7 +108,7 @@ export function testAuthStateManagement() {
     isAuthenticated: authenticatedState.isAuthenticated,
     isTokenExpired: authenticatedState.isTokenExpired,
     timeUntilLogout: authenticatedState.timeUntilLogout,
-    expected: { isAuthenticated: true, isTokenExpired: false, timeUntilLogout: expect.any(Number) }
+    expected: { isAuthenticated: true, isTokenExpired: false, timeUntilLogout: 'any number' }
   })
   
   // Test with expired access token
