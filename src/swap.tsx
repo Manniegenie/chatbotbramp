@@ -15,8 +15,6 @@ type BTCPrice = {
     price: number
     currency: string
     lastUpdated: string
-    source?: string
-    fallback?: boolean
 }
 
 type InitiateSwapRes = {
@@ -153,13 +151,6 @@ export default function SwapModal({ open, onClose, onChatEcho }: SwapModalProps)
                 } catch (e: any) {
                     console.error('BTC price fetch error:', e)
                     setPriceError(e?.message || 'Failed to fetch BTC price')
-                    // Set fallback price
-                    setBtcPrice({
-                        price: 50000,
-                        currency: 'USD',
-                        lastUpdated: new Date().toISOString(),
-                        fallback: true
-                    })
                 } finally {
                     setPriceLoading(false)
                 }
@@ -265,16 +256,12 @@ export default function SwapModal({ open, onClose, onChatEcho }: SwapModalProps)
                             {/* BTC Price Display */}
                             {btcPrice && (
                                 <div className="swap-modal-price-card">
-                                    <div className="swap-modal-price-title">
-                                        Current BTC Price
-                                        {btcPrice.fallback && <span className="swap-modal-fallback-badge">Fallback</span>}
-                                    </div>
+                                    <div className="swap-modal-price-title">Current BTC Price</div>
                                     <div className="swap-modal-price-value">
                                         {prettyUsd(btcPrice.price)} USD
                                     </div>
                                     <div className="swap-modal-price-updated">
                                         Updated: {new Date(btcPrice.lastUpdated).toLocaleTimeString()}
-                                        {btcPrice.source && ` (${btcPrice.source})`}
                                     </div>
                                 </div>
                             )}
