@@ -37,6 +37,8 @@ const NETWORKS = [
     { code: 'SOL', label: 'Solana' },
 ] as const
 
+type NetworkCode = typeof NETWORKS[number]['code']
+
 function getHeaders() {
     const { access } = tokenStore.getTokens()
     const h = new Headers()
@@ -93,7 +95,7 @@ export default function SwapModal({ open, onClose, onChatEcho }: SwapModalProps)
 
     // Step 1 (Swap Details)
     const [usdtAddress, setUsdtAddress] = useState('')
-    const [network, setNetwork] = useState(NETWORKS[0].code)
+    const [network, setNetwork] = useState<NetworkCode>(NETWORKS[0].code)
     const [usdAmount, setUsdAmount] = useState<string>('100')
     const [initLoading, setInitLoading] = useState(false)
     const [initError, setInitError] = useState<string | null>(null)
@@ -284,7 +286,7 @@ export default function SwapModal({ open, onClose, onChatEcho }: SwapModalProps)
                                         <select
                                             className="swap-modal-input"
                                             value={network}
-                                            onChange={e => setNetwork(e.target.value)}
+                                            onChange={e => setNetwork(e.target.value as NetworkCode)}
                                         >
                                             {NETWORKS.map(n => (
                                                 <option key={n.code} value={n.code}>{n.label}</option>
