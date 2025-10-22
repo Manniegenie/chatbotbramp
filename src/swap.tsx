@@ -136,11 +136,28 @@ export default function SwapModal({ open, onClose, onChatEcho }: SwapModalProps)
                         headers: getHeaders(),
                         cache: 'no-store'
                     })
+
+                    if (!res.ok) {
+                        throw new Error(`HTTP ${res.status}: ${res.statusText}`)
+                    }
+
                     const data = await res.json()
-                    if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`)
-                    setBtcPrice(data)
+
+                    if (data.success && data.price) {
+                        setBtcPrice(data)
+                    } else {
+                        throw new Error(data?.error || 'Invalid price data received')
+                    }
                 } catch (e: any) {
+                    console.error('BTC price fetch error:', e)
                     setPriceError(e?.message || 'Failed to fetch BTC price')
+                    // Set fallback price
+                    setBtcPrice({
+                        price: 50000,
+                        currency: 'USD',
+                        lastUpdated: new Date().toISOString(),
+                        fallback: true
+                    })
                 } finally {
                     setPriceLoading(false)
                 }
@@ -236,7 +253,7 @@ export default function SwapModal({ open, onClose, onChatEcho }: SwapModalProps)
                     {step === 1 && (
                         <div className="swap-modal-section">
                             <p className="swap-modal-description">
-                                Enter your USDT receiving address and amount. We'll create a Lightning invoice for you to pay.
+                                Enter your USDT blockchain address and amount. We'll create a Lightning invoice for you to pay with BTC, then swap to USDT on your chosen network.
                             </p>
 
                             <div className="swap-modal-warning">
@@ -246,12 +263,16 @@ export default function SwapModal({ open, onClose, onChatEcho }: SwapModalProps)
                             {/* BTC Price Display */}
                             {btcPrice && (
                                 <div className="swap-modal-price-card">
-                                    <div className="swap-modal-price-title">Current BTC Price</div>
+                                    <div className="swap-modal-price-title">
+                                        Current BTC Price
+                                        {btcPrice.fallback && <span className="swap-modal-fallback-badge">Fallback</span>}
+                                    </div>
                                     <div className="swap-modal-price-value">
                                         {prettyUsd(btcPrice.price)} USD
                                     </div>
                                     <div className="swap-modal-price-updated">
                                         Updated: {new Date(btcPrice.lastUpdated).toLocaleTimeString()}
+                                        {btcPrice.source && ` (${btcPrice.source})`}
                                     </div>
                                 </div>
                             )}
@@ -274,7 +295,7 @@ export default function SwapModal({ open, onClose, onChatEcho }: SwapModalProps)
                                     <input
                                         ref={firstInputRef as any}
                                         className="swap-modal-input"
-                                        placeholder="Enter your USDT Lightning address"
+                                        placeholder="Enter your USDT blockchain address"
                                         value={usdtAddress}
                                         onChange={e => setUsdtAddress(e.target.value)}
                                     />
@@ -310,7 +331,7 @@ export default function SwapModal({ open, onClose, onChatEcho }: SwapModalProps)
                                 <div className="swap-modal-fee-info">
                                     <div className="swap-modal-fee-title">Fee: 1.5%</div>
                                     <div className="swap-modal-fee-description">
-                                        Lightning Network fees apply for fast processing
+                                        Lightning Network fees apply for fast BTC processing
                                     </div>
                                 </div>
 
@@ -394,8 +415,8 @@ export default function SwapModal({ open, onClose, onChatEcho }: SwapModalProps)
                 <div className="swap-modal-footer">
                     <div className="swap-modal-footer-text">
                         {step === 1
-                            ? 'Enter your USDT address and amount to create a Lightning invoice.'
-                            : 'Send the exact BTC amount to complete your swap.'}
+                            ? 'Enter your USDT blockchain address and amount to create a Lightning invoice.'
+                            : 'Send the exact BTC amount to complete your swap to USDT.'}
                     </div>
                     <div className="swap-modal-button-row">
                         {step === 2 ? (
