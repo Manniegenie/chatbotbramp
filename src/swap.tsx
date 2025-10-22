@@ -15,6 +15,8 @@ type BTCPrice = {
     price: number
     currency: string
     lastUpdated: string
+    source?: string
+    fallback?: boolean
 }
 
 type InitiateSwapRes = {
