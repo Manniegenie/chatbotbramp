@@ -63,22 +63,22 @@ type SellModalProps = {
   onChatEcho?: (text: string) => void
 }
 
-const TOKENS = ['USDT','USDC','BTC','ETH','SOL','BNB','MATIC','AVAX'] as const
+const TOKENS = ['USDT', 'USDC', 'BTC', 'ETH', 'SOL', 'BNB', 'MATIC', 'AVAX'] as const
 type TokenSym = typeof TOKENS[number]
 
 const NETWORKS_BY_TOKEN: Record<TokenSym, { code: string; label: string }[]> = {
-  BTC:   [{ code: 'BTC', label: 'Bitcoin' }],
-  ETH:   [{ code: 'ETH', label: 'Ethereum' }],
-  SOL:   [{ code: 'SOL', label: 'Solana' }],
-  BNB:   [{ code: 'BSC', label: 'BNB Smart Chain' }],
+  BTC: [{ code: 'BTC', label: 'Bitcoin' }],
+  ETH: [{ code: 'ETH', label: 'Ethereum' }],
+  SOL: [{ code: 'SOL', label: 'Solana' }],
+  BNB: [{ code: 'BSC', label: 'BNB Smart Chain' }],
   MATIC: [{ code: 'ETH', label: 'Ethereum (ERC-20)' }],
-  AVAX:  [{ code: 'BSC', label: 'BNB Smart Chain' }],
-  USDT:  [
+  AVAX: [{ code: 'BSC', label: 'BNB Smart Chain' }],
+  USDT: [
     { code: 'ETH', label: 'Ethereum (ERC-20)' },
     { code: 'TRX', label: 'Tron (TRC-20)' },
     { code: 'BSC', label: 'BNB Smart Chain (BEP-20)' },
   ],
-  USDC:  [
+  USDC: [
     { code: 'ETH', label: 'Ethereum (ERC-20)' },
     { code: 'BSC', label: 'BNB Smart Chain (BEP-20)' },
   ],
@@ -160,7 +160,7 @@ function generateQRCode(text: string, size: number = 128): string {
 // QR Code component
 function QRCode({ data, size = 120 }: { data: string; size?: number }) {
   const qrUrl = generateQRCode(data, size)
-  
+
   return (
     <div style={{
       display: 'flex',
@@ -173,22 +173,22 @@ function QRCode({ data, size = 120 }: { data: string; size?: number }) {
       borderRadius: 12,
       minWidth: 'fit-content'
     }}>
-      <img 
-        src={qrUrl} 
+      <img
+        src={qrUrl}
         alt="QR Code for deposit address"
-        style={{ 
-          width: size, 
-          height: size, 
+        style={{
+          width: size,
+          height: size,
           borderRadius: 8,
           background: 'white',
           padding: 4
         }}
       />
-      <div style={{ 
-        fontSize: 10, 
-        color: 'var(--muted)', 
+      <div style={{
+        fontSize: 10,
+        color: 'var(--muted)',
         textAlign: 'center',
-        maxWidth: size 
+        maxWidth: size
       }}>
         Scan to copy address
       </div>
@@ -232,6 +232,8 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [token, setToken] = useState<TokenSym>('USDT')
   const [network, setNetwork] = useState(NETWORKS_BY_TOKEN['USDT'][0].code)
   const [amount, setAmount] = useState<string>('100')
+  const [currency, setCurrency] = useState<'USD' | 'NGN'>('USD')
+  const [nairaAmount, setNairaAmount] = useState<string>('')
   const [initLoading, setInitLoading] = useState(false)
   const [initError, setInitError] = useState<string | null>(null)
   const [initData, setInitData] = useState<InitiateSellRes | null>(null)
@@ -264,6 +266,8 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     setToken('USDT')
     setNetwork(NETWORKS_BY_TOKEN['USDT'][0].code)
     setAmount('100')
+    setCurrency('USD')
+    setNairaAmount('')
     setInitLoading(false)
     setInitError(null)
     setInitData(null)
@@ -305,37 +309,37 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   useEffect(() => {
     if (!open || step !== 2 || banksFetchedRef.current) return
     banksFetchedRef.current = true
-    ;(async () => {
-      setBanksLoading(true)
-      setBanksError(null)
-      try {
-        const res = await fetch(`${API_BASE}/fetchnaira/naira-accounts`, { method: 'GET', cache: 'no-store' })
-        const json = await res.json()
-        if (!res.ok) throw new Error(json?.error || `HTTP ${res.status}`)
+      ; (async () => {
+        setBanksLoading(true)
+        setBanksError(null)
+        try {
+          const res = await fetch(`${API_BASE}/fetchnaira/naira-accounts`, { method: 'GET', cache: 'no-store' })
+          const json = await res.json()
+          if (!res.ok) throw new Error(json?.error || `HTTP ${res.status}`)
 
-        const list: BankOption[] = Array.isArray(json?.banks) ? json.banks : []
-        const opts: BankOption[] = (list as BankOption[])
-          .map((b: BankOption) => ({ name: String(b.name || '').trim(), code: String(b.code || '').trim() }))
-          .filter((b: BankOption) => b.name.length > 0 && b.code.length > 0)
-          .sort((a: BankOption, b: BankOption) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+          const list: BankOption[] = Array.isArray(json?.banks) ? json.banks : []
+          const opts: BankOption[] = (list as BankOption[])
+            .map((b: BankOption) => ({ name: String(b.name || '').trim(), code: String(b.code || '').trim() }))
+            .filter((b: BankOption) => b.name.length > 0 && b.code.length > 0)
+            .sort((a: BankOption, b: BankOption) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
 
-        setBankOptions(opts)
-        if (opts.length) {
-          setBankCode(opts[0].code)
-          setBankName(opts[0].name)
-        } else {
+          setBankOptions(opts)
+          if (opts.length) {
+            setBankCode(opts[0].code)
+            setBankName(opts[0].name)
+          } else {
+            setBankCode('')
+            setBankName('')
+          }
+        } catch (e: any) {
+          setBanksError(e?.message || 'Failed to load banks')
+          setBankOptions([])
           setBankCode('')
           setBankName('')
+        } finally {
+          setBanksLoading(false)
         }
-      } catch (e: any) {
-        setBanksError(e?.message || 'Failed to load banks')
-        setBankOptions([])
-        setBankCode('')
-        setBankName('')
-      } finally {
-        setBanksLoading(false)
-      }
-    })()
+      })()
   }, [open, step])
 
   // Resolve account name (debounced)
@@ -380,18 +384,42 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   async function submitInitiate(e: React.FormEvent) {
     e.preventDefault()
     setInitError(null)
-    if (!amount || isNaN(+amount) || +amount <= 0) {
-      setInitError('Enter a valid amount')
-      return
+
+    let amountNum: number
+
+    if (currency === 'USD') {
+      if (!amount || isNaN(+amount) || +amount <= 0) {
+        setInitError('Enter a valid amount')
+        return
+      }
+      amountNum = +amount
+    } else {
+      if (!nairaAmount || isNaN(+nairaAmount) || +nairaAmount <= 0) {
+        setInitError('Enter a valid Naira amount')
+        return
+      }
+      // Convert Naira to USD using backend
+      try {
+        const res = await fetch(`${API_BASE}/swap/convert-naira`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ nairaAmount: +nairaAmount }),
+        })
+        const data = await res.json()
+        if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
+        amountNum = data.usdAmount
+      } catch (err: any) {
+        setInitError(err.message || 'Failed to convert Naira amount')
+        return
+      }
     }
-    
+
     // Test flight compliance: $50 daily sell limit validation
-    const amountNum = +amount;
     if (amountNum > 50) {
       setInitError('Daily sell limit is $50 during test flight. Please reduce your amount.')
       return
     }
-    
+
     setInitLoading(true)
     try {
       const res = await fetch(`${API_BASE}/sell/initiate`, {
@@ -453,21 +481,21 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     navigator.clipboard?.writeText(text).then(() => {
       setCopiedKey(key)
       setTimeout(() => setCopiedKey(null), 1200)
-    }).catch(() => {})
+    }).catch(() => { })
   }
 
   if (!open) return null
 
   const headerTitle =
     step === 1 ? 'Start a Payment'
-    : (!payData ? 'Payout Details' : 'Transaction Summary')
+      : (!payData ? 'Payout Details' : 'Transaction Summary')
 
   const showFinalSummary = !!payData
 
   // Build QR data - include memo if present for compatible wallets
-  const qrData = initData ? 
-    (initData.deposit.memo ? 
-      `${initData.deposit.address}?memo=${initData.deposit.memo}` : 
+  const qrData = initData ?
+    (initData.deposit.memo ?
+      `${initData.deposit.address}?memo=${initData.deposit.memo}` :
       initData.deposit.address
     ) : ''
 
@@ -500,7 +528,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
               <p style={{ margin: 0, color: 'var(--muted)' }}>
                 Choose token, network, and amount. We'll capture payout next.
               </p>
-              
+
               <div style={{ ...badgeWarn, margin: '8px 0' }}>
                 ⚠️ Test Flight: Maximum $50 per day during testing phase
               </div>
@@ -563,16 +591,54 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   </div>
                 </label>
 
-                <label style={{ ...inputWrap, gridColumn: '1 / span 2' }}>
-                  <span style={labelText}>Amount ({token})</span>
-                  <input
-                    style={inputBase}
-                    inputMode="decimal"
-                    placeholder="e.g. 100"
-                    value={amount}
-                    onChange={e => setAmount(e.target.value)}
-                  />
+                <label style={inputWrap}>
+                  <span style={labelText}>Currency</span>
+                  <div style={{ position: 'relative' }}>
+                    <select
+                      style={inputBase}
+                      value={currency}
+                      onChange={e => setCurrency(e.target.value as 'USD' | 'NGN')}
+                    >
+                      <option value="USD">USD</option>
+                      <option value="NGN">NGN</option>
+                    </select>
+                    <div style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      pointerEvents: 'none',
+                      color: 'var(--muted)',
+                      fontSize: '12px'
+                    }}>
+                      ▼
+                    </div>
+                  </div>
                 </label>
+
+                {currency === 'USD' ? (
+                  <label style={{ ...inputWrap, gridColumn: '1 / span 2' }}>
+                    <span style={labelText}>Amount ({token})</span>
+                    <input
+                      style={inputBase}
+                      inputMode="decimal"
+                      placeholder="e.g. 100"
+                      value={amount}
+                      onChange={e => setAmount(e.target.value)}
+                    />
+                  </label>
+                ) : (
+                  <label style={{ ...inputWrap, gridColumn: '1 / span 2' }}>
+                    <span style={labelText}>Amount (NGN)</span>
+                    <input
+                      style={inputBase}
+                      inputMode="decimal"
+                      placeholder="e.g. 50000"
+                      value={nairaAmount}
+                      onChange={e => setNairaAmount(e.target.value)}
+                    />
+                  </label>
+                )}
 
                 <div style={{ gridColumn: '1 / span 2', display: 'flex', justifyContent: 'flex-end' }}>
                   <button style={btnPrimary} disabled={initLoading}>
@@ -686,7 +752,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                           <span style={{ color: '#ff6b6b' }}>{accountNameError}</span>
                         ) : accountName ? (
                           accountName
-                        ) : 
+                        ) :
                           'Enter account number'
                         }
                       </div>
@@ -715,10 +781,10 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   </div>
 
                   {/* Enhanced deposit details section with QR code */}
-                  <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: '1fr auto', 
-                    gap: 16, 
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr auto',
+                    gap: 16,
                     alignItems: 'start',
                     background: '#0a0b0f',
                     padding: 16,
@@ -727,7 +793,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   }}>
                     <div style={{ display: 'grid', gap: 12 }}>
                       <h4 style={{ margin: 0, fontSize: 14, color: 'var(--accent)' }}>📍 Deposit Details</h4>
-                      
+
                       <div>
                         <div style={kStyle}>Deposit Address</div>
                         <div style={{ ...vStyle, ...mono, wordBreak: 'break-all', marginBottom: 8 }}>
@@ -818,8 +884,8 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
             {step === 1
               ? 'We\'ll capture your payout next.'
               : (showFinalSummary
-                  ? 'Copy the deposit details and send the exact amount within the window.'
-                  : 'Ensure your bank details match your account name.')}
+                ? 'Copy the deposit details and send the exact amount within the window.'
+                : 'Ensure your bank details match your account name.')}
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
             {step === 2 ? (
@@ -842,4 +908,847 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     </div>,
     document.body
   )
+}
+    }
+
+    setPayLoading(true)
+
+    try {
+
+      const res = await fetch(`${API_BASE}/sell/payout`, {
+
+        method: 'POST',
+
+        headers: getHeaders(),
+
+        body: JSON.stringify({
+
+          paymentId: initData.paymentId,
+
+          bankName,
+
+          bankCode,
+
+          accountNumber,
+
+          accountName,
+
+        }),
+
+      })
+
+      const data: PayoutRes = await res.json()
+
+      if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
+
+      setPayData(data)
+
+      onChatEcho?.(buildPayoutRecap(initData, data))
+
+      // ⏱ Start a fresh local 10:00 window AFTER payout is captured
+
+      setSummaryExpiresAt(new Date(Date.now() + 10 * 60 * 1000).toISOString())
+
+    } catch (err: any) {
+
+      setPayError(err.message || 'Failed to save payout details')
+
+    } finally {
+
+      setPayLoading(false)
+
+    }
+
+  }
+
+
+
+  const [copiedKey, setCopiedKey] = useState<string | null>(null)
+
+  function copyToClipboard(text: string, key: string) {
+
+    navigator.clipboard?.writeText(text).then(() => {
+
+      setCopiedKey(key)
+
+      setTimeout(() => setCopiedKey(null), 1200)
+
+    }).catch(() => {})
+
+  }
+
+
+
+  if (!open) return null
+
+
+
+  const headerTitle =
+
+    step === 1 ? 'Start a Payment'
+
+    : (!payData ? 'Payout Details' : 'Transaction Summary')
+
+
+
+  const showFinalSummary = !!payData
+
+
+
+  // Build QR data - include memo if present for compatible wallets
+
+  const qrData = initData ? 
+
+    (initData.deposit.memo ? 
+
+      `${initData.deposit.address}?memo=${initData.deposit.memo}` : 
+
+      initData.deposit.address
+
+    ) : ''
+
+
+
+  return createPortal(
+
+    <div style={overlayStyle} role="dialog" aria-modal="true" aria-labelledby="sell-title" onClick={onClose}>
+
+      <div style={sheetStyle} onClick={(e) => e.stopPropagation()}>
+
+        {/* Header */}
+
+        <div style={headerStyle}>
+
+          <div style={titleRowStyle}>
+
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: '#0d1512', display: 'grid', placeItems: 'center', border: '1px solid var(--border)' }}>
+
+              💱
+
+            </div>
+
+            <div>
+
+              <div id="sell-title" style={{ fontWeight: 700 }}>{headerTitle}</div>
+
+              <div style={stepperStyle}>
+
+                <span style={dot(step === 1)}></span> Step 1 — Start
+
+                <span style={{ opacity: .4, padding: '0 6px' }}>•</span>
+
+                <span style={dot(step === 2)}></span> Step 2 — Payout
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <button type="button" aria-label="Close" style={btnDangerGhost} onClick={onClose}>✕</button>
+
+        </div>
+
+
+
+        {/* Body */}
+
+        <div style={bodyStyle}>
+
+          {/* STEP 1 — Start a Payment (no deposit-details screen; goes straight to payout on success) */}
+
+          {step === 1 && (
+
+            <div style={{ display: 'grid', gap: 14 }}>
+
+              <p style={{ margin: 0, color: 'var(--muted)' }}>
+
+                Choose token, network, and amount. We'll capture payout next.
+
+              </p>
+
+              
+
+              <div style={{ ...badgeWarn, margin: '8px 0' }}>
+
+                ⚠️ Test Flight: Maximum $50 per day during testing phase
+
+              </div>
+
+
+
+              {!!initError && (
+
+                <div role="alert" style={errorBanner}>
+
+                  <strong style={{ color: '#ffaaaa' }}>Error:</strong> {initError}
+
+                </div>
+
+              )}
+
+
+
+              <form onSubmit={submitInitiate} style={gridForm}>
+
+                <label style={inputWrap}>
+
+                  <span style={labelText}>Token</span>
+
+                  <div style={{ position: 'relative' }}>
+
+                    <select
+
+                      ref={firstInputRef as any}
+
+                      style={inputBase}
+
+                      value={token}
+
+                      onChange={e => setToken(e.target.value as TokenSym)}
+
+                    >
+
+                      {TOKENS.map(t => <option key={t} value={t}>{t}</option>)}
+
+                    </select>
+
+                    <div style={{
+
+                      position: 'absolute',
+
+                      right: '12px',
+
+                      top: '50%',
+
+                      transform: 'translateY(-50%)',
+
+                      pointerEvents: 'none',
+
+                      color: 'var(--muted)',
+
+                      fontSize: '12px'
+
+                    }}>
+
+                      ▼
+
+                    </div>
+
+                  </div>
+
+                </label>
+
+
+
+                <label style={inputWrap}>
+
+                  <span style={labelText}>Network</span>
+
+                  <div style={{ position: 'relative' }}>
+
+                    <select
+
+                      style={inputBase}
+
+                      value={network}
+
+                      onChange={e => setNetwork(e.target.value)}
+
+                    >
+
+                      {NETWORKS_BY_TOKEN[token].map(n => (
+
+                        <option key={n.code} value={n.code}>{n.label}</option>
+
+                      ))}
+
+                    </select>
+
+                    <div style={{
+
+                      position: 'absolute',
+
+                      right: '12px',
+
+                      top: '50%',
+
+                      transform: 'translateY(-50%)',
+
+                      pointerEvents: 'none',
+
+                      color: 'var(--muted)',
+
+                      fontSize: '12px'
+
+                    }}>
+
+                      ▼
+
+                    </div>
+
+                  </div>
+
+                </label>
+
+
+
+                <label style={{ ...inputWrap, gridColumn: '1 / span 2' }}>
+
+                  <span style={labelText}>Amount ({token})</span>
+
+                  <input
+
+                    style={inputBase}
+
+                    inputMode="decimal"
+
+                    placeholder="e.g. 100"
+
+                    value={amount}
+
+                    onChange={e => setAmount(e.target.value)}
+
+                  />
+
+                </label>
+
+
+
+                <div style={{ gridColumn: '1 / span 2', display: 'flex', justifyContent: 'flex-end' }}>
+
+                  <button style={btnPrimary} disabled={initLoading}>
+
+                    {initLoading ? 'Starting…' : 'Start & Continue to Payout'}
+
+                  </button>
+
+                </div>
+
+              </form>
+
+            </div>
+
+          )}
+
+
+
+          {/* STEP 2 — Payout (then Summary with countdown) */}
+
+          {step === 2 && (
+
+            <div style={{ display: 'grid', gap: 14 }}>
+
+              {!initData && (
+
+                <div role="alert" style={errorBanner}>
+
+                  Missing sell reference — please restart.
+
+                </div>
+
+              )}
+
+
+
+              {initData && !showFinalSummary && (
+
+                <>
+
+                  <div style={card}>
+
+                    <h3 style={{ margin: 0, fontSize: 16 }}>Sell Summary</h3>
+
+                    <div style={kvGrid}>
+
+                      <div>
+
+                        <div style={kStyle}>Payment ID</div>
+
+                        <div style={{ ...vStyle, ...mono }}>{initData.paymentId}</div>
+
+                      </div>
+
+                      <div>
+
+                        <div style={kStyle}>Reference</div>
+
+                        <div style={{ ...vStyle, ...mono }}>{initData.reference}</div>
+
+                      </div>
+
+                      <div>
+
+                        <div style={kStyle}>You Receive</div>
+
+                        <div style={vStyle}>
+
+                          {prettyNgn(initData.quote.receiveAmount)} ({initData.quote.receiveCurrency})
+
+                        </div>
+
+                      </div>
+
+                      <div>
+
+                        <div style={kStyle}>Rate</div>
+
+                        <div style={vStyle}>{prettyAmount(initData.quote.rate)} NGN/{initData.deposit.token}</div>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+
+
+                  {!!payError && (
+
+                    <div role="alert" style={errorBanner}>
+
+                      <strong style={{ color: '#ffaaaa' }}>Error:</strong> {payError}
+
+                    </div>
+
+                  )}
+
+
+
+                  <form onSubmit={submitPayout} style={gridForm}>
+
+                    <label style={inputWrap}>
+
+                      <span style={labelText}>Bank</span>
+
+                      <div style={{ position: 'relative' }}>
+
+                        <select
+
+                          ref={firstInputRef as any}
+
+                          style={inputBase}
+
+                          value={bankCode}
+
+                          disabled={banksLoading || bankOptions.length === 0}
+
+                          onChange={e => {
+
+                            const code = e.target.value
+
+                            const hit = bankOptions.find((b: BankOption) => b.code === code)
+
+                            if (hit) {
+
+                              setBankCode(hit.code)
+
+                              setBankName(hit.name)
+
+                            }
+
+                          }}
+
+                        >
+
+                          {bankOptions.length === 0 ? (
+
+                            <option value="">{banksLoading ? 'Loading…' : (banksError || 'No banks')}</option>
+
+                          ) : (
+
+                            bankOptions.map((b: BankOption) => (
+
+                              <option key={b.code} value={b.code}>{b.name}</option>
+
+                            ))
+
+                          )}
+
+                        </select>
+
+                        <div style={{
+
+                          position: 'absolute',
+
+                          right: '12px',
+
+                          top: '50%',
+
+                          transform: 'translateY(-50%)',
+
+                          pointerEvents: 'none',
+
+                          color: 'var(--muted)',
+
+                          fontSize: '12px'
+
+                        }}>
+
+                          ▼
+
+                        </div>
+
+                      </div>
+
+                    </label>
+
+
+
+                    <label style={inputWrap}>
+
+                      <span style={labelText}>Account Number</span>
+
+                      <input
+
+                        style={inputBase}
+
+                        value={accountNumber}
+
+                        onChange={e => setAccountNumber(e.target.value)}
+
+                        placeholder="e.g. 0123456789"
+
+                      />
+
+                    </label>
+
+
+
+                    <label style={{ ...inputWrap, gridColumn: '1 / span 2' }}>
+
+                      <span style={labelText}>Account Name</span>
+
+                      <div style={{ ...inputBase, background: '#1a1d23', color: accountName ? 'var(--txt)' : 'var(--muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
+
+                        {accountNameLoading ? (
+
+                          <>
+
+                            <div style={{ width: 12, height: 12, border: '2px solid var(--border)', borderTop: '2px solid var(--accent)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+
+                            Resolving...
+
+                          </>
+
+                        ) : accountNameError ? (
+
+                          <span style={{ color: '#ff6b6b' }}>{accountNameError}</span>
+
+                        ) : accountName ? (
+
+                          accountName
+
+                        ) : 
+
+                          'Enter account number'
+
+                        }
+
+                      </div>
+
+                    </label>
+
+
+
+                    <div style={{ gridColumn: '1 / span 2', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+
+                      <button
+
+                        style={btnPrimary}
+
+                        disabled={payLoading || !bankCode || banksLoading || !accountName}
+
+                      >
+
+                        {payLoading ? 'Saving…' : 'Save Payout & Show Summary'}
+
+                      </button>
+
+                    </div>
+
+                  </form>
+
+                </>
+
+              )}
+
+
+
+              {/* FINAL SUMMARY (countdown starts here) */}
+
+              {initData && showFinalSummary && payData && (
+
+                <div style={successCard}>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+
+                    <h3 style={{ margin: 0, fontSize: 16 }}>Transaction Summary</h3>
+
+                    <div style={badge}>
+
+                      ⏱ {expired ? 'Expired' : countdown} <span style={{ opacity: .6 }}>of 10:00</span>
+
+                    </div>
+
+                  </div>
+
+
+
+                  {/* Enhanced deposit details section with QR code */}
+
+                  <div style={{ 
+
+                    display: 'grid', 
+
+                    gridTemplateColumns: '1fr auto', 
+
+                    gap: 16, 
+
+                    alignItems: 'start',
+
+                    background: '#0a0b0f',
+
+                    padding: 16,
+
+                    borderRadius: 12,
+
+                    border: '1px solid var(--border)'
+
+                  }}>
+
+                    <div style={{ display: 'grid', gap: 12 }}>
+
+                      <h4 style={{ margin: 0, fontSize: 14, color: 'var(--accent)' }}>📍 Deposit Details</h4>
+
+                      
+
+                      <div>
+
+                        <div style={kStyle}>Deposit Address</div>
+
+                        <div style={{ ...vStyle, ...mono, wordBreak: 'break-all', marginBottom: 8 }}>
+
+                          {initData.deposit.address}
+
+                        </div>
+
+                        <div style={row}>
+
+                          <button
+
+                            style={btn}
+
+                            onClick={() => copyToClipboard(initData.deposit.address, 'addr2')}
+
+                          >
+
+                            {copiedKey === 'addr2' ? 'Copied ✓' : 'Copy Address'}
+
+                          </button>
+
+                        </div>
+
+                      </div>
+
+
+
+                      {!!initData.deposit.memo && (
+
+                        <div>
+
+                          <div style={kStyle}>Memo / Tag</div>
+
+                          <div style={{ ...vStyle, ...mono, wordBreak: 'break-all', marginBottom: 8 }}>
+
+                            {initData.deposit.memo}
+
+                          </div>
+
+                          <div style={row}>
+
+                            <button
+
+                              style={btn}
+
+                              onClick={() => copyToClipboard(initData.deposit.memo!, 'memo2')}
+
+                            >
+
+                              {copiedKey === 'memo2' ? 'Copied ✓' : 'Copy Memo'}
+
+                            </button>
+
+                          </div>
+
+                        </div>
+
+                      )}
+
+
+
+                      <div style={{ ...smallMuted, ...badgeWarn }}>
+
+                        ⚠️ Send exactly {prettyAmount(initData.deposit.amount)} {initData.deposit.token} on {toNetworkLabel(initData.deposit.token, initData.deposit.network)} before the timer runs out.
+
+                      </div>
+
+                    </div>
+
+
+
+                    {/* QR Code */}
+
+                    <QRCode data={qrData} size={120} />
+
+                  </div>
+
+
+
+                  {/* Transaction info grid */}
+
+                  <div style={kvGrid}>
+
+                    <div>
+
+                      <div style={kStyle}>Status</div>
+
+                      <div style={vStyle}>{payData.status}</div>
+
+                    </div>
+
+                    <div>
+
+                      <div style={kStyle}>Payment ID</div>
+
+                      <div style={{ ...vStyle, ...mono }}>{payData.paymentId}</div>
+
+                    </div>
+
+                    <div>
+
+                      <div style={kStyle}>Reference</div>
+
+                      <div style={{ ...vStyle, ...mono }}>{initData.reference}</div>
+
+                    </div>
+
+                    <div>
+
+                      <div style={kStyle}>You Receive</div>
+
+                      <div style={vStyle}>
+
+                        {prettyNgn((initData.quote.receiveAmount) || 0)} ({initData.quote.receiveCurrency})
+
+                      </div>
+
+                    </div>
+
+                    <div>
+
+                      <div style={kStyle}>Rate</div>
+
+                      <div style={vStyle}>{prettyAmount(initData.quote.rate)} NGN/{initData.deposit.token}</div>
+
+                    </div>
+
+                    <div>
+
+                      <div style={kStyle}>Bank</div>
+
+                      <div style={vStyle}>{payData.payout.bankName}</div>
+
+                    </div>
+
+                    <div>
+
+                      <div style={kStyle}>Account</div>
+
+                      <div style={vStyle}>{payData.payout.accountName} — {payData.payout.accountNumber}</div>
+
+                    </div>
+
+                  </div>
+
+
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+
+                    <button style={btnPrimary} onClick={onClose}>Done</button>
+
+                  </div>
+
+                </div>
+
+              )}
+
+            </div>
+
+          )}
+
+        </div>
+
+
+
+        {/* Footer */}
+
+        <div style={footerStyle}>
+
+          <div style={smallMuted}>
+
+            {step === 1
+
+              ? 'We\'ll capture your payout next.'
+
+              : (showFinalSummary
+
+                  ? 'Copy the deposit details and send the exact amount within the window.'
+
+                  : 'Ensure your bank details match your account name.')}
+
+          </div>
+
+          <div style={{ display: 'flex', gap: 10 }}>
+
+            {step === 2 ? (
+
+              !showFinalSummary ? (
+
+                <button style={btn} onClick={() => setStep(1)}>← Back</button>
+
+              ) : (
+
+                <button style={btn} onClick={onClose}>Close</button>
+
+              )
+
+            ) : (
+
+              <button style={btn} onClick={onClose}>Cancel</button>
+
+            )}
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+
+      {/* Tiny animation keyframes */}
+
+      <style>
+
+        {`@keyframes scaleIn{from{transform:translateY(8px) scale(.98); opacity:.0} to{transform:none; opacity:1}} @keyframes spin{from{transform:rotate(0deg)} to{transform:rotate(360deg)}}`}
+
+      </style>
+
+    </div>,
+
+    document.body
+
+  )
+
 }

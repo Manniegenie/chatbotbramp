@@ -97,6 +97,8 @@ export default function SwapModal({ open, onClose, onChatEcho }: SwapModalProps)
     const [usdtAddress, setUsdtAddress] = useState('')
     const [network, setNetwork] = useState<NetworkCode>(NETWORKS[0].code)
     const [usdAmount, setUsdAmount] = useState<string>('100')
+    const [currency, setCurrency] = useState<'USD' | 'NGN'>('USD')
+    const [nairaAmount, setNairaAmount] = useState<string>('')
     const [initLoading, setInitLoading] = useState(false)
     const [initError, setInitError] = useState<string | null>(null)
     const [initData, setInitData] = useState<InitiateSwapRes | null>(null)
@@ -116,6 +118,8 @@ export default function SwapModal({ open, onClose, onChatEcho }: SwapModalProps)
         setUsdtAddress('')
         setNetwork(NETWORKS[0].code)
         setUsdAmount('100')
+        setCurrency('USD')
+        setNairaAmount('')
         setInitLoading(false)
         setInitError(null)
         setInitData(null)
@@ -176,13 +180,40 @@ export default function SwapModal({ open, onClose, onChatEcho }: SwapModalProps)
             setInitError('Enter your USDT receiving address')
             return
         }
-        if (!usdAmount || isNaN(+usdAmount) || +usdAmount <= 0) {
-            setInitError('Enter a valid USD amount')
-            return
+
+        let finalUsdAmount = 0;
+
+        if (currency === 'USD') {
+            if (!usdAmount || isNaN(+usdAmount) || +usdAmount <= 0) {
+                setInitError('Enter a valid USD amount')
+                return
+            }
+            finalUsdAmount = +usdAmount;
+        } else {
+            if (!nairaAmount || isNaN(+nairaAmount) || +nairaAmount <= 0) {
+                setInitError('Enter a valid Naira amount')
+                return
+            }
+
+            // Convert Naira to USD
+            try {
+                const convertRes = await fetch(`${API_BASE}/swap/convert-naira`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ nairaAmount: +nairaAmount }),
+                })
+                const convertData = await convertRes.json()
+                if (!convertRes.ok || !convertData.success) {
+                    throw new Error(convertData?.error || 'Failed to convert Naira amount')
+                }
+                finalUsdAmount = convertData.usdAmount;
+            } catch (err: any) {
+                setInitError(err.message || 'Failed to convert Naira amount')
+                return
+            }
         }
 
-        const amountNum = +usdAmount;
-        if (amountNum > 10000) {
+        if (finalUsdAmount > 10000) {
             setInitError('Maximum swap amount is $10,000')
             return
         }
@@ -195,7 +226,7 @@ export default function SwapModal({ open, onClose, onChatEcho }: SwapModalProps)
                 body: JSON.stringify({
                     usdtAddress: usdtAddress.trim(),
                     network,
-                    usdAmount: amountNum
+                    usdAmount: finalUsdAmount
                 }),
             })
             const data: InitiateSwapRes = await res.json()
@@ -306,16 +337,44 @@ export default function SwapModal({ open, onClose, onChatEcho }: SwapModalProps)
                                     </div>
                                 </label>
 
-                                <label className="swap-modal-input-wrap full-width">
-                                    <span className="swap-modal-label">Amount (USD)</span>
-                                    <input
-                                        className="swap-modal-input"
-                                        inputMode="decimal"
-                                        placeholder="e.g. 100"
-                                        value={usdAmount}
-                                        onChange={e => setUsdAmount(e.target.value)}
-                                    />
+                                <label className="swap-modal-input-wrap">
+                                    <span className="swap-modal-label">Currency</span>
+                                    <div className="swap-modal-select-wrapper">
+                                        <select
+                                            className="swap-modal-input"
+                                            value={currency}
+                                            onChange={e => setCurrency(e.target.value as 'USD' | 'NGN')}
+                                        >
+                                            <option value="USD">USD</option>
+                                            <option value="NGN">NGN (Naira)</option>
+                                        </select>
+                                        <div className="swap-modal-dropdown-arrow">▼</div>
+                                    </div>
                                 </label>
+
+                                {currency === 'USD' ? (
+                                    <label className="swap-modal-input-wrap full-width">
+                                        <span className="swap-modal-label">Amount (USD)</span>
+                                        <input
+                                            className="swap-modal-input"
+                                            inputMode="decimal"
+                                            placeholder="e.g. 100"
+                                            value={usdAmount}
+                                            onChange={e => setUsdAmount(e.target.value)}
+                                        />
+                                    </label>
+                                ) : (
+                                    <label className="swap-modal-input-wrap full-width">
+                                        <span className="swap-modal-label">Amount (NGN)</span>
+                                        <input
+                                            className="swap-modal-input"
+                                            inputMode="decimal"
+                                            placeholder="e.g. 150000"
+                                            value={nairaAmount}
+                                            onChange={e => setNairaAmount(e.target.value)}
+                                        />
+                                    </label>
+                                )}
 
                                 <div className="swap-modal-fee-info">
                                     <div className="swap-modal-fee-title">Fee: 1.5%</div>
