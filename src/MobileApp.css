@@ -64,11 +64,12 @@ body {
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
   background-image: var(--wallpaper-url);
-  background-size: contain;
+  background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
-  transition: background-image 2s ease-in-out;
+  transition: background-image 3s ease-in-out;
+  mix-blend-mode: normal;
 }
 
 @supports (-webkit-touch-callout: none) {

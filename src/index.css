@@ -15,8 +15,9 @@
   --composer-h: 64px;
   --max-chat-width: 860px;
 
-  /* Wallpaper slideshow CSS variable */
+  /* Wallpaper slideshow CSS variables */
   --wallpaper-url: none;
+  --wallpaper-next-url: none;
 }
 
 /* Reset / touch */
@@ -92,12 +93,30 @@ a:hover { opacity: .92; }
   pointer-events: none;
   background-image: var(--wallpaper-url);
   background-position: center;
-  background-size: contain;
+  background-size: cover;
   background-repeat: no-repeat;
   z-index: 0;           /* sits behind all UI */
   transform: translateZ(0);
   will-change: background-image;
-  transition: background-image 2s ease-in-out;
+  transition: background-image 3s ease-in-out;
+  mix-blend-mode: normal;
+  
+  /* Crossfade effect with pseudo-element */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: var(--wallpaper-next-url);
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    opacity: 0;
+    transition: opacity 3s ease-in-out;
+    z-index: 1;
+  }
   /* slight smoothing for large images */
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
