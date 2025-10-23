@@ -224,39 +224,7 @@ a {
   align-items: center;
 }
 
-.mobile-sell-btn {
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  white-space: nowrap;
-  background: var(--accent);
-  color: white;
-  min-height: 36px;
-}
-
-.mobile-sell-btn:active:not(.disabled) {
-  transform: scale(0.95);
-}
-
-.mobile-sell-btn.disabled {
-  opacity: 0.6;
-  background: var(--border);
-  cursor: pointer;
-  position: relative;
-}
-
-.mobile-sell-btn.disabled::after {
-  content: '🔒';
-  position: absolute;
-  right: 4px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 12px;
-}
+/* Removed mobile-sell-btn styles - no longer used */
 
 .mobile-menu-btn {
   width: 44px;

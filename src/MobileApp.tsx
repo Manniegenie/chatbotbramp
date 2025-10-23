@@ -626,13 +626,6 @@ export default function MobileApp() {
           <div className="mobile-nav-buttons">
             {!auth ? (
               <>
-                <button
-                  className="mobile-sell-btn disabled"
-                  onClick={() => setShowSignIn(true)}
-                  aria-label="Sign in to Sell Crypto"
-                >
-                  Sell
-                </button>
                 <div className="mobile-auth-buttons">
                   <button className="mobile-auth-btn" onClick={() => setShowSignIn(true)}>
                     Sign in
