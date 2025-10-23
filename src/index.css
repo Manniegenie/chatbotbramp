@@ -143,11 +143,11 @@ a:hover { opacity: .92; }
 /* Buttons */
 .btn {
   appearance: none; -webkit-appearance: none; cursor: pointer;
-  background: rgba(255, 255, 255, 0.1); color: #fff;
+  background: rgba(255, 255, 255, 0.05); color: #fff;
   padding: 10px 14px; border-radius: 10px;
   font-weight: 700; font-size: 15px; line-height: 1.35;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(15px);
   transition: box-shadow .18s ease, transform .08s ease, opacity .2s ease, background .2s ease, border-color .2s ease;
   box-shadow: 0 0 0 0 rgba(0,115,55,0); border: 0; min-height: 40px;
   -webkit-tap-highlight-color: transparent;
@@ -232,6 +232,7 @@ a:hover { opacity: .92; }
 .bubble.assistant .role { color: var(--accent); font-weight: 700; }
 
 .bubble .text { white-space: pre-wrap; word-wrap: break-word; }
+.bubble.assistant .text { font-style: italic; font-family: 'Georgia', 'Times New Roman', serif; }
 
 /* CTA buttons inside messages */
 .cta-buttons { display: grid; gap: 10px; margin-top: 12px; }

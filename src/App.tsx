@@ -526,14 +526,15 @@ export default function App() {
             position: sticky;
             top: 0;
             z-index: 60;
-            background: linear-gradient(180deg, rgba(18,18,26,0.95), rgba(18,18,26,0.8));
-            backdrop-filter: blur(6px);
+            background: rgba(18, 18, 26, 0.1);
+            backdrop-filter: blur(15px);
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
             padding: 12px 16px;
             transition: box-shadow 200ms ease, transform 160ms ease;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
           }
           .header.pinned {
             box-shadow: 0 6px 20px rgba(0,0,0,0.25);
@@ -563,6 +564,8 @@ export default function App() {
             font-weight: 600;
             font-size: 13px;
             color: var(--accent); /* use green accent for ticker text */
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
           }
 
           /* fade edges */
@@ -585,8 +588,8 @@ export default function App() {
           }
 
           @keyframes tickerScroll {
-            0% { transform: translateX(0%); }
-            100% { transform: translateX(-50%); }
+            0% { transform: translate3d(0%, 0, 0); }
+            100% { transform: translate3d(-50%, 0, 0); }
           }
 
           .ticker.idle {

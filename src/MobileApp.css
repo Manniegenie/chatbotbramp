@@ -134,10 +134,10 @@ a {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: linear-gradient(180deg, var(--gradient-start), var(--gradient-end));
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
+  background: rgba(18, 18, 26, 0.1);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   padding-top: max(12px, var(--safe-top));
   box-shadow: 0 2px 10px var(--shadow);
   flex-shrink: 0;
@@ -193,21 +193,21 @@ a {
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
   color: white;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(15px);
   min-height: 36px;
 }
 
 .mobile-auth-btn-secondary {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.03);
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
 }
 
 .mobile-auth-btn:active {
@@ -420,8 +420,8 @@ a {
 .mobile-menu-item {
   width: 100%;
   padding: 16px 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
   color: white;
   text-align: left;
   font-size: 16px;
@@ -431,7 +431,7 @@ a {
   align-items: center;
   text-decoration: none;
   min-height: 54px;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(15px);
   border-radius: 8px;
   margin: 4px 0;
 }
@@ -529,6 +529,11 @@ a {
   overflow-wrap: break-word;
   hyphens: auto;
   box-shadow: 0 1px 3px var(--shadow);
+}
+
+.mobile-bubble.assistant .mobile-bubble-content {
+  font-style: italic;
+  font-family: 'Georgia', 'Times New Roman', serif;
 }
 
 .mobile-bubble.user .mobile-bubble-content {
