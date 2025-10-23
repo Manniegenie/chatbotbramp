@@ -393,7 +393,7 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
   if (!open) return null
 
   const headerTitle =
-    step === 1 ? 'Start a Sell'
+    step === 1 ? 'Start a Payment'
     : (!payData ? 'Payout Details' : 'Transaction Summary')
 
   const showFinalSummary = !!payData
@@ -426,7 +426,7 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
 
         {/* Body */}
         <div className="mobile-sell-body">
-          {/* STEP 1 — Start a Sell */}
+          {/* STEP 1 — Start a Payment */}
           {step === 1 && (
             <div className="mobile-sell-section">
               <p className="mobile-sell-description">

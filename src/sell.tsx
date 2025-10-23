@@ -459,7 +459,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   if (!open) return null
 
   const headerTitle =
-    step === 1 ? 'Start a Sell'
+    step === 1 ? 'Start a Payment'
     : (!payData ? 'Payout Details' : 'Transaction Summary')
 
   const showFinalSummary = !!payData
@@ -494,7 +494,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
         {/* Body */}
         <div style={bodyStyle}>
-          {/* STEP 1 — Start a Sell (no deposit-details screen; goes straight to payout on success) */}
+          {/* STEP 1 — Start a Payment (no deposit-details screen; goes straight to payout on success) */}
           {step === 1 && (
             <div style={{ display: 'grid', gap: 14 }}>
               <p style={{ margin: 0, color: 'var(--muted)' }}>
