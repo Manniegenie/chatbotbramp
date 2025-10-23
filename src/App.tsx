@@ -5,6 +5,7 @@ import SignUp, { SignUpResult } from './signup'
 import { tokenStore } from './lib/secureStore'
 import { authFetch, getAuthState, setupAutoLogoutTimer, clearAuth } from './lib/tokenManager'
 import SellModal from './sell'
+import SwapModal from './swap'
 import WallpaperSlideshow from './WallpaperSlideshow'
 // Import logo from assets
 import BrampLogo from './assets/logo.jpeg' // Placeholder path
@@ -255,8 +256,10 @@ export default function App() {
   const [showSignIn, setShowSignIn] = useState(false)
   const [showSignUp, setShowSignUp] = useState(false)
   const [showSell, setShowSell] = useState(false)
+  const [showSwap, setShowSwap] = useState(false)
 
   const [openSellAfterAuth, setOpenSellAfterAuth] = useState(false)
+  const [openSwapAfterAuth, setOpenSwapAfterAuth] = useState(false)
 
   const [auth, setAuth] = useState<SignInResult | null>(() => {
     const authState = getAuthState()
@@ -296,12 +299,12 @@ export default function App() {
       console.log('Auto-logout triggered:', reason)
       setAuth(null)
       setShowSell(false)
-      
+
       // Show appropriate message based on reason
-      const message = reason === 'token_expired' 
+      const message = reason === 'token_expired'
         ? 'Your session has expired. Please sign in again.'
         : 'Session timeout reached. Please sign in again.'
-      
+
       setMessages((prev) => [...prev, {
         id: crypto.randomUUID(),
         role: 'assistant',
@@ -318,7 +321,7 @@ export default function App() {
   }, [messages, loading, showSignIn, showSignUp, showSell])
 
   /* ------------------- Price ticker: fetch & formatting ------------------- */
-  const TICKER_SYMBOLS = ['BTC','ETH','USDT','USDC','BNB','MATIC','AVAX','SOL','NGNB']
+  const TICKER_SYMBOLS = ['BTC', 'ETH', 'USDT', 'USDC', 'BNB', 'MATIC', 'AVAX', 'SOL', 'NGNB']
 
   async function fetchTickerPrices(signal?: AbortSignal) {
     try {
@@ -436,6 +439,7 @@ export default function App() {
     clearAuth()
     setAuth(null)
     setShowSell(false)
+    setShowSwap(false)
   }
 
   function isSellCTA(btn: CTAButton): boolean {
@@ -454,6 +458,16 @@ export default function App() {
       return
     }
     setShowSell(true)
+  }
+
+  function handleSwapClick(event?: React.MouseEvent) {
+    event?.preventDefault()
+    if (!auth) {
+      setOpenSwapAfterAuth(true)
+      setShowSignIn(true)
+      return
+    }
+    setShowSwap(true)
   }
 
   function echoFromModalToChat(text: string) {
@@ -710,6 +724,9 @@ export default function App() {
               <button className="btn" onClick={handleSellClick} style={{ background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)' }}>
                 Sell
               </button>
+              <button className="btn" onClick={handleSwapClick} style={{ background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)' }}>
+                Swap
+              </button>
               <button
                 className="btn"
                 style={{ background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border)' }}
@@ -723,7 +740,7 @@ export default function App() {
 
         {showSignIn ? (
           <SignIn
-            onCancel={() => { setShowSignIn(false); setOpenSellAfterAuth(false) }}
+            onCancel={() => { setShowSignIn(false); setOpenSellAfterAuth(false); setOpenSwapAfterAuth(false) }}
             onSuccess={(res) => {
               setAuth(res)
               setShowSignIn(false)
@@ -736,6 +753,7 @@ export default function App() {
                 ts: Date.now(),
               }])
               if (openSellAfterAuth) { setOpenSellAfterAuth(false); setShowSell(true) }
+              if (openSwapAfterAuth) { setOpenSwapAfterAuth(false); setShowSwap(true) }
             }}
           />
         ) : showSignUp ? (
@@ -885,6 +903,7 @@ export default function App() {
         )}
 
         <SellModal open={showSell} onClose={() => setShowSell(false)} onChatEcho={echoFromModalToChat} />
+        <SwapModal open={showSwap} onClose={() => setShowSwap(false)} onChatEcho={echoFromModalToChat} />
 
         <footer className="footer">
           <div className="footer-left">
@@ -902,10 +921,10 @@ export default function App() {
 
           <div className="footer-right">
             <div className="footer-brand">
-              <img 
-                src={BrampLogo} 
-                alt="Bramp Africa Logo" 
-                width="24" 
+              <img
+                src={BrampLogo}
+                alt="Bramp Africa Logo"
+                width="24"
                 height="24"
                 onError={(e) => {
                   // Fallback to a placeholder if logo fails to load
