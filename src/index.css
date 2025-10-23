@@ -1,6 +1,6 @@
 /* ========= Global Theme & Font ========= */
 :root {
-  --font-sans: "Inter", "SF Pro Display", system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-sans: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", Arial, "Apple Color Emoji", "Segoe UI Emoji";
   --bg: #0b0b10;
   --card: #12121a;
   --muted: #ffffffcc;
@@ -60,7 +60,7 @@ body {
 .geist-brand,
 .geist-100, .geist-200, .geist-300, .geist-400,
 .geist-500, .geist-600, .geist-700, .geist-800, .geist-900 {
-  font-family: "Inter", sans-serif; font-optical-sizing: auto;
+  font-family: "SF Pro Display", sans-serif; font-optical-sizing: auto;
 }
 .geist-100{font-weight:100}.geist-200{font-weight:200}.geist-300{font-weight:300}
 .geist-400{font-weight:400}.geist-500{font-weight:500}.geist-600{font-weight:600}
@@ -80,7 +80,7 @@ a:hover { opacity: .92; }
   display: flex;
   flex-direction: column;
   overflow: hidden; /* critical: prevent body scroll, only .messages scrolls */
-  background: var(--bg); /* fallback color while asset loads */
+  background: transparent; /* wallpaper handled by WallpaperSlideshow component */
 }
 
 /* FIXED image layer tied to the viewport (stays static) */
@@ -232,7 +232,7 @@ a:hover { opacity: .92; }
 .bubble.assistant .role { color: var(--accent); font-weight: 700; }
 
 .bubble .text { white-space: pre-wrap; word-wrap: break-word; }
-.bubble.assistant .text { font-style: italic; font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', 'Menlo', monospace; }
+.bubble.assistant .text { font-style: italic; font-family: 'SF Mono', 'Monaco', 'Menlo', 'Courier New', monospace; }
 
 /* CTA buttons inside messages */
 .cta-buttons { display: grid; gap: 10px; margin-top: 12px; }
