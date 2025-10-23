@@ -232,7 +232,13 @@ a:hover { opacity: .92; }
 .bubble.assistant .role { color: var(--accent); font-weight: 700; }
 
 .bubble .text { white-space: pre-wrap; word-wrap: break-word; }
-.bubble.assistant .text { font-style: italic; font-family: 'SF Mono', 'Monaco', 'Menlo', 'Courier New', monospace; }
+.bubble.assistant .text { 
+  font-style: italic; 
+  font-family: 'SF Mono', 'Monaco', 'Menlo', 'Courier New', monospace; 
+  font-size: 14px;
+  text-align: left;
+  line-height: 1.4;
+}
 
 /* CTA buttons inside messages */
 .cta-buttons { display: grid; gap: 10px; margin-top: 12px; }

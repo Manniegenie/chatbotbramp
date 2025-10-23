@@ -502,6 +502,9 @@ a {
 .mobile-bubble.assistant .mobile-bubble-content {
   font-style: italic;
   font-family: 'SF Mono', 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-size: 14px;
+  text-align: left;
+  line-height: 1.4;
 }
 
 .mobile-bubble.user .mobile-bubble-content {
