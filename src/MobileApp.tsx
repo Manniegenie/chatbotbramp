@@ -213,7 +213,7 @@ export default function MobileApp() {
     {
       id: crypto.randomUUID(),
       role: 'assistant',
-      text: "⛳️Hey, there, how can I assist you with crypto today? Sign in to sell your usdt,btc,usdc,sol and many more for NGN to your bank account.",
+      text: "⛳️Hey, there, how can I assist you with crypto today? Sign in to sell your usdt,btc,usdc,sol and many more for NGN to any bank account.",
       ts: Date.now(),
     },
   ])
