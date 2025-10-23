@@ -1,7 +1,7 @@
 :root{ --bg:#0b0b10; --card:#12121a; --muted:#9aa3af; --accent:#7c3aed; --border:#1f2330; --txt:#e5e7eb }
 *{ box-sizing:border-box }
 html,body,#root{ height:100% }
-body{ margin:0; background:transparent; color:var(--txt); font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji" }
+body{ margin:0; background:transparent; color:var(--txt); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, "Segoe UI", Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji" }
 
 .page{ min-height:100%; display:flex; flex-direction:column }
 .header{ position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); background:linear-gradient(180deg, rgba(18,18,26,.9), rgba(18,18,26,.4) 60%, transparent) }
@@ -78,7 +78,7 @@ body{ margin:0; background:transparent; color:var(--txt); font-family: "SF Pro D
 .bubble.user{ align-self:flex-end; background:#1a1428; border-color:#2a1f3d }
 .bubble .role{ font-size:11px; color:var(--muted); margin-bottom:6px }
 .bubble .text{ white-space:pre-wrap; line-height:1.5 }
-.bubble.assistant .text{ font-family: 'SF Mono', 'Monaco', 'Menlo', 'Courier New', monospace; font-style: italic; font-size: 14px; text-align: left; }
+.bubble.assistant .text{ font-family: 'SF Mono', 'Monaco', 'Menlo', 'JetBrains Mono', 'Courier New', monospace; font-style: italic; font-size: 14px; text-align: left; }
 .typing{ color:var(--muted); font-size:13px; padding:6px 2px }
 
 .composer{ margin-top:auto; display:flex; gap:10px; padding-top:10px; border-top:1px solid var(--border) }

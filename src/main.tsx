@@ -23,7 +23,7 @@ import './index.css'
   const stylesheet = document.createElement('link')
   stylesheet.rel = 'stylesheet'
   stylesheet.href =
-    'https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@100..900&family=SF+Mono:wght@100..800&display=swap'
+    'https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..800&display=swap'
 
   document.head.append(preconnect1, preconnect2, stylesheet)
 })()
