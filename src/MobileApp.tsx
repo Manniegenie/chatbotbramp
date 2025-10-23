@@ -238,7 +238,12 @@ export default function MobileApp() {
 
   const endRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const [tickerText, setTickerText] = useState<string>('Loading prices...')
+  const [tickerText, setTickerText] = useState<string>('')
+  
+  // Debug ticker
+  useEffect(() => {
+    console.log('Mobile ticker text:', tickerText)
+  }, [tickerText])
 
   useEffect(() => {
     try {
@@ -671,7 +676,7 @@ export default function MobileApp() {
         </div>
 
         {tickerText && (
-          <div className="mobile-ticker-wrap">
+          <div className="mobile-ticker-wrap" style={{ display: 'block', visibility: 'visible' }}>
             <div className="mobile-ticker">
               {tickerText}  •  {tickerText}
             </div>

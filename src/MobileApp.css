@@ -298,37 +298,29 @@ a {
 .mobile-ticker {
   display: inline-block;
   white-space: nowrap;
-  animation: mobileTickerScroll 10s linear infinite;
-  -webkit-animation: mobileTickerScroll 10s linear infinite;
   font-size: 12px;
   font-weight: 600;
   color: #00ff00;
   line-height: 32px;
-  padding-left: 0;
-  transform: translate3d(0, 0, 0);
-  -webkit-transform: translate3d(0, 0, 0);
-  will-change: transform;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  perspective: 1000px;
-  -webkit-perspective: 1000px;
+  animation: mobileTickerMarquee 10s linear infinite;
+  -webkit-animation: mobileTickerMarquee 10s linear infinite;
 }
 
-@keyframes mobileTickerScroll {
+@keyframes mobileTickerMarquee {
   0% {
-    transform: translate3d(-100%, 0, 0);
+    transform: translateX(100%);
   }
   100% {
-    transform: translate3d(100%, 0, 0);
+    transform: translateX(-100%);
   }
 }
 
-@-webkit-keyframes mobileTickerScroll {
+@-webkit-keyframes mobileTickerMarquee {
   0% {
-    -webkit-transform: translate3d(-100%, 0, 0);
+    -webkit-transform: translateX(100%);
   }
   100% {
-    -webkit-transform: translate3d(100%, 0, 0);
+    -webkit-transform: translateX(-100%);
   }
 }
 
