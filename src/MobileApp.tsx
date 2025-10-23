@@ -770,6 +770,8 @@ export default function MobileApp() {
             >
               Terms of Service
             </a>
+            <div className="mobile-menu-divider"></div>
+            <div className="mobile-menu-copyright">© 2025 Bramp Africa Limited</div>
           </div>
         </div>
       )}
@@ -783,7 +785,6 @@ export default function MobileApp() {
       />
 
       <footer className="mobile-footer">
-        <div className="mobile-footer-text">© 2025 Bramp Africa Limited</div>
       </footer>
     </div>
   )

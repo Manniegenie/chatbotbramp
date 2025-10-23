@@ -933,7 +933,6 @@ export default function App() {
           </div>
 
           <div className="footer-center">
-            <div className="copyright">© 2025 Bramp Africa Limited. Bramp Platforms, LLC.</div>
           </div>
 
           <div className="footer-right">
