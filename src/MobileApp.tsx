@@ -213,7 +213,7 @@ export default function MobileApp() {
     {
       id: crypto.randomUUID(),
       role: 'assistant',
-      text: "👋 Hey! I'm Bramp AI — your crypto assistant. Sign in to get started!",
+      text: "⛳️Hey, there, how can I assist you with crypto today? Sign in to sell your usdt,btc,usdc,sol and many more for NGN to your bank account.",
       ts: Date.now(),
     },
   ])

@@ -24,7 +24,7 @@ body{ margin:0; background:transparent; color:var(--txt); font-family: -apple-sy
   display: inline-block;
   white-space: nowrap;
   will-change: transform;
-  animation: tickerScroll 10s linear infinite;
+  animation: tickerScroll 25s linear infinite;
   padding-left: 100%;
   box-sizing: content-box;
   font-weight: 600;
