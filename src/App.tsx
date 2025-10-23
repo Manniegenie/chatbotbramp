@@ -118,17 +118,34 @@ function shortenUrlForDisplay(raw: string) {
 function inlineRender(text: string, keyPrefix: string): React.ReactNode[] {
   const nodes: React.ReactNode[] = []
   let last = 0
-  text.replace(MD_LINK, (match, label: string, url: string, offset: number) => {
+  
+  // Handle **bold** text first
+  text.replace(/\*\*(.*?)\*\*/g, (match, content: string, offset: number) => {
     if (offset > last) nodes.push(text.slice(last, offset))
     nodes.push(
-      <a key={`${keyPrefix}-md-${offset}`} href={url} target="_blank" rel="noopener noreferrer">
-        {label}
-      </a>
+      <strong key={`${keyPrefix}-bold-${offset}`}>
+        {content}
+      </strong>
     )
     last = offset + match.length
     return match
   })
-  if (last < text.length) nodes.push(text.slice(last))
+  
+  if (last < text.length) {
+    const remainingText = text.slice(last)
+    let linkLast = 0
+    remainingText.replace(MD_LINK, (match, label: string, url: string, offset: number) => {
+      if (offset > linkLast) nodes.push(remainingText.slice(linkLast, offset))
+      nodes.push(
+        <a key={`${keyPrefix}-md-${offset}`} href={url} target="_blank" rel="noopener noreferrer">
+          {label}
+        </a>
+      )
+      linkLast = offset + match.length
+      return match
+    })
+    if (linkLast < remainingText.length) nodes.push(remainingText.slice(linkLast))
+  }
 
   const finalNodes: React.ReactNode[] = []
   nodes.forEach((node, i) => {
@@ -272,7 +289,12 @@ export default function App() {
   })
 
   const endRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null) // Add ref for input focus management
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Parse **text** to <strong>text</strong>
+  function parseBoldText(text: string): string {
+    return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+  } // Add ref for input focus management
 
   // New state: prices for marquee (initially empty)
   const [tickerText, setTickerText] = useState<string>('')

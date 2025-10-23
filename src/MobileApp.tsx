@@ -245,6 +245,49 @@ export default function MobileApp() {
     console.log('Mobile ticker text:', tickerText)
   }, [tickerText])
 
+  // Parse **text** to <strong>text</strong>
+  function parseBoldText(text: string): string {
+    return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+  }
+
+  // Mobile version of renderMessageText
+  function renderMessageText(text: string): React.ReactNode {
+    const paragraphs = text.split(/\r?\n\s*\r?\n/)
+    const rendered: React.ReactNode[] = []
+
+    paragraphs.forEach((para, pi) => {
+      const lines = para.split(/\r?\n/)
+      const isListBlock = lines.length > 1 && lines.every((l) => l.trim().startsWith('- '))
+      if (isListBlock) {
+        rendered.push(
+          <ul key={`ul-${pi}`} style={{ margin: '8px 0', paddingLeft: 18 }}>
+            {lines.map((l, li) => {
+              const cleanText = l.trim().slice(2)
+              return (
+                <li key={li} style={{ margin: '4px 0' }}>
+                  <span dangerouslySetInnerHTML={{ __html: parseBoldText(cleanText) }} />
+                </li>
+              )
+            })}
+          </ul>
+        )
+      } else {
+        rendered.push(
+          <p key={`p-${pi}`} style={{ margin: '8px 0' }}>
+            {lines.map((line, li) => (
+              <React.Fragment key={li}>
+                <span dangerouslySetInnerHTML={{ __html: parseBoldText(line) }} />
+                {li < lines.length - 1 && <br />}
+              </React.Fragment>
+            ))}
+          </p>
+        )
+      }
+    })
+
+    return rendered
+  }
+
   useEffect(() => {
     try {
       const url = new URL(window.location.href)
