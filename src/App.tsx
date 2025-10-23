@@ -245,7 +245,7 @@ export default function App() {
       id: crypto.randomUUID(),
       role: 'assistant',
       text:
-        "⛳️Hey, there, how can I assist you with crypto today? Sign in to pay with crypto to a naira 🇳🇬bank account.",
+        "👋 Hey there! How can I help you with crypto today?\nSign in to easily pay with crypto directly to a Naira bank account.",
       ts: Date.now(),
     },
   ])
