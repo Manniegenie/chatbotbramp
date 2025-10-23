@@ -193,19 +193,21 @@ a {
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
-  background: var(--accent);
+  background: rgba(255, 255, 255, 0.1);
   color: white;
+  backdrop-filter: blur(10px);
   min-height: 36px;
 }
 
 .mobile-auth-btn-secondary {
-  background: transparent;
-  color: var(--txt);
-  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
 }
 
 .mobile-auth-btn:active {
@@ -418,9 +420,9 @@ a {
 .mobile-menu-item {
   width: 100%;
   padding: 16px 20px;
-  border: none;
-  background: transparent;
-  color: var(--txt);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
   text-align: left;
   font-size: 16px;
   cursor: pointer;
@@ -429,6 +431,9 @@ a {
   align-items: center;
   text-decoration: none;
   min-height: 54px;
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  margin: 4px 0;
 }
 
 .mobile-menu-item:active {
