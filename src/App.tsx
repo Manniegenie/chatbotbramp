@@ -726,17 +726,13 @@ export default function App() {
               <span style={{ color: 'var(--muted)', fontSize: 13 }}>
                 Signed in{auth.user?.username ? ` as ${auth.user.username}` : ''}
               </span>
-              <button className="btn" onClick={handleSellClick} style={{ background: 'rgba(255, 255, 255, 0.05)', color: 'var(--accent)', border: '1px solid rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(15px)' }}>
+              <button className="btn" onClick={handleSellClick}>
                 Sell
               </button>
-              <button className="btn" onClick={handleSwapClick} style={{ background: 'rgba(255, 255, 255, 0.05)', color: 'var(--accent)', border: '1px solid rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(15px)' }}>
+              <button className="btn" onClick={handleSwapClick}>
                 Swap
               </button>
-              <button
-                className="btn"
-                style={{ background: 'rgba(255, 255, 255, 0.03)', color: 'var(--muted)', border: '1px solid rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(15px)' }}
-                onClick={signOut}
-              >
+              <button className="btn" onClick={signOut}>
                 Sign out
               </button>
             </div>
