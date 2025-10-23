@@ -63,11 +63,7 @@ body {
   touch-action: pan-y;
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
-  background-image: var(--bg-image-url);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+  /* Background handled by WallpaperSlideshow component */
 }
 
 @supports (-webkit-touch-callout: none) {

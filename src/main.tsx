@@ -3,7 +3,6 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
 import './index.css'
-import bg from './assets/bg.jpg' // <-- import your background image (adjust filename)
 
 //
 // Inject Google Fonts <link> tags (so you don't have to touch index.html)
@@ -29,8 +28,7 @@ import bg from './assets/bg.jpg' // <-- import your background image (adjust fil
   document.head.append(preconnect1, preconnect2, stylesheet)
 })()
 
-// --- set background image CSS variable on :root (bundler will resolve the URL) ---
-document.documentElement.style.setProperty('--bg-image-url', `url(${bg})`)
+// --- Background is now handled by WallpaperSlideshow component ---
 
 //
 // --- Prevent unwanted zooming while maintaining usability ---

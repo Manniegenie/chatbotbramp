@@ -15,13 +15,7 @@
   --composer-h: 64px;
   --max-chat-width: 860px;
 
-  /* Background image controls - set --bg-image-url from JS, e.g.
-     document.documentElement.style.setProperty('--bg-image-url', `url(${bg})`) */
-  --bg-image-url: none;
-  --bg-image-position: center;
-  --bg-image-size: cover;
-  --bg-overlay-top-alpha: 0.50;
-  --bg-overlay-bottom-alpha: 0.9;
+  /* Background is now handled by WallpaperSlideshow component */
 }
 
 /* Reset / touch */
@@ -95,10 +89,7 @@ a:hover { opacity: .92; }
   position: fixed;      /* key: fixed so it doesn't move with .page content */
   inset: 0;             /* covers the full viewport */
   pointer-events: none;
-  background-image: var(--bg-image-url);
-  background-position: var(--bg-image-position);
-  background-size: var(--bg-image-size);
-  background-repeat: no-repeat;
+  /* Background handled by WallpaperSlideshow component */
   z-index: 0;           /* sits behind all UI */
   transform: translateZ(0);
   will-change: transform, opacity;

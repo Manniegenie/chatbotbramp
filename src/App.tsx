@@ -5,6 +5,7 @@ import SignUp, { SignUpResult } from './signup'
 import { tokenStore } from './lib/secureStore'
 import { authFetch, getAuthState, setupAutoLogoutTimer, clearAuth } from './lib/tokenManager'
 import SellModal from './sell'
+import WallpaperSlideshow from './WallpaperSlideshow'
 // Import logo from assets
 import BrampLogo from './assets/logo.jpeg' // Placeholder path
 
@@ -670,6 +671,7 @@ export default function App() {
         `}
       </style>
       <div className="page">
+        <WallpaperSlideshow />
         <header ref={headerRef} className="header">
           <div className="brand">
             <p className="tag">Secure access to digital assets & payments — via licensed partners.</p>
