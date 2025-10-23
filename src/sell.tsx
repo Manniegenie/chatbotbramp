@@ -908,56 +908,52 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     </div>,
     document.body
   )
-}
-    }
 
-    setPayLoading(true)
+  setPayLoading(true)
 
-    try {
+  try {
 
-      const res = await fetch(`${API_BASE}/sell/payout`, {
+    const res = await fetch(`${API_BASE}/sell/payout`, {
 
-        method: 'POST',
+      method: 'POST',
 
-        headers: getHeaders(),
+      headers: getHeaders(),
 
-        body: JSON.stringify({
+      body: JSON.stringify({
 
-          paymentId: initData.paymentId,
+        paymentId: initData.paymentId,
 
-          bankName,
+        bankName,
 
-          bankCode,
+        bankCode,
 
-          accountNumber,
+        accountNumber,
 
-          accountName,
+        accountName,
 
-        }),
+      }),
 
-      })
+    })
 
-      const data: PayoutRes = await res.json()
+    const data: PayoutRes = await res.json()
 
-      if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
+    if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
 
-      setPayData(data)
+    setPayData(data)
 
-      onChatEcho?.(buildPayoutRecap(initData, data))
+    onChatEcho?.(buildPayoutRecap(initData, data))
 
-      // ⏱ Start a fresh local 10:00 window AFTER payout is captured
+    // ⏱ Start a fresh local 10:00 window AFTER payout is captured
 
-      setSummaryExpiresAt(new Date(Date.now() + 10 * 60 * 1000).toISOString())
+    setSummaryExpiresAt(new Date(Date.now() + 10 * 60 * 1000).toISOString())
 
-    } catch (err: any) {
+  } catch (err: any) {
 
-      setPayError(err.message || 'Failed to save payout details')
+    setPayError(err.message || 'Failed to save payout details')
 
-    } finally {
+  } finally {
 
-      setPayLoading(false)
-
-    }
+    setPayLoading(false)
 
   }
 
@@ -973,7 +969,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
       setTimeout(() => setCopiedKey(null), 1200)
 
-    }).catch(() => {})
+    }).catch(() => { })
 
   }
 
@@ -987,7 +983,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
     step === 1 ? 'Start a Payment'
 
-    : (!payData ? 'Payout Details' : 'Transaction Summary')
+      : (!payData ? 'Payout Details' : 'Transaction Summary')
 
 
 
@@ -997,11 +993,11 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
   // Build QR data - include memo if present for compatible wallets
 
-  const qrData = initData ? 
+  const qrData = initData ?
 
-    (initData.deposit.memo ? 
+    (initData.deposit.memo ?
 
-      `${initData.deposit.address}?memo=${initData.deposit.memo}` : 
+      `${initData.deposit.address}?memo=${initData.deposit.memo}` :
 
       initData.deposit.address
 
@@ -1067,7 +1063,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
               </p>
 
-              
+
 
               <div style={{ ...badgeWarn, margin: '8px 0' }}>
 
@@ -1439,7 +1435,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
                           accountName
 
-                        ) : 
+                        ) :
 
                           'Enter account number'
 
@@ -1497,13 +1493,13 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
                   {/* Enhanced deposit details section with QR code */}
 
-                  <div style={{ 
+                  <div style={{
 
-                    display: 'grid', 
+                    display: 'grid',
 
-                    gridTemplateColumns: '1fr auto', 
+                    gridTemplateColumns: '1fr auto',
 
-                    gap: 16, 
+                    gap: 16,
 
                     alignItems: 'start',
 
@@ -1521,7 +1517,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
                       <h4 style={{ margin: 0, fontSize: 14, color: 'var(--accent)' }}>📍 Deposit Details</h4>
 
-                      
+
 
                       <div>
 
@@ -1703,9 +1699,9 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
               : (showFinalSummary
 
-                  ? 'Copy the deposit details and send the exact amount within the window.'
+                ? 'Copy the deposit details and send the exact amount within the window.'
 
-                  : 'Ensure your bank details match your account name.')}
+                : 'Ensure your bank details match your account name.')}
 
           </div>
 
@@ -1750,5 +1746,3 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     document.body
 
   )
-
-}
