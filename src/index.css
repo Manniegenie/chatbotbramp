@@ -167,7 +167,7 @@ a:hover { opacity: .92; }
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 200px);
+  min-height: 0;
 }
 
 /* chat-top: sticky under header; contains the "try" tabs so they remain static */
