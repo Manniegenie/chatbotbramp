@@ -56,7 +56,7 @@ body {
   padding: 0;
   background: var(--bg);
   color: var(--txt);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue',
+  font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue',
     'Arial', sans-serif;
   font-size: 16px;
   line-height: 1.5;
@@ -501,7 +501,7 @@ a {
 
 .mobile-bubble.assistant .mobile-bubble-content {
   font-style: italic;
-  font-family: 'Georgia', 'Times New Roman', serif;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', 'Menlo', monospace;
 }
 
 .mobile-bubble.user .mobile-bubble-content {
