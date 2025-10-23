@@ -92,7 +92,7 @@ a:hover { opacity: .92; }
   pointer-events: none;
   background-image: var(--wallpaper-url);
   background-position: center;
-  background-size: cover;
+  background-size: contain;
   background-repeat: no-repeat;
   z-index: 0;           /* sits behind all UI */
   transform: translateZ(0);

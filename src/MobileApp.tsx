@@ -5,6 +5,7 @@ import { authFetch, getAuthState, setupAutoLogoutTimer, clearAuth } from './lib/
 import MobileSignIn, { SignInResult } from './MobileSignIn'
 import MobileSignUp, { SignUpResult } from './MobileSignUp'
 import MobileSell from './MobileSell'
+import WallpaperSlideshow from './WallpaperSlideshow'
 import BrampLogo from './assets/logo.jpeg'
 import './MobileApp.css'
 
@@ -607,6 +608,7 @@ export default function MobileApp() {
 
   return (
     <div className="mobile-page">
+      <WallpaperSlideshow />
       <header className="mobile-header">
         <div className="mobile-header-top">
           <div className="mobile-brand">
