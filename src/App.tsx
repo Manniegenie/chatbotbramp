@@ -606,13 +606,15 @@ export default function App() {
           /* Footer: responsive layout and alignment fixes */
           .footer {
             padding: 12px 16px;
-            border-top: 1px solid var(--border);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
             flex-wrap: wrap;
-            background: transparent;
+            background: rgba(18, 18, 26, 0.1);
+            backdrop-filter: blur(15px);
+            color: rgba(255, 255, 255, 0.7);
           }
 
           /* groups inside footer for layout control */
@@ -635,13 +637,13 @@ export default function App() {
 
           .footer a {
             font-size: 13px;
-            color: var(--muted);
+            color: rgba(255, 255, 255, 0.6);
             text-decoration: none;
             padding: 6px 0;
           }
           .footer a:hover {
             text-decoration: underline;
-            color: var(--txt);
+            color: rgba(255, 255, 255, 0.9);
           }
 
           .footer-brand {
@@ -666,7 +668,7 @@ export default function App() {
           }
           .footer-center .copyright {
             font-size: 12px;
-            color: var(--muted);
+            color: rgba(255, 255, 255, 0.6);
             white-space: nowrap;
           }
 

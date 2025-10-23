@@ -773,15 +773,16 @@ a {
 .mobile-footer {
   padding: 12px 16px;
   padding-bottom: max(12px, var(--safe-bottom));
-  background: var(--card);
-  border-top: 1px solid var(--border);
+  background: rgba(18, 18, 26, 0.1);
+  backdrop-filter: blur(15px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   text-align: center;
   flex-shrink: 0;
 }
 
 .mobile-footer-text {
   font-size: 12px;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.6);
   line-height: 1.4;
 }
 
