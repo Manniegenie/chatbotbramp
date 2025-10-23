@@ -213,7 +213,7 @@ export default function MobileApp() {
     {
       id: crypto.randomUUID(),
       role: 'assistant',
-      text: "👋 Hey there! How can I help you with crypto today?\nSign in to easily pay with crypto directly to a Naira bank account.",
+      text: "🚀Ready to move your crypto? Sign in to send or pay instantly to any Naira bank account🏦.",
       ts: Date.now(),
     },
   ])
