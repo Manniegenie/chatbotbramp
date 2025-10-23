@@ -231,7 +231,6 @@ a:hover { opacity: .92; }
 
 .bubble .text { white-space: pre-wrap; word-wrap: break-word; }
 .bubble.assistant .text { 
-  font-style: italic; 
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", Arial, "Apple Color Emoji", "Segoe UI Emoji"; 
   font-size: 14px;
   text-align: left;

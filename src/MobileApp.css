@@ -497,7 +497,6 @@ a {
 }
 
 .mobile-bubble.assistant .mobile-bubble-content {
-  font-style: italic;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
   font-size: 14px;
   text-align: left;
