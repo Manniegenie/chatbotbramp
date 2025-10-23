@@ -721,7 +721,7 @@ export default function App() {
                 Signed in{auth.user?.username ? ` as ${auth.user.username}` : ''}
               </span>
               <button className="btn" onClick={handleSellClick}>
-                Sell
+                Pay
               </button>
               <button className="btn" onClick={handleSwapClick}>
                 Swap

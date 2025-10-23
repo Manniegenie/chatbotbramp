@@ -648,9 +648,9 @@ export default function MobileApp() {
                 <button
                   className="mobile-sell-btn"
                   onClick={handleSellClick}
-                  aria-label="Sell Crypto"
+                  aria-label="Pay Crypto"
                 >
-                  Sell
+                  Pay
                 </button>
                 <button
                   className="mobile-menu-btn"
@@ -689,7 +689,7 @@ export default function MobileApp() {
           <div className="mobile-menu" onClick={(e) => e.stopPropagation()}>
             <div className="mobile-menu-user">{auth.user?.username || 'User'}</div>
             <button className="mobile-menu-item primary" onClick={handleSellClick}>
-              Sell Crypto
+              Pay Crypto
             </button>
             <button className="mobile-menu-item" onClick={signOut}>
               Sign Out
