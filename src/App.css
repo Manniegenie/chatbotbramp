@@ -24,12 +24,12 @@ body{ margin:0; background:transparent; color:var(--txt); font-family: -apple-sy
   display: inline-block;
   white-space: nowrap;
   will-change: transform;
-  animation: tickerScroll 18s linear infinite;
+  animation: tickerScroll 10s linear infinite;
   padding-left: 100%;
   box-sizing: content-box;
   font-weight: 600;
   font-size: 13px;
-  color: var(--accent);
+  color: #00ff00;
   transform: translate3d(0, 0, 0);
   -webkit-transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
@@ -62,14 +62,12 @@ body{ margin:0; background:transparent; color:var(--txt); font-family: -apple-sy
 
 .ticker-wrap::before {
   left: 0;
-  background: transparent;
 }
 
 .ticker-wrap::after {
   right: 0;
-  background: transparent;
 }
-.btn{ appearance:none; background:rgba(255, 255, 255, 0.05); color:#fff; border:1px solid rgba(255, 255, 255, 0.15); padding:10px 14px; border-radius:10px; font-weight:600; text-decoration:none; cursor:pointer; backdrop-filter:blur(15px) }
+.btn{ appearance:none; color:#fff; border:1px solid rgba(255, 255, 255, 0.15); padding:10px 14px; border-radius:10px; font-weight:600; text-decoration:none; cursor:pointer }
 .btn[disabled]{ opacity:.6; cursor:not-allowed }
 
 .chat{ max-width:860px; margin:0 auto; padding:20px; flex:1; width:100%; display:flex; flex-direction:column }

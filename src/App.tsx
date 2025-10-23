@@ -526,8 +526,6 @@ export default function App() {
             position: sticky;
             top: 0;
             z-index: 60;
-            background: rgba(18, 18, 26, 0.1);
-            backdrop-filter: blur(15px);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -580,11 +578,9 @@ export default function App() {
           }
           .ticker-wrap::before {
             left: 0;
-            background: transparent;
           }
           .ticker-wrap::after {
             right: 0;
-            background: transparent;
           }
 
           @keyframes tickerScroll {
@@ -612,8 +608,6 @@ export default function App() {
             justify-content: space-between;
             gap: 12px;
             flex-wrap: wrap;
-            background: rgba(18, 18, 26, 0.1);
-            backdrop-filter: blur(15px);
             color: rgba(255, 255, 255, 0.7);
           }
 

@@ -123,7 +123,6 @@ a {
   flex-direction: column;
   overflow: hidden;
   position: relative;
-  background: transparent;
 }
 
 .mobile-page::before {
@@ -157,7 +156,6 @@ a {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: transparent;
   border-bottom: none;
   padding-top: max(12px, var(--safe-top));
   flex-shrink: 0;
@@ -219,15 +217,12 @@ a {
   white-space: nowrap;
   background: rgba(255, 255, 255, 0.05);
   color: white;
-  backdrop-filter: blur(15px);
   min-height: 36px;
 }
 
 .mobile-auth-btn-secondary {
-  background: rgba(255, 255, 255, 0.03);
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(15px);
 }
 
 .mobile-auth-btn:active {
@@ -249,10 +244,8 @@ a {
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
-  background: rgba(255, 255, 255, 0.05);
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(15px);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -297,7 +290,6 @@ a {
   position: relative;
   margin: 0 16px 8px;
   border-radius: 8px;
-  background: transparent;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -306,11 +298,11 @@ a {
 .mobile-ticker {
   display: inline-block;
   white-space: nowrap;
-  animation: mobileTickerScroll 20s linear infinite;
-  -webkit-animation: mobileTickerScroll 20s linear infinite;
+  animation: mobileTickerScroll 10s linear infinite;
+  -webkit-animation: mobileTickerScroll 10s linear infinite;
   font-size: 12px;
   font-weight: 600;
-  color: white;
+  color: #00ff00;
   line-height: 32px;
   padding-left: 0;
   transform: translate3d(0, 0, 0);
@@ -324,19 +316,19 @@ a {
 
 @keyframes mobileTickerScroll {
   0% {
-    transform: translate3d(100%, 0, 0);
+    transform: translate3d(-100%, 0, 0);
   }
   100% {
-    transform: translate3d(-100%, 0, 0);
+    transform: translate3d(100%, 0, 0);
   }
 }
 
 @-webkit-keyframes mobileTickerScroll {
   0% {
-    -webkit-transform: translate3d(100%, 0, 0);
+    -webkit-transform: translate3d(-100%, 0, 0);
   }
   100% {
-    -webkit-transform: translate3d(-100%, 0, 0);
+    -webkit-transform: translate3d(100%, 0, 0);
   }
 }
 
@@ -353,12 +345,10 @@ a {
 
 .mobile-ticker-wrap::before {
   left: 0;
-  background: transparent;
 }
 
 .mobile-ticker-wrap::after {
   right: 0;
-  background: transparent;
 }
 
 /* ============================================
@@ -434,7 +424,6 @@ a {
   align-items: center;
   text-decoration: none;
   min-height: 54px;
-  backdrop-filter: blur(15px);
   border-radius: 8px;
   margin: 4px 0;
 }
@@ -485,7 +474,6 @@ a {
 }
 
 .mobile-messages::-webkit-scrollbar-track {
-  background: transparent;
 }
 
 .mobile-messages::-webkit-scrollbar-thumb {
@@ -811,7 +799,6 @@ a {
   padding: 12px 16px;
   padding-bottom: max(12px, var(--safe-bottom));
   background: rgba(18, 18, 26, 0.1);
-  backdrop-filter: blur(15px);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   text-align: center;
   flex-shrink: 0;
