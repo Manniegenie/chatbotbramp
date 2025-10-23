@@ -64,6 +64,10 @@ body {
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
   /* Background handled by WallpaperSlideshow component */
+  /* Full screen PWA support */
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile browsers */
+  overflow: hidden;
 }
 
 @supports (-webkit-touch-callout: none) {
@@ -72,6 +76,25 @@ body {
     min-height: -webkit-fill-available;
     background-attachment: scroll;
   }
+}
+
+/* Full screen PWA - extend into status bar areas */
+.mobile-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Ensure wallpaper covers full screen including status bar */
+.wallpaper-background {
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
 }
 
 button {
