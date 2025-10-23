@@ -54,7 +54,7 @@ body,
 body {
   margin: 0;
   padding: 0;
-  background: transparent;
+  background: var(--bg);
   color: var(--txt);
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, 'Segoe UI', 'Roboto', 'Helvetica Neue',
     'Arial', sans-serif;
@@ -64,16 +64,6 @@ body {
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
   /* Background handled by WallpaperSlideshow component */
-}
-
-/* Status bar styling - make it match wallpaper */
-html {
-  background: transparent;
-}
-
-/* Ensure status bar area shows wallpaper */
-.mobile-page {
-  background: transparent;
 }
 
 @supports (-webkit-touch-callout: none) {
