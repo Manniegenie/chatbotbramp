@@ -7,9 +7,9 @@ import './index.css'
 //
 // Inject Google Fonts <link> tags (so you don't have to touch index.html)
 //
-;(function injectGeistLinks() {
+;(function injectSFFonts() {
   // avoid duplicates if HMR reloads
-  if (document.querySelector('link[href*="family=Geist"]')) return
+  if (document.querySelector('link[href*="family=SF+Pro+Display"]')) return
 
   const preconnect1 = document.createElement('link')
   preconnect1.rel = 'preconnect'
