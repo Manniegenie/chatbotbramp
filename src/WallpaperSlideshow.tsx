@@ -21,31 +21,71 @@ interface WallpaperSlideshowProps {
 
 const WallpaperSlideshow: React.FC<WallpaperSlideshowProps> = ({ className = '' }) => {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [nextIndex, setNextIndex] = useState(1)
+  const [isTransitioning, setIsTransitioning] = useState(false)
 
   useEffect(() => {
-    // Set initial wallpaper
-    document.documentElement.style.setProperty('--wallpaper-url', `url(${WALLPAPERS[0]})`)
-    document.documentElement.style.setProperty('--wallpaper-next-url', `url(${WALLPAPERS[1]})`)
-    
     const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => {
-        const nextIdx = (prevIndex + 1) % WALLPAPERS.length
-        const nextNextIdx = (nextIdx + 1) % WALLPAPERS.length
-        
-        // Smooth crossfade transition
-        document.documentElement.style.setProperty('--wallpaper-url', `url(${WALLPAPERS[nextIdx]})`)
-        document.documentElement.style.setProperty('--wallpaper-next-url', `url(${WALLPAPERS[nextNextIdx]})`)
-        
-        setNextIndex(nextNextIdx)
-        return nextIdx
-      })
+      setIsTransitioning(true)
+      
+      // Start transition
+      setTimeout(() => {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % WALLPAPERS.length)
+        setIsTransitioning(false)
+      }, 1500) // Half of transition duration
     }, 15000) // 15 seconds
 
     return () => clearInterval(interval)
   }, [])
 
-  return null // This component only sets CSS variables, no DOM elements
+  return (
+    <div className={`wallpaper-slideshow ${className}`}>
+      <style>{`
+        .wallpaper-slideshow {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: -1;
+          overflow: hidden;
+        }
+
+        .wallpaper-slide {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+          opacity: 0;
+          transition: opacity 3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .wallpaper-slide.active {
+          opacity: 1;
+        }
+
+        .wallpaper-slide.transitioning {
+          opacity: 0.5;
+        }
+      `}</style>
+      {WALLPAPERS.map((wallpaper, index) => (
+        <div
+          key={index}
+          className={`wallpaper-slide ${
+            index === currentIndex ? 'active' : ''
+          } ${
+            isTransitioning && index === (currentIndex + 1) % WALLPAPERS.length ? 'transitioning' : ''
+          }`}
+          style={{
+            backgroundImage: `url(${wallpaper})`
+          }}
+        />
+      ))}
+    </div>
+  )
 }
 
 export default WallpaperSlideshow
