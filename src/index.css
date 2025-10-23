@@ -128,10 +128,8 @@ a:hover { opacity: .92; }
   justify-content: space-between;
   padding: calc(10px + var(--sa-top)) 16px 10px;
   min-height: calc(var(--appbar-h) + var(--sa-top));
-  border-bottom: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(18,18,26,.95), rgba(18,18,26,.6) 60%, transparent);
-  backdrop-filter: saturate(120%) blur(6px);
-  -webkit-backdrop-filter: saturate(120%) blur(6px);
+  border-bottom: none;
+  background: transparent;
   gap: 12px;
 }
 
@@ -234,7 +232,7 @@ a:hover { opacity: .92; }
 .bubble .text { white-space: pre-wrap; word-wrap: break-word; }
 .bubble.assistant .text { 
   font-style: italic; 
-  font-family: 'SF Mono', 'Monaco', 'Menlo', 'JetBrains Mono', 'Courier New', monospace; 
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", Arial, "Apple Color Emoji", "Segoe UI Emoji"; 
   font-size: 14px;
   text-align: left;
   line-height: 1.4;

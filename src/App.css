@@ -4,7 +4,7 @@ html,body,#root{ height:100% }
 body{ margin:0; background:transparent; color:var(--txt); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, "Segoe UI", Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji" }
 
 .page{ min-height:100%; display:flex; flex-direction:column }
-.header{ position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); background:linear-gradient(180deg, rgba(18,18,26,.9), rgba(18,18,26,.4) 60%, transparent) }
+.header{ position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:none; background:transparent }
 .brand{ display:flex; gap:12px; align-items:center; min-width:0; flex:1 }
 .logo{ width:36px; height:36px; border-radius:10px; background:var(--accent); display:grid; place-items:center; box-shadow:0 8px 24px rgba(124,58,237,.35) }
 .tag{ margin:0; color:var(--muted); font-size:12px }
@@ -62,12 +62,12 @@ body{ margin:0; background:transparent; color:var(--txt); font-family: -apple-sy
 
 .ticker-wrap::before {
   left: 0;
-  background: linear-gradient(90deg, rgba(18,18,26,1) 0%, rgba(18,18,26,0) 100%);
+  background: transparent;
 }
 
 .ticker-wrap::after {
   right: 0;
-  background: linear-gradient(270deg, rgba(18,18,26,1) 0%, rgba(18,18,26,0) 100%);
+  background: transparent;
 }
 .btn{ appearance:none; background:var(--accent); color:white; border:0; padding:10px 14px; border-radius:10px; font-weight:600; text-decoration:none; cursor:pointer }
 .btn[disabled]{ opacity:.6; cursor:not-allowed }
@@ -78,7 +78,7 @@ body{ margin:0; background:transparent; color:var(--txt); font-family: -apple-sy
 .bubble.user{ align-self:flex-end; background:#1a1428; border-color:#2a1f3d }
 .bubble .role{ font-size:11px; color:var(--muted); margin-bottom:6px }
 .bubble .text{ white-space:pre-wrap; line-height:1.5 }
-.bubble.assistant .text{ font-family: 'SF Mono', 'Monaco', 'Menlo', 'JetBrains Mono', 'Courier New', monospace; font-style: italic; font-size: 14px; text-align: left; }
+.bubble.assistant .text{ font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, "Segoe UI", Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji"; font-style: italic; font-size: 14px; text-align: left; }
 .typing{ color:var(--muted); font-size:13px; padding:6px 2px }
 
 .composer{ margin-top:auto; display:flex; gap:10px; padding-top:10px; border-top:1px solid var(--border) }

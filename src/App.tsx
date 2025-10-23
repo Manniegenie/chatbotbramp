@@ -580,11 +580,11 @@ export default function App() {
           }
           .ticker-wrap::before {
             left: 0;
-            background: linear-gradient(90deg, rgba(18,18,26,1) 0%, rgba(18,18,26,0) 100%);
+            background: transparent;
           }
           .ticker-wrap::after {
             right: 0;
-            background: linear-gradient(270deg, rgba(18,18,26,1) 0%, rgba(18,18,26,0) 100%);
+            background: transparent;
           }
 
           @keyframes tickerScroll {
