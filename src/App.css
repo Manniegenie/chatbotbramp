@@ -29,7 +29,7 @@ body{ margin:0; background:transparent; color:var(--txt); font-family: -apple-sy
   box-sizing: content-box;
   font-weight: 600;
   font-size: 13px;
-  color: #00ff00;
+  color: #007337;
   transform: translate3d(0, 0, 0);
   -webkit-transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
