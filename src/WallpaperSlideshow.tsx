@@ -17,7 +17,7 @@ const WallpaperSlideshow: React.FC<WallpaperSlideshowProps> = ({ className = '' 
           height: 100vh;
           z-index: -10;
           background-image: url(${wallpaper1});
-          background-size: cover;
+          background-size: contain;
           background-position: center;
           background-repeat: no-repeat;
           background-attachment: fixed;
