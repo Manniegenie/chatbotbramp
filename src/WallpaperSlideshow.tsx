@@ -34,20 +34,8 @@ const WallpaperSlideshow: React.FC<WallpaperSlideshowProps> = ({ className = '' 
   }, [])
 
   return (
-    <div className={`wallpaper-slideshow ${className}`}>
-      {WALLPAPERS.map((wallpaper, index) => (
-        <div
-          key={index}
-          className={`wallpaper-slide ${index === currentIndex ? 'active' : ''}`}
-          style={{
-            backgroundImage: `url(${wallpaper})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat'
-          }}
-        />
-      ))}
-      <style jsx>{`
+    <>
+      <style>{`
         .wallpaper-slideshow {
           position: fixed;
           top: 0;
@@ -84,7 +72,21 @@ const WallpaperSlideshow: React.FC<WallpaperSlideshowProps> = ({ className = '' 
           z-index: 1;
         }
       `}</style>
-    </div>
+      <div className={`wallpaper-slideshow ${className}`}>
+        {WALLPAPERS.map((wallpaper, index) => (
+          <div
+            key={index}
+            className={`wallpaper-slide ${index === currentIndex ? 'active' : ''}`}
+            style={{
+              backgroundImage: `url(${wallpaper})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat'
+            }}
+          />
+        ))}
+      </div>
+    </>
   )
 }
 
