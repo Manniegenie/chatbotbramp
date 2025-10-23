@@ -15,7 +15,8 @@
   --composer-h: 64px;
   --max-chat-width: 860px;
 
-  /* Background is now handled by WallpaperSlideshow component */
+  /* Wallpaper slideshow CSS variable */
+  --wallpaper-url: none;
 }
 
 /* Reset / touch */
@@ -89,10 +90,14 @@ a:hover { opacity: .92; }
   position: fixed;      /* key: fixed so it doesn't move with .page content */
   inset: 0;             /* covers the full viewport */
   pointer-events: none;
-  /* Background handled by WallpaperSlideshow component */
+  background-image: var(--wallpaper-url);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
   z-index: 0;           /* sits behind all UI */
   transform: translateZ(0);
-  will-change: transform, opacity;
+  will-change: background-image;
+  transition: background-image 2s ease-in-out;
   /* slight smoothing for large images */
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;

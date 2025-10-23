@@ -23,71 +23,22 @@ const WallpaperSlideshow: React.FC<WallpaperSlideshowProps> = ({ className = '' 
   const [currentIndex, setCurrentIndex] = useState(0)
 
   useEffect(() => {
-    // Start with wallpaper1.jpg (index 0) immediately
-    setCurrentIndex(0)
+    // Set initial wallpaper
+    document.documentElement.style.setProperty('--wallpaper-url', `url(${WALLPAPERS[0]})`)
     
     const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % WALLPAPERS.length)
+      setCurrentIndex((prevIndex) => {
+        const nextIndex = (prevIndex + 1) % WALLPAPERS.length
+        // Update CSS variable with new wallpaper
+        document.documentElement.style.setProperty('--wallpaper-url', `url(${WALLPAPERS[nextIndex]})`)
+        return nextIndex
+      })
     }, 15000) // 15 seconds
 
     return () => clearInterval(interval)
   }, [])
 
-  return (
-    <>
-      <style>{`
-        .wallpaper-slideshow {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          z-index: -1;
-          overflow: hidden;
-        }
-
-        .wallpaper-slide {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          opacity: 0;
-          transition: opacity 2s ease-in-out;
-        }
-
-        .wallpaper-slide.active {
-          opacity: 1;
-        }
-
-        /* Ensure slideshow is behind all content */
-        .wallpaper-slideshow::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(18, 18, 26, 0.3);
-          z-index: 1;
-        }
-      `}</style>
-      <div className={`wallpaper-slideshow ${className}`}>
-        {WALLPAPERS.map((wallpaper, index) => (
-          <div
-            key={index}
-            className={`wallpaper-slide ${index === currentIndex ? 'active' : ''}`}
-            style={{
-              backgroundImage: `url(${wallpaper})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat'
-            }}
-          />
-        ))}
-      </div>
-    </>
-  )
+  return null // This component only sets CSS variables, no DOM elements
 }
 
 export default WallpaperSlideshow
