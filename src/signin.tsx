@@ -175,33 +175,16 @@ export default function SignIn({
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <form onSubmit={submit}>
               <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Phone number</label>
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                <span
-                  style={{
-                    position: 'absolute',
-                    left: '12px',
-                    color: 'var(--txt)',
-                    fontSize: '16px',
-                    pointerEvents: 'none',
-                    zIndex: 1,
-                  }}
-                >
-                  +234
-                </span>
-                <input
-                  placeholder="08123456789"
-                  value={phone}
-                  onChange={(e) => handlePhoneChange(e.target.value)}
-                  inputMode="numeric"
-                  autoFocus
-                  style={{
-                    ...inputStyle,
-                    paddingLeft: '60px',
-                  }}
-                  className="no-zoom"
-                  maxLength={10}
-                />
-              </div>
+              <input
+                placeholder="08123456789"
+                value={phone}
+                onChange={(e) => handlePhoneChange(e.target.value)}
+                inputMode="numeric"
+                autoFocus
+                style={inputStyle}
+                className="no-zoom"
+                maxLength={10}
+              />
 
               <div style={{ height: 8 }} />
 

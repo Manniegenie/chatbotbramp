@@ -178,18 +178,15 @@ export default function MobileSignIn({
           <form onSubmit={submit} className="mobile-auth-form">
             <label className="mobile-auth-input-wrap">
               <span className="mobile-auth-label">Phone number</span>
-              <div className="mobile-auth-phone-input">
-                <span className="mobile-auth-phone-prefix">+234</span>
-                <input
-                  className="mobile-auth-input"
-                  placeholder="08123456789"
-                  value={phone}
-                  onChange={(e) => handlePhoneChange(e.target.value)}
-                  inputMode="numeric"
-                  autoFocus
-                  maxLength={10}
-                />
-              </div>
+              <input
+                className="mobile-auth-input"
+                placeholder="08123456789"
+                value={phone}
+                onChange={(e) => handlePhoneChange(e.target.value)}
+                inputMode="numeric"
+                autoFocus
+                maxLength={10}
+              />
             </label>
 
             <label className="mobile-auth-input-wrap">
