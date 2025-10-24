@@ -703,6 +703,14 @@ export default function MobileApp() {
                   Pay
                 </button>
                 <button
+                  className="mobile-sell-btn"
+                  onClick={handleKycClick}
+                  style={{ opacity: 0.6, cursor: 'not-allowed', marginLeft: '8px' }}
+                  aria-label="KYC"
+                >
+                  KYC
+                </button>
+                <button
                   className="mobile-menu-btn"
                   onClick={() => setShowMenu(!showMenu)}
                   aria-label="Menu"
@@ -740,9 +748,6 @@ export default function MobileApp() {
             <div className="mobile-menu-user">{auth.user?.username || 'User'}</div>
             <button className="mobile-menu-item primary" onClick={handleSellClick}>
               Pay Crypto
-            </button>
-            <button className="mobile-menu-item" onClick={handleKycClick} style={{ opacity: 0.6, cursor: 'not-allowed' }}>
-              KYC
             </button>
             <button className="mobile-menu-item" onClick={signOut}>
               Sign Out
