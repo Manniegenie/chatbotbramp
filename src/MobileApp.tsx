@@ -484,6 +484,13 @@ export default function MobileApp() {
     setShowSell(true)
   }
 
+  function handleKycClick(event?: React.MouseEvent) {
+    event?.preventDefault()
+    setShowMenu(false)
+    // KYC functionality disabled for now
+    console.log('KYC button clicked - functionality disabled')
+  }
+
   function echoFromModalToChat(text: string) {
     if (!text) return
     setMessages((prev) => [
@@ -733,6 +740,9 @@ export default function MobileApp() {
             <div className="mobile-menu-user">{auth.user?.username || 'User'}</div>
             <button className="mobile-menu-item primary" onClick={handleSellClick}>
               Pay Crypto
+            </button>
+            <button className="mobile-menu-item" onClick={handleKycClick} style={{ opacity: 0.6, cursor: 'not-allowed' }}>
+              KYC
             </button>
             <button className="mobile-menu-item" onClick={signOut}>
               Sign Out

@@ -302,8 +302,10 @@ a {
   font-weight: 600;
   color: #007337;
   line-height: 32px;
-  animation: mobileTickerMarquee 25s linear infinite;
-  -webkit-animation: mobileTickerMarquee 25s linear infinite;
+  animation: mobileTickerMarquee 40s linear infinite;
+  -webkit-animation: mobileTickerMarquee 40s linear infinite;
+  animation-delay: 0s;
+  -webkit-animation-delay: 0s;
 }
 
 @keyframes mobileTickerMarquee {
