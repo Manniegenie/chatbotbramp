@@ -435,6 +435,14 @@ a {
   margin: 8px 0;
 }
 
+.mobile-menu-copyright {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  text-align: center;
+  padding: 8px 16px;
+  margin-top: 8px;
+}
+
 /* ============================================
    Mobile Chat Container
    ============================================ */
@@ -520,6 +528,7 @@ a {
   text-align: left;
   line-height: 1.4;
 }
+.mobile-bubble .mobile-bubble-content strong { font-weight: bold; }
 
 .mobile-bubble.user .mobile-bubble-content {
   background: linear-gradient(135deg, rgba(0, 115, 55, 0.15), rgba(0, 115, 55, 0.08));
@@ -689,7 +698,7 @@ a {
   display: flex;
   gap: 8px;
   padding: 12px;
-  padding-bottom: max(12px, var(--safe-bottom));
+  padding-bottom: max(32px, var(--safe-bottom));
   background: linear-gradient(0deg, var(--bg) 70%, transparent);
   border-top: 1px solid var(--border);
   z-index: 10;

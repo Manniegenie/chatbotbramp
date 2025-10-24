@@ -147,11 +147,11 @@ function buildPayoutRecap(init: InitiateSellRes | null, p: PayoutRes) {
 
 function QRCode({ data, size = 120 }: { data: string; size?: number }) {
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(data)}&format=svg&bgcolor=0f1117&color=ffffff&margin=10`
-  
+
   return (
     <div className="mobile-qr-container">
-      <img 
-        src={qrUrl} 
+      <img
+        src={qrUrl}
         alt="QR Code for deposit address"
         className="mobile-qr-code"
         style={{ width: size, height: size }}
@@ -168,6 +168,8 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
   const [token, setToken] = useState<TokenSym>('USDT')
   const [network, setNetwork] = useState(NETWORKS_BY_TOKEN['USDT'][0].code)
   const [amount, setAmount] = useState<string>('100')
+  const [currency, setCurrency] = useState<'USD' | 'NGN'>('USD')
+  const [nairaAmount, setNairaAmount] = useState<string>('')
   const [initLoading, setInitLoading] = useState(false)
   const [initError, setInitError] = useState<string | null>(null)
   const [initData, setInitData] = useState<InitiateSellRes | null>(null)
@@ -200,6 +202,8 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
     setToken('USDT')
     setNetwork(NETWORKS_BY_TOKEN['USDT'][0].code)
     setAmount('100')
+    setCurrency('USD')
+    setNairaAmount('')
     setInitLoading(false)
     setInitError(null)
     setInitData(null)
@@ -241,37 +245,37 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
   useEffect(() => {
     if (!open || step !== 2 || banksFetchedRef.current) return
     banksFetchedRef.current = true
-    ;(async () => {
-      setBanksLoading(true)
-      setBanksError(null)
-      try {
-        const res = await fetch(`${API_BASE}/fetchnaira/naira-accounts`, { method: 'GET', cache: 'no-store' })
-        const json = await res.json()
-        if (!res.ok) throw new Error(json?.error || `HTTP ${res.status}`)
+      ; (async () => {
+        setBanksLoading(true)
+        setBanksError(null)
+        try {
+          const res = await fetch(`${API_BASE}/fetchnaira/naira-accounts`, { method: 'GET', cache: 'no-store' })
+          const json = await res.json()
+          if (!res.ok) throw new Error(json?.error || `HTTP ${res.status}`)
 
-        const list: BankOption[] = Array.isArray(json?.banks) ? json.banks : []
-        const opts: BankOption[] = (list as BankOption[])
-          .map((b: BankOption) => ({ name: String(b.name || '').trim(), code: String(b.code || '').trim() }))
-          .filter((b: BankOption) => b.name.length > 0 && b.code.length > 0)
-          .sort((a: BankOption, b: BankOption) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+          const list: BankOption[] = Array.isArray(json?.banks) ? json.banks : []
+          const opts: BankOption[] = (list as BankOption[])
+            .map((b: BankOption) => ({ name: String(b.name || '').trim(), code: String(b.code || '').trim() }))
+            .filter((b: BankOption) => b.name.length > 0 && b.code.length > 0)
+            .sort((a: BankOption, b: BankOption) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
 
-        setBankOptions(opts)
-        if (opts.length) {
-          setBankCode(opts[0].code)
-          setBankName(opts[0].name)
-        } else {
+          setBankOptions(opts)
+          if (opts.length) {
+            setBankCode(opts[0].code)
+            setBankName(opts[0].name)
+          } else {
+            setBankCode('')
+            setBankName('')
+          }
+        } catch (e: any) {
+          setBanksError(e?.message || 'Failed to load banks')
+          setBankOptions([])
           setBankCode('')
           setBankName('')
+        } finally {
+          setBanksLoading(false)
         }
-      } catch (e: any) {
-        setBanksError(e?.message || 'Failed to load banks')
-        setBankOptions([])
-        setBankCode('')
-        setBankName('')
-      } finally {
-        setBanksLoading(false)
-      }
-    })()
+      })()
   }, [open, step])
 
   // Resolve account name (debounced)
@@ -316,18 +320,42 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
   async function submitInitiate(e: React.FormEvent) {
     e.preventDefault()
     setInitError(null)
-    if (!amount || isNaN(+amount) || +amount <= 0) {
-      setInitError('Enter a valid amount')
-      return
+
+    let amountNum: number
+
+    if (currency === 'USD') {
+      if (!amount || isNaN(+amount) || +amount <= 0) {
+        setInitError('Enter a valid amount')
+        return
+      }
+      amountNum = +amount
+    } else {
+      if (!nairaAmount || isNaN(+nairaAmount) || +nairaAmount <= 0) {
+        setInitError('Enter a valid Naira amount')
+        return
+      }
+      // Convert Naira to USD using backend
+      try {
+        const res = await fetch(`${API_BASE}/swap/convert-naira`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ nairaAmount: +nairaAmount }),
+        })
+        const data = await res.json()
+        if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
+        amountNum = data.usdAmount
+      } catch (err: any) {
+        setInitError(err.message || 'Failed to convert Naira amount')
+        return
+      }
     }
-    
+
     // Test flight compliance: $50 daily sell limit validation
-    const amountNum = +amount;
     if (amountNum > 50) {
       setInitError('Daily sell limit is $50 during test flight. Please reduce your amount.')
       return
     }
-    
+
     setInitLoading(true)
     try {
       const res = await fetch(`${API_BASE}/sell/initiate`, {
@@ -387,21 +415,21 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
     navigator.clipboard?.writeText(text).then(() => {
       setCopiedKey(key)
       setTimeout(() => setCopiedKey(null), 1200)
-    }).catch(() => {})
+    }).catch(() => { })
   }
 
   if (!open) return null
 
   const headerTitle =
     step === 1 ? 'Start a Payment'
-    : (!payData ? 'Payout Details' : 'Transaction Summary')
+      : (!payData ? 'Payout Details' : 'Transaction Summary')
 
   const showFinalSummary = !!payData
 
   // Build QR data - include memo if present for compatible wallets
-  const qrData = initData ? 
-    (initData.deposit.memo ? 
-      `${initData.deposit.address}?memo=${initData.deposit.memo}` : 
+  const qrData = initData ?
+    (initData.deposit.memo ?
+      `${initData.deposit.address}?memo=${initData.deposit.memo}` :
       initData.deposit.address
     ) : ''
 
@@ -432,7 +460,7 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
               <p className="mobile-sell-description">
                 Choose token, network, and amount. We'll capture payout next.
               </p>
-              
+
               <div className="mobile-sell-warning">
                 ⚠️ Test Flight: Maximum $50 per day during testing phase
               </div>
@@ -475,16 +503,44 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
                   </div>
                 </label>
 
-                <label className="mobile-sell-input-wrap full-width">
-                  <span className="mobile-sell-label">Amount ({token})</span>
-                  <input
-                    className="mobile-sell-input"
-                    inputMode="decimal"
-                    placeholder="e.g. 100"
-                    value={amount}
-                    onChange={e => setAmount(e.target.value)}
-                  />
+                <label className="mobile-sell-input-wrap">
+                  <span className="mobile-sell-label">Currency</span>
+                  <div className="mobile-sell-select-wrapper">
+                    <select
+                      className="mobile-sell-input"
+                      value={currency}
+                      onChange={e => setCurrency(e.target.value as 'USD' | 'NGN')}
+                    >
+                      <option value="USD">USD</option>
+                      <option value="NGN">NGN</option>
+                    </select>
+                    <div className="mobile-sell-dropdown-arrow">▼</div>
+                  </div>
                 </label>
+
+                {currency === 'USD' ? (
+                  <label className="mobile-sell-input-wrap full-width">
+                    <span className="mobile-sell-label">Amount ({token})</span>
+                    <input
+                      className="mobile-sell-input"
+                      inputMode="decimal"
+                      placeholder="e.g. 100"
+                      value={amount}
+                      onChange={e => setAmount(e.target.value)}
+                    />
+                  </label>
+                ) : (
+                  <label className="mobile-sell-input-wrap full-width">
+                    <span className="mobile-sell-label">Amount (NGN)</span>
+                    <input
+                      className="mobile-sell-input"
+                      inputMode="decimal"
+                      placeholder="e.g. 50000"
+                      value={nairaAmount}
+                      onChange={e => setNairaAmount(e.target.value)}
+                    />
+                  </label>
+                )}
 
                 <div className="mobile-sell-button-row">
                   <button className="mobile-sell-button primary" disabled={initLoading}>
@@ -588,7 +644,7 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
                           accountNameError
                         ) : accountName ? (
                           accountName
-                        ) : 
+                        ) :
                           'Enter account number'
                         }
                       </div>
@@ -620,7 +676,7 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
                   <div className="mobile-sell-deposit-section">
                     <div className="mobile-sell-deposit-details">
                       <h4 className="mobile-sell-deposit-title">📍 Deposit Details</h4>
-                      
+
                       <div>
                         <div className="mobile-sell-key">Deposit Address</div>
                         <div className="mobile-sell-value mono wrap">
@@ -711,8 +767,8 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
             {step === 1
               ? 'We\'ll capture your payout next.'
               : (showFinalSummary
-                  ? 'Copy the deposit details and send the exact amount within the window.'
-                  : 'Ensure your bank details match your account name.')}
+                ? 'Copy the deposit details and send the exact amount within the window.'
+                : 'Ensure your bank details match your account name.')}
           </div>
           <div className="mobile-sell-button-row">
             {step === 2 ? (

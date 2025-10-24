@@ -230,6 +230,7 @@ a:hover { opacity: .92; }
 .bubble.assistant .role { color: var(--accent); font-weight: 700; }
 
 .bubble .text { white-space: pre-wrap; word-wrap: break-word; }
+.bubble .text strong { font-weight: bold; }
 .bubble.assistant .text { 
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", Arial, "Apple Color Emoji", "Segoe UI Emoji"; 
   font-size: 14px;
