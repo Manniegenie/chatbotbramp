@@ -840,7 +840,7 @@ export default function App() {
 
         {showSignIn ? (
           <SignIn
-            onCancel={() => { setShowSignIn(false); setOpenSellAfterAuth(false); setOpenSwapAfterAuth(false) }}
+            onCancel={() => { setShowSignIn(false); setOpenSellAfterAuth(false) }}
             onSuccess={(res) => {
               setAuth(res)
               setShowSignIn(false)
