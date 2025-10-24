@@ -252,6 +252,7 @@ export default function App() {
 
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [isInitialLoading, setIsInitialLoading] = useState(true)
 
   const [showSignIn, setShowSignIn] = useState(false)
   const [showSignUp, setShowSignUp] = useState(false)
@@ -278,6 +279,15 @@ export default function App() {
   const [tickerText, setTickerText] = useState<string>('')
   // keep a loading flag internally but DO NOT display loading text in UI
   const [tickerLoading, setTickerLoading] = useState<boolean>(false)
+
+  // Handle initial loading animation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsInitialLoading(false)
+    }, 1500) // Show loading for 1.5 seconds
+
+    return () => clearTimeout(timer)
+  }, [])
 
   // Scrub sensitive URL params on load and setup token refresh timer
   useEffect(() => {
@@ -484,6 +494,87 @@ export default function App() {
         inputRef.current?.focus()
       }, 0)
     }
+  }
+
+  // Show loading screen during initial load
+  if (isInitialLoading) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'linear-gradient(135deg, #0a0b0f 0%, #1a1d23 100%)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999,
+        color: 'white'
+      }}>
+        {/* Logo/Brand */}
+        <div style={{
+          width: '80px',
+          height: '80px',
+          borderRadius: '20px',
+          background: 'linear-gradient(135deg, #007337 0%, #00a847 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: '24px',
+          animation: 'pulse 2s ease-in-out infinite'
+        }}>
+          <span style={{ fontSize: '32px' }}>🚀</span>
+        </div>
+
+        {/* Loading text */}
+        <h1 style={{
+          fontSize: '24px',
+          fontWeight: '700',
+          margin: '0 0 8px 0',
+          background: 'linear-gradient(135deg, #007337 0%, #00a847 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text'
+        }}>
+          Bramp
+        </h1>
+
+        <p style={{
+          fontSize: '16px',
+          color: '#a0a0a0',
+          margin: '0 0 32px 0',
+          textAlign: 'center'
+        }}>
+          Loading your crypto experience...
+        </p>
+
+        {/* Loading spinner */}
+        <div style={{
+          width: '40px',
+          height: '40px',
+          border: '3px solid rgba(255, 255, 255, 0.1)',
+          borderTop: '3px solid #007337',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }} />
+
+        {/* CSS Animations */}
+        <style>
+          {`
+            @keyframes pulse {
+              0%, 100% { transform: scale(1); }
+              50% { transform: scale(1.05); }
+            }
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          `}
+        </style>
+      </div>
+    )
   }
 
   return (

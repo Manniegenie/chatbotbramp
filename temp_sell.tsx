@@ -385,50 +385,47 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     e.preventDefault()
     setInitError(null)
 
-    // Validate input based on currency
+    let amountNum: number
+
     if (currency === 'USD') {
       if (!amount || isNaN(+amount) || +amount <= 0) {
         setInitError('Enter a valid amount')
         return
       }
-
-      // Test flight compliance: $50 daily sell limit validation
-      const amountNum = +amount;
-      if (amountNum > 50) {
-        setInitError('Daily sell limit is $50 during test flight. Please reduce your amount.')
-        return
-      }
+      amountNum = +amount
     } else {
       if (!nairaAmount || isNaN(+nairaAmount) || +nairaAmount <= 0) {
         setInitError('Enter a valid Naira amount')
         return
       }
-    }
-
-    setInitLoading(true)
-    try {
-      let requestBody: any = { token, network }
-
-      if (currency === 'USD') {
-        requestBody.sellAmount = +amount
-      } else {
-        // For NGN, we need to convert to USD first
+      // Convert Naira to USD using backend
+      try {
         const res = await fetch(`${API_BASE}/swap/convert-naira`, {
           method: 'POST',
           headers: getHeaders(),
           body: JSON.stringify({ nairaAmount: +nairaAmount }),
         })
-        const conversionData = await res.json()
-        if (!res.ok || !conversionData.success) {
-          throw new Error(conversionData?.message || 'Failed to convert Naira amount')
-        }
-        requestBody.sellAmount = conversionData.usdAmount
+        const data = await res.json()
+        if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
+        amountNum = data.usdAmount
+      } catch (err: any) {
+        setInitError(err.message || 'Failed to convert Naira amount')
+        return
       }
+    }
 
+    // Test flight compliance: $50 daily sell limit validation
+    if (amountNum > 50) {
+      setInitError('Daily sell limit is $50 during test flight. Please reduce your amount.')
+      return
+    }
+
+    setInitLoading(true)
+    try {
       const res = await fetch(`${API_BASE}/sell/initiate`, {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify({ token, network, sellAmount: amountNum }),
       })
       const data: InitiateSellRes = await res.json()
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
@@ -602,8 +599,8 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                       value={currency}
                       onChange={e => setCurrency(e.target.value as 'USD' | 'NGN')}
                     >
-                      <option value="USD">USD ({token})</option>
-                      <option value="NGN">NGN (Naira)</option>
+                      <option value="USD">USD</option>
+                      <option value="NGN">NGN</option>
                     </select>
                     <div style={{
                       position: 'absolute',
@@ -620,7 +617,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                 </label>
 
                 {currency === 'USD' ? (
-                  <label style={inputWrap}>
+                  <label style={{ ...inputWrap, gridColumn: '1 / span 2' }}>
                     <span style={labelText}>Amount ({token})</span>
                     <input
                       style={inputBase}
@@ -631,7 +628,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     />
                   </label>
                 ) : (
-                  <label style={inputWrap}>
+                  <label style={{ ...inputWrap, gridColumn: '1 / span 2' }}>
                     <span style={labelText}>Amount (NGN)</span>
                     <input
                       style={inputBase}
