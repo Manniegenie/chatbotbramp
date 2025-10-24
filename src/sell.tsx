@@ -751,7 +751,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     </div>
                   )}
 
-                  <form onSubmit={submitPayout} style={gridForm}>
+                  <form onSubmit={submitPayout} style={{ display: 'grid', gap: 12 }}>
 
                     <label style={inputWrap}>
                       <span style={labelText}>Bank</span>
@@ -802,7 +802,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                       />
                     </label>
 
-                    <label style={{ ...inputWrap, gridColumn: '1 / span 2' }}>
+                    <label style={inputWrap}>
                       <span style={labelText}>Account Name</span>
                       <div style={{ ...inputBase, background: '#1a1d23', color: accountName ? 'var(--txt)' : 'var(--muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
                         {accountNameLoading ? (
@@ -820,7 +820,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                       </div>
                     </label>
 
-                    <div style={{ gridColumn: '1 / span 2', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
                       <button
                         style={btnPrimary}
                         disabled={payLoading || !bankCode || banksLoading || !accountName}
