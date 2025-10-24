@@ -388,3 +388,9 @@ button, .hint { -webkit-tap-highlight-color: transparent; }
   .header .tag { display: none; }
   .header .btn, .header button.btn { min-height: 40px; padding: 10px 12px; font-size: 14px; border-radius: 10px; box-shadow: none; }
 }
+
+/* Loading spinner animation */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

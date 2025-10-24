@@ -489,6 +489,39 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   return createPortal(
     <div style={overlayStyle} role="dialog" aria-modal="true" aria-labelledby="sell-title" onClick={onClose}>
       <div style={sheetStyle} onClick={(e) => e.stopPropagation()}>
+        {/* Loading Overlay */}
+        {(initLoading || payLoading || accountNameLoading || banksLoading) && (
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            borderRadius: '12px'
+          }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              border: '3px solid rgba(255, 255, 255, 0.3)',
+              borderTop: '3px solid #007bff',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite',
+              marginBottom: '16px'
+            }}></div>
+            <div style={{ color: 'white', fontSize: '16px', fontWeight: 500 }}>
+              {initLoading && 'Starting sell...'}
+              {payLoading && 'Saving payout...'}
+              {accountNameLoading && 'Validating account...'}
+              {banksLoading && 'Loading banks...'}
+            </div>
+          </div>
+        )}
         {/* Header */}
         <div style={headerStyle}>
           <div style={titleRowStyle}>
@@ -517,7 +550,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
               </p>
 
               <div style={{ ...badgeWarn, margin: '8px 0' }}>
-                ⚠️ Test Flight: Maximum $50 per day during testing phase
+                ⚠️ Test Flight: Maximum $1,000 per day during testing phase
               </div>
 
               {!!initError && (

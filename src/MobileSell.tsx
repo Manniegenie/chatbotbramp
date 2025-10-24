@@ -417,6 +417,18 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
   return (
     <div className="mobile-sell-overlay" onClick={onClose}>
       <div className="mobile-sell-container" onClick={(e) => e.stopPropagation()}>
+        {/* Loading Overlay */}
+        {(initLoading || payLoading || accountNameLoading || banksLoading) && (
+          <div className="mobile-sell-loading-overlay">
+            <div className="mobile-sell-loading-spinner"></div>
+            <div className="mobile-sell-loading-text">
+              {initLoading && 'Starting sell...'}
+              {payLoading && 'Saving payout...'}
+              {accountNameLoading && 'Validating account...'}
+              {banksLoading && 'Loading banks...'}
+            </div>
+          </div>
+        )}
         {/* Header */}
         <div className="mobile-sell-header">
           <div className="mobile-sell-title-row">
@@ -443,7 +455,7 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
               </p>
 
               <div className="mobile-sell-warning">
-                ⚠️ Test Flight: Maximum $50 per day during testing phase
+                ⚠️ Test Flight: Maximum $1,000 per day during testing phase
               </div>
 
               {!!initError && (
