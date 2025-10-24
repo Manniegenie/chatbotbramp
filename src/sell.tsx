@@ -195,13 +195,37 @@ function QRCode({ data, size = 120 }: { data: string; size?: number }) {
 }
 
 /* ===== Minimal inline modal styles ===== */
-const overlayStyle: React.CSSProperties = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', display: 'grid', placeItems: 'center', padding: 8, zIndex: 1000 }
-const sheetStyle: React.CSSProperties = { width: '100%', maxWidth: 600, background: 'var(--card)', color: 'var(--txt)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: 'var(--shadow)', overflow: 'hidden', display: 'grid', gridTemplateRows: 'auto 1fr auto', animation: 'scaleIn 120ms ease-out' }
-const headerStyle: React.CSSProperties = { padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }
+const overlayStyle: React.CSSProperties = { 
+  position: 'fixed', 
+  inset: 0, 
+  background: 'rgba(0,0,0,.55)', 
+  display: 'flex', 
+  alignItems: 'flex-start', 
+  justifyContent: 'center', 
+  padding: '20px 16px', 
+  overflow: 'hidden', 
+  touchAction: 'none',
+  zIndex: 1000 
+}
+const sheetStyle: React.CSSProperties = { 
+  maxWidth: '360px', 
+  width: '100%',
+  maxHeight: '70vh',
+  marginTop: '10vh',
+  background: 'var(--card)', 
+  border: '1px solid var(--border)', 
+  borderRadius: '8px', 
+  padding: '20px', 
+  boxShadow: 'var(--shadow)', 
+  overflow: 'hidden', 
+  display: 'flex', 
+  flexDirection: 'column'
+}
+const headerStyle: React.CSSProperties = { marginBottom: '16px', flexShrink: 0 }
 const titleRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6 }
 const stepperStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--muted)' }
 const dot = (active: boolean): React.CSSProperties => ({ width: 8, height: 8, borderRadius: 999, background: active ? 'var(--accent)' : 'var(--border)' })
-const bodyStyle: React.CSSProperties = { padding: 12, overflow: 'auto' }
+const bodyStyle: React.CSSProperties = { flex: 1, overflow: 'auto', minHeight: 0 }
 const footerStyle: React.CSSProperties = { padding: 10, display: 'flex', justifyContent: 'space-between', gap: 8, borderTop: '1px solid var(--border)', background: 'linear-gradient(180deg, transparent, rgba(0,0,0,.05))' }
 const btn: React.CSSProperties = { appearance: 'none', border: '1px solid var(--border)', background: 'transparent', color: 'var(--txt)', padding: '8px 12px', borderRadius: 8, cursor: 'pointer' }
 const btnPrimary: React.CSSProperties = { ...btn, border: 'none', background: 'var(--accent)', color: 'white' }
@@ -565,20 +589,19 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         )}
         {/* Header */}
         <div style={headerStyle}>
-          <div style={titleRowStyle}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: '#0d1512', display: 'grid', placeItems: 'center', border: '1px solid var(--border)' }}>
-              💱
-            </div>
-            <div>
-              <div id="sell-title" style={{ fontWeight: 700 }}>{headerTitle}</div>
-              <div style={stepperStyle}>
-                <span style={dot(step === 1)}></span> Step 1 — Start
-                <span style={{ opacity: .4, padding: '0 6px' }}>•</span>
-                <span style={dot(step === 2)}></span> Step 2 — Payout
-              </div>
-            </div>
+          <h2 id="sell-title" style={{ margin: 0, fontSize: '1.3rem', fontWeight: 600, color: 'var(--txt)' }}>
+            {step === 1 ? 'Start a Payment' : step === 2 ? 'Payout Details' : 'Transaction Summary'}
+          </h2>
+          <p style={{ marginTop: '6px', color: 'var(--muted)', fontSize: '0.85rem' }}>
+            {step === 1 ? 'Choose token, network, and amount. We\'ll capture payout next.' : 
+             step === 2 ? 'Enter your bank details to receive payment.' : 
+             'Review your transaction details before confirming.'}
+          </p>
+          <div style={stepperStyle}>
+            <span style={dot(step >= 1)} />
+            <span style={dot(step >= 2)} />
+            <span style={dot(step >= 3)} />
           </div>
-          <button type="button" aria-label="Close" style={btnDangerGhost} onClick={onClose}>✕</button>
         </div>
 
         {/* Body */}
@@ -739,12 +762,10 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     <h3 style={{ margin: 0, fontSize: 16 }}>Sell Summary</h3>
                     <div style={kvGrid}>
                       <div>
-                        <div style={kStyle}>Payment ID</div>
-                        <div style={{ ...vStyle, ...mono }}>{initData.paymentId}</div>
-                      </div>
-                      <div>
-                        <div style={kStyle}>Reference</div>
-                        <div style={{ ...vStyle, ...mono }}>{initData.reference}</div>
+                        <div style={kStyle}>Amount to Send</div>
+                        <div style={vStyle}>
+                          {prettyAmount(initData.deposit.amount)} {initData.deposit.token}
+                        </div>
                       </div>
                       <div>
                         <div style={kStyle}>You Receive</div>
@@ -968,14 +989,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     <div>
                       <div style={kStyle}>Status</div>
                       <div style={vStyle}>{payData.status}</div>
-                    </div>
-                    <div>
-                      <div style={kStyle}>Payment ID</div>
-                      <div style={{ ...vStyle, ...mono }}>{payData.paymentId}</div>
-                    </div>
-                    <div>
-                      <div style={kStyle}>Reference</div>
-                      <div style={{ ...vStyle, ...mono }}>{initData.reference}</div>
                     </div>
                     <div>
                       <div style={kStyle}>You Receive</div>

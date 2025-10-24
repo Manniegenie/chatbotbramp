@@ -471,18 +471,19 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
         )}
         {/* Header */}
         <div className="mobile-sell-header">
-          <div className="mobile-sell-title-row">
-            <div className="mobile-sell-icon">💱</div>
-            <div>
-              <h2 className="mobile-sell-title">{headerTitle}</h2>
-              <div className="mobile-sell-stepper">
-                <span className={`mobile-sell-dot ${step === 1 ? 'active' : ''}`}></span> Step 1 — Start
-                <span className="mobile-sell-dot-separator">•</span>
-                <span className={`mobile-sell-dot ${step === 2 ? 'active' : ''}`}></span> Step 2 — Payout
-              </div>
-            </div>
+          <h2 className="mobile-sell-title">
+            {step === 1 ? 'Start a Payment' : step === 2 ? 'Payout Details' : 'Transaction Summary'}
+          </h2>
+          <p className="mobile-sell-description">
+            {step === 1 ? 'Choose token, network, and amount. We\'ll capture payout next.' : 
+             step === 2 ? 'Enter your bank details to receive payment.' : 
+             'Review your transaction details before confirming.'}
+          </p>
+          <div className="mobile-sell-stepper">
+            <span className={`mobile-sell-dot ${step >= 1 ? 'active' : ''}`}></span>
+            <span className={`mobile-sell-dot ${step >= 2 ? 'active' : ''}`}></span>
+            <span className={`mobile-sell-dot ${step >= 3 ? 'active' : ''}`}></span>
           </div>
-          <button type="button" className="mobile-sell-close" onClick={onClose}>✕</button>
         </div>
 
         {/* Body */}
@@ -613,12 +614,10 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
                     <h3 className="mobile-sell-card-title">Sell Summary</h3>
                     <div className="mobile-sell-grid">
                       <div>
-                        <div className="mobile-sell-key">Payment ID</div>
-                        <div className="mobile-sell-value mono">{initData.paymentId}</div>
-                      </div>
-                      <div>
-                        <div className="mobile-sell-key">Reference</div>
-                        <div className="mobile-sell-value mono">{initData.reference}</div>
+                        <div className="mobile-sell-key">Amount to Send</div>
+                        <div className="mobile-sell-value">
+                          {prettyAmount(initData.deposit.amount)} {initData.deposit.token}
+                        </div>
                       </div>
                       <div>
                         <div className="mobile-sell-key">You Receive</div>
@@ -822,14 +821,6 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
                     <div>
                       <div className="mobile-sell-key">Status</div>
                       <div className="mobile-sell-value">{payData.status}</div>
-                    </div>
-                    <div>
-                      <div className="mobile-sell-key">Payment ID</div>
-                      <div className="mobile-sell-value mono">{payData.paymentId}</div>
-                    </div>
-                    <div>
-                      <div className="mobile-sell-key">Reference</div>
-                      <div className="mobile-sell-value mono">{initData.reference}</div>
                     </div>
                     <div>
                       <div className="mobile-sell-key">You Receive</div>
