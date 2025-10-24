@@ -250,10 +250,10 @@ export default function SignUp({
   function validateField(step: StepId): string | null {
     switch (step) {
       case 'firstname':
-        if (firstname.trim().length < 2) return 'Enter a valid first name.'
+        if (!firstname.trim()) return 'First name is required.'
         return null
       case 'lastname':
-        if (lastname.trim().length < 2) return 'Enter a valid surname.'
+        if (!lastname.trim()) return 'Last name is required.'
         return null
       case 'phone': {
         const phonenumber = normalizePhone(phone)
@@ -372,9 +372,15 @@ export default function SignUp({
 
     // Handle step groups
     if (currentStepGroup === 'names') {
-      const invalid = validateAllUpTo(1) // Validate firstname, lastname
-      if (invalid) {
-        setError(invalid)
+      // Validate firstname and lastname individually
+      const firstnameError = validateField('firstname')
+      if (firstnameError) {
+        setError(firstnameError)
+        return
+      }
+      const lastnameError = validateField('lastname')
+      if (lastnameError) {
+        setError(lastnameError)
         return
       }
       setCurrentStepGroup('contact')
@@ -382,9 +388,25 @@ export default function SignUp({
     }
 
     if (currentStepGroup === 'contact') {
-      const invalid = validateAllUpTo(3) // Validate firstname, lastname, phone, email
-      if (invalid) {
-        setError(invalid)
+      // Validate all fields individually
+      const firstnameError = validateField('firstname')
+      if (firstnameError) {
+        setError(firstnameError)
+        return
+      }
+      const lastnameError = validateField('lastname')
+      if (lastnameError) {
+        setError(lastnameError)
+        return
+      }
+      const phoneError = validateField('phone')
+      if (phoneError) {
+        setError(phoneError)
+        return
+      }
+      const emailError = validateField('email')
+      if (emailError) {
+        setError(emailError)
         return
       }
       setCurrentStepGroup('otp')
