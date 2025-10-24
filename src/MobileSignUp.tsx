@@ -423,64 +423,62 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
   }
 
   function renderStep() {
-    switch (currentStepId) {
-      case 'firstname':
-        return (
+    // Handle step groups
+    if (currentStepGroup === 'names') {
+      return (
+        <div className="mobile-auth-fields">
           <label className="mobile-auth-input-wrap">
-            <span className="mobile-auth-label">First name</span>
+            <span className="mobile-auth-label">First Name</span>
             <input
               className="mobile-auth-input"
-              placeholder="Kemi"
+              placeholder="John"
               value={firstname}
               onChange={(e) => setFirstname(e.target.value)}
               autoFocus
             />
           </label>
-        )
-      case 'lastname':
-        return (
           <label className="mobile-auth-input-wrap">
-            <span className="mobile-auth-label">Surname</span>
+            <span className="mobile-auth-label">Last Name</span>
             <input
               className="mobile-auth-input"
-              placeholder="Adebayo"
+              placeholder="Doe"
               value={lastname}
               onChange={(e) => setLastname(e.target.value)}
+            />
+          </label>
+        </div>
+      )
+    }
+
+    if (currentStepGroup === 'contact') {
+      return (
+        <div className="mobile-auth-fields">
+          <label className="mobile-auth-input-wrap">
+            <span className="mobile-auth-label">Phone Number</span>
+            <input
+              className="mobile-auth-input"
+              placeholder="08123456789"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              inputMode="tel"
               autoFocus
             />
           </label>
-        )
-      case 'phone':
-        return (
           <label className="mobile-auth-input-wrap">
-            <span className="mobile-auth-label">Phone number</span>
-            <div className="mobile-auth-phone-input">
-              <span className="mobile-auth-phone-prefix">+234</span>
-              <input
-                className="mobile-auth-input"
-                placeholder="9034567890"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                inputMode="tel"
-                autoFocus
-              />
-            </div>
-          </label>
-        )
-      case 'email':
-        return (
-          <label className="mobile-auth-input-wrap">
-            <span className="mobile-auth-label">Email address</span>
+            <span className="mobile-auth-label">Email Address</span>
             <input
               className="mobile-auth-input"
-              placeholder="kemi.adebayo@yahoo.com"
+              placeholder="john@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               type="email"
-              autoFocus
             />
           </label>
-        )
+        </div>
+      )
+    }
+
+    switch (currentStepId) {
       case 'otp':
         return (
           <>
@@ -592,81 +590,41 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
       }}>
         <div style={{ marginBottom: '12px', flexShrink: 0 }}>
           <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 600, color: 'var(--txt)' }}>
-            {showAllFields 
-              ? 'Create your account'
-              : currentStepId === 'otp'
-                ? 'Verify OTP'
-                : currentStepId === 'pin'
-                  ? 'Set your PIN'
-                  : 'Create your account'}
+            {currentStepGroup === 'names'
+              ? 'Your Name'
+              : currentStepGroup === 'contact'
+                ? 'Contact Information'
+                : currentStepId === 'otp'
+                  ? 'Verify OTP'
+                  : currentStepId === 'pin'
+                    ? 'Set your PIN'
+                    : 'Create your account'}
           </h2>
           <p style={{ marginTop: '4px', color: 'var(--muted)', fontSize: '0.8rem' }}>
-            {showAllFields 
-              ? "Enter your details to create your account."
-              : currentStepId === 'otp'
-                ? 'Enter the 6-digit OTP sent to your phone.'
-                : currentStepId === 'pin'
-                  ? 'Create a 6-digit PIN for sign-in and transactions.'
-                  : "We'll collect a few details. One step at a time."}
+            {currentStepGroup === 'names'
+              ? "Let's start with your name."
+              : currentStepGroup === 'contact'
+                ? "Now we need your contact details."
+                : currentStepId === 'otp'
+                  ? 'Enter the 6-digit OTP sent to your phone.'
+                  : currentStepId === 'pin'
+                    ? 'Create a 6-digit PIN for sign-in and transactions.'
+                    : "We'll collect a few details. One step at a time."}
           </p>
 
-          {!showAllFields && <ProgressDots />}
+          {currentStepGroup === 'otp' || currentStepGroup === 'pin' ? <ProgressDots /> : null}
         </div>
 
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <form onSubmit={handleSubmit} className="mobile-auth-form">
-            {showAllFields && !loading ? (
-              // Show all basic fields on one page
-              <div className="mobile-auth-fields">
-                <label className="mobile-auth-input-wrap">
-                  <span className="mobile-auth-label">First Name</span>
-                  <input
-                    className="mobile-auth-input"
-                    placeholder="John"
-                    value={firstname}
-                    onChange={e => setFirstname(e.target.value)}
-                    autoFocus
-                  />
-                </label>
-
-                <label className="mobile-auth-input-wrap">
-                  <span className="mobile-auth-label">Last Name</span>
-                  <input
-                    className="mobile-auth-input"
-                    placeholder="Doe"
-                    value={lastname}
-                    onChange={e => setLastname(e.target.value)}
-                  />
-                </label>
-
-                <label className="mobile-auth-input-wrap">
-                  <span className="mobile-auth-label">Phone Number</span>
-                  <input
-                    className="mobile-auth-input"
-                    placeholder="08123456789"
-                    value={phone}
-                    onChange={e => setPhone(e.target.value)}
-                    inputMode="tel"
-                  />
-                </label>
-
-                <label className="mobile-auth-input-wrap">
-                  <span className="mobile-auth-label">Email Address</span>
-                  <input
-                    className="mobile-auth-input"
-                    placeholder="john@example.com"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    type="email"
-                  />
-                </label>
-
+            {!loading && (
+              <>
+                {renderStep()}
                 {error && (
                   <div className="mobile-auth-error">
                     ⚠️ {error}
                   </div>
                 )}
-
                 <div className="mobile-auth-button-row">
                   <button
                     type="button"
@@ -676,91 +634,22 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
                   >
                     Cancel
                   </button>
-
                   <button type="submit" className="mobile-auth-button primary" disabled={loading}>
-                    {loading ? 'Creating…' : 'Create Account'}
+                    {loading 
+                      ? 'Processing…' 
+                      : currentStepGroup === 'names'
+                        ? 'Continue'
+                        : currentStepGroup === 'contact'
+                          ? 'Create Account'
+                          : currentStepId === 'otp'
+                            ? 'Verify OTP'
+                            : currentStepId === 'pin'
+                              ? 'Complete'
+                              : 'Next'}
                   </button>
                 </div>
-              </div>
-            ) : (
-              // Original step-by-step approach
-              <>
-                {renderStep()}
-
-                {/* Default nav + error for the basic signup steps */}
-                {['firstname', 'lastname', 'phone', 'email'].includes(currentStepId) && (
-                  <>
-                    {error && (
-                      <div className="mobile-auth-error">
-                        ⚠️ {error}
-                      </div>
-                    )}
-                    <div className="mobile-auth-button-row">
-                      {stepIndex > 0 ? (
-                        <button
-                          type="button"
-                          className="mobile-auth-button outline"
-                          onClick={goBack}
-                          disabled={loading}
-                        >
-                          Back
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          className="mobile-auth-button outline"
-                          onClick={onCancel}
-                          disabled={loading}
-                        >
-                          Cancel
-                        </button>
-                      )}
-
-                      <button type="submit" className="mobile-auth-button primary" disabled={loading}>
-                        {loading
-                          ? 'Please wait…'
-                          : 'Next'}
-                      </button>
-                    </div>
-                  </>
-                )}
               </>
             )}
-
-            {/* OTP step buttons */}
-            {currentStepId === 'otp' && (
-              <div className="mobile-auth-button-row">
-                <button
-                  type="button"
-                  className="mobile-auth-button outline"
-                  onClick={goBack}
-                  disabled={loading}
-                >
-                  Back
-                </button>
-                <button type="submit" className="mobile-auth-button primary" disabled={loading}>
-                  {loading ? 'Verifying…' : 'Verify OTP'}
-                </button>
-              </div>
-            )}
-
-            {/* PIN step buttons */}
-            {currentStepId === 'pin' && (
-              <div className="mobile-auth-button-row">
-                <button
-                  type="button"
-                  className="mobile-auth-button outline"
-                  onClick={goBack}
-                  disabled={loading}
-                >
-                  Back
-                </button>
-                <button type="submit" className="mobile-auth-button primary" disabled={loading}>
-                  {loading ? 'Creating Account…' : 'Complete Signup'}
-                </button>
-              </div>
-            )}
-
           </form>
         </div>
       </div>
