@@ -349,7 +349,7 @@ export default function App() {
   }, [messages, loading, showSignIn, showSignUp, showSell])
 
   /* ------------------- Price ticker: fetch & formatting ------------------- */
-  const TICKER_SYMBOLS = ['BTC', 'ETH', 'USDT', 'USDC', 'BNB', 'MATIC', 'AVAX', 'SOL', 'NGNB']
+  const TICKER_SYMBOLS = ['BTC', 'ETH', 'USDT', 'USDC', 'BNB', 'SOL', 'NGNB']
 
   async function fetchTickerPrices(signal?: AbortSignal) {
     try {

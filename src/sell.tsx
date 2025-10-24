@@ -63,7 +63,7 @@ type SellModalProps = {
   onChatEcho?: (text: string) => void
 }
 
-const TOKENS = ['USDT', 'USDC', 'BTC', 'ETH', 'SOL', 'BNB', 'MATIC', 'AVAX'] as const
+const TOKENS = ['USDT', 'USDC', 'BTC', 'ETH', 'SOL', 'BNB'] as const
 type TokenSym = typeof TOKENS[number]
 
 const NETWORKS_BY_TOKEN: Record<TokenSym, { code: string; label: string }[]> = {
@@ -71,8 +71,6 @@ const NETWORKS_BY_TOKEN: Record<TokenSym, { code: string; label: string }[]> = {
   ETH: [{ code: 'ETH', label: 'Ethereum' }],
   SOL: [{ code: 'SOL', label: 'Solana' }],
   BNB: [{ code: 'BSC', label: 'BNB Smart Chain' }],
-  MATIC: [{ code: 'ETH', label: 'Ethereum (ERC-20)' }],
-  AVAX: [{ code: 'BSC', label: 'BNB Smart Chain' }],
   USDT: [
     { code: 'ETH', label: 'Ethereum (ERC-20)' },
     { code: 'TRX', label: 'Tron (TRC-20)' },
