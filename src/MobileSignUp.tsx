@@ -529,26 +529,39 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
   }
 
   return (
-    <div className="mobile-auth-overlay" onClick={onCancel}>
-      <div className="mobile-auth-container" onClick={(e) => e.stopPropagation()}>
-        <div className="mobile-auth-header">
-          <div className="mobile-auth-title-row">
-            <div className="mobile-auth-icon">📝</div>
-            <h2 className="mobile-auth-title">
-              {showAllFields 
-                ? 'Create your account'
-                : currentStepId === 'otp'
-                  ? 'Verify OTP'
-                  : currentStepId === 'pin'
-                    ? 'Set your PIN'
-                    : 'Create your account'}
-            </h2>
-          </div>
-          <button type="button" className="mobile-auth-close" onClick={onCancel}>✕</button>
-        </div>
-
-        <div className="mobile-auth-body">
-          <p className="mobile-auth-description">
+    <div style={{ 
+      position: 'fixed', 
+      top: 0, 
+      left: 0, 
+      width: '100%', 
+      height: '100%', 
+      background: 'var(--bg)', 
+      zIndex: 1000,
+      display: 'flex',
+      alignItems: 'flex-start',
+      justifyContent: 'flex-start',
+      padding: '20px'
+    }}>
+      <div style={{ 
+        maxWidth: '500px', 
+        width: '100%',
+        background: 'var(--card)',
+        border: '1px solid var(--border)',
+        borderRadius: '12px',
+        padding: '24px',
+        boxShadow: 'var(--shadow)'
+      }}>
+        <div style={{ marginBottom: '20px' }}>
+          <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600, color: 'var(--txt)' }}>
+            {showAllFields 
+              ? 'Create your account'
+              : currentStepId === 'otp'
+                ? 'Verify OTP'
+                : currentStepId === 'pin'
+                  ? 'Set your PIN'
+                  : 'Create your account'}
+          </h2>
+          <p style={{ marginTop: '8px', color: 'var(--muted)', fontSize: '0.9rem' }}>
             {showAllFields 
               ? "Enter your details to create your account."
               : currentStepId === 'otp'
@@ -559,7 +572,9 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
           </p>
 
           {!showAllFields && <ProgressDots />}
+        </div>
 
+        <div>
           <form onSubmit={handleSubmit} className="mobile-auth-form">
             {showAllFields && !loading ? (
               // Show all basic fields on one page

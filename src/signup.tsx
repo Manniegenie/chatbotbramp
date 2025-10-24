@@ -829,11 +829,29 @@ export default function SignUp({
   }
 
   return (
-    <div className="chat" style={{ width: '100%', maxWidth: '100vw', padding: '8px 10px 0' }}>
-      <div className="messages" style={{ paddingTop: 0 }}>
-        <div className="bubble" style={{ maxWidth: '95%' }}>
-          <div className="role">Security</div>
-          <div className="text">
+    <div style={{ 
+      position: 'fixed', 
+      top: 0, 
+      left: 0, 
+      width: '100%', 
+      height: '100%', 
+      background: 'var(--bg)', 
+      zIndex: 1000,
+      display: 'flex',
+      alignItems: 'flex-start',
+      justifyContent: 'flex-start',
+      padding: '20px'
+    }}>
+      <div style={{ 
+        maxWidth: '500px', 
+        width: '100%',
+        background: 'var(--card)',
+        border: '1px solid var(--border)',
+        borderRadius: '12px',
+        padding: '24px',
+        boxShadow: 'var(--shadow)'
+      }}>
+        <div style={{ marginBottom: '20px' }}>
             <h2 id="signup-title" style={{ marginTop: 0, marginBottom: 6, fontSize: '1.2rem' }}>
               {showAllFields 
                 ? 'Create your account'
@@ -981,8 +999,6 @@ export default function SignUp({
                 </>
               )}
             </form>
-
-          </div>
         </div>
       </div>
     </div>
