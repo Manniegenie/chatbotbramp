@@ -512,7 +512,7 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
                         value={currency}
                         onChange={e => setCurrency(e.target.value as 'TOKEN' | 'NGN')}
                       >
-                        <option value="TOKEN">{token} Amount</option>
+                        <option value="TOKEN">{token}</option>
                         <option value="NGN">NGN</option>
                       </select>
                       <div className="mobile-sell-dropdown-arrow">▼</div>

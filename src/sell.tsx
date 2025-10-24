@@ -628,8 +628,8 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                         value={currency}
                         onChange={e => setCurrency(e.target.value as 'TOKEN' | 'NGN')}
                       >
-                        <option value="TOKEN">{token} Amount</option>
-                        <option value="NGN">NGN (Naira)</option>
+                      <option value="TOKEN">{token}</option>
+                      <option value="NGN">NGN</option>
                       </select>
                       <div style={{
                         position: 'absolute',
