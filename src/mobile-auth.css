@@ -170,12 +170,15 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 8px;
 }
 
 .mobile-auth-checkbox {
   margin: 0;
+  width: 16px;
+  height: 16px;
   accent-color: var(--accent);
+  cursor: pointer;
 }
 
 .mobile-auth-checkbox-label {
@@ -183,12 +186,13 @@
   color: var(--muted);
   cursor: pointer;
   margin: 0;
+  user-select: none;
 }
 
 .mobile-auth-button-row {
   display: flex;
   gap: 10px;
-  margin-top: 4px;
+  margin-top: 8px;
 }
 
 .mobile-auth-button {

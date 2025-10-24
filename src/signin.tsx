@@ -218,20 +218,26 @@ export default function SignIn({
                 </div>
               )}
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
                 <input
                   type="checkbox"
                   id="rememberMe"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  style={{ margin: 0 }}
+                  style={{ 
+                    margin: 0, 
+                    width: '16px', 
+                    height: '16px', 
+                    accentColor: 'var(--accent)',
+                    cursor: 'pointer'
+                  }}
                 />
-                <label htmlFor="rememberMe" style={{ fontSize: '0.8rem', color: 'var(--muted)', cursor: 'pointer', margin: 0 }}>
+                <label htmlFor="rememberMe" style={{ fontSize: '0.8rem', color: 'var(--muted)', cursor: 'pointer', margin: 0, userSelect: 'none' }}>
                   Remember me
                 </label>
               </div>
 
-              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                 <button className="btn" type="submit" disabled={loading}>
                   {loading ? 'Signing in…' : 'Sign in'}
                 </button>
