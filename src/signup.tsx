@@ -103,7 +103,8 @@ export default function SignUp({
   // KYC steps removed for test flight - consolidated for testflight
   const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'otp', 'pin']
   const [stepIndex, setStepIndex] = useState<number>(0)
-  const [showAllFields, setShowAllFields] = useState(true) // Show all fields on one page
+  const [showAllFields, setShowAllFields] = useState(false) // Show step-by-step approach
+  const [currentStepGroup, setCurrentStepGroup] = useState<'names' | 'contact' | 'otp' | 'pin'>('names')
 
   const [firstname, setFirstname] = useState('')
   const [lastname, setLastname] = useState('')
@@ -369,15 +370,24 @@ export default function SignUp({
     e?.preventDefault()
     setError(null)
 
-    // Validate all basic fields if showing all fields
-    if (showAllFields) {
+    // Handle step groups
+    if (currentStepGroup === 'names') {
+      const invalid = validateAllUpTo(1) // Validate firstname, lastname
+      if (invalid) {
+        setError(invalid)
+        return
+      }
+      setCurrentStepGroup('contact')
+      return
+    }
+
+    if (currentStepGroup === 'contact') {
       const invalid = validateAllUpTo(3) // Validate firstname, lastname, phone, email
       if (invalid) {
         setError(invalid)
         return
       }
-      // After signup, switch to OTP step
-      setShowAllFields(false)
+      setCurrentStepGroup('otp')
       setStepIndex(4) // Go to OTP step (index 4 in the steps array)
       return doSignup()
     }
@@ -615,37 +625,70 @@ export default function SignUp({
   }
 
   function renderStep() {
-    switch (currentStepId) {
-      case 'firstname':
-        return (
-          <>
-            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>First name</label>
+    // Handle step groups
+    if (currentStepGroup === 'names') {
+      return (
+        <div style={{ display: 'grid', gap: 12 }}>
+          <label style={{ display: 'grid', gap: 4 }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>First Name</span>
             <input
-              key="fn"
-              placeholder="Adunni"
+              key="firstname"
+              placeholder="John"
               value={firstname}
-              onChange={(e) => setFirstname(e.target.value)}
+              onChange={e => setFirstname(e.target.value)}
               autoFocus
               style={inputStyle}
               className="no-zoom"
             />
-          </>
-        )
-      case 'lastname':
-        return (
-          <>
-            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Surname</label>
+          </label>
+          <label style={{ display: 'grid', gap: 4 }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Last Name</span>
             <input
-              key="ln"
-              placeholder="Okafor"
+              key="lastname"
+              placeholder="Doe"
               value={lastname}
-              onChange={(e) => setLastname(e.target.value)}
+              onChange={e => setLastname(e.target.value)}
+              style={inputStyle}
+              className="no-zoom"
+            />
+          </label>
+        </div>
+      )
+    }
+
+    if (currentStepGroup === 'contact') {
+      return (
+        <div style={{ display: 'grid', gap: 12 }}>
+          <label style={{ display: 'grid', gap: 4 }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Phone Number</span>
+            <input
+              key="phone"
+              placeholder="08123456789"
+              value={phone}
+              onChange={e => setPhone(e.target.value)}
+              inputMode="tel"
               autoFocus
               style={inputStyle}
               className="no-zoom"
             />
-          </>
-        )
+          </label>
+          <label style={{ display: 'grid', gap: 4 }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Email Address</span>
+            <input
+              key="email"
+              placeholder="john@example.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              inputMode="email"
+              style={inputStyle}
+              className="no-zoom"
+            />
+          </label>
+        </div>
+      )
+    }
+
+    switch (currentStepId) {
       case 'phone':
         return (
           <>
@@ -860,89 +903,40 @@ export default function SignUp({
       }}>
         <div style={{ marginBottom: '16px', flexShrink: 0 }}>
           <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 600, color: 'var(--txt)' }}>
-            {showAllFields 
-              ? 'Create your account'
-              : currentStepId === 'otp'
-                ? 'Verify OTP'
-                : currentStepId === 'pin'
-                  ? 'Set your PIN'
-                  : 'Create your account'}
+            {currentStepGroup === 'names'
+              ? 'Your Name'
+              : currentStepGroup === 'contact'
+                ? 'Contact Information'
+                : currentStepId === 'otp'
+                  ? 'Verify OTP'
+                  : currentStepId === 'pin'
+                    ? 'Set your PIN'
+                    : 'Create your account'}
           </h2>
           <p style={{ marginTop: '6px', color: 'var(--muted)', fontSize: '0.85rem' }}>
-            {showAllFields 
-              ? "Enter your details to create your account."
-              : currentStepId === 'otp'
-                ? 'Enter the 6-digit OTP sent to your phone.'
-                : currentStepId === 'pin'
-                  ? 'Create a 6-digit PIN for sign-in and transactions.'
-                  : "We'll collect a few details. One step at a time."}
+            {currentStepGroup === 'names'
+              ? "Let's start with your name."
+              : currentStepGroup === 'contact'
+                ? "Now we need your contact details."
+                : currentStepId === 'otp'
+                  ? 'Enter the 6-digit OTP sent to your phone.'
+                  : currentStepId === 'pin'
+                    ? 'Create a 6-digit PIN for sign-in and transactions.'
+                    : "We'll collect a few details. One step at a time."}
           </p>
 
-          {!showAllFields && <ProgressDots />}
+          {currentStepGroup === 'otp' || currentStepGroup === 'pin' ? <ProgressDots /> : null}
         </div>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <form onSubmit={handleSubmit}>
-              {showAllFields && !loading ? (
-                // Show all basic fields on one page
-                <div style={{ display: 'grid', gap: 12 }}>
-                  <label style={{ display: 'grid', gap: 4 }}>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>First Name</span>
-                    <input
-                      key="firstname"
-                      placeholder="John"
-                      value={firstname}
-                      onChange={e => setFirstname(e.target.value)}
-                      autoFocus
-                      style={inputStyle}
-                      className="no-zoom"
-                    />
-                  </label>
-
-                  <label style={{ display: 'grid', gap: 4 }}>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Last Name</span>
-                    <input
-                      key="lastname"
-                      placeholder="Doe"
-                      value={lastname}
-                      onChange={e => setLastname(e.target.value)}
-                      style={inputStyle}
-                      className="no-zoom"
-                    />
-                  </label>
-
-                  <label style={{ display: 'grid', gap: 4 }}>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Phone Number</span>
-                    <input
-                      key="phone"
-                      placeholder="08123456789"
-                      value={phone}
-                      onChange={e => setPhone(e.target.value)}
-                      inputMode="tel"
-                      style={inputStyle}
-                      className="no-zoom"
-                    />
-                  </label>
-
-                  <label style={{ display: 'grid', gap: 4 }}>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Email Address</span>
-                    <input
-                      key="email"
-                      placeholder="john@example.com"
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      type="email"
-                      autoFocus
-                      style={inputStyle}
-                      className="no-zoom"
-                    />
-                  </label>
-
+              {!loading ? (
+                <>
+                  {renderStep()}
                   {error && (
                     <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
                       ⚠️ {error}
                     </div>
                   )}
-
                   <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                     <button
                       type="button"
@@ -952,58 +946,20 @@ export default function SignUp({
                     >
                       Cancel
                     </button>
-
                     <button type="submit" className="btn" disabled={loading}>
-                      {loading ? 'Creating…' : 'Create Account'}
+                      {loading 
+                        ? 'Processing…' 
+                        : currentStepGroup === 'names'
+                          ? 'Continue'
+                          : currentStepGroup === 'contact'
+                            ? 'Create Account'
+                            : currentStepId === 'otp'
+                              ? 'Verify OTP'
+                              : currentStepId === 'pin'
+                                ? 'Complete'
+                                : 'Next'}
                     </button>
                   </div>
-                </div>
-              ) : (
-                // Original step-by-step approach
-                <>
-                  {renderStep()}
-
-                  {/* Default nav + error for the basic signup steps */}
-                  {['firstname', 'lastname', 'phone', 'email'].includes(currentStepId) && (
-                    <>
-                      {error && (
-                        <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
-                          ⚠️ {error}
-                        </div>
-                      )}
-                      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                        {stepIndex > 0 ? (
-                          <button
-                            type="button"
-                            className="btn btn-outline"
-                            onClick={goBack}
-                            disabled={loading}
-                          >
-                            Back
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            className="btn btn-outline"
-                            onClick={onCancel}
-                            disabled={loading}
-                          >
-                            Cancel
-                          </button>
-                        )}
-
-                        <button type="submit" className="btn" disabled={loading}>
-                          {loading
-                            ? currentStepId === 'email'
-                              ? 'Creating…'
-                              : 'Please wait…'
-                            : currentStepId === 'email'
-                              ? 'Create account'
-                              : 'Next'}
-                        </button>
-                      </div>
-                    </>
-                  )}
                 </>
               )}
           </form>

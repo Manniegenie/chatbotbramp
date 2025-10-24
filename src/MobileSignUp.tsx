@@ -78,7 +78,8 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
 
   const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'otp', 'pin']
   const [stepIndex, setStepIndex] = useState<number>(0)
-  const [showAllFields, setShowAllFields] = useState(true) // Show all fields on one page
+  const [showAllFields, setShowAllFields] = useState(false) // Show step-by-step approach
+  const [currentStepGroup, setCurrentStepGroup] = useState<'names' | 'contact' | 'otp' | 'pin'>('names')
 
   const [firstname, setFirstname] = useState('')
   const [lastname, setLastname] = useState('')
@@ -212,15 +213,24 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
     e?.preventDefault()
     setError(null)
 
-    // Validate all basic fields if showing all fields
-    if (showAllFields) {
+    // Handle step groups
+    if (currentStepGroup === 'names') {
+      const invalid = validateAllUpTo(1) // Validate firstname, lastname
+      if (invalid) {
+        setError(invalid)
+        return
+      }
+      setCurrentStepGroup('contact')
+      return
+    }
+
+    if (currentStepGroup === 'contact') {
       const invalid = validateAllUpTo(3) // Validate firstname, lastname, phone, email
       if (invalid) {
         setError(invalid)
         return
       }
-      // After signup, switch to OTP step
-      setShowAllFields(false)
+      setCurrentStepGroup('otp')
       setStepIndex(4) // Go to OTP step (index 4 in the steps array)
       return doSignup()
     }
