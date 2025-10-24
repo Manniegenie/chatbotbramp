@@ -834,21 +834,25 @@ export default function SignUp({
           <div className="role">Security</div>
           <div className="text">
             <h2 id="signup-title" style={{ marginTop: 0, marginBottom: 6, fontSize: '1.2rem' }}>
-              {currentStepId === 'otp'
-                ? 'Verify OTP'
-                : currentStepId === 'pin'
-                  ? 'Set your PIN'
-                  : 'Create your account'}
+              {showAllFields 
+                ? 'Create your account'
+                : currentStepId === 'otp'
+                  ? 'Verify OTP'
+                  : currentStepId === 'pin'
+                    ? 'Set your PIN'
+                    : 'Create your account'}
             </h2>
             <p style={{ marginTop: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>
-              {currentStepId === 'otp'
+            {showAllFields 
+              ? "Enter your details to create your account."
+              : currentStepId === 'otp'
                 ? 'Enter the 6-digit OTP sent to your phone.'
                 : currentStepId === 'pin'
                   ? 'Create a 6-digit PIN for sign-in and transactions.'
                   : "We'll collect a few details. One step at a time."}
             </p>
 
-            <ProgressDots />
+            {!showAllFields && <ProgressDots />}
 
             <form onSubmit={handleSubmit}>
               {showAllFields && !loading ? (

@@ -534,11 +534,13 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
           <div className="mobile-auth-title-row">
             <div className="mobile-auth-icon">📝</div>
             <h2 className="mobile-auth-title">
-              {currentStepId === 'otp'
-                ? 'Verify OTP'
-                : currentStepId === 'pin'
-                ? 'Set your PIN'
-                : 'Create your account'}
+              {showAllFields 
+                ? 'Create your account'
+                : currentStepId === 'otp'
+                  ? 'Verify OTP'
+                  : currentStepId === 'pin'
+                    ? 'Set your PIN'
+                    : 'Create your account'}
             </h2>
           </div>
           <button type="button" className="mobile-auth-close" onClick={onCancel}>✕</button>
@@ -546,14 +548,16 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
 
         <div className="mobile-auth-body">
           <p className="mobile-auth-description">
-            {currentStepId === 'otp'
-              ? 'Enter the 6-digit OTP sent to your phone.'
-              : currentStepId === 'pin'
-              ? 'Create a 6-digit PIN for sign-in and transactions.'
-              : "We'll collect a few details. One step at a time."}
+            {showAllFields 
+              ? "Enter your details to create your account."
+              : currentStepId === 'otp'
+                ? 'Enter the 6-digit OTP sent to your phone.'
+                : currentStepId === 'pin'
+                  ? 'Create a 6-digit PIN for sign-in and transactions.'
+                  : "We'll collect a few details. One step at a time."}
           </p>
 
-          <ProgressDots />
+          {!showAllFields && <ProgressDots />}
 
           <form onSubmit={handleSubmit} className="mobile-auth-form">
             {showAllFields && !loading ? (
