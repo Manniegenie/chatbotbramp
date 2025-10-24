@@ -872,13 +872,13 @@ export default function SignUp({
   }
 
   return (
-    <div style={{ 
-      position: 'fixed', 
-      top: 0, 
-      left: 0, 
-      width: '100vw', 
-      height: '100vh', 
-      background: 'linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(/src/assets/wallpaper1.jpg) center/cover no-repeat', 
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      background: 'linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(/src/assets/wallpaper1.jpg) center/cover no-repeat',
       zIndex: 1000,
       display: 'flex',
       alignItems: 'flex-start',
@@ -887,8 +887,8 @@ export default function SignUp({
       overflow: 'hidden',
       touchAction: 'none'
     }}>
-      <div style={{ 
-        maxWidth: '360px', 
+      <div style={{
+        maxWidth: '360px',
         width: '100%',
         maxHeight: '70vh',
         marginTop: '10vh',
@@ -929,7 +929,7 @@ export default function SignUp({
         </div>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <form onSubmit={handleSubmit}>
-              {!loading ? (
+              {!loading && (
                 <>
                   {renderStep()}
                   {error && (
