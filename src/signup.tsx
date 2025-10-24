@@ -95,20 +95,20 @@ export default function SignUp({
 }) {
   const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
   const SIGNUP_ENDPOINT = `${API_BASE}/chatsignup/add-user`
-  const VERIFY_OTP_ENDPOINT = `${API_BASE}/verify-otp/verify-otp`         
-  const PASSWORD_PIN_ENDPOINT = `${API_BASE}/passwordpin/password-pin`    
+  const VERIFY_OTP_ENDPOINT = `${API_BASE}/verify-otp/verify-otp`
+  const PASSWORD_PIN_ENDPOINT = `${API_BASE}/passwordpin/password-pin`
   // const BIOMETRIC_VERIFICATION_ENDPOINT = `${API_BASE}/chatbot-kyc/chatbot-kyc`  // Commented out for test flight
-    
-  // KYC steps removed for test flight
-  const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'bvn', 'otp', 'pin']
+
+  // KYC steps removed for test flight - consolidated for testflight
+  const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'otp', 'pin']
   const [stepIndex, setStepIndex] = useState<number>(0)
 
   const [firstname, setFirstname] = useState('')
   const [lastname, setLastname] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
-  
-  // Auto-fill BVN with random 11-digit number for test flight
+
+  // Auto-fill BVN with random 11-digit number for test flight (hidden from user)
   const [bvn, setBvn] = useState(() => {
     return Math.floor(10000000000 + Math.random() * 90000000000).toString()
   })
@@ -134,10 +134,10 @@ export default function SignUp({
       setResendError('Phone number is required')
       return
     }
-    
+
     setResendLoading(true)
     setResendError(null)
-    
+
     try {
       const response = await fetch(`${API_BASE}/resend-otp/resend-otp`, {
         method: 'POST',
@@ -146,17 +146,17 @@ export default function SignUp({
         },
         body: JSON.stringify({ phonenumber: phone }),
       })
-      
+
       const data = await response.json()
-      
+
       if (!response.ok) {
         throw new Error(data.message || 'Failed to resend OTP')
       }
-      
+
       // Clear any existing OTP error and show success
       setOtpError(null)
       // You could add a success message here if needed
-      
+
     } catch (err: any) {
       setResendError(err.message || 'Failed to resend OTP')
     } finally {
@@ -195,18 +195,18 @@ export default function SignUp({
   // ---------- Utils ----------
   function normalizePhone(input: string) {
     const d = input.replace(/[^\d+]/g, '')
-    
+
     // Handle Nigerian phone numbers specifically
     if (/^0\d{10}$/.test(d)) return '+234' + d.slice(1) // 08123456789 -> +2348123456789
     if (/^234\d{10}$/.test(d)) return '+' + d // 2348123456789 -> +2348123456789
     if (/^\+234\d{10}$/.test(d)) return d // +2348123456789 -> +2348123456789
-    
+
     // Handle 10-digit numbers that could be Nigerian (starting with 7, 8, or 9)
     if (/^[789]\d{9}$/.test(d)) return '+234' + d // 8123456789 -> +2348123456789
-    
+
     // Handle other international formats
     if (/^\+?\d{10,15}$/.test(d)) return d.startsWith('+') ? d : '+' + d
-    
+
     return d
   }
 
@@ -259,9 +259,6 @@ export default function SignUp({
       }
       case 'email':
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim().toLowerCase())) return 'Enter a valid email address.'
-        return null
-      case 'bvn':
-        if (!/^\d{11}$/.test(bvn)) return 'BVN must be exactly 11 digits.'
         return null
       case 'otp':
         if (!/^\d{6}$/.test(otp)) return 'OTP must be a 6-digit number.'
@@ -379,8 +376,6 @@ export default function SignUp({
     }
 
     switch (currentStepId) {
-      case 'bvn':
-        return doSignup()
       case 'otp':
         return doVerifyOtp()
       case 'pin':
@@ -584,7 +579,7 @@ export default function SignUp({
     // KYC progress dots logic removed for test flight
     const visibleSteps = steps
     const currentVisibleIndex = visibleSteps.indexOf(currentStepId)
-    
+
     return (
       <div style={{ display: 'flex', gap: 6, margin: '6px 0 10px' }} aria-hidden>
         {visibleSteps.map((_, i) => (
@@ -666,26 +661,6 @@ export default function SignUp({
               style={inputStyle}
               className="no-zoom"
             />
-          </>
-        )
-      case 'bvn':
-        return (
-          <>
-            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>BVN (11 digits)</label>
-            <input
-              key="bvn"
-              placeholder="22345678901"
-              value={bvn}
-              onChange={(e) => setBvn(e.target.value.replace(/[^\d]/g, '').slice(0, 11))}
-              inputMode="numeric"
-              maxLength={11}
-              autoFocus
-              style={inputStyle}
-              className="no-zoom"
-            />
-            <div style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: 4 }}>
-              💡 Pre-filled for test flight - not validated
-            </div>
           </>
         )
       case 'otp':
@@ -781,7 +756,7 @@ export default function SignUp({
             </div>
           </>
         )
-      
+
       // KYC render cases commented out for test flight
       /*
       case 'id-type-selection':
@@ -848,15 +823,15 @@ export default function SignUp({
               {currentStepId === 'otp'
                 ? 'Verify OTP'
                 : currentStepId === 'pin'
-                ? 'Set your PIN'
-                : 'Create your account'}
+                  ? 'Set your PIN'
+                  : 'Create your account'}
             </h2>
             <p style={{ marginTop: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>
               {currentStepId === 'otp'
                 ? 'Enter the 6-digit OTP sent to your phone.'
                 : currentStepId === 'pin'
-                ? 'Create a 6-digit PIN for sign-in and transactions.'
-                : "We'll collect a few details. One step at a time."}
+                  ? 'Create a 6-digit PIN for sign-in and transactions.'
+                  : "We'll collect a few details. One step at a time."}
             </p>
 
             <ProgressDots />
@@ -865,7 +840,7 @@ export default function SignUp({
               {renderStep()}
 
               {/* Default nav + error for the basic signup steps */}
-              {['firstname', 'lastname', 'phone', 'email', 'bvn'].includes(currentStepId) && (
+              {['firstname', 'lastname', 'phone', 'email'].includes(currentStepId) && (
                 <>
                   {error && (
                     <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
@@ -895,12 +870,12 @@ export default function SignUp({
 
                     <button type="submit" className="btn" disabled={loading}>
                       {loading
-                        ? currentStepId === 'bvn'
+                        ? currentStepId === 'email'
                           ? 'Creating…'
                           : 'Please wait…'
-                        : currentStepId === 'bvn'
-                        ? 'Create account'
-                        : 'Next'}
+                        : currentStepId === 'email'
+                          ? 'Create account'
+                          : 'Next'}
                     </button>
                   </div>
                 </>

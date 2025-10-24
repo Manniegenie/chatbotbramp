@@ -243,6 +243,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [accountName, setAccountName] = useState('')
   const [accountNameLoading, setAccountNameLoading] = useState(false)
   const [accountNameError, setAccountNameError] = useState<string | null>(null)
+  const [bankSearch, setBankSearch] = useState('')
   const [payLoading, setPayLoading] = useState(false)
   const [payError, setPayError] = useState<string | null>(null)
   const [payData, setPayData] = useState<PayoutRes | null>(null)
@@ -256,6 +257,11 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [banksError, setBanksError] = useState<string | null>(null)
   const [bankOptions, setBankOptions] = useState<BankOption[]>([])
   const banksFetchedRef = useRef(false)
+
+  // Filter banks based on search
+  const filteredBanks = bankOptions.filter(bank =>
+    bank.name.toLowerCase().includes(bankSearch.toLowerCase())
+  )
 
   // Reset on open
   useEffect(() => {
@@ -550,9 +556,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                 Choose token, network, and amount. We'll capture payout next.
               </p>
 
-              <div style={{ ...badgeWarn, margin: '8px 0' }}>
-                ⚠️ Test Flight: Maximum $1,000 per day during testing phase
-              </div>
 
               {!!initError && (
                 <div role="alert" style={errorBanner}>
@@ -560,119 +563,125 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                 </div>
               )}
 
-              <form onSubmit={submitInitiate} style={gridForm}>
-                <label style={inputWrap}>
-                  <span style={labelText}>Token</span>
-                  <div style={{ position: 'relative' }}>
-                    <select
-                      ref={firstInputRef as any}
-                      style={inputBase}
-                      value={token}
-                      onChange={e => setToken(e.target.value as TokenSym)}
-                    >
-                      {TOKENS.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                    <div style={{
-                      position: 'absolute',
-                      right: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      pointerEvents: 'none',
-                      color: 'var(--muted)',
-                      fontSize: '12px'
-                    }}>
-                      ▼
-                    </div>
-                  </div>
-                </label>
-
-                <label style={inputWrap}>
-                  <span style={labelText}>Network</span>
-                  <div style={{ position: 'relative' }}>
-                    <select
-                      style={inputBase}
-                      value={network}
-                      onChange={e => setNetwork(e.target.value)}
-                    >
-                      {NETWORKS_BY_TOKEN[token].map(n => (
-                        <option key={n.code} value={n.code}>{n.label}</option>
-                      ))}
-                    </select>
-                    <div style={{
-                      position: 'absolute',
-                      right: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      pointerEvents: 'none',
-                      color: 'var(--muted)',
-                      fontSize: '12px'
-                    }}>
-                      ▼
-                    </div>
-                  </div>
-                </label>
-
-                <label style={inputWrap}>
-                  <span style={labelText}>Currency</span>
-                  <div style={{ position: 'relative' }}>
-                    <select
-                      style={inputBase}
-                      value={currency}
-                      onChange={e => setCurrency(e.target.value as 'TOKEN' | 'NGN')}
-                    >
-                      <option value="TOKEN">{token} Amount</option>
-                      <option value="NGN">NGN (Naira)</option>
-                    </select>
-                    <div style={{
-                      position: 'absolute',
-                      right: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      pointerEvents: 'none',
-                      color: 'var(--muted)',
-                      fontSize: '12px'
-                    }}>
-                      ▼
-                    </div>
-                  </div>
-                </label>
-
-                {currency === 'TOKEN' ? (
+              <form onSubmit={submitInitiate} style={{ display: 'grid', gap: 12 }}>
+                {/* Token and Network on same line */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   <label style={inputWrap}>
-                    <span style={labelText}>Amount ({token})</span>
-                    <input
-                      style={inputBase}
-                      inputMode="decimal"
-                      placeholder="e.g. 100"
-                      value={amount}
-                      onChange={e => setAmount(e.target.value)}
-                    />
+                    <span style={labelText}>Token</span>
+                    <div style={{ position: 'relative' }}>
+                      <select
+                        ref={firstInputRef as any}
+                        style={{ ...inputBase, paddingRight: '32px' }}
+                        value={token}
+                        onChange={e => setToken(e.target.value as TokenSym)}
+                      >
+                        {TOKENS.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                      <div style={{
+                        position: 'absolute',
+                        right: '8px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        pointerEvents: 'none',
+                        color: 'var(--muted)',
+                        fontSize: '10px'
+                      }}>
+                        ▼
+                      </div>
+                    </div>
                   </label>
-                ) : (
-                  <label style={inputWrap}>
-                    <span style={labelText}>Amount (NGN)</span>
-                    <input
-                      style={inputBase}
-                      inputMode="decimal"
-                      placeholder="e.g. 50,000"
-                      value={nairaAmount}
-                      onChange={e => {
-                        // Remove commas and non-numeric characters except decimal point
-                        const cleanValue = e.target.value.replace(/[^\d.]/g, '');
-                        setNairaAmount(cleanValue);
-                      }}
-                      onBlur={e => {
-                        // Format with commas when user finishes typing
-                        const num = parseFloat(e.target.value);
-                        if (!isNaN(num) && num > 0) {
-                          setNairaAmount(num.toLocaleString('en-US'));
-                        }
-                      }}
-                    />
-                  </label>
-                )}
 
-                <div style={{ gridColumn: '1 / span 2', display: 'flex', justifyContent: 'flex-end' }}>
+                  <label style={inputWrap}>
+                    <span style={labelText}>Network</span>
+                    <div style={{ position: 'relative' }}>
+                      <select
+                        style={{ ...inputBase, paddingRight: '32px' }}
+                        value={network}
+                        onChange={e => setNetwork(e.target.value)}
+                      >
+                        {NETWORKS_BY_TOKEN[token].map(n => (
+                          <option key={n.code} value={n.code}>{n.label}</option>
+                        ))}
+                      </select>
+                      <div style={{
+                        position: 'absolute',
+                        right: '8px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        pointerEvents: 'none',
+                        color: 'var(--muted)',
+                        fontSize: '10px'
+                      }}>
+                        ▼
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Currency and Amount on same line */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <label style={inputWrap}>
+                    <span style={labelText}>Currency</span>
+                    <div style={{ position: 'relative' }}>
+                      <select
+                        style={{ ...inputBase, paddingRight: '32px' }}
+                        value={currency}
+                        onChange={e => setCurrency(e.target.value as 'TOKEN' | 'NGN')}
+                      >
+                        <option value="TOKEN">{token} Amount</option>
+                        <option value="NGN">NGN (Naira)</option>
+                      </select>
+                      <div style={{
+                        position: 'absolute',
+                        right: '8px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        pointerEvents: 'none',
+                        color: 'var(--muted)',
+                        fontSize: '10px'
+                      }}>
+                        ▼
+                      </div>
+                    </div>
+                  </label>
+
+                  {currency === 'TOKEN' ? (
+                    <label style={inputWrap}>
+                      <span style={labelText}>Amount ({token})</span>
+                      <input
+                        style={inputBase}
+                        inputMode="decimal"
+                        placeholder="e.g. 100"
+                        value={amount}
+                        onChange={e => setAmount(e.target.value)}
+                      />
+                    </label>
+                  ) : (
+                    <label style={inputWrap}>
+                      <span style={labelText}>Amount (NGN)</span>
+                      <input
+                        style={inputBase}
+                        inputMode="decimal"
+                        placeholder="e.g. 50,000"
+                        value={nairaAmount}
+                        onChange={e => {
+                          // Remove commas and non-numeric characters except decimal point
+                          const cleanValue = e.target.value.replace(/[^\d.]/g, '');
+                          setNairaAmount(cleanValue);
+                        }}
+                        onBlur={e => {
+                          // Format with commas when user finishes typing
+                          const num = parseFloat(e.target.value);
+                          if (!isNaN(num) && num > 0) {
+                            setNairaAmount(num.toLocaleString('en-US'));
+                          }
+                        }}
+                      />
+                    </label>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                   <button style={btnPrimary} disabled={initLoading}>
                     {initLoading ? 'Starting…' : 'Start & Continue to Payout'}
                   </button>

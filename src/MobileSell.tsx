@@ -179,6 +179,7 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
   const [accountName, setAccountName] = useState('')
   const [accountNameLoading, setAccountNameLoading] = useState(false)
   const [accountNameError, setAccountNameError] = useState<string | null>(null)
+  const [bankSearch, setBankSearch] = useState('')
   const [payLoading, setPayLoading] = useState(false)
   const [payError, setPayError] = useState<string | null>(null)
   const [payData, setPayData] = useState<PayoutRes | null>(null)
@@ -192,6 +193,11 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
   const [banksError, setBanksError] = useState<string | null>(null)
   const [bankOptions, setBankOptions] = useState<BankOption[]>([])
   const banksFetchedRef = useRef(false)
+  
+  // Filter banks based on search
+  const filteredBanks = bankOptions.filter(bank => 
+    bank.name.toLowerCase().includes(bankSearch.toLowerCase())
+  )
 
   // Reset on open
   useEffect(() => {
@@ -454,9 +460,6 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
                 Choose token, network, and amount. We'll capture payout next.
               </p>
 
-              <div className="mobile-sell-warning">
-                ⚠️ Test Flight: Maximum $1,000 per day during testing phase
-              </div>
 
               {!!initError && (
                 <div className="mobile-sell-error">
@@ -465,86 +468,92 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
               )}
 
               <form onSubmit={submitInitiate} className="mobile-sell-form">
-                <label className="mobile-sell-input-wrap">
-                  <span className="mobile-sell-label">Token</span>
-                  <div className="mobile-sell-select-wrapper">
-                    <select
-                      ref={firstInputRef as any}
-                      className="mobile-sell-input"
-                      value={token}
-                      onChange={e => setToken(e.target.value as TokenSym)}
-                    >
-                      {TOKENS.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                    <div className="mobile-sell-dropdown-arrow">▼</div>
-                  </div>
-                </label>
-
-                <label className="mobile-sell-input-wrap">
-                  <span className="mobile-sell-label">Network</span>
-                  <div className="mobile-sell-select-wrapper">
-                    <select
-                      className="mobile-sell-input"
-                      value={network}
-                      onChange={e => setNetwork(e.target.value)}
-                    >
-                      {NETWORKS_BY_TOKEN[token].map(n => (
-                        <option key={n.code} value={n.code}>{n.label}</option>
-                      ))}
-                    </select>
-                    <div className="mobile-sell-dropdown-arrow">▼</div>
-                  </div>
-                </label>
-
-                <label className="mobile-sell-input-wrap">
-                  <span className="mobile-sell-label">Currency</span>
-                  <div className="mobile-sell-select-wrapper">
-                    <select
-                      className="mobile-sell-input"
-                      value={currency}
-                      onChange={e => setCurrency(e.target.value as 'TOKEN' | 'NGN')}
-                    >
-                      <option value="TOKEN">{token} Amount</option>
-                      <option value="NGN">NGN</option>
-                    </select>
-                    <div className="mobile-sell-dropdown-arrow">▼</div>
-                  </div>
-                </label>
-
-                {currency === 'TOKEN' ? (
-                  <label className="mobile-sell-input-wrap full-width">
-                    <span className="mobile-sell-label">Amount ({token})</span>
-                    <input
-                      className="mobile-sell-input"
-                      inputMode="decimal"
-                      placeholder="e.g. 100"
-                      value={amount}
-                      onChange={e => setAmount(e.target.value)}
-                    />
+                {/* Token and Network on same line */}
+                <div className="mobile-sell-row">
+                  <label className="mobile-sell-input-wrap">
+                    <span className="mobile-sell-label">Token</span>
+                    <div className="mobile-sell-select-wrapper">
+                      <select
+                        ref={firstInputRef as any}
+                        className="mobile-sell-input"
+                        value={token}
+                        onChange={e => setToken(e.target.value as TokenSym)}
+                      >
+                        {TOKENS.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                      <div className="mobile-sell-dropdown-arrow">▼</div>
+                    </div>
                   </label>
-                ) : (
-                  <label className="mobile-sell-input-wrap full-width">
-                    <span className="mobile-sell-label">Amount (NGN)</span>
-                    <input
-                      className="mobile-sell-input"
-                      inputMode="decimal"
-                      placeholder="e.g. 50,000"
-                      value={nairaAmount}
-                      onChange={e => {
-                        // Remove commas and non-numeric characters except decimal point
-                        const cleanValue = e.target.value.replace(/[^\d.]/g, '');
-                        setNairaAmount(cleanValue);
-                      }}
-                      onBlur={e => {
-                        // Format with commas when user finishes typing
-                        const num = parseFloat(e.target.value);
-                        if (!isNaN(num) && num > 0) {
-                          setNairaAmount(num.toLocaleString('en-US'));
-                        }
-                      }}
-                    />
+
+                  <label className="mobile-sell-input-wrap">
+                    <span className="mobile-sell-label">Network</span>
+                    <div className="mobile-sell-select-wrapper">
+                      <select
+                        className="mobile-sell-input"
+                        value={network}
+                        onChange={e => setNetwork(e.target.value)}
+                      >
+                        {NETWORKS_BY_TOKEN[token].map(n => (
+                          <option key={n.code} value={n.code}>{n.label}</option>
+                        ))}
+                      </select>
+                      <div className="mobile-sell-dropdown-arrow">▼</div>
+                    </div>
                   </label>
-                )}
+                </div>
+
+                {/* Currency and Amount on same line */}
+                <div className="mobile-sell-row">
+                  <label className="mobile-sell-input-wrap">
+                    <span className="mobile-sell-label">Currency</span>
+                    <div className="mobile-sell-select-wrapper">
+                      <select
+                        className="mobile-sell-input"
+                        value={currency}
+                        onChange={e => setCurrency(e.target.value as 'TOKEN' | 'NGN')}
+                      >
+                        <option value="TOKEN">{token} Amount</option>
+                        <option value="NGN">NGN</option>
+                      </select>
+                      <div className="mobile-sell-dropdown-arrow">▼</div>
+                    </div>
+                  </label>
+
+                  {currency === 'TOKEN' ? (
+                    <label className="mobile-sell-input-wrap">
+                      <span className="mobile-sell-label">Amount ({token})</span>
+                      <input
+                        className="mobile-sell-input"
+                        inputMode="decimal"
+                        placeholder="e.g. 100"
+                        value={amount}
+                        onChange={e => setAmount(e.target.value)}
+                      />
+                    </label>
+                  ) : (
+                    <label className="mobile-sell-input-wrap">
+                      <span className="mobile-sell-label">Amount (NGN)</span>
+                      <input
+                        className="mobile-sell-input"
+                        inputMode="decimal"
+                        placeholder="e.g. 50,000"
+                        value={nairaAmount}
+                        onChange={e => {
+                          // Remove commas and non-numeric characters except decimal point
+                          const cleanValue = e.target.value.replace(/[^\d.]/g, '');
+                          setNairaAmount(cleanValue);
+                        }}
+                        onBlur={e => {
+                          // Format with commas when user finishes typing
+                          const num = parseFloat(e.target.value);
+                          if (!isNaN(num) && num > 0) {
+                            setNairaAmount(num.toLocaleString('en-US'));
+                          }
+                        }}
+                      />
+                    </label>
+                  )}
+                </div>
 
                 <div className="mobile-sell-button-row">
                   <button className="mobile-sell-button primary" disabled={initLoading}>
@@ -598,26 +607,37 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
 
                   <form onSubmit={submitPayout} className="mobile-sell-form">
                     <label className="mobile-sell-input-wrap">
+                      <span className="mobile-sell-label">Search Bank</span>
+                      <input
+                        className="mobile-sell-input"
+                        type="text"
+                        placeholder="Type to search banks..."
+                        value={bankSearch}
+                        onChange={e => setBankSearch(e.target.value)}
+                      />
+                    </label>
+
+                    <label className="mobile-sell-input-wrap">
                       <span className="mobile-sell-label">Bank</span>
                       <div className="mobile-sell-select-wrapper">
                         <select
                           ref={firstInputRef as any}
                           className="mobile-sell-input"
                           value={bankCode}
-                          disabled={banksLoading || bankOptions.length === 0}
+                          disabled={banksLoading || filteredBanks.length === 0}
                           onChange={e => {
                             const code = e.target.value
-                            const hit = bankOptions.find((b: BankOption) => b.code === code)
+                            const hit = filteredBanks.find((b: BankOption) => b.code === code)
                             if (hit) {
                               setBankCode(hit.code)
                               setBankName(hit.name)
                             }
                           }}
                         >
-                          {bankOptions.length === 0 ? (
-                            <option value="">{banksLoading ? 'Loading…' : (banksError || 'No banks')}</option>
+                          {filteredBanks.length === 0 ? (
+                            <option value="">{banksLoading ? 'Loading…' : (banksError || 'No banks found')}</option>
                           ) : (
-                            bankOptions.map((b: BankOption) => (
+                            filteredBanks.map((b: BankOption) => (
                               <option key={b.code} value={b.code}>{b.name}</option>
                             ))
                           )}
