@@ -166,6 +166,25 @@
   border: 1px solid rgba(255, 0, 0, 0.2);
 }
 
+.mobile-auth-remember-me {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.mobile-auth-checkbox {
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.mobile-auth-checkbox-label {
+  font-size: 0.8rem;
+  color: var(--muted);
+  cursor: pointer;
+  margin: 0;
+}
+
 .mobile-auth-button-row {
   display: flex;
   gap: 10px;

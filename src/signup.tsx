@@ -470,7 +470,7 @@ export default function SignUp({
       const ok = data as ServerSuccess
       if (ok.userId) setPendingUserId(ok.userId)
 
-      // move to OTP page
+      // Only move to OTP page if signup was successful
       setStepIndex(steps.indexOf('otp'))
     } catch (err: any) {
       setError(`Network error: ${err.message}`)

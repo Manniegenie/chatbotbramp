@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { tokenStore } from './lib/secureStore'
 import { normalizePhone } from './utils/phoneNormalization.test'
 
@@ -46,6 +46,16 @@ export default function SignIn({
   const [pin, setPin] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [rememberMe, setRememberMe] = useState(false)
+
+  // Load saved phone number on component mount
+  useEffect(() => {
+    const savedPhone = localStorage.getItem('rememberedPhone')
+    if (savedPhone) {
+      setPhone(savedPhone)
+      setRememberMe(true)
+    }
+  }, [])
 
   // Phone number normalization function
   function normalizePhone(input: string): string {
@@ -119,6 +129,13 @@ export default function SignIn({
       const ok = data as ServerSuccess
       tokenStore.setTokens(ok.accessToken, ok.refreshToken)
       tokenStore.setUser(ok.user)
+
+      // Save phone number if remember me is checked
+      if (rememberMe) {
+        localStorage.setItem('rememberedPhone', phone)
+      } else {
+        localStorage.removeItem('rememberedPhone')
+      }
 
       onSuccess({ accessToken: ok.accessToken, refreshToken: ok.refreshToken, user: ok.user })
     } catch (err: any) {
@@ -200,6 +217,19 @@ export default function SignIn({
                   ⚠️ {error}
                 </div>
               )}
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
+                <input
+                  type="checkbox"
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  style={{ margin: 0 }}
+                />
+                <label htmlFor="rememberMe" style={{ fontSize: '0.8rem', color: 'var(--muted)', cursor: 'pointer', margin: 0 }}>
+                  Remember me
+                </label>
+              </div>
 
               <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                 <button className="btn" type="submit" disabled={loading}>
