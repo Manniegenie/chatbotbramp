@@ -134,27 +134,38 @@ export default function SignIn({
   }
 
   return (
-    <div
-      className="chat"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="signin-title"
-      style={{
+    <div style={{ 
+      position: 'fixed', 
+      top: 0, 
+      left: 0, 
+      width: '100%', 
+      height: '100%', 
+      background: 'var(--bg)', 
+      zIndex: 1000,
+      display: 'flex',
+      alignItems: 'flex-start',
+      justifyContent: 'flex-start',
+      padding: '20px'
+    }}>
+      <div style={{ 
+        maxWidth: '500px', 
         width: '100%',
-        maxWidth: '100vw',
-        padding: '8px 10px 0',
-      }}
-    >
-      <div className="messages" style={{ paddingTop: 0 }}>
-        <div className="bubble" style={{ maxWidth: '95%' }}>
-          <div className="role">Security</div>
-          <div className="text">
-            <h2 id="signin-title" style={{ marginTop: 0, marginBottom: 6, fontSize: '1.2rem' }}>
-              Sign in
-            </h2>
-            <p style={{ marginTop: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>
-              Use your phone number and 6-digit PIN to continue.
-            </p>
+        background: 'var(--card)',
+        border: '1px solid var(--border)',
+        borderRadius: '12px',
+        padding: '24px',
+        boxShadow: 'var(--shadow)'
+      }}>
+        <div style={{ marginBottom: '20px' }}>
+          <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600, color: 'var(--txt)' }}>
+            Sign in
+          </h2>
+          <p style={{ marginTop: '8px', color: 'var(--muted)', fontSize: '0.9rem' }}>
+            Use your phone number and 6-digit PIN to continue.
+          </p>
+        </div>
+
+        <div>
 
             <form onSubmit={submit}>
               <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Phone number</label>
@@ -224,7 +235,6 @@ export default function SignIn({
             <p style={{ marginTop: 12, fontSize: '0.8rem', color: 'var(--muted)' }}>
               Too many failed attempts can temporarily lock your account.
             </p>
-          </div>
         </div>
       </div>
     </div>
