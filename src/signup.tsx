@@ -375,6 +375,9 @@ export default function SignUp({
         setError(invalid)
         return
       }
+      // After signup, switch to OTP step
+      setShowAllFields(false)
+      setStepIndex(4) // Go to OTP step (index 4 in the steps array)
       return doSignup()
     }
 
@@ -848,7 +851,7 @@ export default function SignUp({
             <ProgressDots />
 
             <form onSubmit={handleSubmit}>
-              {showAllFields ? (
+              {showAllFields && !loading ? (
                 // Show all basic fields on one page
                 <div style={{ display: 'grid', gap: 12 }}>
                   <label style={{ display: 'grid', gap: 4 }}>

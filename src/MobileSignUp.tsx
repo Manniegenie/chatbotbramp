@@ -218,6 +218,9 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
         setError(invalid)
         return
       }
+      // After signup, switch to OTP step
+      setShowAllFields(false)
+      setStepIndex(4) // Go to OTP step (index 4 in the steps array)
       return doSignup()
     }
 
@@ -553,7 +556,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
           <ProgressDots />
 
           <form onSubmit={handleSubmit} className="mobile-auth-form">
-            {showAllFields ? (
+            {showAllFields && !loading ? (
               // Show all basic fields on one page
               <div className="mobile-auth-fields">
                 <label className="mobile-auth-input-wrap">
