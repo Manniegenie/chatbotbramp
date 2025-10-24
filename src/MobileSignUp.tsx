@@ -75,7 +75,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
   const VERIFY_OTP_ENDPOINT = `${API_BASE}/verify-otp/verify-otp`
   const PASSWORD_PIN_ENDPOINT = `${API_BASE}/passwordpin/password-pin`
 
-  const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'bvn', 'otp', 'pin']
+  const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'otp', 'pin']
   const [stepIndex, setStepIndex] = useState<number>(0)
 
   const [firstname, setFirstname] = useState('')
@@ -83,7 +83,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   
-  // Auto-fill BVN with random 11-digit number for test flight
+  // Auto-fill BVN with random 11-digit number for test flight (hidden from user)
   const [bvn, setBvn] = useState(() => {
     return Math.floor(10000000000 + Math.random() * 90000000000).toString()
   })
@@ -173,9 +173,6 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
       case 'email':
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim().toLowerCase())) return 'Enter a valid email address.'
         return null
-      case 'bvn':
-        if (!/^\d{11}$/.test(bvn)) return 'BVN must be exactly 11 digits.'
-        return null
       case 'otp':
         if (!/^\d{6}$/.test(otp)) return 'OTP must be a 6-digit number.'
         return null
@@ -222,7 +219,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
     }
 
     switch (currentStepId) {
-      case 'bvn':
+      case 'email':
         return doSignup()
       case 'otp':
         return doVerifyOtp()
@@ -437,24 +434,6 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
             />
           </label>
         )
-      case 'bvn':
-        return (
-          <label className="mobile-auth-input-wrap">
-            <span className="mobile-auth-label">BVN (11 digits)</span>
-            <input
-              className="mobile-auth-input"
-              placeholder="22345678901"
-              value={bvn}
-              onChange={(e) => setBvn(e.target.value.replace(/[^\d]/g, '').slice(0, 11))}
-              inputMode="numeric"
-              maxLength={11}
-              autoFocus
-            />
-            <div className="mobile-auth-hint">
-              💡 Pre-filled for test flight - not validated
-            </div>
-          </label>
-        )
       case 'otp':
         return (
           <>
@@ -566,7 +545,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
             {renderStep()}
 
             {/* Default nav + error for the basic signup steps */}
-            {['firstname', 'lastname', 'phone', 'email', 'bvn'].includes(currentStepId) && (
+            {['firstname', 'lastname', 'phone', 'email'].includes(currentStepId) && (
               <>
                 {error && (
                   <div className="mobile-auth-error">
@@ -596,11 +575,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
 
                   <button type="submit" className="mobile-auth-button primary" disabled={loading}>
                     {loading
-                      ? currentStepId === 'bvn'
-                        ? 'Creating…'
-                        : 'Please wait…'
-                      : currentStepId === 'bvn'
-                      ? 'Create account'
+                      ? 'Please wait…'
                       : 'Next'}
                   </button>
                 </div>
