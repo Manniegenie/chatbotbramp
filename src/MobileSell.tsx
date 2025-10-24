@@ -654,7 +654,7 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
                         ) : accountName ? (
                           accountName
                         ) :
-                          'Enter account number'
+                          'Account name'
                         }
                       </div>
                     </label>

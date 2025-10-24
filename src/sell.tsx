@@ -219,7 +219,8 @@ const sheetStyle: React.CSSProperties = {
   boxShadow: 'var(--shadow)', 
   overflow: 'hidden', 
   display: 'flex', 
-  flexDirection: 'column'
+  flexDirection: 'column',
+  position: 'relative'
 }
 const headerStyle: React.CSSProperties = { marginBottom: '16px', flexShrink: 0 }
 const titleRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6 }
@@ -232,14 +233,14 @@ const btnPrimary: React.CSSProperties = { ...btn, border: 'none', background: 'v
 const btnDangerGhost: React.CSSProperties = { ...btn, borderColor: 'var(--border)', color: 'var(--muted)' }
 const gridForm: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }
 const inputWrap: React.CSSProperties = { display: 'grid', gap: 4 }
-const labelText: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' }
+const labelText: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', whiteSpace: 'nowrap' }
 const inputBase: React.CSSProperties = { background: '#0f1117', color: 'var(--txt)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 10px', outline: 'none' }
 const card: React.CSSProperties = { border: '1px solid var(--border)', borderRadius: 10, padding: 10, background: '#0e0f15', display: 'grid', gap: 8 }
 const kvGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }
-const kStyle: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' }
-const vStyle: React.CSSProperties = { fontWeight: 600 }
+const kStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', whiteSpace: 'nowrap' }
+const vStyle: React.CSSProperties = { fontWeight: 600, fontSize: 11, whiteSpace: 'nowrap' }
 const mono: React.CSSProperties = { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace' }
-const smallMuted: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' }
+const smallMuted: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', whiteSpace: 'nowrap' }
 const row: React.CSSProperties = { display: 'flex', gap: 6, flexWrap: 'wrap' }
 const badge: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, padding: '4px 8px', borderRadius: 999, border: '1px solid var(--border)', background: '#0d1210' }
 const badgeWarn: React.CSSProperties = { ...badge, background: 'rgba(255, 170, 0, .08)', borderColor: 'rgba(255, 170, 0, .25)' }
@@ -812,7 +813,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                         ) : accountName ? (
                           accountName
                         ) :
-                          'Enter account number'
+                          'Account name'
                         }
                       </div>
                     </label>
