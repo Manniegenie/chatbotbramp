@@ -32,7 +32,7 @@ function toArrayBuffer(view: Uint8Array): ArrayBuffer {
     return sliced;
   } else {
     // Convert SharedArrayBuffer to ArrayBuffer if needed
-    const arrayBuffer = new ArrayBuffer(sliced.byteLength);
+    const arrayBuffer = new ArrayBuffer((sliced as SharedArrayBuffer).byteLength);
     new Uint8Array(arrayBuffer).set(new Uint8Array(sliced));
     return arrayBuffer;
   }

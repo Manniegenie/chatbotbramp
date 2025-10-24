@@ -877,6 +877,7 @@ export default function SignUp({
           </p>
 
           {!showAllFields && <ProgressDots />}
+        </div>
 
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <form onSubmit={handleSubmit}>
