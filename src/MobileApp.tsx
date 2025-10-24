@@ -607,19 +607,19 @@ export default function MobileApp() {
             className="mobile-hint"
             onClick={() => handleHintClick('Sell 100 USDT to NGN')}
           >
-            💰 Sell USDT
+            Sell USDT
           </button>
           <button
             className="mobile-hint"
             onClick={() => handleHintClick('Show my portfolio balance')}
           >
-            📊 Portfolio
+            Portfolio
           </button>
           <button
             className="mobile-hint"
             onClick={() => handleHintClick('Current NGN rates')}
           >
-            💱 NGN Rates
+            NGN Rates
           </button>
         </div>
 
