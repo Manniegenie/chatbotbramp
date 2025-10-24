@@ -478,6 +478,55 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
       )
     }
 
+    if (currentStepGroup === 'otp') {
+      return (
+        <label className="mobile-auth-input-wrap">
+          <span className="mobile-auth-label">Enter OTP</span>
+          <input
+            className="mobile-auth-input"
+            placeholder="123456"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
+            inputMode="numeric"
+            maxLength={6}
+            autoFocus
+          />
+        </label>
+      )
+    }
+
+    if (currentStepGroup === 'pin') {
+      return (
+        <>
+          <label className="mobile-auth-input-wrap">
+            <span className="mobile-auth-label">Create PIN</span>
+            <input
+              className="mobile-auth-input"
+              placeholder="••••••"
+              value={pin}
+              onChange={(e) => setPin(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
+              type="password"
+              inputMode="numeric"
+              maxLength={6}
+              autoFocus
+            />
+          </label>
+          <label className="mobile-auth-input-wrap">
+            <span className="mobile-auth-label">Confirm PIN</span>
+            <input
+              className="mobile-auth-input"
+              placeholder="••••••"
+              value={pin2}
+              onChange={(e) => setPin2(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
+              type="password"
+              inputMode="numeric"
+              maxLength={6}
+            />
+          </label>
+        </>
+      )
+    }
+
     switch (currentStepId) {
       case 'otp':
         return (

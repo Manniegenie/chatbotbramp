@@ -710,6 +710,73 @@ export default function SignUp({
       )
     }
 
+    if (currentStepGroup === 'otp') {
+      return (
+        <>
+          <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Enter OTP</label>
+          <input
+            key="otp"
+            placeholder="123456"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
+            inputMode="numeric"
+            maxLength={6}
+            autoFocus
+            style={inputStyle}
+            className="no-zoom"
+          />
+          {otpError && (
+            <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
+              ⚠️ {otpError}
+            </div>
+          )}
+          {resendError && (
+            <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
+              ⚠️ {resendError}
+            </div>
+          )}
+        </>
+      )
+    }
+
+    if (currentStepGroup === 'pin') {
+      return (
+        <>
+          <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Create PIN</label>
+          <input
+            key="pin"
+            placeholder="••••••"
+            value={pin}
+            onChange={(e) => setPin(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
+            type="password"
+            inputMode="numeric"
+            maxLength={6}
+            autoFocus
+            style={inputStyle}
+            className="no-zoom"
+          />
+          <div style={{ height: 8 }} />
+          <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Confirm PIN</label>
+          <input
+            key="pin2"
+            placeholder="••••••"
+            value={pin2}
+            onChange={(e) => setPin2(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
+            type="password"
+            inputMode="numeric"
+            maxLength={6}
+            style={inputStyle}
+            className="no-zoom"
+          />
+          {pinError && (
+            <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
+              ⚠️ {pinError}
+            </div>
+          )}
+        </>
+      )
+    }
+
     switch (currentStepId) {
       case 'phone':
         return (
