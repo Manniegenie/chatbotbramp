@@ -168,7 +168,7 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
   const [token, setToken] = useState<TokenSym>('USDT')
   const [network, setNetwork] = useState(NETWORKS_BY_TOKEN['USDT'][0].code)
   const [amount, setAmount] = useState<string>('100')
-  const [currency, setCurrency] = useState<'USD' | 'NGN'>('USD')
+  const [currency, setCurrency] = useState<'TOKEN' | 'NGN'>('TOKEN')
   const [nairaAmount, setNairaAmount] = useState<string>('')
   const [initLoading, setInitLoading] = useState(false)
   const [initError, setInitError] = useState<string | null>(null)
@@ -202,7 +202,7 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
     setToken('USDT')
     setNetwork(NETWORKS_BY_TOKEN['USDT'][0].code)
     setAmount('100')
-    setCurrency('USD')
+    setCurrency('TOKEN')
     setNairaAmount('')
     setInitLoading(false)
     setInitError(null)
@@ -323,9 +323,9 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
 
     let amountNum: number
 
-    if (currency === 'USD') {
+    if (currency === 'TOKEN') {
       if (!amount || isNaN(+amount) || +amount <= 0) {
-        setInitError('Enter a valid amount')
+        setInitError('Enter a valid token amount')
         return
       }
       amountNum = +amount
@@ -334,26 +334,7 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
         setInitError('Enter a valid Naira amount')
         return
       }
-      // Convert Naira to USD using backend
-      try {
-        const res = await fetch(`${API_BASE}/swap/convert-naira`, {
-          method: 'POST',
-          headers: getHeaders(),
-          body: JSON.stringify({ nairaAmount: +nairaAmount }),
-        })
-        const data = await res.json()
-        if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
-        amountNum = data.usdAmount
-      } catch (err: any) {
-        setInitError(err.message || 'Failed to convert Naira amount')
-        return
-      }
-    }
-
-    // Test flight compliance: $50 daily sell limit validation
-    if (amountNum > 50) {
-      setInitError('Daily sell limit is $50 during test flight. Please reduce your amount.')
-      return
+      amountNum = +nairaAmount
     }
 
     setInitLoading(true)
@@ -361,7 +342,7 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
       const res = await fetch(`${API_BASE}/sell/initiate`, {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify({ token, network, sellAmount: amountNum }),
+        body: JSON.stringify({ token, network, sellAmount: amountNum, currency }),
       })
       const data: InitiateSellRes = await res.json()
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
@@ -509,16 +490,16 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
                     <select
                       className="mobile-sell-input"
                       value={currency}
-                      onChange={e => setCurrency(e.target.value as 'USD' | 'NGN')}
+                      onChange={e => setCurrency(e.target.value as 'TOKEN' | 'NGN')}
                     >
-                      <option value="USD">USD</option>
+                      <option value="TOKEN">{token} Amount</option>
                       <option value="NGN">NGN</option>
                     </select>
                     <div className="mobile-sell-dropdown-arrow">▼</div>
                   </div>
                 </label>
 
-                {currency === 'USD' ? (
+                {currency === 'TOKEN' ? (
                   <label className="mobile-sell-input-wrap full-width">
                     <span className="mobile-sell-label">Amount ({token})</span>
                     <input

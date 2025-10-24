@@ -118,7 +118,7 @@ function shortenUrlForDisplay(raw: string) {
 function inlineRender(text: string, keyPrefix: string): React.ReactNode[] {
   const nodes: React.ReactNode[] = []
   let last = 0
-  
+
   // Handle **bold** text first
   text.replace(/\*\*(.*?)\*\*/g, (match, content: string, offset: number) => {
     if (offset > last) nodes.push(text.slice(last, offset))
@@ -130,7 +130,7 @@ function inlineRender(text: string, keyPrefix: string): React.ReactNode[] {
     last = offset + match.length
     return match
   })
-  
+
   if (last < text.length) {
     const remainingText = text.slice(last)
     let linkLast = 0
@@ -471,7 +471,6 @@ export default function App() {
     clearAuth()
     setAuth(null)
     setShowSell(false)
-    setShowSwap(false)
   }
 
   function isSellCTA(btn: CTAButton): boolean {
@@ -501,6 +500,7 @@ export default function App() {
     }
     setShowSwap(true)
   }
+
 
   function echoFromModalToChat(text: string) {
     if (!text) return

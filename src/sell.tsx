@@ -232,7 +232,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [token, setToken] = useState<TokenSym>('USDT')
   const [network, setNetwork] = useState(NETWORKS_BY_TOKEN['USDT'][0].code)
   const [amount, setAmount] = useState<string>('100')
-  const [currency, setCurrency] = useState<'USD' | 'NGN'>('USD')
+  const [currency, setCurrency] = useState<'TOKEN' | 'NGN'>('TOKEN')
   const [nairaAmount, setNairaAmount] = useState<string>('')
   const [initLoading, setInitLoading] = useState(false)
   const [initError, setInitError] = useState<string | null>(null)
@@ -266,7 +266,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     setToken('USDT')
     setNetwork(NETWORKS_BY_TOKEN['USDT'][0].code)
     setAmount('100')
-    setCurrency('USD')
+    setCurrency('TOKEN')
     setNairaAmount('')
     setInitLoading(false)
     setInitError(null)
@@ -386,16 +386,9 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     setInitError(null)
 
     // Validate input based on currency
-    if (currency === 'USD') {
+    if (currency === 'TOKEN') {
       if (!amount || isNaN(+amount) || +amount <= 0) {
-        setInitError('Enter a valid amount')
-        return
-      }
-
-      // Test flight compliance: $50 daily sell limit validation
-      const amountNum = +amount;
-      if (amountNum > 50) {
-        setInitError('Daily sell limit is $50 during test flight. Please reduce your amount.')
+        setInitError('Enter a valid token amount')
         return
       }
     } else {
@@ -407,22 +400,13 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
     setInitLoading(true)
     try {
-      let requestBody: any = { token, network }
+      let requestBody: any = { token, network, currency }
 
-      if (currency === 'USD') {
+      if (currency === 'TOKEN') {
         requestBody.sellAmount = +amount
       } else {
-        // For NGN, we need to convert to USD first
-        const res = await fetch(`${API_BASE}/swap/convert-naira`, {
-          method: 'POST',
-          headers: getHeaders(),
-          body: JSON.stringify({ nairaAmount: +nairaAmount }),
-        })
-        const conversionData = await res.json()
-        if (!res.ok || !conversionData.success) {
-          throw new Error(conversionData?.message || 'Failed to convert Naira amount')
-        }
-        requestBody.sellAmount = conversionData.usdAmount
+        // For NGN, send NGN amount directly
+        requestBody.sellAmount = +nairaAmount
       }
 
       const res = await fetch(`${API_BASE}/sell/initiate`, {
@@ -600,9 +584,9 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     <select
                       style={inputBase}
                       value={currency}
-                      onChange={e => setCurrency(e.target.value as 'USD' | 'NGN')}
+                      onChange={e => setCurrency(e.target.value as 'TOKEN' | 'NGN')}
                     >
-                      <option value="USD">USD ({token})</option>
+                      <option value="TOKEN">{token} Amount</option>
                       <option value="NGN">NGN (Naira)</option>
                     </select>
                     <div style={{
@@ -619,7 +603,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   </div>
                 </label>
 
-                {currency === 'USD' ? (
+                {currency === 'TOKEN' ? (
                   <label style={inputWrap}>
                     <span style={labelText}>Amount ({token})</span>
                     <input

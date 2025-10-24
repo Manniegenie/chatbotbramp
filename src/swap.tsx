@@ -1,7 +1,7 @@
 // src/swap.tsx
 import React, { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { tokenStore } from './lib/secureStore'
-import './swap-modal-responsive.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -11,33 +11,8 @@ type SwapModalProps = {
     onChatEcho?: (text: string) => void
 }
 
-type BTCPrice = {
-    price: number
-    currency: string
-    lastUpdated: string
-}
-
-type InitiateSwapRes = {
-    success: boolean
-    swapId: string
-    reference: string
-    btcAmount: number
-    usdtAmount: number
-    fee: number
-    usdtAddress: string
-    network: string
-    expiresAt: string
-    message?: string
-}
-
-const NETWORKS = [
-    { code: 'ETH', label: 'Ethereum (ERC-20)' },
-    { code: 'TRX', label: 'Tron (TRC-20)' },
-    { code: 'BSC', label: 'BNB Smart Chain (BEP-20)' },
-    { code: 'SOL', label: 'Solana' },
-] as const
-
-type NetworkCode = typeof NETWORKS[number]['code']
+const TOKENS = ['USDT', 'USDC', 'BTC', 'ETH', 'SOL', 'BNB', 'MATIC', 'AVAX'] as const
+type TokenSym = typeof TOKENS[number]
 
 function getHeaders() {
     const { access } = tokenStore.getTokens()
@@ -48,117 +23,32 @@ function getHeaders() {
 }
 
 function prettyAmount(n: number) {
-    return new Intl.NumberFormat('en-US', { maximumFractionDigits: 8 }).format(n)
+    return new Intl.NumberFormat('en-NG', { maximumFractionDigits: 8 }).format(n)
 }
 
-function prettyUsd(n: number) {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(n)
-}
-
-function useCountdown(expiryIso?: string | null) {
-    const [msLeft, setMsLeft] = useState<number>(() => {
-        if (!expiryIso) return 0
-        return Math.max(0, new Date(expiryIso).getTime() - Date.now())
-    })
-
-    useEffect(() => {
-        if (!expiryIso) return
-        const t = setInterval(() => {
-            const left = Math.max(0, new Date(expiryIso).getTime() - Date.now())
-            setMsLeft(left)
-        }, 250)
-        return () => clearInterval(t)
-    }, [expiryIso])
-
-    const mm = Math.floor(msLeft / 60000)
-    const ss = Math.floor((msLeft % 60000) / 1000)
-    return { msLeft, text: `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`, expired: msLeft <= 0 }
-}
-
-function buildSwapRecap(init: InitiateSwapRes | null) {
-    if (!init) return ''
-
-    return [
-        `Swap initiated successfully! 🔄`,
-        `You'll receive: **${prettyAmount(init.usdtAmount)} USDT**`,
-        `Network: **${init.network}**`,
-        `Address: **${init.usdtAddress}**`,
-        `Fee: **${prettyUsd(init.fee)}** (1.5%)`,
-        `Expires: **${new Date(init.expiresAt).toLocaleString()}**`,
-        '',
-        `⚠️ Send exactly **${prettyAmount(init.btcAmount)} BTC** to complete the swap.`,
-    ].join('\n')
+function prettyNgn(n: number) {
+    return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 2 }).format(n)
 }
 
 export default function SwapModal({ open, onClose, onChatEcho }: SwapModalProps) {
-    const [step, setStep] = useState<1 | 2>(1)
-
-    // Step 1 (Swap Details)
-    const [usdtAddress, setUsdtAddress] = useState('')
-    const [network, setNetwork] = useState<NetworkCode>(NETWORKS[0].code)
-    const [usdAmount, setUsdAmount] = useState<string>('100')
-    const [currency, setCurrency] = useState<'USD' | 'NGN'>('USD')
-    const [nairaAmount, setNairaAmount] = useState<string>('')
-    const [initLoading, setInitLoading] = useState(false)
-    const [initError, setInitError] = useState<string | null>(null)
-    const [initData, setInitData] = useState<InitiateSwapRes | null>(null)
-
-    // BTC Price
-    const [btcPrice, setBtcPrice] = useState<BTCPrice | null>(null)
-    const [priceLoading, setPriceLoading] = useState(false)
-    const [priceError, setPriceError] = useState<string | null>(null)
-
-    // Countdown
-    const { text: countdown, expired } = useCountdown(initData?.expiresAt)
+    const [fromToken, setFromToken] = useState<TokenSym>('USDT')
+    const [toToken, setToToken] = useState<TokenSym>('BTC')
+    const [amount, setAmount] = useState<string>('100')
+    const [swapType, setSwapType] = useState<'onramp' | 'offramp'>('offramp')
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+    const [quote, setQuote] = useState<any>(null)
 
     // Reset on open
     useEffect(() => {
         if (!open) return
-        setStep(1)
-        setUsdtAddress('')
-        setNetwork(NETWORKS[0].code)
-        setUsdAmount('100')
-        setCurrency('USD')
-        setNairaAmount('')
-        setInitLoading(false)
-        setInitError(null)
-        setInitData(null)
-        setBtcPrice(null)
-        setPriceLoading(false)
-        setPriceError(null)
-    }, [open])
-
-    // Fetch BTC price on open
-    useEffect(() => {
-        if (!open) return
-            ; (async () => {
-                setPriceLoading(true)
-                setPriceError(null)
-                try {
-                    const res = await fetch(`${API_BASE}/swap/btc-price`, {
-                        method: 'GET',
-                        headers: getHeaders(),
-                        cache: 'no-store'
-                    })
-
-                    if (!res.ok) {
-                        throw new Error(`HTTP ${res.status}: ${res.statusText}`)
-                    }
-
-                    const data = await res.json()
-
-                    if (data.success && data.price) {
-                        setBtcPrice(data)
-                    } else {
-                        throw new Error(data?.error || 'Invalid price data received')
-                    }
-                } catch (e: any) {
-                    console.error('BTC price fetch error:', e)
-                    setPriceError(e?.message || 'Failed to fetch BTC price')
-                } finally {
-                    setPriceLoading(false)
-                }
-            })()
+        setFromToken('USDT')
+        setToToken('BTC')
+        setAmount('100')
+        setSwapType('offramp')
+        setLoading(false)
+        setError(null)
+        setQuote(null)
     }, [open])
 
     // Esc to close
@@ -169,312 +59,319 @@ export default function SwapModal({ open, onClose, onChatEcho }: SwapModalProps)
         return () => window.removeEventListener('keydown', onKey)
     }, [open, onClose])
 
-    // Autofocus per step
-    const firstInputRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null)
-    useEffect(() => { firstInputRef.current?.focus() }, [step])
-
-    async function submitInitiate(e: React.FormEvent) {
-        e.preventDefault()
-        setInitError(null)
-        if (!usdtAddress.trim()) {
-            setInitError('Enter your USDT receiving address')
+    async function getQuote() {
+        if (!amount || isNaN(+amount) || +amount <= 0) {
+            setError('Enter a valid amount')
             return
         }
 
-        let finalUsdAmount = 0;
-
-        if (currency === 'USD') {
-            if (!usdAmount || isNaN(+usdAmount) || +usdAmount <= 0) {
-                setInitError('Enter a valid USD amount')
-                return
-            }
-            finalUsdAmount = +usdAmount;
-        } else {
-            if (!nairaAmount || isNaN(+nairaAmount) || +nairaAmount <= 0) {
-                setInitError('Enter a valid Naira amount')
-                return
-            }
-
-            // Convert Naira to USD
-            try {
-                const convertRes = await fetch(`${API_BASE}/swap/convert-naira`, {
-                    method: 'POST',
-                    headers: getHeaders(),
-                    body: JSON.stringify({ nairaAmount: +nairaAmount }),
-                })
-                const convertData = await convertRes.json()
-                if (!convertRes.ok || !convertData.success) {
-                    throw new Error(convertData?.error || 'Failed to convert Naira amount')
-                }
-                finalUsdAmount = convertData.usdAmount;
-            } catch (err: any) {
-                setInitError(err.message || 'Failed to convert Naira amount')
-                return
-            }
-        }
-
-        if (finalUsdAmount > 10000) {
-            setInitError('Maximum swap amount is $10,000')
-            return
-        }
-
-        setInitLoading(true)
+        setLoading(true)
+        setError(null)
         try {
-            const res = await fetch(`${API_BASE}/swap/initiate`, {
+            const res = await fetch(`${API_BASE}/swap/quote`, {
                 method: 'POST',
                 headers: getHeaders(),
                 body: JSON.stringify({
-                    usdtAddress: usdtAddress.trim(),
-                    network,
-                    usdAmount: finalUsdAmount
+                    fromToken,
+                    toToken,
+                    amount: +amount,
+                    type: swapType
                 }),
             })
-            const data: InitiateSwapRes = await res.json()
-            if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
-            setInitData(data)
-            setStep(2)
+            const data = await res.json()
+            if (!res.ok || !data.success) throw new Error(data?.error || `HTTP ${res.status}`)
+            setQuote(data.quote)
         } catch (err: any) {
-            setInitError(err.message || 'Failed to initiate swap')
+            setError(err.message || 'Failed to get quote')
         } finally {
-            setInitLoading(false)
+            setLoading(false)
         }
     }
 
-    const [copiedKey, setCopiedKey] = useState<string | null>(null)
-    function copyToClipboard(text: string, key: string) {
-        navigator.clipboard?.writeText(text).then(() => {
-            setCopiedKey(key)
-            setTimeout(() => setCopiedKey(null), 1200)
-        }).catch(() => { })
+    async function executeSwap() {
+        if (!quote) return
+
+        setLoading(true)
+        setError(null)
+        try {
+            const res = await fetch(`${API_BASE}/swap/execute`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify({
+                    fromToken: quote.fromToken,
+                    toToken: quote.toToken,
+                    fromAmount: quote.fromAmount,
+                    toAmount: quote.toAmount,
+                    rate: quote.rate,
+                    type: quote.type
+                }),
+            })
+            const data = await res.json()
+            if (!res.ok || !data.success) throw new Error(data?.error || `HTTP ${res.status}`)
+
+            onChatEcho?.(`Swap executed successfully! ${prettyAmount(quote.fromAmount)} ${quote.fromToken} → ${prettyAmount(quote.toAmount)} ${quote.toToken}`)
+            onClose()
+        } catch (err: any) {
+            setError(err.message || 'Failed to execute swap')
+        } finally {
+            setLoading(false)
+        }
     }
 
     if (!open) return null
 
-    const headerTitle = step === 1 ? 'Start a Swap' : 'Swap Summary'
+    return createPortal(
+        <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,.55)',
+            display: 'grid',
+            placeItems: 'center',
+            padding: 16,
+            zIndex: 1000
+        }} role="dialog" aria-modal="true" onClick={onClose}>
+            <div style={{
+                width: '100%',
+                maxWidth: 500,
+                background: 'var(--card)',
+                color: 'var(--txt)',
+                border: '1px solid var(--border)',
+                borderRadius: 16,
+                boxShadow: 'var(--shadow)',
+                overflow: 'hidden',
+                display: 'grid',
+                gridTemplateRows: 'auto 1fr auto',
+                animation: 'scaleIn 120ms ease-out'
+            }} onClick={(e) => e.stopPropagation()}>
 
-    return (
-        <div className="swap-modal-overlay" onClick={onClose}>
-            <div className="swap-modal-container" onClick={(e) => e.stopPropagation()}>
                 {/* Header */}
-                <div className="swap-modal-header">
-                    <div className="swap-modal-title-row">
-                        <div className="swap-modal-icon">🔄</div>
+                <div style={{
+                    padding: '16px 18px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    borderBottom: '1px solid var(--border)'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 10, background: '#0d1512', display: 'grid', placeItems: 'center', border: '1px solid var(--border)' }}>
+                            🔄
+                        </div>
                         <div>
-                            <h2 className="swap-modal-title">{headerTitle}</h2>
-                            <div className="swap-modal-stepper">
-                                <span className={`swap-modal-dot ${step === 1 ? 'active' : ''}`}></span> Step 1 — Details
-                                <span className="swap-modal-dot-separator">•</span>
-                                <span className={`swap-modal-dot ${step === 2 ? 'active' : ''}`}></span> Step 2 — Summary
-                            </div>
+                            <div style={{ fontWeight: 700 }}>Token Swap</div>
+                            <div style={{ fontSize: 12, color: 'var(--muted)' }}>Exchange between tokens</div>
                         </div>
                     </div>
-                    <button type="button" className="swap-modal-close" onClick={onClose}>✕</button>
+                    <button type="button" aria-label="Close" style={{
+                        appearance: 'none',
+                        border: '1px solid var(--border)',
+                        background: 'transparent',
+                        color: 'var(--muted)',
+                        padding: '10px 14px',
+                        borderRadius: 10,
+                        cursor: 'pointer'
+                    }} onClick={onClose}>✕</button>
                 </div>
 
                 {/* Body */}
-                <div className="swap-modal-body">
-                    {/* STEP 1 — Swap Details */}
-                    {step === 1 && (
-                        <div className="swap-modal-section">
-                            <p className="swap-modal-description">
-                                Enter your USDT blockchain address and amount. We'll create a Lightning invoice for you to pay with BTC, then swap to USDT on your chosen network.
-                            </p>
+                <div style={{ padding: 18, overflow: 'auto' }}>
+                    <div style={{ display: 'grid', gap: 14 }}>
+                        <p style={{ margin: 0, color: 'var(--muted)' }}>
+                            Choose tokens and amount to get a quote.
+                        </p>
 
-                            <div className="swap-modal-warning">
-                                ⚠️ Maximum swap amount: $10,000 worth of BTC
+                        {!!error && (
+                            <div role="alert" style={{
+                                border: '1px solid rgba(220, 50, 50, .25)',
+                                borderRadius: 12,
+                                padding: 14,
+                                background: 'rgba(220, 50, 50, .1)'
+                            }}>
+                                <strong style={{ color: '#ffaaaa' }}>Error:</strong> {error}
                             </div>
+                        )}
 
-                            {/* BTC Price Display */}
-                            {btcPrice && (
-                                <div className="swap-modal-price-card">
-                                    <div className="swap-modal-price-title">Current BTC Price</div>
-                                    <div className="swap-modal-price-value">
-                                        {prettyUsd(btcPrice.price)} USD
-                                    </div>
-                                    <div className="swap-modal-price-updated">
-                                        Updated: {new Date(btcPrice.lastUpdated).toLocaleTimeString()}
-                                    </div>
-                                </div>
-                            )}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                            <label style={{ display: 'grid', gap: 6 }}>
+                                <span style={{ fontSize: 12, color: 'var(--muted)' }}>From Token</span>
+                                <select
+                                    style={{
+                                        background: '#0f1117',
+                                        color: 'var(--txt)',
+                                        border: '1px solid var(--border)',
+                                        borderRadius: 10,
+                                        padding: '10px 12px',
+                                        outline: 'none'
+                                    }}
+                                    value={fromToken}
+                                    onChange={e => setFromToken(e.target.value as TokenSym)}
+                                >
+                                    {TOKENS.map(t => <option key={t} value={t}>{t}</option>)}
+                                </select>
+                            </label>
 
-                            {priceError && (
-                                <div className="swap-modal-error">
-                                    <strong>Price Error:</strong> {priceError}
-                                </div>
-                            )}
+                            <label style={{ display: 'grid', gap: 6 }}>
+                                <span style={{ fontSize: 12, color: 'var(--muted)' }}>To Token</span>
+                                <select
+                                    style={{
+                                        background: '#0f1117',
+                                        color: 'var(--txt)',
+                                        border: '1px solid var(--border)',
+                                        borderRadius: 10,
+                                        padding: '10px 12px',
+                                        outline: 'none'
+                                    }}
+                                    value={toToken}
+                                    onChange={e => setToToken(e.target.value as TokenSym)}
+                                >
+                                    {TOKENS.map(t => <option key={t} value={t}>{t}</option>)}
+                                </select>
+                            </label>
 
-                            {!!initError && (
-                                <div className="swap-modal-error">
-                                    <strong>Error:</strong> {initError}
-                                </div>
-                            )}
+                            <label style={{ display: 'grid', gap: 6 }}>
+                                <span style={{ fontSize: 12, color: 'var(--muted)' }}>Amount</span>
+                                <input
+                                    style={{
+                                        background: '#0f1117',
+                                        color: 'var(--txt)',
+                                        border: '1px solid var(--border)',
+                                        borderRadius: 10,
+                                        padding: '10px 12px',
+                                        outline: 'none'
+                                    }}
+                                    inputMode="decimal"
+                                    placeholder="e.g. 100"
+                                    value={amount}
+                                    onChange={e => setAmount(e.target.value)}
+                                />
+                            </label>
 
-                            <form onSubmit={submitInitiate} className="swap-modal-form">
-                                <label className="swap-modal-input-wrap">
-                                    <span className="swap-modal-label">USDT Receiving Address</span>
-                                    <input
-                                        ref={firstInputRef as any}
-                                        className="swap-modal-input"
-                                        placeholder="Enter your USDT blockchain address"
-                                        value={usdtAddress}
-                                        onChange={e => setUsdtAddress(e.target.value)}
-                                    />
-                                </label>
-
-                                <label className="swap-modal-input-wrap">
-                                    <span className="swap-modal-label">Network</span>
-                                    <div className="swap-modal-select-wrapper">
-                                        <select
-                                            className="swap-modal-input"
-                                            value={network}
-                                            onChange={e => setNetwork(e.target.value as NetworkCode)}
-                                        >
-                                            {NETWORKS.map(n => (
-                                                <option key={n.code} value={n.code}>{n.label}</option>
-                                            ))}
-                                        </select>
-                                        <div className="swap-modal-dropdown-arrow">▼</div>
-                                    </div>
-                                </label>
-
-                                <label className="swap-modal-input-wrap">
-                                    <span className="swap-modal-label">Currency</span>
-                                    <div className="swap-modal-select-wrapper">
-                                        <select
-                                            className="swap-modal-input"
-                                            value={currency}
-                                            onChange={e => setCurrency(e.target.value as 'USD' | 'NGN')}
-                                        >
-                                            <option value="USD">USD</option>
-                                            <option value="NGN">NGN (Naira)</option>
-                                        </select>
-                                        <div className="swap-modal-dropdown-arrow">▼</div>
-                                    </div>
-                                </label>
-
-                                {currency === 'USD' ? (
-                                    <label className="swap-modal-input-wrap full-width">
-                                        <span className="swap-modal-label">Amount (USD)</span>
-                                        <input
-                                            className="swap-modal-input"
-                                            inputMode="decimal"
-                                            placeholder="e.g. 100"
-                                            value={usdAmount}
-                                            onChange={e => setUsdAmount(e.target.value)}
-                                        />
-                                    </label>
-                                ) : (
-                                    <label className="swap-modal-input-wrap full-width">
-                                        <span className="swap-modal-label">Amount (NGN)</span>
-                                        <input
-                                            className="swap-modal-input"
-                                            inputMode="decimal"
-                                            placeholder="e.g. 150000"
-                                            value={nairaAmount}
-                                            onChange={e => setNairaAmount(e.target.value)}
-                                        />
-                                    </label>
-                                )}
-
-                                <div className="swap-modal-fee-info">
-                                    <div className="swap-modal-fee-title">Fee: 1.5%</div>
-                                    <div className="swap-modal-fee-description">
-                                        Lightning Network fees apply for fast BTC processing
-                                    </div>
-                                </div>
-
-                                <div className="swap-modal-button-row">
-                                    <button className="swap-modal-button primary" disabled={initLoading || priceLoading}>
-                                        {initLoading ? 'Creating Swap...' : 'Create Swap'}
-                                    </button>
-                                </div>
-                            </form>
+                            <label style={{ display: 'grid', gap: 6 }}>
+                                <span style={{ fontSize: 12, color: 'var(--muted)' }}>Type</span>
+                                <select
+                                    style={{
+                                        background: '#0f1117',
+                                        color: 'var(--txt)',
+                                        border: '1px solid var(--border)',
+                                        borderRadius: 10,
+                                        padding: '10px 12px',
+                                        outline: 'none'
+                                    }}
+                                    value={swapType}
+                                    onChange={e => setSwapType(e.target.value as 'onramp' | 'offramp')}
+                                >
+                                    <option value="offramp">Crypto to NGN</option>
+                                    <option value="onramp">NGN to Crypto</option>
+                                </select>
+                            </label>
                         </div>
-                    )}
 
-                    {/* STEP 2 — Swap Summary */}
-                    {step === 2 && initData && (
-                        <div className="swap-modal-section">
-                            <div className="swap-modal-success-card">
-                                <div className="swap-modal-success-header">
-                                    <h3 className="swap-modal-card-title">Swap Details</h3>
-                                    <div className="swap-modal-countdown">
-                                        ⏱ {expired ? 'Expired' : countdown} <span>remaining</span>
-                                    </div>
-                                </div>
-
-                                <div className="swap-modal-grid">
+                        {quote && (
+                            <div style={{
+                                border: '1px solid var(--border)',
+                                borderRadius: 12,
+                                padding: 14,
+                                background: '#0e0f15',
+                                display: 'grid',
+                                gap: 10
+                            }}>
+                                <h3 style={{ margin: 0, fontSize: 16 }}>Quote</h3>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                     <div>
-                                        <div className="swap-modal-key">Swap ID</div>
-                                        <div className="swap-modal-value mono">{initData.swapId}</div>
-                                    </div>
-                                    <div>
-                                        <div className="swap-modal-key">Reference</div>
-                                        <div className="swap-modal-value mono">{initData.reference}</div>
-                                    </div>
-                                    <div>
-                                        <div className="swap-modal-key">You'll Receive</div>
-                                        <div className="swap-modal-value">
-                                            {prettyAmount(initData.usdtAmount)} USDT
+                                        <div style={{ fontSize: 12, color: 'var(--muted)' }}>You Send</div>
+                                        <div style={{ fontWeight: 600 }}>
+                                            {prettyAmount(quote.fromAmount)} {quote.fromToken}
                                         </div>
                                     </div>
                                     <div>
-                                        <div className="swap-modal-key">Network</div>
-                                        <div className="swap-modal-value">{initData.network}</div>
-                                    </div>
-                                    <div>
-                                        <div className="swap-modal-key">Fee</div>
-                                        <div className="swap-modal-value">{prettyUsd(initData.fee)} (1.5%)</div>
-                                    </div>
-                                    <div>
-                                        <div className="swap-modal-key">USDT Address</div>
-                                        <div className="swap-modal-value mono wrap">
-                                            {initData.usdtAddress}
-                                        </div>
-                                        <div className="swap-modal-button-row">
-                                            <button
-                                                className="swap-modal-button outline"
-                                                onClick={() => copyToClipboard(initData.usdtAddress, 'usdt-addr')}
-                                            >
-                                                {copiedKey === 'usdt-addr' ? 'Copied ✓' : 'Copy Address'}
-                                            </button>
+                                        <div style={{ fontSize: 12, color: 'var(--muted)' }}>You Receive</div>
+                                        <div style={{ fontWeight: 600 }}>
+                                            {prettyAmount(quote.toAmount)} {quote.toToken}
                                         </div>
                                     </div>
-                                </div>
-
-                                <div className="swap-modal-warning">
-                                    ⚠️ Send exactly {prettyAmount(initData.btcAmount)} BTC to complete the swap before the timer expires.
-                                </div>
-
-                                <div className="swap-modal-button-row">
-                                    <button className="swap-modal-button primary" onClick={() => {
-                                        onChatEcho?.(buildSwapRecap(initData))
-                                        onClose()
-                                    }}>
-                                        Done
-                                    </button>
+                                    <div>
+                                        <div style={{ fontSize: 12, color: 'var(--muted)' }}>Rate</div>
+                                        <div style={{ fontWeight: 600 }}>
+                                            {prettyAmount(quote.rate)} {quote.toToken}/{quote.fromToken}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+                        )}
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                            {!quote ? (
+                                <button
+                                    style={{
+                                        appearance: 'none',
+                                        border: 'none',
+                                        background: 'var(--accent)',
+                                        color: 'white',
+                                        padding: '10px 14px',
+                                        borderRadius: 10,
+                                        cursor: 'pointer'
+                                    }}
+                                    disabled={loading}
+                                    onClick={getQuote}
+                                >
+                                    {loading ? 'Getting Quote...' : 'Get Quote'}
+                                </button>
+                            ) : (
+                                <button
+                                    style={{
+                                        appearance: 'none',
+                                        border: 'none',
+                                        background: 'var(--accent)',
+                                        color: 'white',
+                                        padding: '10px 14px',
+                                        borderRadius: 10,
+                                        cursor: 'pointer'
+                                    }}
+                                    disabled={loading}
+                                    onClick={executeSwap}
+                                >
+                                    {loading ? 'Executing...' : 'Execute Swap'}
+                                </button>
+                            )}
                         </div>
-                    )}
+                    </div>
                 </div>
 
                 {/* Footer */}
-                <div className="swap-modal-footer">
-                    <div className="swap-modal-footer-text">
-                        {step === 1
-                            ? 'Enter your USDT blockchain address and amount to create a Lightning invoice.'
-                            : 'Send the exact BTC amount to complete your swap to USDT.'}
+                <div style={{
+                    padding: 16,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                    borderTop: '1px solid var(--border)',
+                    background: 'linear-gradient(180deg, transparent, rgba(0,0,0,.05))'
+                }}>
+                    <div style={{ fontSize: 12, color: 'var(--muted)' }}>
+                        {!quote ? 'Get a quote to see exchange rates.' : 'Review the quote before executing.'}
                     </div>
-                    <div className="swap-modal-button-row">
-                        {step === 2 ? (
-                            <button className="swap-modal-button outline" onClick={() => setStep(1)}>← Back</button>
-                        ) : (
-                            <button className="swap-modal-button outline" onClick={onClose}>Cancel</button>
-                        )}
+                    <div style={{ display: 'flex', gap: 10 }}>
+                        <button
+                            style={{
+                                appearance: 'none',
+                                border: '1px solid var(--border)',
+                                background: 'transparent',
+                                color: 'var(--txt)',
+                                padding: '10px 14px',
+                                borderRadius: 10,
+                                cursor: 'pointer'
+                            }}
+                            onClick={onClose}
+                        >
+                            Cancel
+                        </button>
                     </div>
                 </div>
             </div>
-        </div>
+
+            {/* Tiny animation keyframes */}
+            <style>
+                {`@keyframes scaleIn{from{transform:translateY(8px) scale(.98); opacity:.0} to{transform:none; opacity:1}}`}
+            </style>
+        </div>,
+        document.body
     )
 }
