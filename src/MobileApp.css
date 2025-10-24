@@ -590,17 +590,17 @@ a {
 }
 
 .mobile-cta-btn {
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
   background: var(--accent);
   color: white;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
   text-align: center;
   text-decoration: none;
   border: none;
   cursor: pointer;
-  min-height: 36px;
+  min-height: 28px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;

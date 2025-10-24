@@ -195,29 +195,29 @@ function QRCode({ data, size = 120 }: { data: string; size?: number }) {
 }
 
 /* ===== Minimal inline modal styles ===== */
-const overlayStyle: React.CSSProperties = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', display: 'grid', placeItems: 'center', padding: 16, zIndex: 1000 }
-const sheetStyle: React.CSSProperties = { width: '100%', maxWidth: 760, background: 'var(--card)', color: 'var(--txt)', border: '1px solid var(--border)', borderRadius: 16, boxShadow: 'var(--shadow)', overflow: 'hidden', display: 'grid', gridTemplateRows: 'auto 1fr auto', animation: 'scaleIn 120ms ease-out' }
-const headerStyle: React.CSSProperties = { padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }
-const titleRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10 }
-const stepperStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--muted)' }
+const overlayStyle: React.CSSProperties = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', display: 'grid', placeItems: 'center', padding: 8, zIndex: 1000 }
+const sheetStyle: React.CSSProperties = { width: '100%', maxWidth: 600, background: 'var(--card)', color: 'var(--txt)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: 'var(--shadow)', overflow: 'hidden', display: 'grid', gridTemplateRows: 'auto 1fr auto', animation: 'scaleIn 120ms ease-out' }
+const headerStyle: React.CSSProperties = { padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }
+const titleRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6 }
+const stepperStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--muted)' }
 const dot = (active: boolean): React.CSSProperties => ({ width: 8, height: 8, borderRadius: 999, background: active ? 'var(--accent)' : 'var(--border)' })
-const bodyStyle: React.CSSProperties = { padding: 18, overflow: 'auto' }
-const footerStyle: React.CSSProperties = { padding: 16, display: 'flex', justifyContent: 'space-between', gap: 12, borderTop: '1px solid var(--border)', background: 'linear-gradient(180deg, transparent, rgba(0,0,0,.05))' }
-const btn: React.CSSProperties = { appearance: 'none', border: '1px solid var(--border)', background: 'transparent', color: 'var(--txt)', padding: '10px 14px', borderRadius: 10, cursor: 'pointer' }
+const bodyStyle: React.CSSProperties = { padding: 12, overflow: 'auto' }
+const footerStyle: React.CSSProperties = { padding: 10, display: 'flex', justifyContent: 'space-between', gap: 8, borderTop: '1px solid var(--border)', background: 'linear-gradient(180deg, transparent, rgba(0,0,0,.05))' }
+const btn: React.CSSProperties = { appearance: 'none', border: '1px solid var(--border)', background: 'transparent', color: 'var(--txt)', padding: '8px 12px', borderRadius: 8, cursor: 'pointer' }
 const btnPrimary: React.CSSProperties = { ...btn, border: 'none', background: 'var(--accent)', color: 'white' }
 const btnDangerGhost: React.CSSProperties = { ...btn, borderColor: 'var(--border)', color: 'var(--muted)' }
-const gridForm: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }
-const inputWrap: React.CSSProperties = { display: 'grid', gap: 6 }
+const gridForm: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }
+const inputWrap: React.CSSProperties = { display: 'grid', gap: 4 }
 const labelText: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' }
-const inputBase: React.CSSProperties = { background: '#0f1117', color: 'var(--txt)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 12px', outline: 'none' }
-const card: React.CSSProperties = { border: '1px solid var(--border)', borderRadius: 12, padding: 14, background: '#0e0f15', display: 'grid', gap: 10 }
-const kvGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }
+const inputBase: React.CSSProperties = { background: '#0f1117', color: 'var(--txt)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 10px', outline: 'none' }
+const card: React.CSSProperties = { border: '1px solid var(--border)', borderRadius: 10, padding: 10, background: '#0e0f15', display: 'grid', gap: 8 }
+const kvGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }
 const kStyle: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' }
 const vStyle: React.CSSProperties = { fontWeight: 600 }
 const mono: React.CSSProperties = { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace' }
 const smallMuted: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' }
-const row: React.CSSProperties = { display: 'flex', gap: 10, flexWrap: 'wrap' }
-const badge: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 12, padding: '6px 10px', borderRadius: 999, border: '1px solid var(--border)', background: '#0d1210' }
+const row: React.CSSProperties = { display: 'flex', gap: 6, flexWrap: 'wrap' }
+const badge: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, padding: '4px 8px', borderRadius: 999, border: '1px solid var(--border)', background: '#0d1210' }
 const badgeWarn: React.CSSProperties = { ...badge, background: 'rgba(255, 170, 0, .08)', borderColor: 'rgba(255, 170, 0, .25)' }
 const errorBanner: React.CSSProperties = { ...card, background: 'rgba(220, 50, 50, .1)', borderColor: 'rgba(220, 50, 50, .25)' }
 const successCard: React.CSSProperties = { ...card, background: 'rgba(0, 115, 55, .12)', borderColor: 'rgba(0, 115, 55, .35)' }
