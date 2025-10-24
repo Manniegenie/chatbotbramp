@@ -179,7 +179,6 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
   const [accountName, setAccountName] = useState('')
   const [accountNameLoading, setAccountNameLoading] = useState(false)
   const [accountNameError, setAccountNameError] = useState<string | null>(null)
-  const [bankSearch, setBankSearch] = useState('')
   const [payLoading, setPayLoading] = useState(false)
   const [payError, setPayError] = useState<string | null>(null)
   const [payData, setPayData] = useState<PayoutRes | null>(null)
@@ -194,43 +193,6 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
   const [bankOptions, setBankOptions] = useState<BankOption[]>([])
   const banksFetchedRef = useRef(false)
   
-  // Search results from backend
-  const [searchResults, setSearchResults] = useState<BankOption[]>([])
-  const [searchLoading, setSearchLoading] = useState(false)
-
-  // Search banks on backend
-  const searchBanks = async (query: string) => {
-    if (!query.trim()) {
-      setSearchResults([])
-      return
-    }
-    
-    setSearchLoading(true)
-    try {
-      const res = await fetch(`${API_BASE}/banks/search?q=${encodeURIComponent(query)}`, {
-        method: 'GET',
-        headers: getHeaders()
-      })
-      const data = await res.json()
-      if (res.ok && data.success) {
-        setSearchResults(data.data || [])
-      } else {
-        setSearchResults([])
-      }
-    } catch (err) {
-      setSearchResults([])
-    } finally {
-      setSearchLoading(false)
-    }
-  }
-
-  // Debounced search
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      searchBanks(bankSearch)
-    }, 300)
-    return () => clearTimeout(timeoutId)
-  }, [bankSearch])
 
 
   // Reset on open
@@ -639,57 +601,6 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
                   )}
 
                   <form onSubmit={submitPayout} className="mobile-sell-form">
-                    <label className="mobile-sell-input-wrap">
-                      <span className="mobile-sell-label">Search Bank</span>
-                      <input
-                        className="mobile-sell-input"
-                        type="text"
-                        placeholder="Type to search banks..."
-                        value={bankSearch}
-                        onChange={e => setBankSearch(e.target.value)}
-                      />
-                    </label>
-
-                    {/* Search Results */}
-                    {bankSearch && (
-                      <div style={{
-                        maxHeight: '200px',
-                        overflowY: 'auto',
-                        border: '1px solid var(--border)',
-                        borderRadius: '8px',
-                        background: 'var(--card)',
-                        marginTop: '4px'
-                      }}>
-                        {searchLoading ? (
-                          <div style={{ padding: '12px', textAlign: 'center', color: 'var(--muted)' }}>
-                            Searching...
-                          </div>
-                        ) : searchResults.length > 0 ? (
-                          searchResults.map((bank: BankOption) => (
-                            <div
-                              key={bank.code}
-                              style={{
-                                padding: '12px',
-                                cursor: 'pointer',
-                                borderBottom: '1px solid var(--border)'
-                              }}
-                              onClick={() => {
-                                setBankCode(bank.code)
-                                setBankName(bank.name)
-                                setBankSearch('')
-                                setSearchResults([])
-                              }}
-                            >
-                              {bank.name}
-                            </div>
-                          ))
-                        ) : (
-                          <div style={{ padding: '12px', textAlign: 'center', color: 'var(--muted)' }}>
-                            No banks found
-                          </div>
-                        )}
-                      </div>
-                    )}
 
                     <label className="mobile-sell-input-wrap">
                       <span className="mobile-sell-label">Bank</span>
