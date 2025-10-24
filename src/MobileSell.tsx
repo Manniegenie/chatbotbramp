@@ -417,8 +417,35 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
     ) : ''
 
   return (
-    <div className="mobile-sell-overlay" onClick={onClose}>
-      <div className="mobile-sell-container" onClick={(e) => e.stopPropagation()}>
+    <div style={{ 
+      position: 'fixed', 
+      top: 0, 
+      left: 0, 
+      width: '100vw', 
+      height: '100vh', 
+      background: 'linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(/src/assets/wallpaper1.jpg) center/cover no-repeat', 
+      zIndex: 1000,
+      display: 'flex',
+      alignItems: 'flex-start',
+      justifyContent: 'center',
+      padding: '16px 12px',
+      overflow: 'hidden',
+      touchAction: 'none'
+    }} onClick={onClose}>
+      <div style={{ 
+        maxWidth: '340px', 
+        width: '100%',
+        maxHeight: '65vh',
+        marginTop: '8vh',
+        background: 'var(--card)',
+        border: '1px solid var(--border)',
+        borderRadius: '8px',
+        padding: '16px',
+        boxShadow: 'var(--shadow)',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column'
+      }} onClick={(e) => e.stopPropagation()}>
         {/* Loading Overlay */}
         {(initLoading || payLoading || accountNameLoading || banksLoading) && (
           <div className="mobile-sell-loading-overlay">
@@ -432,24 +459,24 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
           </div>
         )}
         {/* Header */}
-        <div className="mobile-sell-header">
-          <h2 className="mobile-sell-title">
+        <div style={{ marginBottom: '16px', flexShrink: 0 }}>
+          <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 600, color: 'var(--txt)' }}>
             {step === 1 ? 'Start a Payment' : step === 2 ? 'Payout Details' : 'Transaction Summary'}
           </h2>
-          <p className="mobile-sell-description">
+          <p style={{ marginTop: '6px', color: 'var(--muted)', fontSize: '0.85rem' }}>
             {step === 1 ? 'Choose token, network, and amount. We\'ll capture payout next.' : 
              step === 2 ? 'Enter your bank details to receive payment.' : 
              'Review your transaction details before confirming.'}
           </p>
-          <div className="mobile-sell-stepper">
-            <span className={`mobile-sell-dot ${step >= 1 ? 'active' : ''}`}></span>
-            <span className={`mobile-sell-dot ${step >= 2 ? 'active' : ''}`}></span>
-            <span className={`mobile-sell-dot ${step >= 3 ? 'active' : ''}`}></span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: '8px' }}>
+            <span style={{ width: 8, height: 8, borderRadius: 999, background: step >= 1 ? 'var(--accent)' : 'var(--border)' }}></span>
+            <span style={{ width: 8, height: 8, borderRadius: 999, background: step >= 2 ? 'var(--accent)' : 'var(--border)' }}></span>
+            <span style={{ width: 8, height: 8, borderRadius: 999, background: step >= 3 ? 'var(--accent)' : 'var(--border)' }}></span>
           </div>
         </div>
 
         {/* Body */}
-        <div className="mobile-sell-body">
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           {/* STEP 1 — Start a Payment */}
           {step === 1 && (
             <div className="mobile-sell-section">

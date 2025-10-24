@@ -197,30 +197,32 @@ function QRCode({ data, size = 120 }: { data: string; size?: number }) {
 /* ===== Minimal inline modal styles ===== */
 const overlayStyle: React.CSSProperties = { 
   position: 'fixed', 
-  inset: 0, 
-  background: 'rgba(0,0,0,.55)', 
-  display: 'flex', 
-  alignItems: 'flex-start', 
-  justifyContent: 'center', 
-  padding: '20px 16px', 
-  overflow: 'hidden', 
-  touchAction: 'none',
-  zIndex: 1000 
+  top: 0, 
+  left: 0, 
+  width: '100vw', 
+  height: '100vh', 
+  background: 'linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(/src/assets/wallpaper1.jpg) center/cover no-repeat', 
+  zIndex: 1000,
+  display: 'flex',
+  alignItems: 'flex-start',
+  justifyContent: 'center',
+  padding: '20px 16px',
+  overflow: 'hidden',
+  touchAction: 'none'
 }
 const sheetStyle: React.CSSProperties = { 
   maxWidth: '360px', 
   width: '100%',
   maxHeight: '70vh',
   marginTop: '10vh',
-  background: 'var(--card)', 
-  border: '1px solid var(--border)', 
-  borderRadius: '8px', 
-  padding: '20px', 
-  boxShadow: 'var(--shadow)', 
-  overflow: 'hidden', 
-  display: 'flex', 
-  flexDirection: 'column',
-  position: 'relative'
+  background: 'var(--card)',
+  border: '1px solid var(--border)',
+  borderRadius: '8px',
+  padding: '20px',
+  boxShadow: 'var(--shadow)',
+  overflow: 'hidden',
+  display: 'flex',
+  flexDirection: 'column'
 }
 const headerStyle: React.CSSProperties = { marginBottom: '16px', flexShrink: 0 }
 const titleRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6 }
