@@ -5,7 +5,6 @@ import SignUp, { SignUpResult } from './signup'
 import { tokenStore } from './lib/secureStore'
 import { authFetch, getAuthState, setupAutoLogoutTimer, clearAuth } from './lib/tokenManager'
 import SellModal from './sell'
-import SwapModal from './swap'
 import WallpaperSlideshow from './WallpaperSlideshow'
 // Import logo from assets
 import BrampLogo from './assets/logo.jpeg' // Placeholder path
@@ -274,10 +273,7 @@ export default function App() {
   const [showSignIn, setShowSignIn] = useState(false)
   const [showSignUp, setShowSignUp] = useState(false)
   const [showSell, setShowSell] = useState(false)
-  const [showSwap, setShowSwap] = useState(false)
-
   const [openSellAfterAuth, setOpenSellAfterAuth] = useState(false)
-  const [openSwapAfterAuth, setOpenSwapAfterAuth] = useState(false)
 
   const [auth, setAuth] = useState<SignInResult | null>(() => {
     const authState = getAuthState()
@@ -491,14 +487,10 @@ export default function App() {
     setShowSell(true)
   }
 
-  function handleSwapClick(event?: React.MouseEvent) {
+  function handleKycClick(event?: React.MouseEvent) {
     event?.preventDefault()
-    if (!auth) {
-      setOpenSwapAfterAuth(true)
-      setShowSignIn(true)
-      return
-    }
-    setShowSwap(true)
+    // KYC functionality disabled for now
+    console.log('KYC button clicked - functionality disabled')
   }
 
 
@@ -836,8 +828,8 @@ export default function App() {
               <button className="btn" onClick={handleSellClick}>
                 Pay
               </button>
-              <button className="btn" onClick={handleSwapClick}>
-                Swap
+              <button className="btn" onClick={handleKycClick} style={{ opacity: 0.6, cursor: 'not-allowed' }}>
+                KYC
               </button>
               <button className="btn" onClick={signOut}>
                 Sign out
@@ -861,7 +853,6 @@ export default function App() {
                 ts: Date.now(),
               }])
               if (openSellAfterAuth) { setOpenSellAfterAuth(false); setShowSell(true) }
-              if (openSwapAfterAuth) { setOpenSwapAfterAuth(false); setShowSwap(true) }
             }}
           />
         ) : showSignUp ? (
@@ -1011,7 +1002,6 @@ export default function App() {
         )}
 
         <SellModal open={showSell} onClose={() => setShowSell(false)} onChatEcho={echoFromModalToChat} />
-        <SwapModal open={showSwap} onClose={() => setShowSwap(false)} onChatEcho={echoFromModalToChat} />
 
         <footer className="footer">
           <div className="footer-left">
