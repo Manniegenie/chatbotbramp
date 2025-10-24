@@ -533,27 +533,32 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
       position: 'fixed', 
       top: 0, 
       left: 0, 
-      width: '100%', 
+      width: '100vw', 
       height: '100vh', 
       background: 'var(--bg)', 
       zIndex: 1000,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '20px',
-      overflow: 'hidden'
+      padding: '12px',
+      overflow: 'hidden',
+      touchAction: 'none'
     }}>
       <div style={{ 
-        maxWidth: '400px', 
+        maxWidth: '340px', 
         width: '100%',
+        maxHeight: '85vh',
         background: 'var(--card)',
         border: '1px solid var(--border)',
-        borderRadius: '12px',
-        padding: '24px',
-        boxShadow: 'var(--shadow)'
+        borderRadius: '8px',
+        padding: '16px',
+        boxShadow: 'var(--shadow)',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column'
       }}>
-        <div style={{ marginBottom: '20px' }}>
-          <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600, color: 'var(--txt)' }}>
+        <div style={{ marginBottom: '12px', flexShrink: 0 }}>
+          <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 600, color: 'var(--txt)' }}>
             {showAllFields 
               ? 'Create your account'
               : currentStepId === 'otp'
@@ -562,7 +567,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
                   ? 'Set your PIN'
                   : 'Create your account'}
           </h2>
-          <p style={{ marginTop: '8px', color: 'var(--muted)', fontSize: '0.9rem' }}>
+          <p style={{ marginTop: '4px', color: 'var(--muted)', fontSize: '0.8rem' }}>
             {showAllFields 
               ? "Enter your details to create your account."
               : currentStepId === 'otp'
@@ -575,7 +580,8 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
           {!showAllFields && <ProgressDots />}
         </div>
 
-        <form onSubmit={handleSubmit} className="mobile-auth-form">
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+          <form onSubmit={handleSubmit} className="mobile-auth-form">
             {showAllFields && !loading ? (
               // Show all basic fields on one page
               <div className="mobile-auth-fields">
@@ -722,7 +728,8 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
               </div>
             )}
 
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   )

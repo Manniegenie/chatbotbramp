@@ -88,6 +88,30 @@
   gap: 12px;
 }
 
+/* Prevent iOS keyboard issues */
+.mobile-auth-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  overflow: hidden !important;
+  touch-action: none !important;
+}
+
+.mobile-auth-container {
+  max-height: 85vh !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.mobile-auth-form {
+  flex: 1 !important;
+  overflow: auto !important;
+  min-height: 0 !important;
+}
+
 .mobile-auth-input-wrap {
   display: grid;
   gap: 6px;

@@ -140,35 +140,41 @@ export default function MobileSignIn({
       position: 'fixed', 
       top: 0, 
       left: 0, 
-      width: '100%', 
+      width: '100vw', 
       height: '100vh', 
       background: 'var(--bg)', 
       zIndex: 1000,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '20px',
-      overflow: 'hidden'
+      padding: '12px',
+      overflow: 'hidden',
+      touchAction: 'none'
     }}>
       <div style={{ 
-        maxWidth: '400px', 
+        maxWidth: '340px', 
         width: '100%',
+        maxHeight: '85vh',
         background: 'var(--card)',
         border: '1px solid var(--border)',
-        borderRadius: '12px',
-        padding: '24px',
-        boxShadow: 'var(--shadow)'
+        borderRadius: '8px',
+        padding: '16px',
+        boxShadow: 'var(--shadow)',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column'
       }}>
-        <div style={{ marginBottom: '20px' }}>
-          <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600, color: 'var(--txt)' }}>
+        <div style={{ marginBottom: '12px', flexShrink: 0 }}>
+          <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 600, color: 'var(--txt)' }}>
             Sign in
           </h2>
-          <p style={{ marginTop: '8px', color: 'var(--muted)', fontSize: '0.9rem' }}>
+          <p style={{ marginTop: '4px', color: 'var(--muted)', fontSize: '0.8rem' }}>
             Use your phone number and 6-digit PIN to continue.
           </p>
         </div>
 
-        <form onSubmit={submit} className="mobile-auth-form">
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+          <form onSubmit={submit} className="mobile-auth-form">
             <label className="mobile-auth-input-wrap">
               <span className="mobile-auth-label">Phone number</span>
               <div className="mobile-auth-phone-input">
@@ -221,7 +227,8 @@ export default function MobileSignIn({
             <p className="mobile-auth-note">
               Too many failed attempts can temporarily lock your account.
             </p>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   )

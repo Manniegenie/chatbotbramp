@@ -138,35 +138,41 @@ export default function SignIn({
       position: 'fixed', 
       top: 0, 
       left: 0, 
-      width: '100%', 
+      width: '100vw', 
       height: '100vh', 
       background: 'var(--bg)', 
       zIndex: 1000,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '20px',
-      overflow: 'hidden'
+      padding: '16px',
+      overflow: 'hidden',
+      touchAction: 'none'
     }}>
       <div style={{ 
-        maxWidth: '400px', 
+        maxWidth: '360px', 
         width: '100%',
+        maxHeight: '90vh',
         background: 'var(--card)',
         border: '1px solid var(--border)',
-        borderRadius: '12px',
-        padding: '24px',
-        boxShadow: 'var(--shadow)'
+        borderRadius: '8px',
+        padding: '20px',
+        boxShadow: 'var(--shadow)',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column'
       }}>
-        <div style={{ marginBottom: '20px' }}>
-          <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600, color: 'var(--txt)' }}>
+        <div style={{ marginBottom: '16px', flexShrink: 0 }}>
+          <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 600, color: 'var(--txt)' }}>
             Sign in
           </h2>
-          <p style={{ marginTop: '8px', color: 'var(--muted)', fontSize: '0.9rem' }}>
+          <p style={{ marginTop: '6px', color: 'var(--muted)', fontSize: '0.85rem' }}>
             Use your phone number and 6-digit PIN to continue.
           </p>
         </div>
 
-        <form onSubmit={submit}>
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+          <form onSubmit={submit}>
               <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Phone number</label>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                 <span
@@ -234,6 +240,7 @@ export default function SignIn({
           <p style={{ marginTop: 12, fontSize: '0.8rem', color: 'var(--muted)' }}>
             Too many failed attempts can temporarily lock your account.
           </p>
+        </div>
       </div>
     </div>
   )

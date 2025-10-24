@@ -833,27 +833,32 @@ export default function SignUp({
       position: 'fixed', 
       top: 0, 
       left: 0, 
-      width: '100%', 
+      width: '100vw', 
       height: '100vh', 
       background: 'var(--bg)', 
       zIndex: 1000,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '20px',
-      overflow: 'hidden'
+      padding: '16px',
+      overflow: 'hidden',
+      touchAction: 'none'
     }}>
       <div style={{ 
-        maxWidth: '400px', 
+        maxWidth: '360px', 
         width: '100%',
+        maxHeight: '90vh',
         background: 'var(--card)',
         border: '1px solid var(--border)',
-        borderRadius: '12px',
-        padding: '24px',
-        boxShadow: 'var(--shadow)'
+        borderRadius: '8px',
+        padding: '20px',
+        boxShadow: 'var(--shadow)',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column'
       }}>
-        <div style={{ marginBottom: '20px' }}>
-          <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600, color: 'var(--txt)' }}>
+        <div style={{ marginBottom: '16px', flexShrink: 0 }}>
+          <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 600, color: 'var(--txt)' }}>
             {showAllFields 
               ? 'Create your account'
               : currentStepId === 'otp'
@@ -862,7 +867,7 @@ export default function SignUp({
                   ? 'Set your PIN'
                   : 'Create your account'}
           </h2>
-          <p style={{ marginTop: '8px', color: 'var(--muted)', fontSize: '0.9rem' }}>
+          <p style={{ marginTop: '6px', color: 'var(--muted)', fontSize: '0.85rem' }}>
             {showAllFields 
               ? "Enter your details to create your account."
               : currentStepId === 'otp'
@@ -874,6 +879,7 @@ export default function SignUp({
 
           {!showAllFields && <ProgressDots />}
         </div>
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <form onSubmit={handleSubmit}>
               {showAllFields && !loading ? (
                 // Show all basic fields on one page
@@ -1000,6 +1006,7 @@ export default function SignUp({
                 </>
               )}
           </form>
+        </div>
       </div>
     </div>
   )
