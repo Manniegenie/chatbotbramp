@@ -77,6 +77,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
 
   const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'otp', 'pin']
   const [stepIndex, setStepIndex] = useState<number>(0)
+  const [showAllFields, setShowAllFields] = useState(true) // Show all fields on one page
 
   const [firstname, setFirstname] = useState('')
   const [lastname, setLastname] = useState('')
@@ -209,6 +210,16 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
   async function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault()
     setError(null)
+
+    // Validate all basic fields if showing all fields
+    if (showAllFields) {
+      const invalid = validateAllUpTo(3) // Validate firstname, lastname, phone, email
+      if (invalid) {
+        setError(invalid)
+        return
+      }
+      return doSignup()
+    }
 
     const invalid = validateAllUpTo(stepIndex)
     if (invalid) {
@@ -542,43 +553,115 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
           <ProgressDots />
 
           <form onSubmit={handleSubmit} className="mobile-auth-form">
-            {renderStep()}
+            {showAllFields ? (
+              // Show all basic fields on one page
+              <div className="mobile-auth-fields">
+                <label className="mobile-auth-input-wrap">
+                  <span className="mobile-auth-label">First Name</span>
+                  <input
+                    className="mobile-auth-input"
+                    placeholder="John"
+                    value={firstname}
+                    onChange={e => setFirstname(e.target.value)}
+                    autoFocus
+                  />
+                </label>
 
-            {/* Default nav + error for the basic signup steps */}
-            {['firstname', 'lastname', 'phone', 'email'].includes(currentStepId) && (
-              <>
+                <label className="mobile-auth-input-wrap">
+                  <span className="mobile-auth-label">Last Name</span>
+                  <input
+                    className="mobile-auth-input"
+                    placeholder="Doe"
+                    value={lastname}
+                    onChange={e => setLastname(e.target.value)}
+                  />
+                </label>
+
+                <label className="mobile-auth-input-wrap">
+                  <span className="mobile-auth-label">Phone Number</span>
+                  <input
+                    className="mobile-auth-input"
+                    placeholder="+234 801 234 5678"
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    inputMode="tel"
+                  />
+                </label>
+
+                <label className="mobile-auth-input-wrap">
+                  <span className="mobile-auth-label">Email Address</span>
+                  <input
+                    className="mobile-auth-input"
+                    placeholder="john@example.com"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    type="email"
+                  />
+                </label>
+
                 {error && (
                   <div className="mobile-auth-error">
                     ⚠️ {error}
                   </div>
                 )}
+
                 <div className="mobile-auth-button-row">
-                  {stepIndex > 0 ? (
-                    <button
-                      type="button"
-                      className="mobile-auth-button outline"
-                      onClick={goBack}
-                      disabled={loading}
-                    >
-                      Back
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className="mobile-auth-button outline"
-                      onClick={onCancel}
-                      disabled={loading}
-                    >
-                      Cancel
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    className="mobile-auth-button outline"
+                    onClick={onCancel}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </button>
 
                   <button type="submit" className="mobile-auth-button primary" disabled={loading}>
-                    {loading
-                      ? 'Please wait…'
-                      : 'Next'}
+                    {loading ? 'Creating…' : 'Create Account'}
                   </button>
                 </div>
+              </div>
+            ) : (
+              // Original step-by-step approach
+              <>
+                {renderStep()}
+
+                {/* Default nav + error for the basic signup steps */}
+                {['firstname', 'lastname', 'phone', 'email'].includes(currentStepId) && (
+                  <>
+                    {error && (
+                      <div className="mobile-auth-error">
+                        ⚠️ {error}
+                      </div>
+                    )}
+                    <div className="mobile-auth-button-row">
+                      {stepIndex > 0 ? (
+                        <button
+                          type="button"
+                          className="mobile-auth-button outline"
+                          onClick={goBack}
+                          disabled={loading}
+                        >
+                          Back
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="mobile-auth-button outline"
+                          onClick={onCancel}
+                          disabled={loading}
+                        >
+                          Cancel
+                        </button>
+                      )}
+
+                      <button type="submit" className="mobile-auth-button primary" disabled={loading}>
+                        {loading
+                          ? 'Please wait…'
+                          : 'Next'}
+                      </button>
+                    </div>
+                  </>
+                )}
               </>
             )}
 

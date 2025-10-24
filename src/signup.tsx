@@ -102,6 +102,7 @@ export default function SignUp({
   // KYC steps removed for test flight - consolidated for testflight
   const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'otp', 'pin']
   const [stepIndex, setStepIndex] = useState<number>(0)
+  const [showAllFields, setShowAllFields] = useState(true) // Show all fields on one page
 
   const [firstname, setFirstname] = useState('')
   const [lastname, setLastname] = useState('')
@@ -366,6 +367,16 @@ export default function SignUp({
   async function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault()
     setError(null)
+
+    // Validate all basic fields if showing all fields
+    if (showAllFields) {
+      const invalid = validateAllUpTo(3) // Validate firstname, lastname, phone, email
+      if (invalid) {
+        setError(invalid)
+        return
+      }
+      return doSignup()
+    }
 
     const invalid = validateAllUpTo(stepIndex)
     if (invalid) {
@@ -837,47 +848,128 @@ export default function SignUp({
             <ProgressDots />
 
             <form onSubmit={handleSubmit}>
-              {renderStep()}
+              {showAllFields ? (
+                // Show all basic fields on one page
+                <div style={{ display: 'grid', gap: 12 }}>
+                  <label style={{ display: 'grid', gap: 4 }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>First Name</span>
+                    <input
+                      key="firstname"
+                      placeholder="John"
+                      value={firstname}
+                      onChange={e => setFirstname(e.target.value)}
+                      autoFocus
+                      style={inputStyle}
+                      className="no-zoom"
+                    />
+                  </label>
 
-              {/* Default nav + error for the basic signup steps */}
-              {['firstname', 'lastname', 'phone', 'email'].includes(currentStepId) && (
-                <>
+                  <label style={{ display: 'grid', gap: 4 }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Last Name</span>
+                    <input
+                      key="lastname"
+                      placeholder="Doe"
+                      value={lastname}
+                      onChange={e => setLastname(e.target.value)}
+                      style={inputStyle}
+                      className="no-zoom"
+                    />
+                  </label>
+
+                  <label style={{ display: 'grid', gap: 4 }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Phone Number</span>
+                    <input
+                      key="phone"
+                      placeholder="+234 801 234 5678"
+                      value={phone}
+                      onChange={e => setPhone(e.target.value)}
+                      inputMode="tel"
+                      style={inputStyle}
+                      className="no-zoom"
+                    />
+                  </label>
+
+                  <label style={{ display: 'grid', gap: 4 }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Email Address</span>
+                    <input
+                      key="email"
+                      placeholder="john@example.com"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      type="email"
+                      autoFocus
+                      style={inputStyle}
+                      className="no-zoom"
+                    />
+                  </label>
+
                   {error && (
                     <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
                       ⚠️ {error}
                     </div>
                   )}
+
                   <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                    {stepIndex > 0 ? (
-                      <button
-                        type="button"
-                        className="btn btn-outline"
-                        onClick={goBack}
-                        disabled={loading}
-                      >
-                        Back
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        className="btn btn-outline"
-                        onClick={onCancel}
-                        disabled={loading}
-                      >
-                        Cancel
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      className="btn btn-outline"
+                      onClick={onCancel}
+                      disabled={loading}
+                    >
+                      Cancel
+                    </button>
 
                     <button type="submit" className="btn" disabled={loading}>
-                      {loading
-                        ? currentStepId === 'email'
-                          ? 'Creating…'
-                          : 'Please wait…'
-                        : currentStepId === 'email'
-                          ? 'Create account'
-                          : 'Next'}
+                      {loading ? 'Creating…' : 'Create Account'}
                     </button>
                   </div>
+                </div>
+              ) : (
+                // Original step-by-step approach
+                <>
+                  {renderStep()}
+
+                  {/* Default nav + error for the basic signup steps */}
+                  {['firstname', 'lastname', 'phone', 'email'].includes(currentStepId) && (
+                    <>
+                      {error && (
+                        <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
+                          ⚠️ {error}
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                        {stepIndex > 0 ? (
+                          <button
+                            type="button"
+                            className="btn btn-outline"
+                            onClick={goBack}
+                            disabled={loading}
+                          >
+                            Back
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="btn btn-outline"
+                            onClick={onCancel}
+                            disabled={loading}
+                          >
+                            Cancel
+                          </button>
+                        )}
+
+                        <button type="submit" className="btn" disabled={loading}>
+                          {loading
+                            ? currentStepId === 'email'
+                              ? 'Creating…'
+                              : 'Please wait…'
+                            : currentStepId === 'email'
+                              ? 'Create account'
+                              : 'Next'}
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </>
               )}
             </form>
