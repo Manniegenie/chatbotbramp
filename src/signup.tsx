@@ -839,33 +839,29 @@ export default function SignUp({
       zIndex: 1000,
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'flex-start',
+      justifyContent: 'center',
       padding: '20px',
       overflow: 'hidden'
     }}>
       <div style={{ 
-        maxWidth: '500px', 
+        maxWidth: '400px', 
         width: '100%',
-        maxHeight: 'calc(100vh - 40px)',
         background: 'var(--card)',
         border: '1px solid var(--border)',
         borderRadius: '12px',
         padding: '24px',
-        boxShadow: 'var(--shadow)',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column'
+        boxShadow: 'var(--shadow)'
       }}>
-        <div style={{ marginBottom: '20px', flexShrink: 0 }}>
+        <div style={{ marginBottom: '20px' }}>
           <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600, color: 'var(--txt)' }}>
-              {showAllFields 
-                ? 'Create your account'
-                : currentStepId === 'otp'
-                  ? 'Verify OTP'
-                  : currentStepId === 'pin'
-                    ? 'Set your PIN'
-                    : 'Create your account'}
-            </h2>
+            {showAllFields 
+              ? 'Create your account'
+              : currentStepId === 'otp'
+                ? 'Verify OTP'
+                : currentStepId === 'pin'
+                  ? 'Set your PIN'
+                  : 'Create your account'}
+          </h2>
           <p style={{ marginTop: '8px', color: 'var(--muted)', fontSize: '0.9rem' }}>
             {showAllFields 
               ? "Enter your details to create your account."
@@ -878,8 +874,6 @@ export default function SignUp({
 
           {!showAllFields && <ProgressDots />}
         </div>
-
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <form onSubmit={handleSubmit}>
               {showAllFields && !loading ? (
                 // Show all basic fields on one page
@@ -1006,7 +1000,6 @@ export default function SignUp({
                 </>
               )}
           </form>
-        </div>
       </div>
     </div>
   )

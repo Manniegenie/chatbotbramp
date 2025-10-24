@@ -539,24 +539,20 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
       zIndex: 1000,
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'flex-start',
+      justifyContent: 'center',
       padding: '20px',
       overflow: 'hidden'
     }}>
       <div style={{ 
-        maxWidth: '500px', 
+        maxWidth: '400px', 
         width: '100%',
-        maxHeight: 'calc(100vh - 40px)',
         background: 'var(--card)',
         border: '1px solid var(--border)',
         borderRadius: '12px',
         padding: '24px',
-        boxShadow: 'var(--shadow)',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column'
+        boxShadow: 'var(--shadow)'
       }}>
-        <div style={{ marginBottom: '20px', flexShrink: 0 }}>
+        <div style={{ marginBottom: '20px' }}>
           <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600, color: 'var(--txt)' }}>
             {showAllFields 
               ? 'Create your account'
@@ -579,8 +575,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
           {!showAllFields && <ProgressDots />}
         </div>
 
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <form onSubmit={handleSubmit} className="mobile-auth-form">
+        <form onSubmit={handleSubmit} className="mobile-auth-form">
             {showAllFields && !loading ? (
               // Show all basic fields on one page
               <div className="mobile-auth-fields">
@@ -727,8 +722,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
               </div>
             )}
 
-          </form>
-        </div>
+        </form>
       </div>
     </div>
   )

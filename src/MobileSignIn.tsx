@@ -146,24 +146,20 @@ export default function MobileSignIn({
       zIndex: 1000,
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'flex-start',
+      justifyContent: 'center',
       padding: '20px',
       overflow: 'hidden'
     }}>
       <div style={{ 
-        maxWidth: '500px', 
+        maxWidth: '400px', 
         width: '100%',
-        maxHeight: 'calc(100vh - 40px)',
         background: 'var(--card)',
         border: '1px solid var(--border)',
         borderRadius: '12px',
         padding: '24px',
-        boxShadow: 'var(--shadow)',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column'
+        boxShadow: 'var(--shadow)'
       }}>
-        <div style={{ marginBottom: '20px', flexShrink: 0 }}>
+        <div style={{ marginBottom: '20px' }}>
           <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600, color: 'var(--txt)' }}>
             Sign in
           </h2>
@@ -172,8 +168,7 @@ export default function MobileSignIn({
           </p>
         </div>
 
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <form onSubmit={submit} className="mobile-auth-form">
+        <form onSubmit={submit} className="mobile-auth-form">
             <label className="mobile-auth-input-wrap">
               <span className="mobile-auth-label">Phone number</span>
               <div className="mobile-auth-phone-input">
@@ -226,8 +221,7 @@ export default function MobileSignIn({
             <p className="mobile-auth-note">
               Too many failed attempts can temporarily lock your account.
             </p>
-          </form>
-        </div>
+        </form>
       </div>
     </div>
   )

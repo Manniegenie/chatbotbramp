@@ -858,15 +858,35 @@ export default function App() {
         ) : showSignUp ? (
           <SignUp
             onCancel={() => setShowSignUp(false)}
-            onSuccess={(_res: SignUpResult) => {
+            onSuccess={(res: SignUpResult) => {
               setShowSignUp(false)
-              setMessages((prev) => [...prev, {
-                id: crypto.randomUUID(),
-                role: 'assistant',
-                text: 'Account created. Please verify OTP to complete your signup.',
-                ts: Date.now(),
-              }])
-              setShowSignIn(true)
+              if (res.accessToken && res.refreshToken) {
+                // User is already authenticated, route to main app
+                tokenStore.setTokens(res.accessToken, res.refreshToken)
+                if (res.user) {
+                  tokenStore.setUser(res.user)
+                }
+                setAuth({
+                  accessToken: res.accessToken,
+                  refreshToken: res.refreshToken,
+                  user: res.user
+                })
+                setMessages((prev) => [...prev, {
+                  id: crypto.randomUUID(),
+                  role: 'assistant',
+                  text: 'Welcome! Your account has been created successfully.',
+                  ts: Date.now(),
+                }])
+              } else {
+                // User needs to verify OTP, show signin
+                setMessages((prev) => [...prev, {
+                  id: crypto.randomUUID(),
+                  role: 'assistant',
+                  text: 'Account created! Please sign in to continue.',
+                  ts: Date.now(),
+                }])
+                setShowSignIn(true)
+              }
             }}
           />
         ) : (
