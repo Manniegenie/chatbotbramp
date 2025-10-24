@@ -258,10 +258,43 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
   const [bankOptions, setBankOptions] = useState<BankOption[]>([])
   const banksFetchedRef = useRef(false)
 
-  // Filter banks based on search
-  const filteredBanks = bankOptions.filter(bank =>
-    bank.name.toLowerCase().includes(bankSearch.toLowerCase())
-  )
+  // Search results from backend
+  const [searchResults, setSearchResults] = useState<BankOption[]>([])
+  const [searchLoading, setSearchLoading] = useState(false)
+
+  // Search banks on backend
+  const searchBanks = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([])
+      return
+    }
+    
+    setSearchLoading(true)
+    try {
+      const res = await fetch(`${API_BASE}/banks/search?q=${encodeURIComponent(query)}`, {
+        method: 'GET',
+        headers: getHeaders()
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        setSearchResults(data.data || [])
+      } else {
+        setSearchResults([])
+      }
+    } catch (err) {
+      setSearchResults([])
+    } finally {
+      setSearchLoading(false)
+    }
+  }
+
+  // Debounced search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      searchBanks(bankSearch)
+    }, 300)
+    return () => clearTimeout(timeoutId)
+  }, [bankSearch])
 
 
   // Reset on open
@@ -744,6 +777,48 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                       />
                     </label>
 
+                    {/* Search Results */}
+                    {bankSearch && (
+                      <div style={{
+                        position: 'relative',
+                        maxHeight: '200px',
+                        overflowY: 'auto',
+                        border: '1px solid var(--border)',
+                        borderRadius: '8px',
+                        background: 'var(--card)',
+                        marginTop: '4px'
+                      }}>
+                        {searchLoading ? (
+                          <div style={{ padding: '12px', textAlign: 'center', color: 'var(--muted)' }}>
+                            Searching...
+                          </div>
+                        ) : searchResults.length > 0 ? (
+                          searchResults.map((bank: BankOption) => (
+                            <div
+                              key={bank.code}
+                              style={{
+                                padding: '12px',
+                                cursor: 'pointer',
+                                borderBottom: '1px solid var(--border)'
+                              }}
+                              onClick={() => {
+                                setBankCode(bank.code)
+                                setBankName(bank.name)
+                                setBankSearch('')
+                                setSearchResults([])
+                              }}
+                            >
+                              {bank.name}
+                            </div>
+                          ))
+                        ) : (
+                          <div style={{ padding: '12px', textAlign: 'center', color: 'var(--muted)' }}>
+                            No banks found
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     <label style={inputWrap}>
                       <span style={labelText}>Bank</span>
                       <div style={{ position: 'relative' }}>
@@ -751,20 +826,20 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                           ref={firstInputRef as any}
                           style={inputBase}
                           value={bankCode}
-                          disabled={banksLoading || filteredBanks.length === 0}
+                          disabled={banksLoading || bankOptions.length === 0}
                           onChange={e => {
                             const code = e.target.value
-                            const hit = filteredBanks.find((b: BankOption) => b.code === code)
+                            const hit = bankOptions.find((b: BankOption) => b.code === code)
                             if (hit) {
                               setBankCode(hit.code)
                               setBankName(hit.name)
                             }
                           }}
                         >
-                          {filteredBanks.length === 0 ? (
-                            <option value="">{banksLoading ? 'Loading…' : (banksError || 'No banks found')}</option>
+                          {bankOptions.length === 0 ? (
+                            <option value="">{banksLoading ? 'Loading…' : (banksError || 'No banks')}</option>
                           ) : (
-                            filteredBanks.map((b: BankOption) => (
+                            bankOptions.map((b: BankOption) => (
                               <option key={b.code} value={b.code}>{b.name}</option>
                             ))
                           )}
