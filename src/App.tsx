@@ -864,13 +864,28 @@ export default function App() {
                 // User is already authenticated, route to main app
                 tokenStore.setTokens(res.accessToken, res.refreshToken)
                 if (res.user) {
-                  tokenStore.setUser(res.user)
+                  // Create a proper user object with required fields
+                  const user = {
+                    id: res.userId || '',
+                    phonenumber: res.user.phonenumber || '',
+                    firstname: res.user.firstname,
+                    lastname: res.user.lastname,
+                    email: res.user.email,
+                    username: res.user.username
+                  }
+                  tokenStore.setUser(user)
+                  setAuth({
+                    accessToken: res.accessToken,
+                    refreshToken: res.refreshToken,
+                    user
+                  })
+                } else {
+                  setAuth({
+                    accessToken: res.accessToken,
+                    refreshToken: res.refreshToken,
+                    user: { id: res.userId || '', phonenumber: '' }
+                  })
                 }
-                setAuth({
-                  accessToken: res.accessToken,
-                  refreshToken: res.refreshToken,
-                  user: res.user
-                })
                 setMessages((prev) => [...prev, {
                   id: crypto.randomUUID(),
                   role: 'assistant',

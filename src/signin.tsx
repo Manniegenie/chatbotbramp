@@ -231,10 +231,9 @@ export default function SignIn({
               </div>
           </form>
 
-            <p style={{ marginTop: 12, fontSize: '0.8rem', color: 'var(--muted)' }}>
-              Too many failed attempts can temporarily lock your account.
-            </p>
-        </form>
+          <p style={{ marginTop: 12, fontSize: '0.8rem', color: 'var(--muted)' }}>
+            Too many failed attempts can temporarily lock your account.
+          </p>
       </div>
     </div>
   )
