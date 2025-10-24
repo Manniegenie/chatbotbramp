@@ -433,14 +433,14 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
       touchAction: 'none'
     }} onClick={onClose}>
       <div style={{ 
-        maxWidth: '340px', 
+        maxWidth: '380px', 
         width: '100%',
-        maxHeight: '65vh',
-        marginTop: '8vh',
+        maxHeight: '70vh',
+        marginTop: '6vh',
         background: 'var(--card)',
         border: '1px solid var(--border)',
         borderRadius: '8px',
-        padding: '16px',
+        padding: '20px',
         boxShadow: 'var(--shadow)',
         overflow: 'hidden',
         display: 'flex',
