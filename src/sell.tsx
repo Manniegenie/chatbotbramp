@@ -211,14 +211,14 @@ const overlayStyle: React.CSSProperties = {
   touchAction: 'none'
 }
 const sheetStyle: React.CSSProperties = { 
-  maxWidth: '420px', 
+  maxWidth: '480px', 
   width: '100%',
-  maxHeight: '75vh',
-  marginTop: '8vh',
+  maxHeight: '80vh',
+  marginTop: '6vh',
   background: 'var(--card)',
   border: '1px solid var(--border)',
   borderRadius: '8px',
-  padding: '24px',
+  padding: '28px',
   boxShadow: 'var(--shadow)',
   overflow: 'hidden',
   display: 'flex',
