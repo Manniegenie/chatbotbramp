@@ -392,7 +392,9 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         return
       }
     } else {
-      if (!nairaAmount || isNaN(+nairaAmount) || +nairaAmount <= 0) {
+      // Remove commas for validation
+      const cleanNairaAmount = nairaAmount.replace(/,/g, '');
+      if (!cleanNairaAmount || isNaN(+cleanNairaAmount) || +cleanNairaAmount <= 0) {
         setInitError('Enter a valid Naira amount')
         return
       }
@@ -405,8 +407,9 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
       if (currency === 'TOKEN') {
         requestBody.sellAmount = +amount
       } else {
-        // For NGN, send NGN amount directly
-        requestBody.sellAmount = +nairaAmount
+        // For NGN, send clean NGN amount (remove commas)
+        const cleanNairaAmount = nairaAmount.replace(/,/g, '');
+        requestBody.sellAmount = +cleanNairaAmount
       }
 
       const res = await fetch(`${API_BASE}/sell/initiate`, {
@@ -653,9 +656,20 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     <input
                       style={inputBase}
                       inputMode="decimal"
-                      placeholder="e.g. 50000"
+                      placeholder="e.g. 50,000"
                       value={nairaAmount}
-                      onChange={e => setNairaAmount(e.target.value)}
+                      onChange={e => {
+                        // Remove commas and non-numeric characters except decimal point
+                        const cleanValue = e.target.value.replace(/[^\d.]/g, '');
+                        setNairaAmount(cleanValue);
+                      }}
+                      onBlur={e => {
+                        // Format with commas when user finishes typing
+                        const num = parseFloat(e.target.value);
+                        if (!isNaN(num) && num > 0) {
+                          setNairaAmount(num.toLocaleString('en-US'));
+                        }
+                      }}
                     />
                   </label>
                 )}
