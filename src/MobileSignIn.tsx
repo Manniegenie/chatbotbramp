@@ -1,6 +1,7 @@
 // src/MobileSignIn.tsx
 import React, { useState } from 'react'
 import { tokenStore } from './lib/secureStore'
+import { normalizePhone } from './utils/phoneNormalization.test'
 import './mobile-auth.css'
 
 type ServerSuccess = {
@@ -157,7 +158,7 @@ export default function MobileSignIn({
                 <span className="mobile-auth-phone-prefix">+234</span>
                 <input
                   className="mobile-auth-input"
-                  placeholder="9076543210"
+                  placeholder="08123456789"
                   value={phone}
                   onChange={(e) => handlePhoneChange(e.target.value)}
                   inputMode="numeric"

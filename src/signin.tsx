@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { tokenStore } from './lib/secureStore'
+import { normalizePhone } from './utils/phoneNormalization.test'
 
 type ServerSuccess = {
   success: true
@@ -171,7 +172,7 @@ export default function SignIn({
                   +234
                 </span>
                 <input
-                  placeholder="8023456789"
+                  placeholder="08123456789"
                   value={phone}
                   onChange={(e) => handlePhoneChange(e.target.value)}
                   inputMode="numeric"

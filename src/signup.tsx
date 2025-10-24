@@ -2,6 +2,7 @@
 import React, { useState, useRef, useCallback } from 'react'
 // import Webcam from 'react-webcam' // Commented out for test flight
 import { tokenStore } from './lib/secureStore'
+import { normalizePhone } from './utils/phoneNormalization.test'
 
 export type SignUpResult = {
   success: boolean
@@ -887,7 +888,7 @@ export default function SignUp({
                     <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Phone Number</span>
                     <input
                       key="phone"
-                      placeholder="+234 801 234 5678"
+                      placeholder="08123456789"
                       value={phone}
                       onChange={e => setPhone(e.target.value)}
                       inputMode="tel"
@@ -981,11 +982,6 @@ export default function SignUp({
               )}
             </form>
 
-            {currentStepId === 'firstname' && (
-              <p style={{ marginTop: 12, fontSize: '0.8rem', color: 'var(--muted)' }}>
-                🧪 Test flight mode - simplified signup flow
-              </p>
-            )}
           </div>
         </div>
       </div>

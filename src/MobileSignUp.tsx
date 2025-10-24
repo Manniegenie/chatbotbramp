@@ -1,6 +1,7 @@
 // src/MobileSignUp.tsx
 import React, { useState } from 'react'
 import { tokenStore } from './lib/secureStore'
+import { normalizePhone } from './utils/phoneNormalization.test'
 import './mobile-auth.css'
 
 export type SignUpResult = {
@@ -588,7 +589,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
                   <span className="mobile-auth-label">Phone Number</span>
                   <input
                     className="mobile-auth-input"
-                    placeholder="+234 801 234 5678"
+                    placeholder="08123456789"
                     value={phone}
                     onChange={e => setPhone(e.target.value)}
                     inputMode="tel"
@@ -706,11 +707,6 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
               </div>
             )}
 
-            {currentStepId === 'firstname' && (
-              <p className="mobile-auth-note">
-                🧪 Test flight mode - simplified signup flow
-              </p>
-            )}
           </form>
         </div>
       </div>
