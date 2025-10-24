@@ -139,24 +139,29 @@ export default function SignIn({
       top: 0, 
       left: 0, 
       width: '100%', 
-      height: '100%', 
+      height: '100vh', 
       background: 'var(--bg)', 
       zIndex: 1000,
       display: 'flex',
-      alignItems: 'flex-start',
+      alignItems: 'center',
       justifyContent: 'flex-start',
-      padding: '20px'
+      padding: '20px',
+      overflow: 'hidden'
     }}>
       <div style={{ 
         maxWidth: '500px', 
         width: '100%',
+        maxHeight: 'calc(100vh - 40px)',
         background: 'var(--card)',
         border: '1px solid var(--border)',
         borderRadius: '12px',
         padding: '24px',
-        boxShadow: 'var(--shadow)'
+        boxShadow: 'var(--shadow)',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column'
       }}>
-        <div style={{ marginBottom: '20px' }}>
+        <div style={{ marginBottom: '20px', flexShrink: 0 }}>
           <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600, color: 'var(--txt)' }}>
             Sign in
           </h2>
@@ -165,9 +170,8 @@ export default function SignIn({
           </p>
         </div>
 
-        <div>
-
-            <form onSubmit={submit}>
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+          <form onSubmit={submit}>
               <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Phone number</label>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                 <span
@@ -230,7 +234,7 @@ export default function SignIn({
                   Cancel
                 </button>
               </div>
-            </form>
+          </form>
 
             <p style={{ marginTop: 12, fontSize: '0.8rem', color: 'var(--muted)' }}>
               Too many failed attempts can temporarily lock your account.

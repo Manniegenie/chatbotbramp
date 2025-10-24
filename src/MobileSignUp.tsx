@@ -534,24 +534,29 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
       top: 0, 
       left: 0, 
       width: '100%', 
-      height: '100%', 
+      height: '100vh', 
       background: 'var(--bg)', 
       zIndex: 1000,
       display: 'flex',
-      alignItems: 'flex-start',
+      alignItems: 'center',
       justifyContent: 'flex-start',
-      padding: '20px'
+      padding: '20px',
+      overflow: 'hidden'
     }}>
       <div style={{ 
         maxWidth: '500px', 
         width: '100%',
+        maxHeight: 'calc(100vh - 40px)',
         background: 'var(--card)',
         border: '1px solid var(--border)',
         borderRadius: '12px',
         padding: '24px',
-        boxShadow: 'var(--shadow)'
+        boxShadow: 'var(--shadow)',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column'
       }}>
-        <div style={{ marginBottom: '20px' }}>
+        <div style={{ marginBottom: '20px', flexShrink: 0 }}>
           <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600, color: 'var(--txt)' }}>
             {showAllFields 
               ? 'Create your account'
@@ -574,7 +579,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
           {!showAllFields && <ProgressDots />}
         </div>
 
-        <div>
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <form onSubmit={handleSubmit} className="mobile-auth-form">
             {showAllFields && !loading ? (
               // Show all basic fields on one page

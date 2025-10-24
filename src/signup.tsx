@@ -834,25 +834,30 @@ export default function SignUp({
       top: 0, 
       left: 0, 
       width: '100%', 
-      height: '100%', 
+      height: '100vh', 
       background: 'var(--bg)', 
       zIndex: 1000,
       display: 'flex',
-      alignItems: 'flex-start',
+      alignItems: 'center',
       justifyContent: 'flex-start',
-      padding: '20px'
+      padding: '20px',
+      overflow: 'hidden'
     }}>
       <div style={{ 
         maxWidth: '500px', 
         width: '100%',
+        maxHeight: 'calc(100vh - 40px)',
         background: 'var(--card)',
         border: '1px solid var(--border)',
         borderRadius: '12px',
         padding: '24px',
-        boxShadow: 'var(--shadow)'
+        boxShadow: 'var(--shadow)',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column'
       }}>
-        <div style={{ marginBottom: '20px' }}>
-            <h2 id="signup-title" style={{ marginTop: 0, marginBottom: 6, fontSize: '1.2rem' }}>
+        <div style={{ marginBottom: '20px', flexShrink: 0 }}>
+          <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600, color: 'var(--txt)' }}>
               {showAllFields 
                 ? 'Create your account'
                 : currentStepId === 'otp'
@@ -861,7 +866,7 @@ export default function SignUp({
                     ? 'Set your PIN'
                     : 'Create your account'}
             </h2>
-            <p style={{ marginTop: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>
+          <p style={{ marginTop: '8px', color: 'var(--muted)', fontSize: '0.9rem' }}>
             {showAllFields 
               ? "Enter your details to create your account."
               : currentStepId === 'otp'
@@ -869,11 +874,12 @@ export default function SignUp({
                 : currentStepId === 'pin'
                   ? 'Create a 6-digit PIN for sign-in and transactions.'
                   : "We'll collect a few details. One step at a time."}
-            </p>
+          </p>
 
-            {!showAllFields && <ProgressDots />}
+          {!showAllFields && <ProgressDots />}
 
-            <form onSubmit={handleSubmit}>
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+          <form onSubmit={handleSubmit}>
               {showAllFields && !loading ? (
                 // Show all basic fields on one page
                 <div style={{ display: 'grid', gap: 12 }}>
@@ -998,7 +1004,7 @@ export default function SignUp({
                   )}
                 </>
               )}
-            </form>
+          </form>
         </div>
       </div>
     </div>
