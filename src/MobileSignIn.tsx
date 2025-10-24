@@ -71,13 +71,8 @@ export default function MobileSignIn({
     // Remove all non-digits
     let digits = value.replace(/\D/g, '')
     
-    // If starts with 0, remove it (e.g., 08141751569 becomes 8141751569)
-    if (digits.startsWith('0')) {
-      digits = digits.slice(1)
-    }
-    
-    // Limit to 10 digits
-    digits = digits.slice(0, 10)
+    // Limit to 11 digits (allowing 0 at the beginning)
+    digits = digits.slice(0, 11)
     
     setPhone(digits)
   }
@@ -185,7 +180,7 @@ export default function MobileSignIn({
                 onChange={(e) => handlePhoneChange(e.target.value)}
                 inputMode="numeric"
                 autoFocus
-                maxLength={10}
+                maxLength={11}
               />
             </label>
 
