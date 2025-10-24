@@ -263,6 +263,17 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
     bank.name.toLowerCase().includes(bankSearch.toLowerCase())
   )
 
+  // Clear bank selection if current bank is not in filtered results
+  useEffect(() => {
+    if (bankCode && filteredBanks.length > 0) {
+      const currentBank = filteredBanks.find(bank => bank.code === bankCode)
+      if (!currentBank) {
+        setBankCode('')
+        setBankName('')
+      }
+    }
+  }, [bankSearch, filteredBanks, bankCode])
+
   // Reset on open
   useEffect(() => {
     if (!open) return
@@ -733,26 +744,37 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
                   <form onSubmit={submitPayout} style={gridForm}>
                     <label style={inputWrap}>
+                      <span style={labelText}>Search Bank</span>
+                      <input
+                        style={inputBase}
+                        type="text"
+                        placeholder="Type to search banks..."
+                        value={bankSearch}
+                        onChange={e => setBankSearch(e.target.value)}
+                      />
+                    </label>
+
+                    <label style={inputWrap}>
                       <span style={labelText}>Bank</span>
                       <div style={{ position: 'relative' }}>
                         <select
                           ref={firstInputRef as any}
                           style={inputBase}
                           value={bankCode}
-                          disabled={banksLoading || bankOptions.length === 0}
+                          disabled={banksLoading || filteredBanks.length === 0}
                           onChange={e => {
                             const code = e.target.value
-                            const hit = bankOptions.find((b: BankOption) => b.code === code)
+                            const hit = filteredBanks.find((b: BankOption) => b.code === code)
                             if (hit) {
                               setBankCode(hit.code)
                               setBankName(hit.name)
                             }
                           }}
                         >
-                          {bankOptions.length === 0 ? (
-                            <option value="">{banksLoading ? 'Loading…' : (banksError || 'No banks')}</option>
+                          {filteredBanks.length === 0 ? (
+                            <option value="">{banksLoading ? 'Loading…' : (banksError || 'No banks found')}</option>
                           ) : (
-                            bankOptions.map((b: BankOption) => (
+                            filteredBanks.map((b: BankOption) => (
                               <option key={b.code} value={b.code}>{b.name}</option>
                             ))
                           )}

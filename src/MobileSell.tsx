@@ -199,6 +199,17 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
     bank.name.toLowerCase().includes(bankSearch.toLowerCase())
   )
 
+  // Clear bank selection if current bank is not in filtered results
+  useEffect(() => {
+    if (bankCode && filteredBanks.length > 0) {
+      const currentBank = filteredBanks.find(bank => bank.code === bankCode)
+      if (!currentBank) {
+        setBankCode('')
+        setBankName('')
+      }
+    }
+  }, [bankSearch, filteredBanks, bankCode])
+
   // Reset on open
   useEffect(() => {
     if (!open) return
