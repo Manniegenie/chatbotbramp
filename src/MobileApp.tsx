@@ -209,14 +209,7 @@ function ThreeDotLoader() {
 }
 
 export default function MobileApp() {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: crypto.randomUUID(),
-      role: 'assistant',
-      text: "🚀Ready to move your crypto? Sign in to send or pay instantly to any Naira bank account🏦.",
-      ts: Date.now(),
-    },
-  ])
+  const [messages, setMessages] = useState<ChatMessage[]>([])
 
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -455,14 +448,8 @@ export default function MobileApp() {
     setAuth(null)
     setShowSell(false)
     setShowMenu(false)
-    setMessages([
-      {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        text: "👋 You've been signed out. Sign in again to continue!",
-        ts: Date.now(),
-      },
-    ])
+    setMessages([])
+    setShowCenteredInput(true)
   }
 
   function isSellCTA(btn: CTAButton): boolean {
@@ -620,6 +607,7 @@ export default function MobileApp() {
                 className="mobile-input mobile-input-centered"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
+                placeholder="Chat Bramp AI..."
                 disabled={loading}
               />
               <button
