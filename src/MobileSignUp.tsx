@@ -347,6 +347,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
       setPendingUserId(ok.pendingUserId)
 
       // move to PIN page
+      setCurrentStepGroup('pin')
       setStepIndex(steps.indexOf('pin'))
     } catch (err: any) {
       setOtpError(`Network error: ${err.message}`)
