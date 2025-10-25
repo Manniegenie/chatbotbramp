@@ -8,6 +8,9 @@ import MobileSell from './MobileSell'
 import WallpaperSlideshow from './WallpaperSlideshow'
 import BrampLogo from './assets/logo.jpeg'
 import FastFoodIcon from './assets/fast-food-icon.png'
+import SolanaIcon from './assets/solana.png'
+import TetherIcon from './assets/tether.png'
+import CryptocurrencyIcon from './assets/cryptocurrency.png'
 import './MobileApp.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
@@ -234,11 +237,22 @@ export default function MobileApp() {
   const endRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const [tickerText, setTickerText] = useState<string>('')
+  
+  const icons = [FastFoodIcon, SolanaIcon, TetherIcon, CryptocurrencyIcon]
+  const [currentIconIndex, setCurrentIconIndex] = useState(0)
 
   // Debug ticker
   useEffect(() => {
     console.log('Mobile ticker text:', tickerText)
   }, [tickerText])
+
+  // Cycle through icons
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIconIndex((prev) => (prev + 1) % icons.length)
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [icons.length])
 
   // Parse **text** to <strong>text</strong>
   function parseBoldText(text: string): string {
@@ -605,7 +619,7 @@ export default function MobileApp() {
         {showCenteredInput ? (
           <div className="mobile-centered-input">
             <div className="mobile-centered-form">
-              <img src={FastFoodIcon} alt="Chat Bramp AI" className="mobile-app-logo" />
+              <img src={icons[currentIconIndex]} alt="Chat Bramp AI" className="mobile-app-logo" />
               <div style={{ position: 'relative', width: '100%' }}>
                 <input
                   ref={inputRef}
