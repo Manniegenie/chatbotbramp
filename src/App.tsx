@@ -7,7 +7,7 @@ import { authFetch, getAuthState, setupAutoLogoutTimer, clearAuth } from './lib/
 import SellModal from './sell'
 import WallpaperSlideshow from './WallpaperSlideshow'
 // Import logo from assets
-import BrampLogo from './assets/logo.jpeg' // Placeholder path
+import BrampLogo from './assets/logo.png'
 import FastFoodIcon from './assets/fast-food-icon.png'
 import SolanaIcon from './assets/solana.png'
 import TetherIcon from './assets/tether.png'
@@ -775,11 +775,10 @@ export default function App() {
             animation: fadeIn 0.5s ease-in-out;
           }
           
-          .header-logo-carousel {
+          .header-logo {
             width: 32px;
             height: 32px;
             object-fit: contain;
-            animation: fadeIn 0.5s ease-in-out;
           }
           
           .brand-text {
@@ -909,9 +908,9 @@ export default function App() {
           <div className="brand">
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <img
-                src={icons[currentIconIndex]}
+                src={BrampLogo}
                 alt="Bramp"
-                className="header-logo-carousel"
+                className="header-logo"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none'
                 }}
