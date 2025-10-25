@@ -7,6 +7,7 @@ import MobileSignUp, { SignUpResult } from './MobileSignUp'
 import MobileSell from './MobileSell'
 import WallpaperSlideshow from './WallpaperSlideshow'
 import BrampLogo from './assets/logo.jpeg'
+import FastFoodIcon from './assets/fast-food-icon.png'
 import './MobileApp.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
@@ -514,6 +515,7 @@ export default function MobileApp() {
           onSuccess={(res) => {
             setAuth(res)
             setShowSignIn(false)
+            setShowCenteredInput(false)
             const greeting = getTimeBasedGreeting()
             const name = res.user.username || (res.user as any).firstname || 'there'
             setMessages([
@@ -539,6 +541,7 @@ export default function MobileApp() {
           onCancel={() => setShowSignUp(false)}
           onSuccess={(_res: SignUpResult) => {
             setShowSignUp(false)
+            setShowCenteredInput(false)
             setMessages((prev) => [
               ...prev,
               {
@@ -602,7 +605,7 @@ export default function MobileApp() {
         {showCenteredInput ? (
           <div className="mobile-centered-input">
             <div className="mobile-centered-form">
-              <img src="/src/assets/drawing.png" alt="Chat Bramp AI" className="mobile-app-logo" />
+              <img src={FastFoodIcon} alt="Chat Bramp AI" className="mobile-app-logo" />
               <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
                 <input
                   ref={inputRef}
