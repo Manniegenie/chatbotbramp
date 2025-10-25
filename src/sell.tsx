@@ -213,8 +213,8 @@ const overlayStyle: React.CSSProperties = {
 const sheetStyle: React.CSSProperties = { 
   maxWidth: '480px', 
   width: '100%',
-  maxHeight: '80vh',
-  marginTop: '6vh',
+  maxHeight: '85vh',
+  marginTop: '4vh',
   background: 'var(--card)',
   border: '1px solid var(--border)',
   borderRadius: '8px',
@@ -553,20 +553,33 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
           </div>
         )}
         {/* Header */}
-        <div style={headerStyle}>
-          <h2 id="sell-title" style={{ margin: 0, fontSize: '1.3rem', fontWeight: 600, color: 'var(--txt)' }}>
-            {step === 1 ? 'Start a Payment' : step === 2 ? 'Payout Details' : 'Transaction Summary'}
-          </h2>
-          <p style={{ marginTop: '6px', color: 'var(--muted)', fontSize: '0.85rem' }}>
-            {step === 1 ? 'Choose token, network, and amount. We\'ll capture payout next.' : 
-             step === 2 ? 'Enter your bank details to receive payment.' : 
-             'Review your transaction details before confirming.'}
-          </p>
-          <div style={stepperStyle}>
-            <span style={dot(step >= 1)} />
-            <span style={dot(step >= 2)} />
-            <span style={dot(step >= 3)} />
+        <div style={{ ...headerStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ flex: 1 }}>
+            <h2 id="sell-title" style={{ margin: 0, fontSize: '1.3rem', fontWeight: 600, color: 'var(--txt)' }}>
+              {step === 1 ? 'Start a Payment' : step === 2 ? 'Payout Details' : 'Transaction Summary'}
+            </h2>
+            <p style={{ marginTop: '6px', color: 'var(--muted)', fontSize: '0.85rem' }}>
+              {step === 1 ? 'Choose token, network, and amount. We\'ll capture payout next.' : 
+               step === 2 ? 'Enter your bank details to receive payment.' : 
+               'Review your transaction details before confirming.'}
+            </p>
+            <div style={stepperStyle}>
+              <span style={dot(step >= 1)} />
+              <span style={dot(step >= 2)} />
+              <span style={dot(step >= 3)} />
+            </div>
           </div>
+          <button 
+            style={{ 
+              ...btnDangerGhost, 
+              padding: '4px 8px',
+              fontSize: '14px',
+              alignSelf: 'flex-start'
+            }} 
+            onClick={onClose}
+          >
+            ✕
+          </button>
         </div>
 
         {/* Body */}
@@ -940,17 +953,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
               : (showFinalSummary
                 ? 'Copy the deposit details and send the exact amount within the window.'
                 : 'Ensure your bank details match your account name.')}
-          </div>
-          <div style={{ display: 'flex', gap: 10 }}>
-            {step === 2 ? (
-              !showFinalSummary ? (
-                <button style={btn} onClick={() => setStep(1)}>← Back</button>
-              ) : (
-                <button style={btn} onClick={onClose}>Close</button>
-              )
-            ) : (
-              <button style={btn} onClick={onClose}>Cancel</button>
-            )}
           </div>
         </div>
       </div>

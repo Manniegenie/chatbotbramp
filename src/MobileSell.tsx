@@ -459,20 +459,38 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
           </div>
         )}
         {/* Header */}
-        <div style={{ marginBottom: '16px', flexShrink: 0 }}>
-          <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 600, color: 'var(--txt)' }}>
-            {step === 1 ? 'Start a Payment' : step === 2 ? 'Payout Details' : 'Transaction Summary'}
-          </h2>
-          <p style={{ marginTop: '6px', color: 'var(--muted)', fontSize: '0.85rem' }}>
-            {step === 1 ? 'Choose token, network, and amount. We\'ll capture payout next.' : 
-             step === 2 ? 'Enter your bank details to receive payment.' : 
-             'Review your transaction details before confirming.'}
-          </p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: '8px' }}>
-            <span style={{ width: 8, height: 8, borderRadius: 999, background: step >= 1 ? 'var(--accent)' : 'var(--border)' }}></span>
-            <span style={{ width: 8, height: 8, borderRadius: 999, background: step >= 2 ? 'var(--accent)' : 'var(--border)' }}></span>
-            <span style={{ width: 8, height: 8, borderRadius: 999, background: step >= 3 ? 'var(--accent)' : 'var(--border)' }}></span>
+        <div style={{ marginBottom: '16px', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ flex: 1 }}>
+            <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 600, color: 'var(--txt)' }}>
+              {step === 1 ? 'Start a Payment' : step === 2 ? 'Payout Details' : 'Transaction Summary'}
+            </h2>
+            <p style={{ marginTop: '6px', color: 'var(--muted)', fontSize: '0.85rem' }}>
+              {step === 1 ? 'Choose token, network, and amount. We\'ll capture payout next.' : 
+               step === 2 ? 'Enter your bank details to receive payment.' : 
+               'Review your transaction details before confirming.'}
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: '8px' }}>
+              <span style={{ width: 8, height: 8, borderRadius: 999, background: step >= 1 ? 'var(--accent)' : 'var(--border)' }}></span>
+              <span style={{ width: 8, height: 8, borderRadius: 999, background: step >= 2 ? 'var(--accent)' : 'var(--border)' }}></span>
+              <span style={{ width: 8, height: 8, borderRadius: 999, background: step >= 3 ? 'var(--accent)' : 'var(--border)' }}></span>
+            </div>
           </div>
+          <button 
+            style={{ 
+              appearance: 'none',
+              border: '1px solid var(--border)',
+              background: 'transparent',
+              color: 'var(--muted)',
+              padding: '4px 8px',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontSize: '14px',
+              alignSelf: 'flex-start'
+            }} 
+            onClick={onClose}
+          >
+            ✕
+          </button>
         </div>
 
         {/* Body */}
