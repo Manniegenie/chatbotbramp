@@ -602,7 +602,7 @@ export default function MobileApp() {
         {showCenteredInput ? (
           <div className="mobile-centered-input">
             <div className="mobile-centered-form">
-              <h2 className="mobile-app-title">Chat Bramp AI</h2>
+              <img src="/src/assets/drawing.png" alt="Chat Bramp AI" className="mobile-app-logo" />
               <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
                 <input
                   ref={inputRef}

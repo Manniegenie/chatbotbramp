@@ -1095,21 +1095,18 @@ a:focus-visible,
   z-index: 10;
 }
 
-.mobile-app-title {
-  text-align: center;
-  font-size: 32px;
-  font-weight: 700;
-  font-style: italic;
-  color: var(--txt);
-  margin: 0 0 24px 0;
-  font-family: 'EB Garamond', serif;
+.mobile-app-logo {
+  width: 180px;
+  height: auto;
+  margin: 0 auto 24px;
+  display: block;
 }
 
 .mobile-centered-form {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-width: 480px;
+  max-width: 384px;
   margin: 0 auto;
 }
 
