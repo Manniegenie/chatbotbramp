@@ -1116,30 +1116,26 @@ a:focus-visible,
   padding: 16px 50px 16px 24px;
   font-size: 16px;
   caret-color: var(--accent);
-  animation: blink-cursor 1s step-end infinite;
 }
 
 .mobile-send-inline {
   position: absolute;
-  right: 10px;
+  right: 6px;
   top: 50%;
   transform: translateY(-50%);
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   background: var(--accent);
   border-radius: 50%;
-  min-width: 36px;
-  min-height: 36px;
+  min-width: 32px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
 }
 
-@keyframes blink-cursor {
-  0%, 50% {
-    border-color: var(--border);
-  }
-  51%, 100% {
-    border-color: var(--accent);
-  }
-}
 
 /* ============================================
    End of Mobile App CSS
