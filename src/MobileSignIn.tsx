@@ -158,14 +158,14 @@ export default function MobileSignIn({
       touchAction: 'none'
     }}>
       <div style={{ 
-        maxWidth: '420px', 
+        maxWidth: '399px', 
         width: '100%',
-        maxHeight: '75vh',
-        marginTop: '4vh',
+        maxHeight: '71.25vh',
+        marginTop: '3.8vh',
         background: 'var(--card)',
         border: '1px solid var(--border)',
-        borderRadius: '8px',
-        padding: '24px',
+        borderRadius: '7.6px',
+        padding: '22.8px',
         boxShadow: 'var(--shadow)',
         overflow: 'hidden',
         display: 'flex',

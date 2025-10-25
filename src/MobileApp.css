@@ -123,6 +123,8 @@ a {
   flex-direction: column;
   overflow: hidden;
   position: relative;
+  transform: scale(0.95);
+  transform-origin: top center;
 }
 
 .mobile-page::before {

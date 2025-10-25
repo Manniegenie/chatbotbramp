@@ -433,14 +433,14 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
       touchAction: 'none'
     }} onClick={onClose}>
       <div style={{ 
-        maxWidth: '420px', 
+        maxWidth: '399px', 
         width: '100%',
-        maxHeight: '75vh',
-        marginTop: '4vh',
+        maxHeight: '71.25vh',
+        marginTop: '3.8vh',
         background: 'var(--card)',
         border: '1px solid var(--border)',
-        borderRadius: '8px',
-        padding: '24px',
+        borderRadius: '7.6px',
+        padding: '22.8px',
         boxShadow: 'var(--shadow)',
         overflow: 'hidden',
         display: 'flex',
@@ -721,15 +721,25 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
 
                       <div>
                         <div className="mobile-sell-key">Deposit Address</div>
-                        <div className="mobile-sell-value mono wrap">
-                          {initData.deposit.address}
-                        </div>
-                        <div className="mobile-sell-button-row">
+                        <div className="mobile-sell-value mono wrap" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ flex: 1 }}>{initData.deposit.address}</span>
                           <button
-                            className="mobile-sell-button outline"
                             onClick={() => copyToClipboard(initData.deposit.address, 'addr2')}
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              cursor: 'pointer',
+                              padding: '4px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              opacity: copiedKey === 'addr2' ? 0.5 : 1
+                            }}
+                            title="Copy address"
                           >
-                            {copiedKey === 'addr2' ? 'Copied ✓' : 'Copy Address'}
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z" fill="currentColor"/>
+                            </svg>
                           </button>
                         </div>
                       </div>
@@ -737,15 +747,25 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
                       {!!initData.deposit.memo && (
                         <div>
                           <div className="mobile-sell-key">Memo / Tag</div>
-                          <div className="mobile-sell-value mono wrap">
-                            {initData.deposit.memo}
-                          </div>
-                          <div className="mobile-sell-button-row">
+                          <div className="mobile-sell-value mono wrap" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ flex: 1 }}>{initData.deposit.memo}</span>
                             <button
-                              className="mobile-sell-button outline"
                               onClick={() => copyToClipboard(initData.deposit.memo!, 'memo2')}
+                              style={{
+                                background: 'transparent',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: '4px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                opacity: copiedKey === 'memo2' ? 0.5 : 1
+                              }}
+                              title="Copy memo"
                             >
-                              {copiedKey === 'memo2' ? 'Copied ✓' : 'Copy Memo'}
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z" fill="currentColor"/>
+                              </svg>
                             </button>
                           </div>
                         </div>
@@ -757,7 +777,7 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
                     </div>
 
                     {/* QR Code */}
-                    <QRCode data={qrData} size={120} />
+                    <QRCode data={qrData} size={80} />
                   </div>
 
                   {/* Transaction info grid */}
