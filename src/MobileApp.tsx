@@ -240,7 +240,7 @@ export default function MobileApp() {
   const endRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const [tickerText, setTickerText] = useState<string>('')
-  
+
   // Debug ticker
   useEffect(() => {
     console.log('Mobile ticker text:', tickerText)
@@ -306,7 +306,7 @@ export default function MobileApp() {
           url.hash
         window.history.replaceState({}, '', clean)
       }
-    } catch {}
+    } catch { }
 
     // Setup automatic logout timer
     const cleanup = setupAutoLogoutTimer((reason) => {
@@ -315,12 +315,12 @@ export default function MobileApp() {
       setAuth(null)
       setShowSell(false)
       setShowMenu(false)
-      
+
       // Show appropriate message based on reason
-      const message = reason === 'token_expired' 
+      const message = reason === 'token_expired'
         ? 'Your session has expired. Please sign in again.'
         : 'Session timeout reached. Please sign in again.'
-      
+
       setMessages([
         {
           id: crypto.randomUUID(),
@@ -398,7 +398,7 @@ export default function MobileApp() {
 
   useEffect(() => {
     const ac = new AbortController()
-    fetchTickerPrices(ac.signal).catch(() => {})
+    fetchTickerPrices(ac.signal).catch(() => { })
     return () => ac.abort()
   }, [])
 
@@ -517,7 +517,7 @@ export default function MobileApp() {
   }
 
   const renderMainContent = () => {
-      if (showSignIn) {
+    if (showSignIn) {
       return (
         <MobileSignIn
           onCancel={() => {
@@ -614,16 +614,38 @@ export default function MobileApp() {
 
         {showCenteredInput ? (
           <div className="mobile-centered-input">
-            <form onSubmit={sendMessage} style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
+            <form onSubmit={sendMessage} className="mobile-centered-form">
               <input
                 ref={inputRef}
-                className="mobile-input"
+                className="mobile-input mobile-input-centered"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder={loading ? 'Please wait…' : 'Chat Bramp AI...'}
                 disabled={loading}
-                style={{ borderRadius: '32px', padding: '16px 24px', fontSize: '16px' }}
               />
+              <button
+                type="submit"
+                className="mobile-send-btn"
+                disabled={loading || !input.trim()}
+                aria-label="Send message"
+              >
+                {loading ? (
+                  <div className="mobile-spinner" />
+                ) : (
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="22" y1="2" x2="11" y2="13" />
+                    <polygon points="22,2 15,22 11,13 2,9" />
+                  </svg>
+                )}
+              </button>
             </form>
           </div>
         ) : (
