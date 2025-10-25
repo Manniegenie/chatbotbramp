@@ -476,6 +476,7 @@ a {
 }
 
 .mobile-messages::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .mobile-messages::-webkit-scrollbar-thumb {
@@ -1147,6 +1148,28 @@ a:focus-visible,
   border: none;
   cursor: pointer;
   padding: 0;
+}
+
+.mobile-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 32px;
+  padding: 0 16px;
+}
+
+.mobile-footer-links a {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  padding: 4px 8px;
+  transition: color 0.2s ease;
+}
+
+.mobile-footer-links a:hover {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: underline;
 }
 
 
