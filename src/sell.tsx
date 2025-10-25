@@ -603,53 +603,27 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   <label style={inputWrap}>
                     <span style={labelText}>Token</span>
-                    <div style={{ position: 'relative' }}>
-                      <select
-                        ref={firstInputRef as any}
-                        style={{ ...inputBase, paddingRight: '28px' }}
-                        value={token}
-                        onChange={e => setToken(e.target.value as TokenSym)}
-                      >
-                        {TOKENS.map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
-                      <div style={{
-                        position: 'absolute',
-                        right: '6px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        pointerEvents: 'none',
-                        color: 'var(--muted)',
-                        fontSize: '10px'
-                      }}>
-                        ▼
-                      </div>
-                    </div>
+                    <select
+                      ref={firstInputRef as any}
+                      style={{ ...inputBase, cursor: 'pointer' }}
+                      value={token}
+                      onChange={e => setToken(e.target.value as TokenSym)}
+                    >
+                      {TOKENS.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
                   </label>
 
                   <label style={inputWrap}>
                     <span style={labelText}>Network</span>
-                    <div style={{ position: 'relative' }}>
-                      <select
-                        style={{ ...inputBase, paddingRight: '28px' }}
-                        value={network}
-                        onChange={e => setNetwork(e.target.value)}
-                      >
-                        {NETWORKS_BY_TOKEN[token].map(n => (
-                          <option key={n.code} value={n.code}>{n.label}</option>
-                        ))}
-                      </select>
-                      <div style={{
-                        position: 'absolute',
-                        right: '6px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        pointerEvents: 'none',
-                        color: 'var(--muted)',
-                        fontSize: '10px'
-                      }}>
-                        ▼
-                      </div>
-                    </div>
+                    <select
+                      style={{ ...inputBase, cursor: 'pointer' }}
+                      value={network}
+                      onChange={e => setNetwork(e.target.value)}
+                    >
+                      {NETWORKS_BY_TOKEN[token].map(n => (
+                        <option key={n.code} value={n.code}>{n.label}</option>
+                      ))}
+                    </select>
                   </label>
                 </div>
 
@@ -657,27 +631,14 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   <label style={inputWrap}>
                     <span style={labelText}>Currency</span>
-                    <div style={{ position: 'relative' }}>
-                      <select
-                        style={{ ...inputBase, paddingRight: '28px' }}
-                        value={currency}
-                        onChange={e => setCurrency(e.target.value as 'TOKEN' | 'NGN')}
-                      >
+                    <select
+                      style={{ ...inputBase, cursor: 'pointer' }}
+                      value={currency}
+                      onChange={e => setCurrency(e.target.value as 'TOKEN' | 'NGN')}
+                    >
                       <option value="TOKEN">{token}</option>
                       <option value="NGN">NGN</option>
-                      </select>
-                      <div style={{
-                        position: 'absolute',
-                        right: '6px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        pointerEvents: 'none',
-                        color: 'var(--muted)',
-                        fontSize: '10px'
-                      }}>
-                        ▼
-                      </div>
-                    </div>
+                    </select>
                   </label>
 
                   {currency === 'TOKEN' ? (
@@ -768,41 +729,28 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
                     <label style={inputWrap}>
                       <span style={labelText}>Bank</span>
-                      <div style={{ position: 'relative' }}>
-                        <select
-                          ref={firstInputRef as any}
-                          style={inputBase}
-                          value={bankCode}
-                          disabled={banksLoading || bankOptions.length === 0}
-                          onChange={e => {
-                            const code = e.target.value
-                            const hit = bankOptions.find((b: BankOption) => b.code === code)
-                            if (hit) {
-                              setBankCode(hit.code)
-                              setBankName(hit.name)
-                            }
-                          }}
-                        >
-                          {bankOptions.length === 0 ? (
-                            <option value="">{banksLoading ? 'Loading…' : (banksError || 'No banks')}</option>
-                          ) : (
-                            bankOptions.map((b: BankOption) => (
-                              <option key={b.code} value={b.code}>{b.name}</option>
-                            ))
-                          )}
-                        </select>
-                        <div style={{
-                          position: 'absolute',
-                          right: '6px',
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          pointerEvents: 'none',
-                          color: 'var(--muted)',
-                          fontSize: '10px'
-                        }}>
-                          ▼
-                        </div>
-                      </div>
+                      <select
+                        ref={firstInputRef as any}
+                        style={{ ...inputBase, cursor: 'pointer' }}
+                        value={bankCode}
+                        disabled={banksLoading || bankOptions.length === 0}
+                        onChange={e => {
+                          const code = e.target.value
+                          const hit = bankOptions.find((b: BankOption) => b.code === code)
+                          if (hit) {
+                            setBankCode(hit.code)
+                            setBankName(hit.name)
+                          }
+                        }}
+                      >
+                        {bankOptions.length === 0 ? (
+                          <option value="">{banksLoading ? 'Loading…' : (banksError || 'No banks')}</option>
+                        ) : (
+                          bankOptions.map((b: BankOption) => (
+                            <option key={b.code} value={b.code}>{b.name}</option>
+                          ))
+                        )}
+                      </select>
                     </label>
 
                     <label style={inputWrap}>
