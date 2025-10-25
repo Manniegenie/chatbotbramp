@@ -844,28 +844,6 @@ export default function App() {
             border-radius: 50%;
             animation: spin 1s linear infinite;
           }
-          
-          .desktop-footer-links {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            justify-content: center;
-            margin-top: 32px;
-            padding: 0 16px;
-          }
-          
-          .desktop-footer-links a {
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.6);
-            text-decoration: none;
-            padding: 4px 8px;
-            transition: color 0.2s ease;
-          }
-          
-          .desktop-footer-links a:hover {
-            color: rgba(255, 255, 255, 0.9);
-            text-decoration: underline;
-          }
         `}
       </style>
       <div className="page">
@@ -1091,38 +1069,6 @@ export default function App() {
                       )}
                     </button>
                   </div>
-                </div>
-                
-                {/* Footer links when centered input is shown */}
-                <div className="desktop-footer-links">
-                  <a
-                    href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    AML/CFT Policy
-                  </a>
-                  <a
-                    href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Risk Disclaimer
-                  </a>
-                  <a
-                    href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Privacy
-                  </a>
-                  <a
-                    href="/terms"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Terms
-                  </a>
                 </div>
               </div>
             ) : (
