@@ -612,6 +612,7 @@ export default function MobileApp() {
                   className="mobile-input mobile-input-centered"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
+                  placeholder="Try: Sell 100 USDT to NGN"
                   disabled={loading}
                 />
                 <button
