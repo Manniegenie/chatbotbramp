@@ -1172,6 +1172,27 @@ a:focus-visible,
   text-decoration: underline;
 }
 
+.mobile-footer-links-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  padding: 12px 16px;
+}
+
+.mobile-footer-links-bottom a {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  padding: 4px 8px;
+  transition: color 0.2s ease;
+}
+
+.mobile-footer-links-bottom a:hover {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: underline;
+}
+
 
 /* ============================================
    End of Mobile App CSS

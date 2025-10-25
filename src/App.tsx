@@ -731,19 +731,23 @@ export default function App() {
             color: rgba(255, 255, 255, 0.7);
           }
 
-          .footer-brand {
+          .footer-links {
             display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+          }
+
+          .footer a {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
             padding: 6px 0;
           }
-          .footer-brand img {
-            width: 24px;
-            height: 24px;
-            object-fit: contain;
-          }
-          .footer-icon-carousel {
-            animation: fadeIn 0.5s ease-in-out;
+          .footer a:hover {
+            text-decoration: underline;
+            color: rgba(255, 255, 255, 0.9);
           }
           
           .header-logo {
@@ -861,12 +865,6 @@ export default function App() {
           .desktop-footer-links a:hover {
             color: rgba(255, 255, 255, 0.9);
             text-decoration: underline;
-          }
-          
-          .footer-brand span {
-            font-size: 14px;
-            color: var(--txt);
-            font-weight: 500;
           }
         `}
       </style>
@@ -1208,18 +1206,11 @@ export default function App() {
         <SellModal open={showSell} onClose={() => setShowSell(false)} onChatEcho={echoFromModalToChat} />
 
         <footer className="footer">
-          <div className="footer-brand">
-            <img
-              src={BrampLogo}
-              alt="Bramp Africa Logo"
-              width="24"
-              height="24"
-              onError={(e) => {
-                // Fallback to a placeholder if logo fails to load
-                e.currentTarget.style.display = 'none';
-              }}
-            />
-            <span></span>
+          <div className="footer-links">
+            <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
+            <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
+            <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
+            <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
           </div>
         </footer>
       </div>
