@@ -237,7 +237,7 @@ export default function MobileApp() {
   const endRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const [tickerText, setTickerText] = useState<string>('')
-  
+
   const icons = [FastFoodIcon, SolanaIcon, TetherIcon, CryptocurrencyIcon]
   const [currentIconIndex, setCurrentIconIndex] = useState(0)
 
@@ -250,7 +250,7 @@ export default function MobileApp() {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIconIndex((prev) => (prev + 1) % icons.length)
-    }, 2000)
+    }, 3000)
     return () => clearInterval(interval)
   }, [icons.length])
 
