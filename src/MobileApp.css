@@ -1086,13 +1086,23 @@ a:focus-visible,
 
 .mobile-centered-input {
   position: absolute;
-  top: 50%;
+  top: 35%;
   left: 0;
   right: 0;
   transform: translateY(-50%);
   width: 100%;
   padding: 0 16px;
   z-index: 10;
+}
+
+.mobile-app-title {
+  text-align: center;
+  font-size: 32px;
+  font-weight: 700;
+  font-style: italic;
+  color: var(--txt);
+  margin: 0 0 24px 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif;
 }
 
 .mobile-centered-form {

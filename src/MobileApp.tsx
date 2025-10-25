@@ -601,13 +601,13 @@ export default function MobileApp() {
 
         {showCenteredInput ? (
           <div className="mobile-centered-input">
+            <h2 className="mobile-app-title">Chat Bramp AI</h2>
             <form onSubmit={sendMessage} className="mobile-centered-form">
               <input
                 ref={inputRef}
                 className="mobile-input mobile-input-centered"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Chat Bramp AI..."
                 disabled={loading}
               />
               <button
