@@ -774,6 +774,20 @@ export default function App() {
           .footer-icon-carousel {
             animation: fadeIn 0.5s ease-in-out;
           }
+          
+          .header-logo-carousel {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            animation: fadeIn 0.5s ease-in-out;
+          }
+          
+          .brand-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--txt);
+          }
+          
           @keyframes fadeIn {
             from {
               opacity: 0;
@@ -888,6 +902,17 @@ export default function App() {
         <WallpaperSlideshow />
         <header ref={headerRef} className="header">
           <div className="brand">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <img
+                src={icons[currentIconIndex]}
+                alt="Bramp"
+                className="header-logo-carousel"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none'
+                }}
+              />
+              <span className="brand-text">Bramp</span>
+            </div>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div className="ticker-wrap" aria-live="polite" aria-atomic="true">
                 <div
@@ -1194,11 +1219,10 @@ export default function App() {
           <div className="footer-right">
             <div className="footer-brand">
               <img
-                src={icons[currentIconIndex]}
+                src={BrampLogo}
                 alt="Bramp Africa Logo"
                 width="24"
                 height="24"
-                className="footer-icon-carousel"
                 onError={(e) => {
                   // Fallback to a placeholder if logo fails to load
                   e.currentTarget.style.display = 'none';
