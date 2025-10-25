@@ -1102,12 +1102,13 @@ a:focus-visible,
   font-style: italic;
   color: var(--txt);
   margin: 0 0 24px 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif;
+  font-family: 'EB Garamond', serif;
 }
 
 .mobile-centered-form {
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  gap: 16px;
   max-width: 480px;
   margin: 0 auto;
 }
