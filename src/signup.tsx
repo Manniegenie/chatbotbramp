@@ -777,132 +777,7 @@ export default function SignUp({
       )
     }
 
-    switch (currentStepId) {
-      case 'phone':
-        return (
-          <>
-            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Phone number</label>
-            <input
-              key="ph"
-              placeholder="+2348172345678"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              inputMode="tel"
-              autoFocus
-              style={inputStyle}
-              className="no-zoom"
-            />
-          </>
-        )
-      case 'email':
-        return (
-          <>
-            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Email address</label>
-            <input
-              key="em"
-              placeholder="adunni.okafor@gmail.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              type="email"
-              autoFocus
-              style={inputStyle}
-              className="no-zoom"
-            />
-          </>
-        )
-      case 'otp':
-        return (
-          <>
-            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Enter OTP</label>
-            <input
-              key="otp"
-              placeholder="123456"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
-              inputMode="numeric"
-              maxLength={6}
-              autoFocus
-              style={inputStyle}
-              className="no-zoom"
-            />
-            {otpError && (
-              <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
-                ⚠️ {otpError}
-              </div>
-            )}
-            {resendError && (
-              <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
-                ⚠️ {resendError}
-              </div>
-            )}
-            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              <button className="btn" type="submit" disabled={loading}>
-                {loading ? 'Verifying…' : 'Verify OTP'}
-              </button>
-              <button
-                type="button"
-                className="btn btn-outline"
-                onClick={handleResendOtp}
-                disabled={resendLoading || loading}
-                style={{ fontSize: '0.8rem' }}
-              >
-                {resendLoading ? 'Sending…' : 'Resend OTP'}
-              </button>
-              <button
-                type="button"
-                className="btn btn-outline"
-                onClick={goBack}
-                disabled={loading}
-              >
-                Back
-              </button>
-            </div>
-          </>
-        )
-      case 'pin':
-        return (
-          <>
-            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>PIN (6 digits)</label>
-            <input
-              key="pin1"
-              placeholder="••••••"
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
-              inputMode="numeric"
-              maxLength={6}
-              type="password"
-              autoFocus
-              style={inputStyle}
-              className="no-zoom"
-            />
-            <div style={{ height: 8 }} />
-            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Confirm PIN</label>
-            <input
-              key="pin2"
-              placeholder="••••••"
-              value={pin2}
-              onChange={(e) => setPin2(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
-              inputMode="numeric"
-              maxLength={6}
-              type="password"
-              style={inputStyle}
-              className="no-zoom"
-            />
-            {pinError && (
-              <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
-                ⚠️ {pinError}
-              </div>
-            )}
-            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              <button type="button" className="btn btn-outline" onClick={goBack} disabled={loading}>
-                Back
-              </button>
-              <button className="btn" type="submit" disabled={loading}>
-                {loading ? 'Creating Account…' : 'Complete Signup'}
-              </button>
-            </div>
-          </>
-        )
+    return null
 
       // KYC render cases commented out for test flight
       /*
@@ -957,7 +832,6 @@ export default function SignUp({
         )
       // ... other KYC cases
       */
-    }
   }
 
   return (
