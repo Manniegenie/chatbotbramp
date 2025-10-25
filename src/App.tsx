@@ -260,19 +260,12 @@ function ThreeDotLoader() {
 /* ----------------------------------- App ----------------------------------- */
 
 export default function App() {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: crypto.randomUUID(),
-      role: 'assistant',
-      text:
-        "🚀Ready to move your crypto? Sign in to send or pay instantly to any Naira bank account🏦.",
-      ts: Date.now(),
-    },
-  ])
+  const [messages, setMessages] = useState<ChatMessage[]>([])
 
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [isInitialLoading, setIsInitialLoading] = useState(true)
+  const [showCenteredInput, setShowCenteredInput] = useState(true)
 
   const [showSignIn, setShowSignIn] = useState(false)
   const [showSignUp, setShowSignUp] = useState(false)
@@ -437,6 +430,11 @@ export default function App() {
     const trimmed = input.trim()
     if (!trimmed || loading) return
 
+    // Switch to bottom input after first message
+    if (showCenteredInput) {
+      setShowCenteredInput(false)
+    }
+
     const userMsg: ChatMessage = { id: crypto.randomUUID(), role: 'user', text: trimmed, ts: Date.now() }
     setMessages((prev) => [...prev, userMsg])
     setInput('')
@@ -482,6 +480,8 @@ export default function App() {
     clearAuth()
     setAuth(null)
     setShowSell(false)
+    setMessages([])
+    setShowCenteredInput(true)
   }
 
   function isSellCTA(btn: CTAButton): boolean {
@@ -784,6 +784,74 @@ export default function App() {
               transform: scale(1);
             }
           }
+          
+          /* Desktop Centered Input */
+          .centered-input-desktop {
+            position: absolute;
+            top: 35%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: calc(100% - 32px);
+            max-width: 450px;
+            z-index: 10;
+          }
+          
+          .desktop-app-logo {
+            width: 72px;
+            height: auto;
+            margin: 0 auto 12px;
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
+          }
+          
+          .centered-form-desktop {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+          }
+          
+          .input-centered-desktop {
+            width: 100%;
+            border-radius: 32px;
+            padding: 24px 50px 24px 24px;
+            font-size: 16px;
+            caret-color: var(--accent);
+            box-sizing: border-box;
+            min-height: 64px;
+            background: rgba(18, 18, 26, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            color: var(--txt);
+            outline: none;
+          }
+          
+          .send-btn-inline-desktop {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+          }
+          
+          .spinner-desktop {
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+          }
+          
           .footer-brand span {
             font-size: 14px;
             color: var(--txt);
@@ -820,7 +888,6 @@ export default function App() {
         <WallpaperSlideshow />
         <header ref={headerRef} className="header">
           <div className="brand">
-            <p className="tag">Secure access to digital assets & payments — via licensed partners.</p>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div className="ticker-wrap" aria-live="polite" aria-atomic="true">
                 <div
@@ -872,6 +939,7 @@ export default function App() {
             onSuccess={(res) => {
               setAuth(res)
               setShowSignIn(false)
+              setShowCenteredInput(false)
               const greeting = getTimeBasedGreeting()
               const name = res.user.username || (res.user as any).firstname || 'there'
               setMessages([{
@@ -891,6 +959,7 @@ export default function App() {
               if (res.accessToken && res.refreshToken) {
                 // User is already authenticated, route to main app
                 tokenStore.setTokens(res.accessToken, res.refreshToken)
+                setShowCenteredInput(false)
                 if (res.user) {
                   // Create a proper user object with required fields
                   const user = {
@@ -988,7 +1057,49 @@ export default function App() {
               <div ref={endRef} />
             </div>
 
-            <form className="composer" onSubmit={sendMessage}>
+            {showCenteredInput ? (
+              <div className="centered-input-desktop">
+                <div className="centered-form-desktop">
+                  <img src={icons[currentIconIndex]} alt="Chat Bramp AI" className="desktop-app-logo" />
+                  <div style={{ position: 'relative', width: '100%' }}>
+                    <input
+                      ref={inputRef}
+                      className="input-centered-desktop"
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      placeholder="Try: Sell 100 USDT to NGN"
+                      disabled={loading}
+                    />
+                    <button
+                      type="submit"
+                      className="send-btn-inline-desktop"
+                      disabled={loading || !input.trim()}
+                      aria-label="Send message"
+                      onClick={sendMessage}
+                    >
+                      {loading ? (
+                        <div className="spinner-desktop" />
+                      ) : (
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <line x1="22" y1="2" x2="11" y2="13" />
+                          <polygon points="22,2 15,22 11,13 2,9" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <form className="composer" onSubmit={sendMessage}>
               <input
                 ref={inputRef}
                 value={input}
@@ -1055,6 +1166,7 @@ export default function App() {
                 )}
               </button>
             </form>
+            )}
 
             <div className="hints">
               <span className="hint" onClick={() => handleHintClick('Sell 100 USDT to NGN')}>Sell 100 USDT to NGN</span>
