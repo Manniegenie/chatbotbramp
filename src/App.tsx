@@ -725,39 +725,10 @@ export default function App() {
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
             gap: 12px;
             flex-wrap: wrap;
             color: rgba(255, 255, 255, 0.7);
-          }
-
-          /* groups inside footer for layout control */
-          .footer-left,
-          .footer-center,
-          .footer-right {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          }
-
-          /* policy links row */
-          .footer-links {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: center;
-          }
-
-          .footer a {
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.6);
-            text-decoration: none;
-            padding: 6px 0;
-          }
-          .footer a:hover {
-            text-decoration: underline;
-            color: rgba(255, 255, 255, 0.9);
           }
 
           .footer-brand {
@@ -896,31 +867,6 @@ export default function App() {
             font-size: 14px;
             color: var(--txt);
             font-weight: 500;
-          }
-
-          .footer-center {
-            text-align: center;
-          }
-          .footer-center .copyright {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.6);
-            white-space: nowrap;
-          }
-
-          /* On small screens stack nicely */
-          @media (max-width: 640px) {
-            .footer {
-              justify-content: center;
-              text-align: center;
-            }
-            .footer-left, .footer-right {
-              width: 100%;
-              justify-content: center;
-            }
-            .footer-center {
-              width: 100%;
-              margin-top: 6px;
-            }
           }
         `}
       </style>
@@ -1262,32 +1208,18 @@ export default function App() {
         <SellModal open={showSell} onClose={() => setShowSell(false)} onChatEcho={echoFromModalToChat} />
 
         <footer className="footer">
-          <div className="footer-left">
-            <div className="footer-links">
-              <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
-              <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
-              <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
-              <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
-            </div>
-          </div>
-
-          <div className="footer-center">
-          </div>
-
-          <div className="footer-right">
-            <div className="footer-brand">
-              <img
-                src={BrampLogo}
-                alt="Bramp Africa Logo"
-                width="24"
-                height="24"
-                onError={(e) => {
-                  // Fallback to a placeholder if logo fails to load
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-              <span></span>
-            </div>
+          <div className="footer-brand">
+            <img
+              src={BrampLogo}
+              alt="Bramp Africa Logo"
+              width="24"
+              height="24"
+              onError={(e) => {
+                // Fallback to a placeholder if logo fails to load
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+            <span></span>
           </div>
         </footer>
       </div>

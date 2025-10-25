@@ -656,7 +656,7 @@ export default function MobileApp() {
                 </button>
               </div>
             </div>
-            
+
             {/* Footer links when centered input is shown */}
             <div className="mobile-footer-links">
               <a
