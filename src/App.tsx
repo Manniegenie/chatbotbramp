@@ -8,6 +8,10 @@ import SellModal from './sell'
 import WallpaperSlideshow from './WallpaperSlideshow'
 // Import logo from assets
 import BrampLogo from './assets/logo.jpeg' // Placeholder path
+import FastFoodIcon from './assets/fast-food-icon.png'
+import SolanaIcon from './assets/solana.png'
+import TetherIcon from './assets/tether.png'
+import CryptocurrencyIcon from './assets/cryptocurrency.png'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -286,6 +290,9 @@ export default function App() {
   })
 
   const endRef = useRef<HTMLDivElement>(null)
+  
+  const icons = [FastFoodIcon, SolanaIcon, TetherIcon, CryptocurrencyIcon]
+  const [currentIconIndex, setCurrentIconIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Parse **text** to <strong>text</strong>
@@ -416,6 +423,14 @@ export default function App() {
     onScroll()
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  // Cycle through icons
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIconIndex((prev) => (prev + 1) % icons.length)
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [icons.length])
 
   async function sendMessage(e?: React.FormEvent) {
     e?.preventDefault()
@@ -756,6 +771,19 @@ export default function App() {
             height: 24px;
             object-fit: contain;
           }
+          .footer-icon-carousel {
+            animation: fadeIn 0.5s ease-in-out;
+          }
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+              transform: scale(0.9);
+            }
+            to {
+              opacity: 1;
+              transform: scale(1);
+            }
+          }
           .footer-brand span {
             font-size: 14px;
             color: var(--txt);
@@ -1054,10 +1082,11 @@ export default function App() {
           <div className="footer-right">
             <div className="footer-brand">
               <img
-                src={BrampLogo}
+                src={icons[currentIconIndex]}
                 alt="Bramp Africa Logo"
                 width="24"
                 height="24"
+                className="footer-icon-carousel"
                 onError={(e) => {
                   // Fallback to a placeholder if logo fails to load
                   e.currentTarget.style.display = 'none';
