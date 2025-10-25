@@ -606,17 +606,18 @@ export default function MobileApp() {
           <div className="mobile-centered-input">
             <div className="mobile-centered-form">
               <img src={FastFoodIcon} alt="Chat Bramp AI" className="mobile-app-logo" />
-              <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+              <div style={{ position: 'relative', width: '100%' }}>
                 <input
                   ref={inputRef}
                   className="mobile-input mobile-input-centered"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   disabled={loading}
+                  style={{ paddingRight: '50px' }}
                 />
                 <button
                   type="submit"
-                  className="mobile-send-btn"
+                  className="mobile-send-btn mobile-send-inline"
                   disabled={loading || !input.trim()}
                   aria-label="Send message"
                   onClick={sendMessage}

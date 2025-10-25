@@ -1119,6 +1119,17 @@ a:focus-visible,
   animation: blink-cursor 1s step-end infinite;
 }
 
+.mobile-send-inline {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  background: var(--accent);
+  border-radius: 50%;
+}
+
 @keyframes blink-cursor {
   0%, 50% {
     border-color: var(--border);
