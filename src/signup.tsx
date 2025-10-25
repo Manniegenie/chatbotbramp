@@ -1014,7 +1014,7 @@ export default function SignUp({
                     : "We'll collect a few details. One step at a time."}
           </p>
 
-          {currentStepGroup === 'otp' || currentStepGroup === 'pin' ? <ProgressDots /> : null}
+          {currentStepId === 'otp' || currentStepId === 'pin' ? <ProgressDots /> : null}
         </div>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <form onSubmit={handleSubmit}>
