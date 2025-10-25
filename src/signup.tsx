@@ -409,9 +409,8 @@ export default function SignUp({
         setError(emailError)
         return
       }
-      setCurrentStepGroup('otp')
-      setStepIndex(4) // Go to OTP step (index 4 in the steps array)
-      return doSignup()
+      // Call API first, then navigate if successful
+      await doSignup()
     }
 
     const invalid = validateAllUpTo(stepIndex)
@@ -471,6 +470,7 @@ export default function SignUp({
       if (ok.userId) setPendingUserId(ok.userId)
 
       // Only move to OTP page if signup was successful
+      setCurrentStepGroup('otp')
       setStepIndex(steps.indexOf('otp'))
     } catch (err: any) {
       setError(`Network error: ${err.message}`)
