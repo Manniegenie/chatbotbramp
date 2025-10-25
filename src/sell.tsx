@@ -606,7 +606,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     <div style={{ position: 'relative' }}>
                       <select
                         ref={firstInputRef as any}
-                        style={{ ...inputBase, paddingRight: '32px' }}
+                        style={{ ...inputBase, paddingRight: '28px' }}
                         value={token}
                         onChange={e => setToken(e.target.value as TokenSym)}
                       >
@@ -614,12 +614,12 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                       </select>
                       <div style={{
                         position: 'absolute',
-                        right: '10px',
+                        right: '6px',
                         top: '50%',
                         transform: 'translateY(-50%)',
                         pointerEvents: 'none',
                         color: 'var(--muted)',
-                        fontSize: '12px'
+                        fontSize: '10px'
                       }}>
                         ▼
                       </div>
@@ -630,7 +630,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     <span style={labelText}>Network</span>
                     <div style={{ position: 'relative' }}>
                       <select
-                        style={{ ...inputBase, paddingRight: '32px' }}
+                        style={{ ...inputBase, paddingRight: '28px' }}
                         value={network}
                         onChange={e => setNetwork(e.target.value)}
                       >
@@ -640,12 +640,12 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                       </select>
                       <div style={{
                         position: 'absolute',
-                        right: '10px',
+                        right: '6px',
                         top: '50%',
                         transform: 'translateY(-50%)',
                         pointerEvents: 'none',
                         color: 'var(--muted)',
-                        fontSize: '12px'
+                        fontSize: '10px'
                       }}>
                         ▼
                       </div>
@@ -659,7 +659,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     <span style={labelText}>Currency</span>
                     <div style={{ position: 'relative' }}>
                       <select
-                        style={{ ...inputBase, paddingRight: '32px' }}
+                        style={{ ...inputBase, paddingRight: '28px' }}
                         value={currency}
                         onChange={e => setCurrency(e.target.value as 'TOKEN' | 'NGN')}
                       >
@@ -668,12 +668,12 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                       </select>
                       <div style={{
                         position: 'absolute',
-                        right: '10px',
+                        right: '6px',
                         top: '50%',
                         transform: 'translateY(-50%)',
                         pointerEvents: 'none',
                         color: 'var(--muted)',
-                        fontSize: '12px'
+                        fontSize: '10px'
                       }}>
                         ▼
                       </div>
@@ -793,12 +793,12 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                         </select>
                         <div style={{
                           position: 'absolute',
-                          right: '14px',
+                          right: '6px',
                           top: '50%',
                           transform: 'translateY(-50%)',
                           pointerEvents: 'none',
                           color: 'var(--muted)',
-                          fontSize: '12px'
+                          fontSize: '10px'
                         }}>
                           ▼
                         </div>
