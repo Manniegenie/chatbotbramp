@@ -613,7 +613,6 @@ export default function MobileApp() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   disabled={loading}
-                  style={{ paddingRight: '50px' }}
                 />
                 <button
                   type="submit"
