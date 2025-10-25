@@ -806,7 +806,7 @@ export default function App() {
             left: 50%;
             transform: translate(-50%, -50%);
             width: calc(100% - 32px);
-            max-width: 450px;
+            max-width: 580px;
             z-index: 10;
           }
           
@@ -827,12 +827,12 @@ export default function App() {
           
           .input-centered-desktop {
             width: 100%;
-            border-radius: 32px;
-            padding: 24px 50px 24px 24px;
-            font-size: 16px;
+            border-radius: 40px;
+            padding: 28px 68px 28px 28px;
+            font-size: 18px;
             caret-color: var(--accent);
             box-sizing: border-box;
-            min-height: 64px;
+            min-height: 72px;
             background: rgba(18, 18, 26, 0.7);
             backdrop-filter: blur(10px);
             border: 1px solid var(--border);
@@ -842,11 +842,11 @@ export default function App() {
           
           .send-btn-inline-desktop {
             position: absolute;
-            right: 8px;
+            right: 10px;
             top: 50%;
             transform: translateY(-50%);
-            width: 36px;
-            height: 36px;
+            width: 52px;
+            height: 52px;
             background: var(--accent);
             border-radius: 50%;
             display: flex;
@@ -855,6 +855,11 @@ export default function App() {
             border: none;
             cursor: pointer;
             padding: 0;
+          }
+          
+          .send-btn-inline-desktop svg {
+            width: 24px;
+            height: 24px;
           }
           
           .spinner-desktop {
