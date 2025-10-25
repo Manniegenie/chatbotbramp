@@ -720,7 +720,7 @@ export default function MobileApp() {
                 e.currentTarget.style.display = 'none'
               }}
             />
-            <span className="mobile-brand-text">Bramp AI</span>
+            <span className="mobile-brand-text">Bramp</span>
           </div>
 
           <div className="mobile-nav-buttons">
