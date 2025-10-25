@@ -22,6 +22,7 @@ const WallpaperSlideshow: React.FC<WallpaperSlideshowProps> = ({ className = '' 
           background-position: center;
           background-repeat: no-repeat;
           background-attachment: fixed;
+          filter: brightness(1);
         }
       `}</style>
     </div>

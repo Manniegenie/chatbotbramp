@@ -107,8 +107,8 @@ a:hover { opacity: .92; }
   position: fixed;      /* match ::before so overlay stays aligned */
   inset: 0;
   background: linear-gradient(180deg,
-    rgba(11,11,16,var(--bg-overlay-top-alpha)),
-    rgba(11,11,16,var(--bg-overlay-bottom-alpha))
+    rgba(11,11,16,0.3),
+    rgba(11,11,16,0.5)
   );
   z-index: 1;
   pointer-events: none;
