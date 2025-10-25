@@ -236,7 +236,7 @@ const btnDangerGhost: React.CSSProperties = { ...btn, borderColor: 'var(--border
 const gridForm: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }
 const inputWrap: React.CSSProperties = { display: 'grid', gap: 4 }
 const labelText: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', whiteSpace: 'nowrap' }
-const inputBase: React.CSSProperties = { background: '#0f1117', color: 'var(--txt)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 10px', outline: 'none' }
+const inputBase: React.CSSProperties = { background: '#0f1117', color: 'var(--txt)', border: '1px solid var(--border)', borderRadius: 12, padding: '10px 14px', outline: 'none', fontSize: '14px' }
 const card: React.CSSProperties = { border: '1px solid var(--border)', borderRadius: 10, padding: 10, background: '#0e0f15', display: 'grid', gap: 8 }
 const kvGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }
 const kStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', whiteSpace: 'nowrap' }
@@ -606,7 +606,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     <div style={{ position: 'relative' }}>
                       <select
                         ref={firstInputRef as any}
-                        style={{ ...inputBase, paddingRight: '32px' }}
+                        style={{ ...inputBase, paddingRight: '36px' }}
                         value={token}
                         onChange={e => setToken(e.target.value as TokenSym)}
                       >
@@ -614,12 +614,12 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                       </select>
                       <div style={{
                         position: 'absolute',
-                        right: '8px',
+                        right: '14px',
                         top: '50%',
                         transform: 'translateY(-50%)',
                         pointerEvents: 'none',
                         color: 'var(--muted)',
-                        fontSize: '10px'
+                        fontSize: '12px'
                       }}>
                         ▼
                       </div>
@@ -630,7 +630,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     <span style={labelText}>Network</span>
                     <div style={{ position: 'relative' }}>
                       <select
-                        style={{ ...inputBase, paddingRight: '32px' }}
+                        style={{ ...inputBase, paddingRight: '36px' }}
                         value={network}
                         onChange={e => setNetwork(e.target.value)}
                       >
@@ -640,12 +640,12 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                       </select>
                       <div style={{
                         position: 'absolute',
-                        right: '8px',
+                        right: '14px',
                         top: '50%',
                         transform: 'translateY(-50%)',
                         pointerEvents: 'none',
                         color: 'var(--muted)',
-                        fontSize: '10px'
+                        fontSize: '12px'
                       }}>
                         ▼
                       </div>
@@ -659,7 +659,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     <span style={labelText}>Currency</span>
                     <div style={{ position: 'relative' }}>
                       <select
-                        style={{ ...inputBase, paddingRight: '32px' }}
+                        style={{ ...inputBase, paddingRight: '36px' }}
                         value={currency}
                         onChange={e => setCurrency(e.target.value as 'TOKEN' | 'NGN')}
                       >
@@ -668,12 +668,12 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                       </select>
                       <div style={{
                         position: 'absolute',
-                        right: '8px',
+                        right: '14px',
                         top: '50%',
                         transform: 'translateY(-50%)',
                         pointerEvents: 'none',
                         color: 'var(--muted)',
-                        fontSize: '10px'
+                        fontSize: '12px'
                       }}>
                         ▼
                       </div>
@@ -793,7 +793,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                         </select>
                         <div style={{
                           position: 'absolute',
-                          right: '12px',
+                          right: '14px',
                           top: '50%',
                           transform: 'translateY(-50%)',
                           pointerEvents: 'none',
