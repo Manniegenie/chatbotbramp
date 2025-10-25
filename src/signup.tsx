@@ -370,9 +370,8 @@ export default function SignUp({
     e?.preventDefault()
     setError(null)
 
-    // Handle step groups
+    // Names step: validate and move to contact
     if (currentStepGroup === 'names') {
-      // Validate firstname and lastname individually
       const firstnameError = validateField('firstname')
       if (firstnameError) {
         setError(firstnameError)
@@ -387,8 +386,8 @@ export default function SignUp({
       return
     }
 
+    // Contact step: validate and call signup API
     if (currentStepGroup === 'contact') {
-      // Validate all fields individually
       const firstnameError = validateField('firstname')
       if (firstnameError) {
         setError(firstnameError)
@@ -409,28 +408,21 @@ export default function SignUp({
         setError(emailError)
         return
       }
-      // Call API first, then navigate if successful
+      // Call signup API
       await doSignup()
-    }
-
-    const invalid = validateAllUpTo(stepIndex)
-    if (invalid) {
-      setError(invalid)
-      const firstBad = steps.slice(0, stepIndex + 1).findIndex((s) => validateField(s))
-      if (firstBad >= 0) setStepIndex(firstBad)
       return
     }
 
-    switch (currentStepId) {
-      case 'otp':
-        return doVerifyOtp()
-      case 'pin':
-        return doSetPin()
-      // KYC case commented out for test flight
-      // case 'photo-capture':
-      //   return doVerification()
-      default:
-        return goNext()
+    // OTP step: call verify OTP API
+    if (currentStepGroup === 'otp') {
+      await doVerifyOtp()
+      return
+    }
+
+    // PIN step: call set PIN API
+    if (currentStepGroup === 'pin') {
+      await doSetPin()
+      return
     }
   }
 

@@ -252,27 +252,21 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
         setError(emailError)
         return
       }
-      // Call API first, then navigate if successful
+      // Call signup API
       await doSignup()
-    }
-
-    const invalid = validateAllUpTo(stepIndex)
-    if (invalid) {
-      setError(invalid)
-      const firstBad = steps.slice(0, stepIndex + 1).findIndex((s) => validateField(s))
-      if (firstBad >= 0) setStepIndex(firstBad)
       return
     }
 
-    switch (currentStepId) {
-      case 'email':
-        return doSignup()
-      case 'otp':
-        return doVerifyOtp()
-      case 'pin':
-        return doSetPin()
-      default:
-        return goNext()
+    // OTP step: call verify OTP API
+    if (currentStepGroup === 'otp') {
+      await doVerifyOtp()
+      return
+    }
+
+    // PIN step: call set PIN API
+    if (currentStepGroup === 'pin') {
+      await doSetPin()
+      return
     }
   }
 
