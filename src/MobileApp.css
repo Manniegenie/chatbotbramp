@@ -123,7 +123,7 @@ a {
   flex-direction: column;
   overflow: hidden;
   position: relative;
-  transform: scale(0.95);
+  transform: scale(0.85);
   transform-origin: top center;
 }
 
@@ -664,6 +664,7 @@ a {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   flex-shrink: 0;
+  margin-bottom: 20px;
 }
 
 .mobile-hints::-webkit-scrollbar {
@@ -707,6 +708,7 @@ a {
   border-top: 1px solid var(--border);
   z-index: 10;
   flex-shrink: 0;
+  margin-top: 30px;
 }
 
 .mobile-input {
