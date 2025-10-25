@@ -602,7 +602,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                 {/* Token and Network on same line */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   <label style={inputWrap}>
-                    <span style={labelText}>Token</span>
+                    <span style={labelText}>Token <span style={{ fontSize: '10px', opacity: 0.7 }}>▼</span></span>
                     <select
                       ref={firstInputRef as any}
                       style={{ ...inputBase, cursor: 'pointer' }}
@@ -614,7 +614,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   </label>
 
                   <label style={inputWrap}>
-                    <span style={labelText}>Network</span>
+                    <span style={labelText}>Network <span style={{ fontSize: '10px', opacity: 0.7 }}>▼</span></span>
                     <select
                       style={{ ...inputBase, cursor: 'pointer' }}
                       value={network}
@@ -630,7 +630,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                 {/* Currency and Amount on same line */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   <label style={inputWrap}>
-                    <span style={labelText}>Currency</span>
+                    <span style={labelText}>Currency <span style={{ fontSize: '10px', opacity: 0.7 }}>▼</span></span>
                     <select
                       style={{ ...inputBase, cursor: 'pointer' }}
                       value={currency}
@@ -728,7 +728,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                   <form onSubmit={submitPayout} style={{ display: 'grid', gap: 12 }}>
 
                     <label style={inputWrap}>
-                      <span style={labelText}>Bank</span>
+                      <span style={labelText}>Bank <span style={{ fontSize: '10px', opacity: 0.7 }}>▼</span></span>
                       <select
                         ref={firstInputRef as any}
                         style={{ ...inputBase, cursor: 'pointer' }}
