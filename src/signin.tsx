@@ -46,14 +46,12 @@ export default function SignIn({
   const [pin, setPin] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [rememberMe, setRememberMe] = useState(false)
 
   // Load saved phone number on component mount
   useEffect(() => {
     const savedPhone = localStorage.getItem('rememberedPhone')
     if (savedPhone) {
       setPhone(savedPhone)
-      setRememberMe(true)
     }
   }, [])
 
@@ -130,12 +128,8 @@ export default function SignIn({
       tokenStore.setTokens(ok.accessToken, ok.refreshToken)
       tokenStore.setUser(ok.user)
 
-      // Save phone number if remember me is checked
-      if (rememberMe) {
-        localStorage.setItem('rememberedPhone', phone)
-      } else {
-        localStorage.removeItem('rememberedPhone')
-      }
+      // Automatically save phone number
+      localStorage.setItem('rememberedPhone', phone)
 
       onSuccess({ accessToken: ok.accessToken, refreshToken: ok.refreshToken, user: ok.user })
     } catch (err: any) {
@@ -218,26 +212,7 @@ export default function SignIn({
                 </div>
               )}
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-                <input
-                  type="checkbox"
-                  id="rememberMe"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  style={{ 
-                    margin: 0, 
-                    width: '16px', 
-                    height: '16px', 
-                    accentColor: 'var(--accent)',
-                    cursor: 'pointer'
-                  }}
-                />
-                <label htmlFor="rememberMe" style={{ fontSize: '0.8rem', color: 'var(--muted)', cursor: 'pointer', margin: 0, userSelect: 'none' }}>
-                  Remember me
-                </label>
-              </div>
-
-              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                 <button className="btn" type="submit" disabled={loading}>
                   {loading ? 'Signing in…' : 'Sign in'}
                 </button>

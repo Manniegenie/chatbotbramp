@@ -48,14 +48,12 @@ export default function MobileSignIn({
   const [pin, setPin] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [rememberMe, setRememberMe] = useState(false)
 
   // Load saved phone number on component mount
   useEffect(() => {
     const savedPhone = localStorage.getItem('rememberedPhone')
     if (savedPhone) {
       setPhone(savedPhone)
-      setRememberMe(true)
     }
   }, [])
 
@@ -132,12 +130,8 @@ export default function MobileSignIn({
       tokenStore.setTokens(ok.accessToken, ok.refreshToken)
       tokenStore.setUser(ok.user)
 
-      // Save phone number if remember me is checked
-      if (rememberMe) {
-        localStorage.setItem('rememberedPhone', phone)
-      } else {
-        localStorage.removeItem('rememberedPhone')
-      }
+      // Automatically save phone number
+      localStorage.setItem('rememberedPhone', phone)
 
       onSuccess({ accessToken: ok.accessToken, refreshToken: ok.refreshToken, user: ok.user })
     } catch (err: any) {
@@ -219,19 +213,6 @@ export default function MobileSignIn({
                 ⚠️ {error}
               </div>
             )}
-
-            <div className="mobile-auth-remember-me">
-              <input
-                type="checkbox"
-                id="mobileRememberMe"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="mobile-auth-checkbox"
-              />
-              <label htmlFor="mobileRememberMe" className="mobile-auth-checkbox-label">
-                Remember me
-              </label>
-            </div>
 
             <div className="mobile-auth-button-row">
               <button className="mobile-auth-button primary" type="submit" disabled={loading}>
