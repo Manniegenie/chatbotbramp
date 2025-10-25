@@ -220,6 +220,7 @@ export default function MobileApp() {
 
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showCenteredInput, setShowCenteredInput] = useState(true)
   const [showSignIn, setShowSignIn] = useState(false)
   const [showSignUp, setShowSignUp] = useState(false)
   const [showSell, setShowSell] = useState(false)
@@ -406,6 +407,11 @@ export default function MobileApp() {
     const trimmed = input.trim()
     if (!trimmed || loading) return
 
+    // Switch to bottom input after first message
+    if (showCenteredInput) {
+      setShowCenteredInput(false)
+    }
+
     const userMsg: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'user',
@@ -501,6 +507,10 @@ export default function MobileApp() {
 
   function handleHintClick(hintText: string) {
     if (!loading) {
+      // Switch to bottom input when hint is clicked
+      if (showCenteredInput) {
+        setShowCenteredInput(false)
+      }
       setInput(hintText)
       setTimeout(() => inputRef.current?.focus(), 0)
     }
@@ -602,61 +612,79 @@ export default function MobileApp() {
           <div ref={endRef} />
         </div>
 
-        <div className="mobile-hints">
-          <button
-            className="mobile-hint"
-            onClick={() => handleHintClick('Sell 100 USDT to NGN')}
-          >
-            Sell USDT
-          </button>
-          <button
-            className="mobile-hint"
-            onClick={() => handleHintClick('Show my portfolio balance')}
-          >
-            Portfolio
-          </button>
-          <button
-            className="mobile-hint"
-            onClick={() => handleHintClick('Current NGN rates')}
-          >
-            NGN Rates
-          </button>
-        </div>
-
-        <form className="mobile-composer" onSubmit={sendMessage}>
-          <input
-            ref={inputRef}
-            className="mobile-input"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder={loading ? 'Please wait…' : 'Chat Bramp AI...'}
-            disabled={loading}
-          />
-          <button
-            type="submit"
-            className="mobile-send-btn"
-            disabled={loading || !input.trim()}
-            aria-label="Send message"
-          >
-            {loading ? (
-              <div className="mobile-spinner" />
-            ) : (
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+        {showCenteredInput ? (
+          <div className="mobile-centered-input">
+            <form onSubmit={sendMessage} style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
+              <input
+                ref={inputRef}
+                className="mobile-input"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder={loading ? 'Please wait…' : 'Chat Bramp AI...'}
+                disabled={loading}
+                style={{ borderRadius: '32px', padding: '16px 24px', fontSize: '16px' }}
+              />
+            </form>
+          </div>
+        ) : (
+          <>
+            <div className="mobile-hints">
+              <button
+                className="mobile-hint"
+                onClick={() => handleHintClick('Sell 100 USDT to NGN')}
               >
-                <line x1="22" y1="2" x2="11" y2="13" />
-                <polygon points="22,2 15,22 11,13 2,9" />
-              </svg>
-            )}
-          </button>
-        </form>
+                Sell USDT
+              </button>
+              <button
+                className="mobile-hint"
+                onClick={() => handleHintClick('Show my portfolio balance')}
+              >
+                Portfolio
+              </button>
+              <button
+                className="mobile-hint"
+                onClick={() => handleHintClick('Current NGN rates')}
+              >
+                NGN Rates
+              </button>
+            </div>
+
+            <form className="mobile-composer" onSubmit={sendMessage}>
+              <input
+                ref={inputRef}
+                className="mobile-input"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder={loading ? 'Please wait…' : 'Chat Bramp AI...'}
+                disabled={loading}
+              />
+              <button
+                type="submit"
+                className="mobile-send-btn"
+                disabled={loading || !input.trim()}
+                aria-label="Send message"
+              >
+                {loading ? (
+                  <div className="mobile-spinner" />
+                ) : (
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="22" y1="2" x2="11" y2="13" />
+                    <polygon points="22,2 15,22 11,13 2,9" />
+                  </svg>
+                )}
+              </button>
+            </form>
+          </>
+        )}
       </main>
     )
   }
