@@ -1089,9 +1089,8 @@ a:focus-visible,
   top: 35%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 100%;
+  width: calc(100% - 32px);
   max-width: 384px;
-  padding: 0 16px;
   z-index: 10;
 }
 
@@ -1110,29 +1109,29 @@ a:focus-visible,
 }
 
 .mobile-input-centered {
-  flex: 1;
+  width: 100%;
   border-radius: 32px;
   padding: 16px 50px 16px 24px;
   font-size: 16px;
   caret-color: var(--accent);
+  box-sizing: border-box;
 }
 
 .mobile-send-inline {
   position: absolute;
-  right: 6px;
+  right: 8px;
   top: 50%;
   transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   background: var(--accent);
   border-radius: 50%;
-  min-width: 32px;
-  min-height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
   cursor: pointer;
+  padding: 0;
 }
 
 
