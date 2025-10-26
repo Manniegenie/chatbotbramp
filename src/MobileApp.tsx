@@ -575,15 +575,9 @@ export default function MobileApp() {
                       {m.cta.buttons.map((btn, index) => {
                         const isSell = isSellCTA(btn)
                         if (isSell) {
-                          return (
-                            <button
-                              key={btn.id || btn.title || index}
-                              className="mobile-cta-btn"
-                              onClick={handleSellClick}
-                            >
-                              {btn.title}
-                            </button>
-                          )
+                          // Automatically open sell modal when sell intent is detected
+                          setTimeout(() => handleSellClick(), 100)
+                          return null
                         }
                         return (
                           <a
