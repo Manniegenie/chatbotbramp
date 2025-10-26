@@ -556,16 +556,14 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         <div style={{ ...headerStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div style={{ flex: 1 }}>
             <h2 id="sell-title" style={{ margin: 0, fontSize: '1.3rem', fontWeight: 600, color: 'var(--txt)' }}>
-              {step === 1 ? 'Start a Payment' : step === 2 ? 'Payout Details' : 'Transaction Summary'}
+              {step === 1 ? 'Start a Payment' : 'Payout Details'}
             </h2>
             <p style={{ marginTop: '6px', color: 'var(--muted)', fontSize: '0.85rem' }}>
-              {step === 2 ? 'Enter your bank details to receive payment.' : 
-               step === 3 ? 'Review your transaction details before confirming.' : ''}
+              {step === 2 ? 'Enter your bank details to receive payment.' : ''}
             </p>
             <div style={stepperStyle}>
               <span style={dot(step >= 1)} />
               <span style={dot(step >= 2)} />
-              <span style={dot(step >= 3)} />
             </div>
           </div>
           <button 
