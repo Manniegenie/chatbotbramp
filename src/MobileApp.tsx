@@ -257,10 +257,17 @@ export default function MobileApp() {
   // Handle automatic sell modal opening
   useEffect(() => {
     if (shouldOpenSell && !showSell) {
-      handleSellClick()
+      setShowMenu(false)
+      if (!auth) {
+        setOpenSellAfterAuth(true)
+        setShowSignIn(true)
+      } else {
+        setShowCenteredInput(false)
+        setShowSell(true)
+      }
       setShouldOpenSell(false)
     }
-  }, [shouldOpenSell, showSell])
+  }, [shouldOpenSell, showSell, auth])
 
   // Parse **text** to <strong>text</strong>
   function parseBoldText(text: string): string {
