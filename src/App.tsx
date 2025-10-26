@@ -982,7 +982,9 @@ export default function App() {
                           const isSell = isSellCTA(btn)
                           if (isSell) {
                             // Automatically open sell modal when sell intent is detected
-                            setTimeout(() => handleSellClick(), 100)
+                            if (!showSell) {
+                              handleSellClick()
+                            }
                             return null
                           }
                           return (
