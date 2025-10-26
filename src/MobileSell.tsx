@@ -630,7 +630,7 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
                     </div>
                   )}
 
-                  <form onSubmit={submitPayout} className="mobile-sell-form">
+                  <form id="payout-form" onSubmit={submitPayout} className="mobile-sell-form">
 
                     <label className="mobile-sell-input-wrap">
                       <span className="mobile-sell-label">Bank <span style={{ fontSize: '10px', opacity: 0.7 }}>▼</span></span>
@@ -686,14 +686,6 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
                       </div>
                     </label>
 
-                    <div className="mobile-sell-button-row">
-                      <button
-                        className="mobile-sell-button primary"
-                        disabled={payLoading || !bankCode || banksLoading || !accountName}
-                      >
-                        {payLoading ? 'Saving…' : 'Save Payout & Show Summary'}
-                      </button>
-                    </div>
                   </form>
                 </>
               )}
@@ -816,12 +808,19 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
               ? ''
               : (showFinalSummary
                 ? 'Copy the deposit details and send the exact amount within the window.'
-                : 'Ensure your bank details match your account name.')}
+                : '')}
           </div>
           <div className="mobile-sell-button-row">
             {step === 2 ? (
               !showFinalSummary ? (
-                <button className="mobile-sell-button outline" onClick={() => setStep(1)}>← Back</button>
+                <button 
+                  className="mobile-sell-button primary" 
+                  type="submit" 
+                  form="payout-form"
+                  disabled={payLoading || !bankCode || banksLoading || !accountName}
+                >
+                  {payLoading ? 'Saving…' : 'Save Payout & Show Summary'}
+                </button>
               ) : (
                 <button className="mobile-sell-button outline" onClick={onClose}>Close</button>
               )

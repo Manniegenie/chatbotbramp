@@ -559,7 +559,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
               {step === 1 ? 'Start a Payment' : 'Payout Details'}
             </h2>
             <p style={{ marginTop: '6px', color: 'var(--muted)', fontSize: '0.85rem' }}>
-              {step === 2 ? 'Enter your bank details to receive payment.' : ''}
             </p>
             <div style={stepperStyle}>
               <span style={dot(step >= 1)} />
@@ -691,27 +690,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
 
               {initData && !showFinalSummary && (
                 <>
-                  <div style={card}>
-                    <h3 style={{ margin: 0, fontSize: 16 }}>Sell Summary</h3>
-                    <div style={kvGrid}>
-                      <div>
-                        <div style={kStyle}>Amount to Send</div>
-                        <div style={vStyle}>
-                          {prettyAmount(initData.deposit.amount)} {initData.deposit.token}
-                        </div>
-                      </div>
-                      <div>
-                        <div style={kStyle}>You Receive</div>
-                        <div style={vStyle}>
-                          {prettyNgn(initData.quote.receiveAmount)} ({initData.quote.receiveCurrency})
-                        </div>
-                      </div>
-                      <div>
-                        <div style={kStyle}>Rate</div>
-                        <div style={vStyle}>{prettyAmount(initData.quote.rate)} NGN/{initData.deposit.token}</div>
-                      </div>
-                    </div>
-                  </div>
 
                   {!!payError && (
                     <div role="alert" style={errorBanner}>
@@ -914,7 +892,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
               ? ''
               : (showFinalSummary
                 ? 'Copy the deposit details and send the exact amount within the window.'
-                : 'Ensure your bank details match your account name.')}
+                : '')}
           </div>
         </div>
       </div>
