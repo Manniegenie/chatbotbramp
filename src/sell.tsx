@@ -217,7 +217,7 @@ const sheetStyle: React.CSSProperties = {
   marginTop: '4vh',
   background: 'var(--card)',
   border: '1px solid var(--border)',
-  borderRadius: '8px',
+  borderRadius: '16px',
   padding: '28px',
   boxShadow: 'var(--shadow)',
   overflow: 'hidden',
@@ -559,9 +559,8 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
               {step === 1 ? 'Start a Payment' : step === 2 ? 'Payout Details' : 'Transaction Summary'}
             </h2>
             <p style={{ marginTop: '6px', color: 'var(--muted)', fontSize: '0.85rem' }}>
-              {step === 1 ? 'Choose token, network, and amount. We\'ll capture payout next.' : 
-               step === 2 ? 'Enter your bank details to receive payment.' : 
-               'Review your transaction details before confirming.'}
+              {step === 2 ? 'Enter your bank details to receive payment.' : 
+               step === 3 ? 'Review your transaction details before confirming.' : ''}
             </p>
             <div style={stepperStyle}>
               <span style={dot(step >= 1)} />
@@ -587,9 +586,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
           {/* STEP 1 — Start a Payment (no deposit-details screen; goes straight to payout on success) */}
           {step === 1 && (
             <div style={{ display: 'grid', gap: 14 }}>
-              <p style={{ margin: 0, color: 'var(--muted)' }}>
-                Choose token, network, and amount. We'll capture payout next.
-              </p>
 
 
               {!!initError && (
@@ -917,7 +913,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
         <div style={footerStyle}>
           <div style={smallMuted}>
             {step === 1
-              ? 'We\'ll capture your payout next.'
+              ? ''
               : (showFinalSummary
                 ? 'Copy the deposit details and send the exact amount within the window.'
                 : 'Ensure your bank details match your account name.')}

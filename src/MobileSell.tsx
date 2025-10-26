@@ -462,17 +462,14 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
         <div style={{ marginBottom: '16px', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div style={{ flex: 1 }}>
             <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 600, color: 'var(--txt)' }}>
-              {step === 1 ? 'Start a Payment' : step === 2 ? 'Payout Details' : 'Transaction Summary'}
+              {step === 1 ? 'Start a Payment' : 'Payout Details'}
             </h2>
             <p style={{ marginTop: '6px', color: 'var(--muted)', fontSize: '0.85rem' }}>
-              {step === 1 ? 'Choose token, network, and amount. We\'ll capture payout next.' : 
-               step === 2 ? 'Enter your bank details to receive payment.' : 
-               'Review your transaction details before confirming.'}
+              {step === 2 ? 'Enter your bank details to receive payment.' : ''}
             </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: '8px' }}>
               <span style={{ width: 8, height: 8, borderRadius: 999, background: step >= 1 ? 'var(--accent)' : 'var(--border)' }}></span>
               <span style={{ width: 8, height: 8, borderRadius: 999, background: step >= 2 ? 'var(--accent)' : 'var(--border)' }}></span>
-              <span style={{ width: 8, height: 8, borderRadius: 999, background: step >= 3 ? 'var(--accent)' : 'var(--border)' }}></span>
             </div>
           </div>
           <button 
@@ -498,9 +495,6 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
           {/* STEP 1 — Start a Payment */}
           {step === 1 && (
             <div className="mobile-sell-section">
-              <p className="mobile-sell-description">
-                Choose token, network, and amount. We'll capture payout next.
-              </p>
 
 
               {!!initError && (
@@ -819,7 +813,7 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
         <div className="mobile-sell-footer">
           <div className="mobile-sell-footer-text">
             {step === 1
-              ? 'We\'ll capture your payout next.'
+              ? ''
               : (showFinalSummary
                 ? 'Copy the deposit details and send the exact amount within the window.'
                 : 'Ensure your bank details match your account name.')}
