@@ -558,8 +558,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
             <h2 id="sell-title" style={{ margin: 0, fontSize: '1.3rem', fontWeight: 600, color: 'var(--txt)' }}>
               {step === 1 ? 'Start a Payment' : 'Payout Details'}
             </h2>
-            <p style={{ marginTop: '6px', color: 'var(--muted)', fontSize: '0.85rem' }}>
-            </p>
             <div style={stepperStyle}>
               <span style={dot(step >= 1)} />
               <span style={dot(step >= 2)} />
@@ -890,9 +888,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
           <div style={smallMuted}>
             {step === 1
               ? ''
-              : (showFinalSummary
-                ? 'Copy the deposit details and send the exact amount within the window.'
-                : '')}
+              : ''}
           </div>
         </div>
       </div>

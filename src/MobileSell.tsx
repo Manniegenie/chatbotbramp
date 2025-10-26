@@ -464,9 +464,6 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
             <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 600, color: 'var(--txt)' }}>
               {step === 1 ? 'Start a Payment' : 'Payout Details'}
             </h2>
-            <p style={{ marginTop: '6px', color: 'var(--muted)', fontSize: '0.85rem' }}>
-              {step === 2 ? 'Enter your bank details to receive payment.' : ''}
-            </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: '8px' }}>
               <span style={{ width: 8, height: 8, borderRadius: 999, background: step >= 1 ? 'var(--accent)' : 'var(--border)' }}></span>
               <span style={{ width: 8, height: 8, borderRadius: 999, background: step >= 2 ? 'var(--accent)' : 'var(--border)' }}></span>
@@ -806,9 +803,7 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
           <div className="mobile-sell-footer-text">
             {step === 1
               ? ''
-              : (showFinalSummary
-                ? 'Copy the deposit details and send the exact amount within the window.'
-                : '')}
+              : ''}
           </div>
           <div className="mobile-sell-button-row">
             {step === 2 ? (
