@@ -420,16 +420,11 @@ export default function App() {
   // Handle automatic sell modal opening
   useEffect(() => {
     if (shouldOpenSell && !showSell) {
-      if (!auth) {
-        setOpenSellAfterAuth(true)
-        setShowSignIn(true)
-      } else {
-        setShowCenteredInput(false)
-        setShowSell(true)
-      }
+      // Use the same logic as manual button click
+      handleSellClick()
       setShouldOpenSell(false)
     }
-  }, [shouldOpenSell, showSell, auth])
+  }, [shouldOpenSell, showSell, auth, setOpenSellAfterAuth, setShowSignIn, setShowCenteredInput, setShowSell])
 
   async function sendMessage(e?: React.FormEvent) {
     e?.preventDefault()
