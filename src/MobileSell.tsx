@@ -470,6 +470,22 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
               <span style={{ width: 8, height: 8, borderRadius: 999, background: step >= 2 ? 'var(--accent)' : 'var(--border)' }}></span>
             </div>
           </div>
+          <button 
+            style={{ 
+              appearance: 'none',
+              border: '1px solid var(--border)',
+              background: 'transparent',
+              color: 'var(--muted)',
+              padding: '4px 8px',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontSize: '14px',
+              alignSelf: 'flex-start'
+            }} 
+            onClick={onClose}
+          >
+            ✕
+          </button>
         </div>
 
         {/* Body */}
