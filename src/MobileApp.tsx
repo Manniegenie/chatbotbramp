@@ -144,7 +144,7 @@ function inlineRender(text: string, keyPrefix: string): React.ReactNode[] {
       if (offset > linkLast) nodes.push(remainingText.slice(linkLast, offset))
       nodes.push(
         <a key={`${keyPrefix}-md-${offset}`} href={url} target="_blank" rel="noopener noreferrer">
-          {label}
+          {shortenUrlForDisplay(url)}
         </a>
       )
       linkLast = offset + match.length

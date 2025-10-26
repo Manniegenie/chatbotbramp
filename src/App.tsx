@@ -140,7 +140,7 @@ function inlineRender(text: string, keyPrefix: string): React.ReactNode[] {
       if (offset > linkLast) nodes.push(remainingText.slice(linkLast, offset))
       nodes.push(
         <a key={`${keyPrefix}-md-${offset}`} href={url} target="_blank" rel="noopener noreferrer">
-          {label}
+          {shortenUrlForDisplay(url)}
         </a>
       )
       linkLast = offset + match.length
@@ -283,7 +283,7 @@ export default function App() {
   })
 
   const endRef = useRef<HTMLDivElement>(null)
-  
+
   const icons = [SolanaIcon, TetherIcon, CryptocurrencyIcon]
   const [currentIconIndex, setCurrentIconIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -1065,72 +1065,72 @@ export default function App() {
               </div>
             ) : (
               <form className="composer" onSubmit={sendMessage}>
-              <input
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={loading ? 'Please wait…' : 'Try: Sell 100 USDT to NGN'}
-                autoFocus
-                disabled={loading}
-              />
-              <button
-                type="submit"
-                className="btn"
-                disabled={loading || !input.trim()}
-                style={{
-                  width: '44px',
-                  height: '44px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '0',
-                  background: loading || !input.trim() ? '#ccc' : 'var(--accent)',
-                  color: 'white',
-                  border: 'none',
-                  cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.2s ease',
-                  boxShadow: loading || !input.trim() ? 'none' : '0 2px 8px rgba(0,115,55,0.18)',
-                  minWidth: '44px',
-                  flexShrink: 0
-                }}
-                onMouseEnter={(e) => {
-                  if (!loading && input.trim()) {
-                    e.currentTarget.style.transform = 'scale(1.05)'
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,115,55,0.26)'
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)'
-                  e.currentTarget.style.boxShadow = loading || !input.trim() ? 'none' : '0 2px 8px rgba(0,115,55,0.18)'
-                }}
-              >
-                {loading ? (
-                  <div style={{
-                    width: '16px',
-                    height: '16px',
-                    border: '2px solid transparent',
-                    borderTop: '2px solid white',
+                <input
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder={loading ? 'Please wait…' : 'Try: Sell 100 USDT to NGN'}
+                  autoFocus
+                  disabled={loading}
+                />
+                <button
+                  type="submit"
+                  className="btn"
+                  disabled={loading || !input.trim()}
+                  style={{
+                    width: '44px',
+                    height: '44px',
                     borderRadius: '50%',
-                    animation: 'spin 1s linear infinite'
-                  }} />
-                ) : (
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="white"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <line x1="22" y1="2" x2="11" y2="13" />
-                    <polygon points="22,2 15,22 11,13 2,9" />
-                  </svg>
-                )}
-              </button>
-            </form>
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '0',
+                    background: loading || !input.trim() ? '#ccc' : 'var(--accent)',
+                    color: 'white',
+                    border: 'none',
+                    cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: loading || !input.trim() ? 'none' : '0 2px 8px rgba(0,115,55,0.18)',
+                    minWidth: '44px',
+                    flexShrink: 0
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!loading && input.trim()) {
+                      e.currentTarget.style.transform = 'scale(1.05)'
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,115,55,0.26)'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)'
+                    e.currentTarget.style.boxShadow = loading || !input.trim() ? 'none' : '0 2px 8px rgba(0,115,55,0.18)'
+                  }}
+                >
+                  {loading ? (
+                    <div style={{
+                      width: '16px',
+                      height: '16px',
+                      border: '2px solid transparent',
+                      borderTop: '2px solid white',
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite'
+                    }} />
+                  ) : (
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="white"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <line x1="22" y1="2" x2="11" y2="13" />
+                      <polygon points="22,2 15,22 11,13 2,9" />
+                    </svg>
+                  )}
+                </button>
+              </form>
             )}
 
             <div className="hints">
