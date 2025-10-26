@@ -211,14 +211,14 @@ const overlayStyle: React.CSSProperties = {
   touchAction: 'none'
 }
 const sheetStyle: React.CSSProperties = { 
-  maxWidth: '480px', 
+  maxWidth: '600px', 
   width: '100%',
-  maxHeight: '85vh',
-  marginTop: '4vh',
+  maxHeight: '90vh',
+  marginTop: '2vh',
   background: 'var(--card)',
   border: '1px solid var(--border)',
   borderRadius: '16px',
-  padding: '28px',
+  padding: '32px',
   boxShadow: 'var(--shadow)',
   overflow: 'hidden',
   display: 'flex',
@@ -563,17 +563,6 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
               <span style={dot(step >= 2)} />
             </div>
           </div>
-          <button 
-            style={{ 
-              ...btnDangerGhost, 
-              padding: '4px 8px',
-              fontSize: '14px',
-              alignSelf: 'flex-start'
-            }} 
-            onClick={onClose}
-          >
-            ✕
-          </button>
         </div>
 
         {/* Body */}
@@ -767,7 +756,7 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
               {initData && showFinalSummary && payData && (
                 <div style={successCard}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                    <h3 style={{ margin: 0, fontSize: 16 }}>Transaction Summary</h3>
+                    <h3 style={{ margin: 0, fontSize: 16 }}></h3>
                     <div style={badge}>
                       ⏱ {expired ? 'Expired' : countdown} <span style={{ opacity: .6 }}>of 10:00</span>
                     </div>

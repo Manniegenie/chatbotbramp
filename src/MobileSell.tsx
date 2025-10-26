@@ -433,10 +433,10 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
       touchAction: 'none'
     }} onClick={onClose}>
       <div style={{ 
-        maxWidth: '359px', 
+        maxWidth: '420px', 
         width: '100%',
-        maxHeight: '64.125vh',
-        marginTop: '3.42vh',
+        maxHeight: '80vh',
+        marginTop: '2vh',
         background: 'var(--card)',
         border: '1px solid var(--border)',
         borderRadius: '6.84px',
@@ -469,22 +469,6 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
               <span style={{ width: 8, height: 8, borderRadius: 999, background: step >= 2 ? 'var(--accent)' : 'var(--border)' }}></span>
             </div>
           </div>
-          <button 
-            style={{ 
-              appearance: 'none',
-              border: '1px solid var(--border)',
-              background: 'transparent',
-              color: 'var(--muted)',
-              padding: '4px 8px',
-              borderRadius: 8,
-              cursor: 'pointer',
-              fontSize: '14px',
-              alignSelf: 'flex-start'
-            }} 
-            onClick={onClose}
-          >
-            ✕
-          </button>
         </div>
 
         {/* Body */}
@@ -691,7 +675,7 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
               {initData && showFinalSummary && payData && (
                 <div className="mobile-sell-success-card">
                   <div className="mobile-sell-success-header">
-                    <h3 className="mobile-sell-card-title">Transaction Summary</h3>
+                    <h3 className="mobile-sell-card-title"></h3>
                     <div className="mobile-sell-countdown">
                       ⏱ {expired ? 'Expired' : countdown} <span>of 10:00</span>
                     </div>
