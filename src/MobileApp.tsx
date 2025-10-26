@@ -352,15 +352,40 @@ export default function MobileApp() {
 
     // Setup automatic logout timer
     const cleanup = setupAutoLogoutTimer((reason) => {
-      // Handle auto-logout
+      // Handle auto-logout gracefully
       console.log('Auto-logout triggered:', reason)
+      
+      // Clear auth state
       setAuth(null)
       setShowSell(false)
       setShowMenu(false)
 
-      // Switch back to centered input view gracefully
+      // Switch back to centered input view gracefully without clearing messages
       setShowCenteredInput(true)
-      setMessages([])
+      
+      // Don't clear messages to prevent screen going dark on iOS
+      // setMessages([])
+      
+      // Show a subtle notification instead of clearing everything
+      if (messages.length > 0) {
+        setMessages(prev => [...prev, {
+          id: `logout-${Date.now()}`,
+          role: 'system' as const,
+          text: 'Session expired. Please sign in again to continue.',
+          ts: Date.now()
+        }])
+      }
+      
+      // Prevent iOS from going into protection mode
+      if (typeof window !== 'undefined' && window.navigator?.userAgent?.includes('iPhone')) {
+        // Force a small DOM update to prevent iOS from thinking the page is inactive
+        setTimeout(() => {
+          document.body.style.transform = 'translateZ(0)'
+          setTimeout(() => {
+            document.body.style.transform = ''
+          }, 100)
+        }, 100)
+      }
     })
 
     return cleanup

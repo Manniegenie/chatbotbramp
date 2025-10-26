@@ -191,10 +191,10 @@ export function clearAuth(): void {
 }
 
 /**
- * Set up automatic logout timer that checks every minute
+ * Set up automatic logout timer that checks every 5 minutes
  */
 export function setupAutoLogoutTimer(onLogout?: AutoLogoutCallback): () => void {
-  const checkInterval = 60000 // Check every minute
+  const checkInterval = 300000 // Check every 5 minutes (reduced frequency)
   
   const intervalId = setInterval(() => {
     checkAndHandleAutoLogout(onLogout)
