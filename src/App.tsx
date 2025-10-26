@@ -270,6 +270,7 @@ export default function App() {
   const [showSignUp, setShowSignUp] = useState(false)
   const [showSell, setShowSell] = useState(false)
   const [openSellAfterAuth, setOpenSellAfterAuth] = useState(false)
+  const [shouldOpenSell, setShouldOpenSell] = useState(false)
 
   const [auth, setAuth] = useState<SignInResult | null>(() => {
     const authState = getAuthState()
@@ -415,6 +416,14 @@ export default function App() {
     }, 3000)
     return () => clearInterval(interval)
   }, [icons.length])
+
+  // Handle automatic sell modal opening
+  useEffect(() => {
+    if (shouldOpenSell && !showSell) {
+      handleSellClick()
+      setShouldOpenSell(false)
+    }
+  }, [shouldOpenSell, showSell])
 
   async function sendMessage(e?: React.FormEvent) {
     e?.preventDefault()
@@ -982,8 +991,8 @@ export default function App() {
                           const isSell = isSellCTA(btn)
                           if (isSell) {
                             // Automatically open sell modal when sell intent is detected
-                            if (!showSell) {
-                              handleSellClick()
+                            if (!showSell && !shouldOpenSell) {
+                              setShouldOpenSell(true)
                             }
                             return null
                           }

@@ -222,6 +222,7 @@ export default function MobileApp() {
   const [showSell, setShowSell] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const [openSellAfterAuth, setOpenSellAfterAuth] = useState(false)
+  const [shouldOpenSell, setShouldOpenSell] = useState(false)
 
   const [auth, setAuth] = useState<SignInResult | null>(() => {
     const authState = getAuthState()
@@ -252,6 +253,14 @@ export default function MobileApp() {
     }, 3000)
     return () => clearInterval(interval)
   }, [icons.length])
+
+  // Handle automatic sell modal opening
+  useEffect(() => {
+    if (shouldOpenSell && !showSell) {
+      handleSellClick()
+      setShouldOpenSell(false)
+    }
+  }, [shouldOpenSell, showSell])
 
   // Parse **text** to <strong>text</strong>
   function parseBoldText(text: string): string {
@@ -576,8 +585,8 @@ export default function MobileApp() {
                         const isSell = isSellCTA(btn)
                         if (isSell) {
                           // Automatically open sell modal when sell intent is detected
-                          if (!showSell) {
-                            handleSellClick()
+                          if (!showSell && !shouldOpenSell) {
+                            setShouldOpenSell(true)
                           }
                           return null
                         }
