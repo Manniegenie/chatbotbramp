@@ -7,7 +7,6 @@ import MobileSignUp, { SignUpResult } from './MobileSignUp'
 import MobileSell from './MobileSell'
 import WallpaperSlideshow from './WallpaperSlideshow'
 import BrampLogo from './assets/logo.png'
-import FastFoodIcon from './assets/fast-food-icon.png'
 import SolanaIcon from './assets/solana.png'
 import TetherIcon from './assets/tether.png'
 import CryptocurrencyIcon from './assets/cryptocurrency.png'
@@ -238,7 +237,7 @@ export default function MobileApp() {
   const inputRef = useRef<HTMLInputElement>(null)
   const [tickerText, setTickerText] = useState<string>('')
 
-  const icons = [FastFoodIcon, SolanaIcon, TetherIcon, CryptocurrencyIcon]
+  const icons = [SolanaIcon, TetherIcon, CryptocurrencyIcon]
   const [currentIconIndex, setCurrentIconIndex] = useState(0)
 
   // Debug ticker
