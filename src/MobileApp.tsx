@@ -115,18 +115,71 @@ function inlineRender(text: string, keyPrefix: string): React.ReactNode[] {
   const nodes: React.ReactNode[] = []
   let last = 0
 
-  text.replace(MD_LINK, (match, label: string, url: string, offset: number) => {
+  // Handle **bold** text first
+  text.replace(/\*\*(.*?)\*\*/g, (match, content: string, offset: number) => {
     if (offset > last) nodes.push(text.slice(last, offset))
     nodes.push(
-      <a key={`${keyPrefix}-md-${offset}`} href={url} target="_blank" rel="noopener noreferrer">
-        {label}
-      </a>
+      <strong key={`${keyPrefix}-bold-${offset}`}>
+        {content}
+      </strong>
     )
     last = offset + match.length
     return match
   })
 
-  if (last < text.length) nodes.push(text.slice(last))
+  // Handle ##bold## and # #bold# # patterns
+  if (last < text.length) {
+    const remainingText = text.slice(last)
+    let boldLast = 0
+
+    // Handle ##bold## pattern
+    remainingText.replace(/##(.*?)##/g, (match, content: string, offset: number) => {
+      if (offset > boldLast) nodes.push(remainingText.slice(boldLast, offset))
+      nodes.push(
+        <strong key={`${keyPrefix}-hash-bold-${offset}`}>
+          {content}
+        </strong>
+      )
+      boldLast = offset + match.length
+      return match
+    })
+
+    // Handle # #bold# # pattern (with spaces)
+    if (boldLast < remainingText.length) {
+      const afterHash = remainingText.slice(boldLast)
+      let spaceBoldLast = 0
+      afterHash.replace(/# #(.*?)# #/g, (match, content: string, offset: number) => {
+        if (offset > spaceBoldLast) nodes.push(afterHash.slice(spaceBoldLast, offset))
+        nodes.push(
+          <strong key={`${keyPrefix}-space-bold-${offset}`}>
+            {content}
+          </strong>
+        )
+        spaceBoldLast = offset + match.length
+        return match
+      })
+      if (spaceBoldLast < afterHash.length) nodes.push(afterHash.slice(spaceBoldLast))
+    } else if (boldLast < remainingText.length) {
+      nodes.push(remainingText.slice(boldLast))
+    }
+  }
+
+  // Handle markdown links
+  if (last < text.length) {
+    const remainingText = text.slice(last)
+    let linkLast = 0
+    remainingText.replace(MD_LINK, (match, label: string, url: string, offset: number) => {
+      if (offset > linkLast) nodes.push(remainingText.slice(linkLast, offset))
+      nodes.push(
+        <a key={`${keyPrefix}-md-${offset}`} href={url} target="_blank" rel="noopener noreferrer">
+          {label}
+        </a>
+      )
+      linkLast = offset + match.length
+      return match
+    })
+    if (linkLast < remainingText.length) nodes.push(remainingText.slice(linkLast))
+  }
 
   const finalNodes: React.ReactNode[] = []
   nodes.forEach((node, i) => {
