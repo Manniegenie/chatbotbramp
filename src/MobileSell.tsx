@@ -596,19 +596,19 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                   <div className="mobile-sell-card">
                     <h3 className="mobile-sell-card-title">Sell Summary</h3>
                     <div className="mobile-sell-grid">
-                      <div>
+                      <div className="mobile-sell-grid-item">
                         <div className="mobile-sell-key">Amount to Send</div>
                         <div className="mobile-sell-value">
                           {prettyAmount(initData.deposit.amount)} {initData.deposit.token}
                         </div>
                       </div>
-                      <div>
+                      <div className="mobile-sell-grid-item">
                         <div className="mobile-sell-key">You Receive</div>
                         <div className="mobile-sell-value">
                           {prettyNgn(initData.quote.receiveAmount)} ({initData.quote.receiveCurrency})
                         </div>
                       </div>
-                      <div>
+                      <div className="mobile-sell-grid-item">
                         <div className="mobile-sell-key">Rate</div>
                         <div className="mobile-sell-value">{prettyAmount(initData.quote.rate)} NGN/{initData.deposit.token}</div>
                       </div>
@@ -759,25 +759,25 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
 
                   {/* Transaction info grid */}
                   <div className="mobile-sell-grid">
-                    <div>
+                    <div className="mobile-sell-grid-item">
                       <div className="mobile-sell-key">Status</div>
                       <div className="mobile-sell-value">{payData.status}</div>
                     </div>
-                    <div>
+                    <div className="mobile-sell-grid-item">
                       <div className="mobile-sell-key">You Receive</div>
                       <div className="mobile-sell-value">
                         {prettyNgn((initData.quote.receiveAmount) || 0)} ({initData.quote.receiveCurrency})
                       </div>
                     </div>
-                    <div>
+                    <div className="mobile-sell-grid-item">
                       <div className="mobile-sell-key">Rate</div>
                       <div className="mobile-sell-value">{prettyAmount(initData.quote.rate)} NGN/{initData.deposit.token}</div>
                     </div>
-                    <div>
+                    <div className="mobile-sell-grid-item">
                       <div className="mobile-sell-key">Bank</div>
                       <div className="mobile-sell-value">{payData.payout.bankName}</div>
                     </div>
-                    <div>
+                    <div className="mobile-sell-grid-item">
                       <div className="mobile-sell-key">Account</div>
                       <div className="mobile-sell-value">{payData.payout.accountName} — {payData.payout.accountNumber}</div>
                     </div>

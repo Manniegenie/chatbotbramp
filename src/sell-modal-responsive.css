@@ -257,10 +257,14 @@
 }
 
 .mobile-sell-grid {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
   width: 100%;
+}
+
+.mobile-sell-grid .mobile-sell-grid-item:nth-child(n+3) {
+  grid-column: 1 / -1;
 }
 
 .mobile-sell-grid-item {
