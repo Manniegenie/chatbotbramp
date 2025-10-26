@@ -115,9 +115,19 @@ function inlineRender(text: string, keyPrefix: string): React.ReactNode[] {
   const nodes: React.ReactNode[] = []
   let last = 0
 
-  // Handle **bold** text first
-  text.replace(/\*\*(.*?)\*\*/g, (match, content: string, offset: number) => {
+  // Handle all bold patterns: **bold**, ##bold##, # #bold# #
+  text.replace(/(\*\*.*?\*\*|##.*?##|# #.*?# #)/g, (match, offset: number) => {
     if (offset > last) nodes.push(text.slice(last, offset))
+
+    let content = match
+    if (match.startsWith('**') && match.endsWith('**')) {
+      content = match.slice(2, -2)
+    } else if (match.startsWith('##') && match.endsWith('##')) {
+      content = match.slice(2, -2)
+    } else if (match.startsWith('# #') && match.endsWith('# #')) {
+      content = match.slice(3, -3)
+    }
+
     nodes.push(
       <strong key={`${keyPrefix}-bold-${offset}`}>
         {content}
@@ -127,44 +137,6 @@ function inlineRender(text: string, keyPrefix: string): React.ReactNode[] {
     return match
   })
 
-  // Handle ##bold## and # #bold# # patterns
-  if (last < text.length) {
-    const remainingText = text.slice(last)
-    let boldLast = 0
-
-    // Handle ##bold## pattern
-    remainingText.replace(/##(.*?)##/g, (match, content: string, offset: number) => {
-      if (offset > boldLast) nodes.push(remainingText.slice(boldLast, offset))
-      nodes.push(
-        <strong key={`${keyPrefix}-hash-bold-${offset}`}>
-          {content}
-        </strong>
-      )
-      boldLast = offset + match.length
-      return match
-    })
-
-    // Handle # #bold# # pattern (with spaces)
-    if (boldLast < remainingText.length) {
-      const afterHash = remainingText.slice(boldLast)
-      let spaceBoldLast = 0
-      afterHash.replace(/# #(.*?)# #/g, (match, content: string, offset: number) => {
-        if (offset > spaceBoldLast) nodes.push(afterHash.slice(spaceBoldLast, offset))
-        nodes.push(
-          <strong key={`${keyPrefix}-space-bold-${offset}`}>
-            {content}
-          </strong>
-        )
-        spaceBoldLast = offset + match.length
-        return match
-      })
-      if (spaceBoldLast < afterHash.length) nodes.push(afterHash.slice(spaceBoldLast))
-    } else if (boldLast < remainingText.length) {
-      nodes.push(remainingText.slice(boldLast))
-    }
-  }
-
-  // Handle markdown links
   if (last < text.length) {
     const remainingText = text.slice(last)
     let linkLast = 0
