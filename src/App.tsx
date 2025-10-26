@@ -457,7 +457,14 @@ export default function App() {
         cta: data.cta || null
       }
 
-      setMessages((prev) => [...prev, aiMsg])
+      // Check if this message contains sell intent and should open modal instead
+      const hasSellIntent = data.cta?.buttons?.some(btn => isSellCTA(btn))
+      if (hasSellIntent) {
+        // Don't add the message to chat, just trigger modal opening
+        setShouldOpenSell(true)
+      } else {
+        setMessages((prev) => [...prev, aiMsg])
+      }
 
     } catch (error) {
       console.error('Chat message failed:', error)
@@ -989,14 +996,6 @@ export default function App() {
                     {m.role === 'assistant' && m.cta?.type === 'button' && m.cta.buttons?.length > 0 && (
                       <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                         {m.cta.buttons.map((btn, index) => {
-                          const isSell = isSellCTA(btn)
-                          if (isSell) {
-                            // Automatically open sell modal when sell intent is detected
-                            if (!showSell && !shouldOpenSell) {
-                              setShouldOpenSell(true)
-                            }
-                            return null
-                          }
                           return (
                             <a
                               key={btn.id || btn.title || index}
