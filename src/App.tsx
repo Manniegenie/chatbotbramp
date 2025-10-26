@@ -327,17 +327,9 @@ export default function App() {
       setAuth(null)
       setShowSell(false)
 
-      // Show appropriate message based on reason
-      const message = reason === 'token_expired'
-        ? 'Your session has expired. Please sign in again.'
-        : 'Session timeout reached. Please sign in again.'
-
-      setMessages((prev) => [...prev, {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        text: message,
-        ts: Date.now(),
-      }])
+      // Switch back to centered input view gracefully
+      setShowCenteredInput(true)
+      setMessages([])
     })
 
     return cleanup
@@ -498,6 +490,7 @@ export default function App() {
       setShowSignIn(true)
       return
     }
+    setShowCenteredInput(false)
     setShowSell(true)
   }
 
@@ -1148,7 +1141,7 @@ export default function App() {
           </main>
         )}
 
-        <SellModal open={showSell} onClose={() => setShowSell(false)} onChatEcho={echoFromModalToChat} />
+        <SellModal open={showSell} onClose={() => setShowSell(false)} onChatEcho={echoFromModalToChat} onStartInteraction={() => setShowCenteredInput(false)} />
 
         <footer className="footer">
           <div className="footer-links">

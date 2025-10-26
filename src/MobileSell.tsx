@@ -61,6 +61,7 @@ type MobileSellProps = {
   open: boolean
   onClose: () => void
   onChatEcho?: (text: string) => void
+  onStartInteraction?: () => void
 }
 
 const TOKENS = ['USDT', 'USDC', 'BTC', 'ETH', 'SOL', 'BNB'] as const
@@ -159,7 +160,7 @@ function QRCode({ data, size = 120 }: { data: string; size?: number }) {
   )
 }
 
-export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProps) {
+export default function MobileSell({ open, onClose, onChatEcho, onStartInteraction }: MobileSellProps) {
   const [step, setStep] = useState<1 | 2>(1)
 
   // Step 1 (Start Sell)
@@ -493,7 +494,10 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
                       ref={firstInputRef as any}
                       className="mobile-sell-input"
                       value={token}
-                      onChange={e => setToken(e.target.value as TokenSym)}
+                      onChange={e => {
+                        setToken(e.target.value as TokenSym)
+                        onStartInteraction?.()
+                      }}
                     >
                       {TOKENS.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
@@ -504,7 +508,10 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
                     <select
                       className="mobile-sell-input"
                       value={network}
-                      onChange={e => setNetwork(e.target.value)}
+                      onChange={e => {
+                        setNetwork(e.target.value)
+                        onStartInteraction?.()
+                      }}
                     >
                       {NETWORKS_BY_TOKEN[token].map(n => (
                         <option key={n.code} value={n.code}>{n.label}</option>
@@ -535,7 +542,10 @@ export default function MobileSell({ open, onClose, onChatEcho }: MobileSellProp
                         inputMode="decimal"
                         placeholder="e.g. 100"
                         value={amount}
-                        onChange={e => setAmount(e.target.value)}
+                        onChange={e => {
+                          setAmount(e.target.value)
+                          onStartInteraction?.()
+                        }}
                       />
                     </label>
                   ) : (

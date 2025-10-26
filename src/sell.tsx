@@ -61,6 +61,7 @@ type SellModalProps = {
   open: boolean
   onClose: () => void
   onChatEcho?: (text: string) => void
+  onStartInteraction?: () => void
 }
 
 const TOKENS = ['USDT', 'USDC', 'BTC', 'ETH', 'SOL', 'BNB'] as const
@@ -249,7 +250,7 @@ const badgeWarn: React.CSSProperties = { ...badge, background: 'rgba(255, 170, 0
 const errorBanner: React.CSSProperties = { ...card, background: 'rgba(220, 50, 50, .1)', borderColor: 'rgba(220, 50, 50, .25)' }
 const successCard: React.CSSProperties = { ...card, background: 'rgba(0, 115, 55, .12)', borderColor: 'rgba(0, 115, 55, .35)' }
 
-export default function SellModal({ open, onClose, onChatEcho }: SellModalProps) {
+export default function SellModal({ open, onClose, onChatEcho, onStartInteraction }: SellModalProps) {
   // Steps: 1 = Start Sell, 2 = Payout. Final summary is a sub-state of step 2.
   const [step, setStep] = useState<1 | 2>(1)
 
@@ -587,7 +588,10 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                       ref={firstInputRef as any}
                       style={{ ...inputBase, cursor: 'pointer' }}
                       value={token}
-                      onChange={e => setToken(e.target.value as TokenSym)}
+                      onChange={e => {
+                        setToken(e.target.value as TokenSym)
+                        onStartInteraction?.()
+                      }}
                     >
                       {TOKENS.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
@@ -598,7 +602,10 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                     <select
                       style={{ ...inputBase, cursor: 'pointer' }}
                       value={network}
-                      onChange={e => setNetwork(e.target.value)}
+                      onChange={e => {
+                        setNetwork(e.target.value)
+                        onStartInteraction?.()
+                      }}
                     >
                       {NETWORKS_BY_TOKEN[token].map(n => (
                         <option key={n.code} value={n.code}>{n.label}</option>
@@ -629,7 +636,10 @@ export default function SellModal({ open, onClose, onChatEcho }: SellModalProps)
                         inputMode="decimal"
                         placeholder="e.g. 100"
                         value={amount}
-                        onChange={e => setAmount(e.target.value)}
+                        onChange={e => {
+                          setAmount(e.target.value)
+                          onStartInteraction?.()
+                        }}
                       />
                     </label>
                   ) : (

@@ -323,19 +323,9 @@ export default function MobileApp() {
       setShowSell(false)
       setShowMenu(false)
 
-      // Show appropriate message based on reason
-      const message = reason === 'token_expired'
-        ? 'Your session has expired. Please sign in again.'
-        : 'Session timeout reached. Please sign in again.'
-
-      setMessages([
-        {
-          id: crypto.randomUUID(),
-          role: 'assistant',
-          text: message,
-          ts: Date.now(),
-        }
-      ])
+      // Switch back to centered input view gracefully
+      setShowCenteredInput(true)
+      setMessages([])
     })
 
     return cleanup
@@ -488,6 +478,7 @@ export default function MobileApp() {
       setShowSignIn(true)
       return
     }
+    setShowCenteredInput(false)
     setShowSell(true)
   }
 
@@ -855,6 +846,7 @@ export default function MobileApp() {
         open={showSell}
         onClose={() => setShowSell(false)}
         onChatEcho={echoFromModalToChat}
+        onStartInteraction={() => setShowCenteredInput(false)}
       />
 
       <footer className="mobile-footer">
