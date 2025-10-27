@@ -1,0 +1,29 @@
+{
+  "name": "Bramp AI - Chat",
+  "short_name": "Bramp AI",
+  "description": "Bramp AI - Seamless crypto to NGN conversion",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0b10",
+  "theme_color": "#007337",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/src/assets/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/src/assets/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "productivity", "utilities"],
+  "lang": "en",
+  "dir": "ltr",
+  "scope": "/",
+  "id": "bramp-ai-chat"
+}
