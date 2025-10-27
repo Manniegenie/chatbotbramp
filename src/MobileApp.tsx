@@ -609,10 +609,13 @@ export default function MobileApp() {
             // Track Facebook pixel CompleteRegistration event
             // Note: This fires on signin, but we'll add a flag to track if it's a new user
             if (typeof window !== 'undefined' && window.fbq) {
+              console.log('Firing Facebook pixel CompleteRegistration event (mobile signup)');
               window.fbq('track', 'CompleteRegistration', {
                 value: 1,
                 currency: 'USD',
               });
+            } else {
+              console.warn('Facebook pixel not loaded or window.fbq not available (mobile signup)');
             }
           }}
         />
@@ -638,10 +641,13 @@ export default function MobileApp() {
 
             // Track Facebook pixel CompleteRegistration event
             if (typeof window !== 'undefined' && window.fbq) {
+              console.log('Firing Facebook pixel CompleteRegistration event (mobile signin)');
               window.fbq('track', 'CompleteRegistration', {
                 value: 1,
                 currency: 'USD',
               });
+            } else {
+              console.warn('Facebook pixel not loaded or window.fbq not available (mobile signin)');
             }
 
             setShowSignIn(true)
@@ -688,16 +694,16 @@ export default function MobileApp() {
             <div className="mobile-centered-form">
               <div style={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <AnimatePresence mode="wait">
-                  <motion.img 
+                  <motion.img
                     key={currentIconIndex}
-                    src={icons[currentIconIndex]} 
-                    alt="Chat Bramp AI" 
+                    src={icons[currentIconIndex]}
+                    alt="Chat Bramp AI"
                     className="mobile-app-logo"
                     initial={{ opacity: 0, scale: 0.8, rotateY: -90 }}
                     animate={{ opacity: 1, scale: 1, rotateY: 0 }}
                     exit={{ opacity: 0, scale: 0.8, rotateY: 90 }}
-                    transition={{ 
-                      duration: 0.6, 
+                    transition={{
+                      duration: 0.6,
                       ease: "easeInOut",
                       type: "spring",
                       stiffness: 100,

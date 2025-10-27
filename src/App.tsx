@@ -952,10 +952,13 @@ export default function App() {
               
               // Track Facebook pixel CompleteRegistration event
               if (typeof window !== 'undefined' && window.fbq) {
+                console.log('Firing Facebook pixel CompleteRegistration event (signin)');
                 window.fbq('track', 'CompleteRegistration', {
                   value: 1,
                   currency: 'USD',
                 });
+              } else {
+                console.warn('Facebook pixel not loaded or window.fbq not available (signin)');
               }
             }}
           />
@@ -1000,10 +1003,13 @@ export default function App() {
                 
                 // Track Facebook pixel CompleteRegistration event
                 if (typeof window !== 'undefined' && window.fbq) {
+                  console.log('Firing Facebook pixel CompleteRegistration event');
                   window.fbq('track', 'CompleteRegistration', {
                     value: 1,
                     currency: 'USD',
                   });
+                } else {
+                  console.warn('Facebook pixel not loaded or window.fbq not available');
                 }
               } else {
                 // User needs to verify OTP, show signin
