@@ -487,32 +487,32 @@ export default function MobileApp() {
     if (typeof window !== 'undefined' && !window.Tawk_API) {
       window.Tawk_API = window.Tawk_API || {}
       window.Tawk_LoadStart = new Date()
-      
+
       // Hide widget by default
-      window.Tawk_API.hideWidget = function() {
+      window.Tawk_API.hideWidget = function () {
         if (window.Tawk_API && window.Tawk_API.hideWidget) {
           window.Tawk_API.hideWidget()
         }
       }
-      
+
       // Show widget function
-      window.Tawk_API.showWidget = function() {
+      window.Tawk_API.showWidget = function () {
         if (window.Tawk_API && window.Tawk_API.showWidget) {
           window.Tawk_API.showWidget()
         }
       }
-      
+
       const script = document.createElement('script')
       script.async = true
       script.src = 'https://embed.tawk.to/68ff552f1a60b619594aac17/1j8im9gmc'
       script.charset = 'UTF-8'
       script.setAttribute('crossorigin', '*')
-      
+
       const firstScript = document.getElementsByTagName('script')[0]
       firstScript.parentNode?.insertBefore(script, firstScript)
-      
+
       console.log('Tawk.to widget loading (hidden by default)...')
-      
+
       // Hide widget after it loads
       script.onload = () => {
         setTimeout(() => {
@@ -571,22 +571,28 @@ export default function MobileApp() {
       const supportKeywords = [
         'help', 'support', 'issue', 'problem', 'error', 'stuck', 'pending', 'transaction',
         'failed', 'not working', 'trouble', 'assistance', 'contact', 'customer service',
-        'complaint', 'refund', 'dispute', 'technical', 'bug', 'glitch', 'slow', 'delay'
+        'complaint', 'refund', 'dispute', 'technical', 'bug', 'glitch', 'slow', 'delay',
+        'confused', 'unclear', 'not sure', 'don\'t understand', 'can\'t figure out',
+        'don\'t know how', 'step by step', 'walk me through', 'show me how',
+        'explain in detail', 'more details', 'personal assistance', 'human help',
+        'speak to someone', 'talk to support', 'live person', 'real person', 'agent'
       ]
-      
+
       const messageText = (data.reply || '').toLowerCase()
       const userText = trimmed.toLowerCase()
-      const hasSupportIntent = supportKeywords.some(keyword => 
+      const hasSupportIntent = supportKeywords.some(keyword =>
         messageText.includes(keyword) || userText.includes(keyword)
       )
-      
+
       // Also check if backend detected support intent
       const backendDetectedSupport = data.cta?.buttons?.some(btn => 
         btn.title?.toLowerCase().includes('support') || 
         btn.title?.toLowerCase().includes('help') ||
-        btn.title?.toLowerCase().includes('contact')
+        btn.title?.toLowerCase().includes('contact') ||
+        btn.title?.toLowerCase().includes('live') ||
+        btn.title?.toLowerCase().includes('chat')
       )
-      
+
       if ((hasSupportIntent || backendDetectedSupport) && !showSupportWidget) {
         showSupport()
       }

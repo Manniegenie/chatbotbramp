@@ -550,7 +550,11 @@ export default function App() {
       const supportKeywords = [
         'help', 'support', 'issue', 'problem', 'error', 'stuck', 'pending', 'transaction',
         'failed', 'not working', 'trouble', 'assistance', 'contact', 'customer service',
-        'complaint', 'refund', 'dispute', 'technical', 'bug', 'glitch', 'slow', 'delay'
+        'complaint', 'refund', 'dispute', 'technical', 'bug', 'glitch', 'slow', 'delay',
+        'confused', 'unclear', 'not sure', 'don\'t understand', 'can\'t figure out',
+        'don\'t know how', 'step by step', 'walk me through', 'show me how',
+        'explain in detail', 'more details', 'personal assistance', 'human help',
+        'speak to someone', 'talk to support', 'live person', 'real person', 'agent'
       ]
       
       const messageText = (data.reply || '').toLowerCase()
@@ -563,7 +567,9 @@ export default function App() {
       const backendDetectedSupport = data.cta?.buttons?.some(btn => 
         btn.title?.toLowerCase().includes('support') || 
         btn.title?.toLowerCase().includes('help') ||
-        btn.title?.toLowerCase().includes('contact')
+        btn.title?.toLowerCase().includes('contact') ||
+        btn.title?.toLowerCase().includes('live') ||
+        btn.title?.toLowerCase().includes('chat')
       )
       
       if ((hasSupportIntent || backendDetectedSupport) && !showSupportWidget) {
