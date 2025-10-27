@@ -11,7 +11,7 @@ export function useInactivityTimer({
   onInactive, 
   events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'] 
 }: UseInactivityTimerOptions) {
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const timeoutRef = useRef<number | null>(null)
   const lastActivityRef = useRef<number>(Date.now())
 
   const resetTimer = useCallback(() => {
