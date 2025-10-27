@@ -412,6 +412,26 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Load Tawk.to widget
+  useEffect(() => {
+    // Check if Tawk.to is already loaded
+    if (typeof window !== 'undefined' && !window.Tawk_API) {
+      window.Tawk_API = window.Tawk_API || {}
+      window.Tawk_LoadStart = new Date()
+      
+      const script = document.createElement('script')
+      script.async = true
+      script.src = 'https://embed.tawk.to/68ff552f1a60b619594aac17/1j8im9gmc'
+      script.charset = 'UTF-8'
+      script.setAttribute('crossorigin', '*')
+      
+      const firstScript = document.getElementsByTagName('script')[0]
+      firstScript.parentNode?.insertBefore(script, firstScript)
+      
+      console.log('Tawk.to widget loading...')
+    }
+  }, [])
+
   // Header pin/shadow logic
   const headerRef = useRef<HTMLElement | null>(null)
   useEffect(() => {

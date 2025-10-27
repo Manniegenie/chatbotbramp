@@ -462,6 +462,26 @@ export default function MobileApp() {
     return () => ac.abort()
   }, [])
 
+  // Load Tawk.to widget
+  useEffect(() => {
+    // Check if Tawk.to is already loaded
+    if (typeof window !== 'undefined' && !window.Tawk_API) {
+      window.Tawk_API = window.Tawk_API || {}
+      window.Tawk_LoadStart = new Date()
+      
+      const script = document.createElement('script')
+      script.async = true
+      script.src = 'https://embed.tawk.to/68ff552f1a60b619594aac17/1j8im9gmc'
+      script.charset = 'UTF-8'
+      script.setAttribute('crossorigin', '*')
+      
+      const firstScript = document.getElementsByTagName('script')[0]
+      firstScript.parentNode?.insertBefore(script, firstScript)
+      
+      console.log('Tawk.to widget loading...')
+    }
+  }, [])
+
   async function sendMessage(e?: React.FormEvent) {
     e?.preventDefault()
     const trimmed = input.trim()
@@ -960,23 +980,6 @@ export default function MobileApp() {
         </div>
       </footer>
 
-      {/* Tawk.to Support Widget - Placed before closing body tag */}
-      <script
-        type="text/javascript"
-        dangerouslySetInnerHTML={{
-          __html: `
-            var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
-            (function(){
-            var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
-            s1.async=true;
-            s1.src='https://embed.tawk.to/68ff552f1a60b619594aac17/1j8im9gmc';
-            s1.charset='UTF-8';
-            s1.setAttribute('crossorigin','*');
-            s0.parentNode.insertBefore(s1,s0);
-            })();
-          `
-        }}
-      />
     </div>
   )
 }
