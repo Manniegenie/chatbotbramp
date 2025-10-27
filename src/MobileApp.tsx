@@ -1,7 +1,9 @@
 // src/MobileApp.tsx
 import React, { useEffect, useRef, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { tokenStore } from './lib/secureStore'
 import { authFetch, getAuthState, setupAutoLogoutTimer, clearAuth } from './lib/tokenManager'
+import { useInactivityTimer } from './lib/useInactivityTimer'
 import MobileSignIn, { SignInResult } from './MobileSignIn'
 import MobileSignUp, { SignUpResult } from './MobileSignUp'
 import MobileSell from './MobileSell'
@@ -354,28 +356,19 @@ export default function MobileApp() {
     const cleanup = setupAutoLogoutTimer((reason) => {
       // Handle auto-logout gracefully
       console.log('Auto-logout triggered:', reason)
-      
+
       // Clear auth state
       setAuth(null)
       setShowSell(false)
       setShowMenu(false)
+      setShowSignIn(false)
+      setShowSignUp(false)
+      setOpenSellAfterAuth(false)
 
-      // Switch back to centered input view gracefully without clearing messages
+      // Smooth transition back to centered input view
       setShowCenteredInput(true)
-      
-      // Don't clear messages to prevent screen going dark on iOS
-      // setMessages([])
-      
-      // Show a subtle notification instead of clearing everything
-      if (messages.length > 0) {
-        setMessages(prev => [...prev, {
-          id: `logout-${Date.now()}`,
-          role: 'system' as const,
-          text: 'Session expired. Please sign in again to continue.',
-          ts: Date.now()
-        }])
-      }
-      
+      setMessages([])
+
       // Prevent iOS from going into protection mode
       if (typeof window !== 'undefined' && window.navigator?.userAgent?.includes('iPhone')) {
         // Force a small DOM update to prevent iOS from thinking the page is inactive
@@ -390,6 +383,16 @@ export default function MobileApp() {
 
     return cleanup
   }, [])
+
+  // 45-minute inactivity timer
+  useInactivityTimer({
+    timeout: 45 * 60 * 1000, // 45 minutes
+    onInactive: () => {
+      console.log('45 minutes of inactivity detected, returning to centered input')
+      setShowCenteredInput(true)
+      setMessages([])
+    }
+  })
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -665,7 +668,24 @@ export default function MobileApp() {
         {showCenteredInput ? (
           <div className="mobile-centered-input">
             <div className="mobile-centered-form">
-              <img src={icons[currentIconIndex]} alt="Chat Bramp AI" className="mobile-app-logo" />
+              <AnimatePresence mode="wait">
+                <motion.img 
+                  key={currentIconIndex}
+                  src={icons[currentIconIndex]} 
+                  alt="Chat Bramp AI" 
+                  className="mobile-app-logo"
+                  initial={{ opacity: 0, scale: 0.8, rotateY: -90 }}
+                  animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+                  exit={{ opacity: 0, scale: 0.8, rotateY: 90 }}
+                  transition={{ 
+                    duration: 0.6, 
+                    ease: "easeInOut",
+                    type: "spring",
+                    stiffness: 100,
+                    damping: 15
+                  }}
+                />
+              </AnimatePresence>
               <div style={{ position: 'relative', width: '100%' }}>
                 <input
                   ref={inputRef}

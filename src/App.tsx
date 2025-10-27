@@ -1,9 +1,11 @@
 // src/App.tsx
 import React, { useEffect, useRef, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import SignIn, { SignInResult } from './signin'
 import SignUp, { SignUpResult } from './signup'
 import { tokenStore } from './lib/secureStore'
 import { authFetch, getAuthState, setupAutoLogoutTimer, clearAuth } from './lib/tokenManager'
+import { useInactivityTimer } from './lib/useInactivityTimer'
 import SellModal from './sell'
 import WallpaperSlideshow from './WallpaperSlideshow'
 // Import logo from assets
@@ -323,18 +325,33 @@ export default function App() {
 
     // Setup automatic logout timer
     const cleanup = setupAutoLogoutTimer((reason) => {
-      // Handle auto-logout
+      // Handle auto-logout gracefully
       console.log('Auto-logout triggered:', reason)
+      
+      // Clear auth state
       setAuth(null)
       setShowSell(false)
+      setShowSignIn(false)
+      setShowSignUp(false)
+      setOpenSellAfterAuth(false)
 
-      // Switch back to centered input view gracefully
+      // Smooth transition back to centered input view
       setShowCenteredInput(true)
       setMessages([])
     })
 
     return cleanup
   }, [])
+
+  // 45-minute inactivity timer
+  useInactivityTimer({
+    timeout: 45 * 60 * 1000, // 45 minutes
+    onInactive: () => {
+      console.log('45 minutes of inactivity detected, returning to centered input')
+      setShowCenteredInput(true)
+      setMessages([])
+    }
+  })
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -1025,7 +1042,24 @@ export default function App() {
             {showCenteredInput ? (
               <div className="centered-input-desktop">
                 <div className="centered-form-desktop">
-                  <img src={icons[currentIconIndex]} alt="Chat Bramp AI" className="desktop-app-logo" />
+                  <AnimatePresence mode="wait">
+                    <motion.img 
+                      key={currentIconIndex}
+                      src={icons[currentIconIndex]} 
+                      alt="Chat Bramp AI" 
+                      className="desktop-app-logo"
+                      initial={{ opacity: 0, scale: 0.8, rotateY: -90 }}
+                      animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+                      exit={{ opacity: 0, scale: 0.8, rotateY: 90 }}
+                      transition={{ 
+                        duration: 0.6, 
+                        ease: "easeInOut",
+                        type: "spring",
+                        stiffness: 100,
+                        damping: 15
+                      }}
+                    />
+                  </AnimatePresence>
                   <div style={{ position: 'relative', width: '100%' }}>
                     <input
                       ref={inputRef}
