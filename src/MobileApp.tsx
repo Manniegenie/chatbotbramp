@@ -570,13 +570,13 @@ export default function MobileApp() {
       // AI-Controlled Tawk Widget Decision
       const messageText = data.reply || ''
       const aiWantsToShowWidget = messageText.includes('SHOW_TAWK_WIDGET')
-      
+
       // Remove the trigger phrase from the displayed message
       if (aiWantsToShowWidget) {
         const cleanMessage = messageText.replace('SHOW_TAWK_WIDGET', '').trim()
         const cleanAiMsg = { ...aiMsg, text: cleanMessage }
         setMessages((prev) => [...prev, cleanAiMsg])
-        
+
         // Show the widget
         if (!showSupportWidget) {
           showSupport()
