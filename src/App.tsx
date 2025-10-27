@@ -511,6 +511,8 @@ export default function App() {
     const trimmed = input.trim()
     if (!trimmed || loading) return
 
+    console.log('🚀 sendMessage called with:', trimmed) // Debug log
+
     // Switch to bottom input after first message
     if (showCenteredInput) {
       setShowCenteredInput(false)
@@ -527,6 +529,7 @@ export default function App() {
     }, 0)
 
     try {
+      console.log('📡 Making API call for:', trimmed) // Debug log
       const data = await sendChatMessage(trimmed, [...messages, userMsg])
 
       const aiMsg: ChatMessage = {
