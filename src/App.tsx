@@ -73,7 +73,7 @@ function getErrorMessage(e: unknown): string {
 async function sendChatMessage(
   message: string,
   history: ChatMessage[]
-): Promise<{ reply: string; cta?: CTA | null; metadata?: any }> {
+): Promise<{ reply: string; cta?: CTA | null; showWidget?: boolean; metadata?: any }> {
   const response = await authFetch(`${API_BASE}/chatbot/chat`, {
     method: 'POST',
     body: JSON.stringify({
@@ -93,6 +93,7 @@ async function sendChatMessage(
   return {
     reply: data?.reply ?? 'Sorry, I could not process that.',
     cta: data.cta || null,
+    showWidget: data.showWidget || false,
     metadata: data.metadata
   }
 }
@@ -511,8 +512,6 @@ export default function App() {
     const trimmed = input.trim()
     if (!trimmed || loading) return
 
-    console.log('🚀 sendMessage called with:', trimmed) // Debug log
-
     // Switch to bottom input after first message
     if (showCenteredInput) {
       setShowCenteredInput(false)
@@ -529,7 +528,6 @@ export default function App() {
     }, 0)
 
     try {
-      console.log('📡 Making API call for:', trimmed) // Debug log
       const data = await sendChatMessage(trimmed, [...messages, userMsg])
 
       const aiMsg: ChatMessage = {

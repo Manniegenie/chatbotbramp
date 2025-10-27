@@ -155,20 +155,12 @@ if (shouldLoadMobileApp()) {
   
   // Dynamically import mobile app
   import('./MobileApp').then(({ default: MobileApp }) => {
-    createRoot(root).render(
-      <StrictMode>
-        <MobileApp />
-      </StrictMode>
-    )
+    createRoot(root).render(<MobileApp />)
   }).catch((err) => {
     console.error('Failed to load Mobile App:', err)
     // Fallback to desktop app if mobile fails
     import('./App').then(({ default: App }) => {
-      createRoot(root).render(
-        <StrictMode>
-          <App />
-        </StrictMode>
-      )
+      createRoot(root).render(<App />)
     })
   })
 } else {
@@ -176,11 +168,7 @@ if (shouldLoadMobileApp()) {
   
   // Load desktop app
   import('./App').then(({ default: App }) => {
-    createRoot(root).render(
-      <StrictMode>
-        <App />
-      </StrictMode>
-    )
+    createRoot(root).render(<App />)
   }).catch((err) => {
     console.error('Failed to load Desktop App:', err)
   })
