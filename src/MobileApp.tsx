@@ -567,22 +567,10 @@ export default function MobileApp() {
         setMessages((prev) => [...prev, aiMsg])
       }
 
-      // AI-Controlled Tawk Widget Decision
-      const messageText = data.reply || ''
-      const aiWantsToShowWidget = messageText.includes('SHOW_TAWK_WIDGET')
-
-      // Remove the trigger phrase from the displayed message
-      if (aiWantsToShowWidget) {
-        const cleanMessage = messageText.replace('SHOW_TAWK_WIDGET', '').trim()
-        const cleanAiMsg = { ...aiMsg, text: cleanMessage }
-        setMessages((prev) => [...prev, cleanAiMsg])
-
-        // Show the widget
-        if (!showSupportWidget) {
-          showSupport()
-        }
-      } else {
-        setMessages((prev) => [...prev, aiMsg])
+      // Backend AI controls widget decisions - frontend just displays messages
+      // Check if backend wants to show widget
+      if (data.showWidget && !showSupportWidget) {
+        showSupport()
       }
     } catch (error) {
       console.error('Chat message failed:', error)
