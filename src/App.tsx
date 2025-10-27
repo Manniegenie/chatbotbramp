@@ -546,34 +546,22 @@ export default function App() {
         setMessages((prev) => [...prev, aiMsg])
       }
 
-      // Check for support intent and show widget if needed
-      const supportKeywords = [
-        'help', 'support', 'issue', 'problem', 'error', 'stuck', 'pending', 'transaction',
-        'failed', 'not working', 'trouble', 'assistance', 'contact', 'customer service',
-        'complaint', 'refund', 'dispute', 'technical', 'bug', 'glitch', 'slow', 'delay',
-        'confused', 'unclear', 'not sure', 'don\'t understand', 'can\'t figure out',
-        'don\'t know how', 'step by step', 'walk me through', 'show me how',
-        'explain in detail', 'more details', 'personal assistance', 'human help',
-        'speak to someone', 'talk to support', 'live person', 'real person', 'agent'
-      ]
+      // AI-Controlled Tawk Widget Decision
+      const messageText = data.reply || ''
+      const aiWantsToShowWidget = messageText.includes('SHOW_TAWK_WIDGET')
       
-      const messageText = (data.reply || '').toLowerCase()
-      const userText = trimmed.toLowerCase()
-      const hasSupportIntent = supportKeywords.some(keyword => 
-        messageText.includes(keyword) || userText.includes(keyword)
-      )
-      
-      // Also check if backend detected support intent
-      const backendDetectedSupport = data.cta?.buttons?.some(btn => 
-        btn.title?.toLowerCase().includes('support') || 
-        btn.title?.toLowerCase().includes('help') ||
-        btn.title?.toLowerCase().includes('contact') ||
-        btn.title?.toLowerCase().includes('live') ||
-        btn.title?.toLowerCase().includes('chat')
-      )
-      
-      if ((hasSupportIntent || backendDetectedSupport) && !showSupportWidget) {
-        showSupport()
+      // Remove the trigger phrase from the displayed message
+      if (aiWantsToShowWidget) {
+        const cleanMessage = messageText.replace('SHOW_TAWK_WIDGET', '').trim()
+        const cleanAiMsg = { ...aiMsg, text: cleanMessage }
+        setMessages((prev) => [...prev, cleanAiMsg])
+        
+        // Show the widget
+        if (!showSupportWidget) {
+          showSupport()
+        }
+      } else {
+        setMessages((prev) => [...prev, aiMsg])
       }
 
     } catch (error) {
