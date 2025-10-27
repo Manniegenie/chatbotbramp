@@ -862,40 +862,6 @@ export default function MobileApp() {
                   KYC
                 </button>
                 <button
-                  className="mobile-support-btn"
-                  onClick={() => {
-                    // Open support chat
-                    const supportMessage = "I need help with my account or have a question about Bramp services.";
-                    setInput(supportMessage);
-                    setShowCenteredInput(false);
-                    sendMessage();
-                  }}
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '16px',
-                    padding: '8px 12px',
-                    color: 'var(--txt)',
-                    fontSize: '12px',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    whiteSpace: 'nowrap',
-                    marginLeft: '8px'
-                  }}
-                  aria-label="Support"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9 12l2 2 4-4"/>
-                    <path d="M21 12c.552 0 1-.448 1-1V5c0-.552-.448-1-1-1H3c-.552 0-1 .448-1 1v6c0 .552.448 1 1 1h18z"/>
-                    <path d="M3 12v6c0 .552.448 1 1 1h16c.552 0 1-.448 1-1v-6"/>
-                  </svg>
-                  Support
-                </button>
-                <button
                   className="mobile-menu-btn"
                   onClick={() => setShowMenu(!showMenu)}
                   aria-label="Menu"
@@ -993,6 +959,24 @@ export default function MobileApp() {
           <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
         </div>
       </footer>
+
+      {/* Tawk.to Support Widget */}
+      <script
+        type="text/javascript"
+        dangerouslySetInnerHTML={{
+          __html: `
+            var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+            (function(){
+            var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+            s1.async=true;
+            s1.src='https://embed.tawk.to/68ff552f1a60b619594aac17/1j8im9gmc';
+            s1.charset='UTF-8';
+            s1.setAttribute('crossorigin','*');
+            s0.parentNode.insertBefore(s1,s0);
+            })();
+          `
+        }}
+      />
     </div>
   )
 }
