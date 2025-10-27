@@ -250,6 +250,25 @@ export default function MobileApp() {
   const [showMenu, setShowMenu] = useState(false)
   const [openSellAfterAuth, setOpenSellAfterAuth] = useState(false)
   const [shouldOpenSell, setShouldOpenSell] = useState(false)
+  const [showSupportWidget, setShowSupportWidget] = useState(false)
+
+  // Function to show support widget
+  const showSupport = () => {
+    setShowSupportWidget(true)
+    if (typeof window !== 'undefined' && window.Tawk_API && window.Tawk_API.showWidget) {
+      window.Tawk_API.showWidget()
+      console.log('Support widget shown')
+    }
+  }
+
+  // Function to hide support widget
+  const hideSupport = () => {
+    setShowSupportWidget(false)
+    if (typeof window !== 'undefined' && window.Tawk_API && window.Tawk_API.hideWidget) {
+      window.Tawk_API.hideWidget()
+      console.log('Support widget hidden')
+    }
+  }
 
   const [auth, setAuth] = useState<SignInResult | null>(() => {
     const authState = getAuthState()
@@ -462,12 +481,26 @@ export default function MobileApp() {
     return () => ac.abort()
   }, [])
 
-  // Load Tawk.to widget
+  // Load Tawk.to widget (hidden by default)
   useEffect(() => {
     // Check if Tawk.to is already loaded
     if (typeof window !== 'undefined' && !window.Tawk_API) {
       window.Tawk_API = window.Tawk_API || {}
       window.Tawk_LoadStart = new Date()
+      
+      // Hide widget by default
+      window.Tawk_API.hideWidget = function() {
+        if (window.Tawk_API && window.Tawk_API.hideWidget) {
+          window.Tawk_API.hideWidget()
+        }
+      }
+      
+      // Show widget function
+      window.Tawk_API.showWidget = function() {
+        if (window.Tawk_API && window.Tawk_API.showWidget) {
+          window.Tawk_API.showWidget()
+        }
+      }
       
       const script = document.createElement('script')
       script.async = true
@@ -478,7 +511,17 @@ export default function MobileApp() {
       const firstScript = document.getElementsByTagName('script')[0]
       firstScript.parentNode?.insertBefore(script, firstScript)
       
-      console.log('Tawk.to widget loading...')
+      console.log('Tawk.to widget loading (hidden by default)...')
+      
+      // Hide widget after it loads
+      script.onload = () => {
+        setTimeout(() => {
+          if (window.Tawk_API && window.Tawk_API.hideWidget) {
+            window.Tawk_API.hideWidget()
+            console.log('Tawk.to widget hidden')
+          }
+        }, 2000) // Wait 2 seconds for widget to fully load
+      }
     }
   }, [])
 
@@ -522,6 +565,30 @@ export default function MobileApp() {
         setShouldOpenSell(true)
       } else {
         setMessages((prev) => [...prev, aiMsg])
+      }
+
+      // Check for support intent and show widget if needed
+      const supportKeywords = [
+        'help', 'support', 'issue', 'problem', 'error', 'stuck', 'pending', 'transaction',
+        'failed', 'not working', 'trouble', 'assistance', 'contact', 'customer service',
+        'complaint', 'refund', 'dispute', 'technical', 'bug', 'glitch', 'slow', 'delay'
+      ]
+      
+      const messageText = (data.reply || '').toLowerCase()
+      const userText = trimmed.toLowerCase()
+      const hasSupportIntent = supportKeywords.some(keyword => 
+        messageText.includes(keyword) || userText.includes(keyword)
+      )
+      
+      // Also check if backend detected support intent
+      const backendDetectedSupport = data.cta?.buttons?.some(btn => 
+        btn.title?.toLowerCase().includes('support') || 
+        btn.title?.toLowerCase().includes('help') ||
+        btn.title?.toLowerCase().includes('contact')
+      )
+      
+      if ((hasSupportIntent || backendDetectedSupport) && !showSupportWidget) {
+        showSupport()
       }
     } catch (error) {
       console.error('Chat message failed:', error)
