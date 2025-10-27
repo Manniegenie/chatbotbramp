@@ -585,8 +585,8 @@ export default function MobileApp() {
       )
 
       // Also check if backend detected support intent
-      const backendDetectedSupport = data.cta?.buttons?.some(btn => 
-        btn.title?.toLowerCase().includes('support') || 
+      const backendDetectedSupport = data.cta?.buttons?.some(btn =>
+        btn.title?.toLowerCase().includes('support') ||
         btn.title?.toLowerCase().includes('help') ||
         btn.title?.toLowerCase().includes('contact') ||
         btn.title?.toLowerCase().includes('live') ||
