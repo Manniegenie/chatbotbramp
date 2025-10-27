@@ -1097,10 +1097,11 @@ a:focus-visible,
 
 .mobile-app-logo {
   width: 72px;
-  height: auto;
+  height: 72px;
   margin: 0 auto 12px;
   display: block;
   animation: fadeIn 0.5s ease-in-out;
+  object-fit: contain;
 }
 
 @keyframes fadeIn {

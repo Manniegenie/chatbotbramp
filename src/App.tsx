@@ -812,10 +812,11 @@ export default function App() {
           
           .desktop-app-logo {
             width: 72px;
-            height: auto;
+            height: 72px;
             margin: 0 auto 12px;
             display: block;
             animation: fadeIn 0.5s ease-in-out;
+            object-fit: contain;
           }
           
           .centered-form-desktop {
@@ -1058,24 +1059,26 @@ export default function App() {
             {showCenteredInput ? (
               <div className="centered-input-desktop">
                 <div className="centered-form-desktop">
-                  <AnimatePresence mode="wait">
-                    <motion.img 
-                      key={currentIconIndex}
-                      src={icons[currentIconIndex]} 
-                      alt="Chat Bramp AI" 
-                      className="desktop-app-logo"
-                      initial={{ opacity: 0, scale: 0.8, rotateY: -90 }}
-                      animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-                      exit={{ opacity: 0, scale: 0.8, rotateY: 90 }}
-                      transition={{ 
-                        duration: 0.6, 
-                        ease: "easeInOut",
-                        type: "spring",
-                        stiffness: 100,
-                        damping: 15
-                      }}
-                    />
-                  </AnimatePresence>
+                  <div style={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <AnimatePresence mode="wait">
+                      <motion.img 
+                        key={currentIconIndex}
+                        src={icons[currentIconIndex]} 
+                        alt="Chat Bramp AI" 
+                        className="desktop-app-logo"
+                        initial={{ opacity: 0, scale: 0.8, rotateY: -90 }}
+                        animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+                        exit={{ opacity: 0, scale: 0.8, rotateY: 90 }}
+                        transition={{ 
+                          duration: 0.6, 
+                          ease: "easeInOut",
+                          type: "spring",
+                          stiffness: 100,
+                          damping: 15
+                        }}
+                      />
+                    </AnimatePresence>
+                  </div>
                   <div style={{ position: 'relative', width: '100%' }}>
                     <input
                       ref={inputRef}

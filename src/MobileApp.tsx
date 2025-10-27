@@ -605,7 +605,7 @@ export default function MobileApp() {
               setOpenSellAfterAuth(false)
               setShowSell(true)
             }
-            
+
             // Track Facebook pixel CompleteRegistration event
             // Note: This fires on signin, but we'll add a flag to track if it's a new user
             if (typeof window !== 'undefined' && window.fbq) {
@@ -635,7 +635,7 @@ export default function MobileApp() {
                 ts: Date.now(),
               },
             ])
-            
+
             // Track Facebook pixel CompleteRegistration event
             if (typeof window !== 'undefined' && window.fbq) {
               window.fbq('track', 'CompleteRegistration', {
@@ -643,7 +643,7 @@ export default function MobileApp() {
                 currency: 'USD',
               });
             }
-            
+
             setShowSignIn(true)
           }}
         />
@@ -686,24 +686,26 @@ export default function MobileApp() {
         {showCenteredInput ? (
           <div className="mobile-centered-input">
             <div className="mobile-centered-form">
-              <AnimatePresence mode="wait">
-                <motion.img
-                  key={currentIconIndex}
-                  src={icons[currentIconIndex]}
-                  alt="Chat Bramp AI"
-                  className="mobile-app-logo"
-                  initial={{ opacity: 0, scale: 0.8, rotateY: -90 }}
-                  animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-                  exit={{ opacity: 0, scale: 0.8, rotateY: 90 }}
-                  transition={{
-                    duration: 0.6,
-                    ease: "easeInOut",
-                    type: "spring",
-                    stiffness: 100,
-                    damping: 15
-                  }}
-                />
-              </AnimatePresence>
+              <div style={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <AnimatePresence mode="wait">
+                  <motion.img 
+                    key={currentIconIndex}
+                    src={icons[currentIconIndex]} 
+                    alt="Chat Bramp AI" 
+                    className="mobile-app-logo"
+                    initial={{ opacity: 0, scale: 0.8, rotateY: -90 }}
+                    animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+                    exit={{ opacity: 0, scale: 0.8, rotateY: 90 }}
+                    transition={{ 
+                      duration: 0.6, 
+                      ease: "easeInOut",
+                      type: "spring",
+                      stiffness: 100,
+                      damping: 15
+                    }}
+                  />
+                </AnimatePresence>
+              </div>
               <div style={{ position: 'relative', width: '100%' }}>
                 <input
                   ref={inputRef}
