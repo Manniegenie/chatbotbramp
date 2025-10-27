@@ -2,7 +2,7 @@
 const CACHE_NAME = 'bramp-ai-v1';
 const urlsToCache = [
   '/',
-  '/src/assets/logo.png',
+  '/src/assets/logo.jpeg',
   '/src/assets/solana.png',
   '/src/assets/tether.png',
   '/src/assets/cryptocurrency.png',
