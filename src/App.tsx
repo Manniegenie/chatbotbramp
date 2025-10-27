@@ -948,6 +948,14 @@ export default function App() {
                 ts: Date.now(),
               }])
               if (openSellAfterAuth) { setOpenSellAfterAuth(false); setShowSell(true) }
+              
+              // Track Facebook pixel CompleteRegistration event
+              if (typeof window !== 'undefined' && window.fbq) {
+                window.fbq('track', 'CompleteRegistration', {
+                  value: 1,
+                  currency: 'USD',
+                });
+              }
             }}
           />
         ) : showSignUp ? (
@@ -988,6 +996,14 @@ export default function App() {
                   text: 'Welcome! Your account has been created successfully.',
                   ts: Date.now(),
                 }])
+                
+                // Track Facebook pixel CompleteRegistration event
+                if (typeof window !== 'undefined' && window.fbq) {
+                  window.fbq('track', 'CompleteRegistration', {
+                    value: 1,
+                    currency: 'USD',
+                  });
+                }
               } else {
                 // User needs to verify OTP, show signin
                 setMessages((prev) => [...prev, {
