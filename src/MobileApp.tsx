@@ -514,14 +514,12 @@ export default function MobileApp() {
 
       console.log('Tawk.to widget loading (hidden by default)...')
 
-      // Hide widget after it loads
+      // Hide widget immediately on load
       script.onload = () => {
-        setTimeout(() => {
-          if (window.Tawk_API && window.Tawk_API.hideWidget) {
-            window.Tawk_API.hideWidget()
-            console.log('Tawk.to widget hidden')
-          }
-        }, 2000) // Wait 2 seconds for widget to fully load
+        if (window.Tawk_API && window.Tawk_API.hideWidget) {
+          window.Tawk_API.hideWidget()
+          console.log('Tawk.to widget hidden on load')
+        }
       }
     }
   }, [])
@@ -763,24 +761,14 @@ export default function MobileApp() {
           <div className="mobile-centered-input">
             <div className="mobile-centered-form">
               <div style={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <AnimatePresence mode="wait">
-                  <motion.img
-                    key={currentIconIndex}
-                    src={icons[currentIconIndex]}
-                    alt="Chat Bramp AI"
-                    className="mobile-app-logo"
-                    initial={{ opacity: 0, scale: 0.8, rotateY: -90 }}
-                    animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-                    exit={{ opacity: 0, scale: 0.8, rotateY: 90 }}
-                    transition={{
-                      duration: 0.6,
-                      ease: "easeInOut",
-                      type: "spring",
-                      stiffness: 100,
-                      damping: 15
-                    }}
-                  />
-                </AnimatePresence>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  border: '4px solid #e0e0e0',
+                  borderTop: '4px solid var(--accent)',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite'
+                }} />
               </div>
               <div style={{ position: 'relative', width: '100%' }}>
                 <input
