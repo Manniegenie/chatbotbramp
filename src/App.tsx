@@ -347,7 +347,7 @@ export default function App() {
     const cleanup = setupAutoLogoutTimer((reason) => {
       // Handle auto-logout gracefully
       console.log('Auto-logout triggered:', reason)
-      
+
       // Clear auth state
       setAuth(null)
       setShowSell(false)
@@ -438,32 +438,32 @@ export default function App() {
     if (typeof window !== 'undefined' && !window.Tawk_API) {
       window.Tawk_API = window.Tawk_API || {}
       window.Tawk_LoadStart = new Date()
-      
+
       // Hide widget by default
-      window.Tawk_API.hideWidget = function() {
+      window.Tawk_API.hideWidget = function () {
         if (window.Tawk_API && window.Tawk_API.hideWidget) {
           window.Tawk_API.hideWidget()
         }
       }
-      
+
       // Show widget function
-      window.Tawk_API.showWidget = function() {
+      window.Tawk_API.showWidget = function () {
         if (window.Tawk_API && window.Tawk_API.showWidget) {
           window.Tawk_API.showWidget()
         }
       }
-      
+
       const script = document.createElement('script')
       script.async = true
       script.src = 'https://embed.tawk.to/68ff552f1a60b619594aac17/1j8im9gmc'
       script.charset = 'UTF-8'
       script.setAttribute('crossorigin', '*')
-      
+
       const firstScript = document.getElementsByTagName('script')[0]
       firstScript.parentNode?.insertBefore(script, firstScript)
-      
+
       console.log('Tawk.to widget loading (hidden by default)...')
-      
+
       // Hide widget after it loads
       script.onload = () => {
         setTimeout(() => {
@@ -988,7 +988,7 @@ export default function App() {
           ) : (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <span style={{ color: 'var(--muted)', fontSize: 13 }}>
-                Signed in{auth.user?.username ? ` as ${auth.user.username}` : ''}
+                {auth.user?.username ? `${auth.user.username} 💚` : 'User 💚'}
               </span>
               <button className="btn" onClick={handleSellClick}>
                 Pay
@@ -1019,7 +1019,7 @@ export default function App() {
                 ts: Date.now(),
               }])
               if (openSellAfterAuth) { setOpenSellAfterAuth(false); setShowSell(true) }
-              
+
               // Track Facebook pixel CompleteRegistration event
               if (typeof window !== 'undefined' && window.fbq) {
                 console.log('Firing Facebook pixel CompleteRegistration event (signin)');
@@ -1070,7 +1070,7 @@ export default function App() {
                   text: 'Welcome! Your account has been created successfully.',
                   ts: Date.now(),
                 }])
-                
+
                 // Track Facebook pixel CompleteRegistration event
                 if (typeof window !== 'undefined' && window.fbq) {
                   console.log('Firing Facebook pixel CompleteRegistration event');
@@ -1137,16 +1137,16 @@ export default function App() {
                 <div className="centered-form-desktop">
                   <div style={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <AnimatePresence mode="wait">
-                      <motion.img 
+                      <motion.img
                         key={currentIconIndex}
-                        src={icons[currentIconIndex]} 
-                        alt="Chat Bramp AI" 
+                        src={icons[currentIconIndex]}
+                        alt="Chat Bramp AI"
                         className="desktop-app-logo"
                         initial={{ opacity: 0, scale: 0.8, rotateY: -90 }}
                         animate={{ opacity: 1, scale: 1, rotateY: 0 }}
                         exit={{ opacity: 0, scale: 0.8, rotateY: 90 }}
-                        transition={{ 
-                          duration: 0.6, 
+                        transition={{
+                          duration: 0.6,
                           ease: "easeInOut",
                           type: "spring",
                           stiffness: 100,
