@@ -420,13 +420,12 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Load Tawk.to widget (hidden by default)
+  // Load Tawk.to widget (background operation)
   useEffect(() => {
     if (typeof window !== 'undefined' && !window.Tawk_API) {
       window.Tawk_API = window.Tawk_API || {}
       window.Tawk_LoadStart = new Date()
 
-      // Set up widget control functions
       window.Tawk_API.hideWidget = function () {
         if (window.Tawk_API && window.Tawk_API.hideWidget) {
           window.Tawk_API.hideWidget()
@@ -439,9 +438,6 @@ export default function App() {
         }
       }
 
-      // Set widget to be hidden by default
-      window.Tawk_API.hideWidget()
-
       const script = document.createElement('script')
       script.async = true
       script.src = 'https://embed.tawk.to/68ff552f1a60b619594aac17/1j8im9gmc'
@@ -451,13 +447,10 @@ export default function App() {
       const firstScript = document.getElementsByTagName('script')[0]
       firstScript.parentNode?.insertBefore(script, firstScript)
 
-      // Ensure widget is hidden after loading
       script.onload = () => {
-        setTimeout(() => {
-          if (window.Tawk_API && window.Tawk_API.hideWidget) {
-            window.Tawk_API.hideWidget()
-          }
-        }, 1000)
+        if (window.Tawk_API && window.Tawk_API.hideWidget) {
+          window.Tawk_API.hideWidget()
+        }
       }
     }
   }, [])
