@@ -1,53 +1,87 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="facebook-domain-verification" content="sfa5foner157ujkam6lx0d7w269ih8" />
-    <!-- Prevent iOS Safari auto-zoom by ensuring initial-scale and maximum-scale are set.
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="facebook-domain-verification" content="sfa5foner157ujkam6lx0d7w269ih8" />
+  <!-- Prevent iOS Safari auto-zoom by ensuring initial-scale and maximum-scale are set.
          Note: avoid user-scalable=no (accessibility); maximum-scale=1 plus 16px input sizes
          is the most reliable approach. -->
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
-    />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Bramp AI" />
-    <meta name="theme-color" content="transparent" />
-    <meta name="msapplication-navbutton-color" content="transparent" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-touch-fullscreen" content="yes" />
-    <meta name="format-detection" content="telephone=no" />
-    <meta name="apple-mobile-web-app-orientations" content="portrait" />
-    
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="/manifest.json" />
-    
-    <!-- PWA Meta Tags -->
-    <meta name="application-name" content="Bramp AI" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Bramp AI" />
-    
-    <!-- PWA Icons -->
-    <link rel="icon" type="image/jpeg" sizes="256x256" href="/src/assets/logo.jpeg" />
-    <link rel="icon" type="image/jpeg" sizes="384x384" href="/src/assets/logo.jpeg" />
-    <link rel="icon" type="image/jpeg" sizes="512x512" href="/src/assets/logo.jpeg" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/src/assets/logo.jpeg" />
-    <link rel="apple-touch-icon" sizes="152x152" href="/src/assets/logo.jpeg" />
-    <link rel="apple-touch-icon" sizes="144x144" href="/src/assets/logo.jpeg" />
-    <link rel="apple-touch-icon" sizes="120x120" href="/src/assets/logo.jpeg" />
-    <link rel="apple-touch-icon" sizes="114x114" href="/src/assets/logo.jpeg" />
-    <link rel="apple-touch-icon" sizes="76x76" href="/src/assets/logo.jpeg" />
-    <link rel="apple-touch-icon" sizes="72x72" href="/src/assets/logo.jpeg" />
-    <link rel="apple-touch-icon" sizes="60x60" href="/src/assets/logo.jpeg" />
-    <link rel="apple-touch-icon" sizes="57x57" href="/src/assets/logo.jpeg" />
-    
-    <title>Bramp AI — Chat</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Bramp AI" />
+  <meta name="theme-color" content="transparent" />
+  <meta name="msapplication-navbutton-color" content="transparent" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-touch-fullscreen" content="yes" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="apple-mobile-web-app-orientations" content="portrait" />
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json" />
+
+  <!-- PWA Meta Tags -->
+  <meta name="application-name" content="Bramp AI" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Bramp AI" />
+
+  <!-- PWA Icons (served from /public) -->
+  <link rel="icon" type="image/jpeg" sizes="256x256" href="/logo.jpeg" />
+  <link rel="icon" type="image/jpeg" sizes="384x384" href="/logo.jpeg" />
+  <link rel="icon" type="image/jpeg" sizes="512x512" href="/logo.jpeg" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/logo.jpeg" />
+  <link rel="apple-touch-icon" sizes="152x152" href="/logo.jpeg" />
+  <link rel="apple-touch-icon" sizes="144x144" href="/logo.jpeg" />
+  <link rel="apple-touch-icon" sizes="120x120" href="/logo.jpeg" />
+  <link rel="apple-touch-icon" sizes="114x114" href="/logo.jpeg" />
+  <link rel="apple-touch-icon" sizes="76x76" href="/logo.jpeg" />
+  <link rel="apple-touch-icon" sizes="72x72" href="/logo.jpeg" />
+  <link rel="apple-touch-icon" sizes="60x60" href="/logo.jpeg" />
+  <link rel="apple-touch-icon" sizes="57x57" href="/logo.jpeg" />
+
+  <!-- SEO Basics -->
+  <title>Bramp AI — Secure Digital Assets & Payments Assistant</title>
+  <meta name="description"
+    content="Bramp AI helps you buy, sell, and manage crypto securely with clear guidance, real-time rates, and fast payouts via licensed partners." />
+  <link rel="canonical" href="https://www.chatbramp.com/" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Bramp AI — Secure Digital Assets & Payments Assistant" />
+  <meta property="og:description"
+    content="Buy, sell, and manage crypto securely with clear guidance, real-time rates, and fast payouts via licensed partners." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.chatbramp.com/" />
+  <meta property="og:image" content="/logo.jpeg" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Bramp AI — Secure Digital Assets & Payments Assistant" />
+  <meta name="twitter:description"
+    content="Buy, sell, and manage crypto securely with clear guidance, real-time rates, and fast payouts via licensed partners." />
+  <meta name="twitter:image" content="/logo.jpeg" />
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Bramp AI",
+        "url": "https://www.chatbramp.com/",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://www.chatbramp.com/?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>

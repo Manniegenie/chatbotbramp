@@ -9,25 +9,29 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/src/assets/logo.jpeg",
+      "src": "/logo.jpeg",
       "sizes": "256x256",
       "type": "image/jpeg",
       "purpose": "any maskable"
     },
     {
-      "src": "/src/assets/logo.jpeg",
+      "src": "/logo.jpeg",
       "sizes": "384x384",
       "type": "image/jpeg",
       "purpose": "any maskable"
     },
     {
-      "src": "/src/assets/logo.jpeg",
+      "src": "/logo.jpeg",
       "sizes": "512x512",
       "type": "image/jpeg",
       "purpose": "any maskable"
     }
   ],
-  "categories": ["finance", "productivity", "utilities"],
+  "categories": [
+    "finance",
+    "productivity",
+    "utilities"
+  ],
   "lang": "en",
   "dir": "ltr",
   "scope": "/",
