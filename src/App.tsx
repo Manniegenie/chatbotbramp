@@ -73,7 +73,7 @@ function getErrorMessage(e: unknown): string {
 async function sendChatMessage(
   message: string,
   history: ChatMessage[]
-): Promise<{ reply: string; cta?: CTA | null; showWidget?: boolean; metadata?: any }> {
+): Promise<{ reply: string; cta?: CTA | null; metadata?: any }> {
   const response = await authFetch(`${API_BASE}/chatbot/chat`, {
     method: 'POST',
     body: JSON.stringify({
@@ -93,7 +93,6 @@ async function sendChatMessage(
   return {
     reply: data?.reply ?? 'Sorry, I could not process that.',
     cta: data.cta || null,
-    showWidget: data.showWidget || false,
     metadata: data.metadata
   }
 }
@@ -273,25 +272,6 @@ export default function App() {
   const [showSell, setShowSell] = useState(false)
   const [openSellAfterAuth, setOpenSellAfterAuth] = useState(false)
   const [shouldOpenSell, setShouldOpenSell] = useState(false)
-  const [showSupportWidget, setShowSupportWidget] = useState(false)
-
-  // Function to show support widget
-  const showSupport = () => {
-    setShowSupportWidget(true)
-    if (typeof window !== 'undefined' && window.Tawk_API && window.Tawk_API.showWidget) {
-      window.Tawk_API.showWidget()
-      console.log('Support widget shown')
-    }
-  }
-
-  // Function to hide support widget
-  const hideSupport = () => {
-    setShowSupportWidget(false)
-    if (typeof window !== 'undefined' && window.Tawk_API && window.Tawk_API.hideWidget) {
-      window.Tawk_API.hideWidget()
-      console.log('Support widget hidden')
-    }
-  }
 
   const [auth, setAuth] = useState<SignInResult | null>(() => {
     const authState = getAuthState()
@@ -420,40 +400,6 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Load Tawk.to widget (background operation)
-  useEffect(() => {
-    if (typeof window !== 'undefined' && !window.Tawk_API) {
-      window.Tawk_API = window.Tawk_API || {}
-      window.Tawk_LoadStart = new Date()
-
-      window.Tawk_API.hideWidget = function () {
-        if (window.Tawk_API && window.Tawk_API.hideWidget) {
-          window.Tawk_API.hideWidget()
-        }
-      }
-
-      window.Tawk_API.showWidget = function () {
-        if (window.Tawk_API && window.Tawk_API.showWidget) {
-          window.Tawk_API.showWidget()
-        }
-      }
-
-      const script = document.createElement('script')
-      script.async = true
-      script.src = 'https://embed.tawk.to/68ff552f1a60b619594aac17/1j8im9gmc'
-      script.charset = 'UTF-8'
-      script.setAttribute('crossorigin', '*')
-
-      const firstScript = document.getElementsByTagName('script')[0]
-      firstScript.parentNode?.insertBefore(script, firstScript)
-
-      script.onload = () => {
-        if (window.Tawk_API && window.Tawk_API.hideWidget) {
-          window.Tawk_API.hideWidget()
-        }
-      }
-    }
-  }, [])
 
   // Header pin/shadow logic
   const headerRef = useRef<HTMLElement | null>(null)
@@ -526,11 +472,6 @@ export default function App() {
         setMessages((prev) => [...prev, aiMsg])
       }
 
-      // Backend AI controls widget decisions - frontend just displays messages
-      // Check if backend wants to show widget
-      if (data.showWidget && !showSupportWidget) {
-        showSupport()
-      }
 
     } catch (error) {
       console.error('Chat message failed:', error)
