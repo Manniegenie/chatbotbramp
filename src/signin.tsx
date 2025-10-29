@@ -85,6 +85,10 @@ export default function SignIn({
 
   async function submit(e?: React.FormEvent) {
     e?.preventDefault()
+    
+    // Prevent duplicate submissions
+    if (loading) return
+    
     setError(null)
 
     // Normalize phone number
