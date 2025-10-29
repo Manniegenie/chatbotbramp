@@ -1,384 +1,679 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Stage, Container, Sprite, Text, Graphics } from '@pixi/react';
+import { Application, Texture, Graphics as PIXIGraphics, Rectangle } from 'pixi.js';
+import * as PIXI from 'pixi.js';
+
+// Import images
+import PlayerSpaceship from './assets/spaceship (1).png';
+import EnemySpaceship from './assets/spaceship.png';
+import AsteroidImage from './assets/asteroid.png';
 
 interface Position {
-    x: number
-    y: number
+  x: number;
+  y: number;
 }
 
-interface Bullet extends Position {
-    id: UPCounter
+interface Bullet {
+  id: string;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
 }
 
-interface Enemy extends Position {
-    id: UPCounter
-    speed: number
+interface Enemy {
+  id: string;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  type: 'spaceship' | 'asteroid';
+  rotation: number;
 }
 
-type UPCounter = number
+interface SpaceGameProps {
+  onClose: () => void;
+}
 
-export default function SpaceGame({ onClose }: { onClose: () => void }) {
-    const canvasRef = useRef<HTMLCanvasElement>(null)
-    const [gameState, setGameState] = useState<'menu' | 'playing' | 'paused' | 'gameover'>('menu')
-    const [score, setScore] = useState(0)
-    const [highScore, setHighScore] = useState(() => {
-        const saved = localStorage.getItem('spaceGameHighScore')
-        return saved ? parseInt(saved, 10) : 0
-    })
+const SpaceGame: React.FC<SpaceGameProps> = ({ onClose }) => {
+  const [gameState, setGameState] = useState<'menu' | 'playing' | 'paused' | 'gameover'>('menu');
+  const [score, setScore] = useState(0);
+  const [highScore, setHighScore] = useState(() => {
+    return parseInt(localStorage.getItem('spaceGameHighScore') || '0');
+  });
+  const [playerPos, setPlayerPos] = useState<Position>({ x: 0, y: 0 });
+  const [bullets, setBullets] = useState<Bullet[]>([]);
+  const [enemies, setEnemies] = useState<Enemy[]>([]);
+  const [keys, setKeys] = useState<{ [key: string]: boolean }>({});
+  
+  const appRef = useRef<Application | null>(null);
+  const bulletsRef = useRef<Bullet[]>([]);
+  const enemiesRef = useRef<Enemy[]>([]);
+  const lastBulletTimeRef = useRef(0);
+  const lastEnemyTimeRef = useRef(0);
+  const gameLoopRef = useRef<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-    const playerRef = useRef<Position>({ x: 400, y: 550 })
-    const bulletsRef = useRef<Bullet[]>([])
-    const enemiesRef = useRef<Enemy[]>([])
-    const keysRef = useRef<Set<string>>(new Set())
-    const animationFrameRef = useRef<number>()
-    const lastEnemySpawnRef = useRef<number>(0)
-    const enemyIdCounterRef = useRef<UPCounter>(0)
-    const bulletIdCounterRef = useRef<UPCounter>(0)
+  // Game constants
+  const PLAYER_SIZE = 60;
+  const PLAYER_SPEED = 5;
+  const BULLET_SPEED = 10;
+  const ENEMY_SIZE = 50;
+  const ASTEROID_SIZE = 40;
+  const BULLET_COOLDOWN = 200; // ms
+  const ENEMY_SPAWN_RATE = 2000; // ms
 
-    const PLAYER_SIZE = 40
-    const BULLET_SIZE = 5
-    const ENEMY_SIZE = 30
-    const CANVAS_WIDTH = 800
-    const CANVAS_HEIGHT = 600
-    const PLAYER_SPEED = 5
-    const BULLET_SPEED = 8
-    const ENEMY_SPAWN_RATE = 60 // frames
+  // Initialize PIXI textures
+  const [textures, setTextures] = useState<{
+    player: Texture | null;
+    enemy: Texture | null;
+    asteroid: Texture | null;
+  }>({
+    player: null,
+    enemy: null,
+    asteroid: null
+  });
 
-    // Handle keyboard input
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            keysRef.current.add(e.key.toLowerCase())
-            if (e.key === ' ' || e.key === 'Spacebar') {
-                e.preventDefault()
-                if (gameState === 'playing') {
-                    shootBullet()
-                }
-            }
-            if (e.key === 'Escape') {
-                if (gameState === 'playing') {
-                    setGameState('paused')
-                } else if (gameState === 'paused') {
-                    setGameState('playing')
-                }
-            }
-        }
+  // Load textures
+  useEffect(() => {
+    const loadTextures = async () => {
+      try {
+        const playerTexture = await PIXI.Assets.load(PlayerSpaceship);
+        const enemyTexture = await PIXI.Assets.load(EnemySpaceship);
+        const asteroidTexture = await PIXI.Assets.load(AsteroidImage);
+        
+        setTextures({
+          player: playerTexture,
+          enemy: enemyTexture,
+          asteroid: asteroidTexture
+        });
+      } catch (error) {
+        console.error('Error loading textures:', error);
+      }
+    };
 
-        const handleKeyUp = (e: KeyboardEvent) => {
-            keysRef.current.delete(e.key.toLowerCase())
-        }
+    loadTextures();
+  }, []);
 
-        window.addEventListener('keydown', handleKeyDown)
-        window.addEventListener('keyup', handleKeyUp)
+  // Initialize game dimensions
+  const [gameDimensions, setGameDimensions] = useState({ width: 800, height: 600 });
 
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown)
-            window.removeEventListener('keyup', handleKeyUp)
-        }
-    }, [gameState])
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setGameDimensions({
+          width: window.innerWidth,
+          height: window.innerHeight
+        });
+        setPlayerPos({
+          x: window.innerWidth / 2,
+          y: window.innerHeight - 100
+        });
+      }
+    };
 
-    const shootBullet = useCallback(() => {
-        const player = playerRef.current
-        bulletsRef.current.push({
-            id: bulletIdCounterRef.current++,
-            x: player.x,
-            y: player.y - PLAYER_SIZE / 2
-        })
-    }, [])
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
 
-    const updateGame = useCallback(() => {
-        if (gameState !== 'playing') return
-
-        const canvas = canvasRef.current
-        if (!canvas) return
-
-        const ctx = canvas.getContext('2d')
-        if (!ctx) return
-
-        const player = playerRef.current
-        const keys = keysRef.current
-
-        // Move player
-        if (keys.has('a') || keys.has('arrowleft')) {
-            player.x = Math.max(PLAYER_SIZE / 2, player.x - PLAYER_SPEED)
-        }
-        if (keys.has('d') || keys.has('arrowright')) {
-            player.x = Math.min(CANVAS_WIDTH - PLAYER_SIZE / 2, player.x + PLAYER_SPEED)
-        }
-
-        // Update bullets
-        bulletsRef.current = bulletsRef.current
-            .map(bullet => ({ ...bullet, y: bullet.y - BULLET_SPEED }))
-            .filter(bullet => bullet.y > -BULLET_SIZE)
-
-        // Spawn enemies
-        lastEnemySpawnRef.current++
-        if (lastEnemySpawnRef.current >= ENEMY_SPAWN_RATE) {
-            lastEnemySpawnRef.current = 0
-            const speed = 2 + Math.random() * 2 + Math.floor(score / 500) * 0.5
-            enemiesRef.current.push({
-                id: enemyIdCounterRef.current++,
-                x: Math.random() * (CANVAS_WIDTH - ENEMY_SIZE) + ENEMY_SIZE / 2,
-                y: -ENEMY_SIZE,
-                speed
-            })
-        }
-
-        // Update enemies
-        enemiesRef.current = enemiesRef.current.map(enemy => ({
-            ...enemy,
-            y: enemy.y + enemy.speed
-        }))
-
-        // Collision: bullets vs enemies
-        bulletsRef.current = bulletsRef.current.filter(bullet => {
-            const hitEnemy = enemiesRef.current.findIndex(enemy => {
-                const dx = bullet.x - enemy.x
-                const dy = bullet.y - enemy.y
-                const distance = Math.sqrt(dx * dx + dy * dy)
-                return distance < ENEMY_SIZE / 2 + BULLET_SIZE
-            })
-
-            if (hitEnemy !== -1) {
-                enemiesRef.current.splice(hitEnemy, 1)
-                setScore(prev => {
-                    const newScore = prev + 10
-                    if (newScore > highScore) {
-                        setHighScore(newScore)
-                        localStorage.setItem('spaceGameHighScore', newScore.toString())
-                    }
-                    return newScore
-                })
-                return false
-            }
-            return true
-        })
-
-        // Collision: player vs enemies
-        const playerHit = enemiesRef.current.some(enemy => {
-            const dx = player.x - enemy.x
-            const dy = player.y - enemy.y
-            const distance = Math.sqrt(dx * dx + dy * dy)
-            return distance < PLAYER_SIZE / 2 + ENEMY_SIZE / 2
-        })
-
-        if (playerHit || enemiesRef.current.some(e => e.y > CANVAS_HEIGHT + ENEMY_SIZE)) {
-            setGameState('gameover')
-            return
-        }
-
-        // Remove enemies that passed the player (optional: could be a penalty)
-        enemiesRef.current = enemiesRef.current.filter(enemy => enemy.y < CANVAS_HEIGHT + ENEMY_SIZE)
-    }, [gameState, highScore])
-
-    const draw = useCallback(() => {
-        const canvas = canvasRef.current
-        if (!canvas) return
-
-        const ctx = canvas.getContext('2d')
-        if (!ctx) return
-
-        // Clear canvas
-        ctx.fillStyle = '#000011'
-        ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
-
-        // Draw stars (background)
-        ctx.fillStyle = '#ffffff'
-        for (let i = 0; i < 50; i++) {
-            const x = (i * 73) % CANVAS_WIDTH
-            const y = ((Date.now() / 10 + i * 37) % CANVAS_HEIGHT)
-            ctx.fillRect(x, y, 2, 2)
-        }
-
-        if (gameState === 'menu') updateGame()
+  // Keyboard handling
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      setKeys(prev => ({ ...prev, [e.code]: true }));
+      
+      if (e.code === 'Space') {
+        e.preventDefault();
         if (gameState === 'playing') {
-            updateGame()
-
-            // Draw player
-            const player = playerRef.current
-            ctx.fillStyle = '#00ff00'
-            ctx.beginPath()
-            ctx.moveTo(player.x, player.y - PLAYER_SIZE / 2)
-            ctx.lineTo(player.x - PLAYER_SIZE / 2, player.y + PLAYER_SIZE / 2)
-            ctx.lineTo(player.x + PLAYER_SIZE / 2, player.y + PLAYER_SIZE / 2)
-            ctx.closePath()
-            ctx.fill()
-
-            // Draw bullets
-            ctx.fillStyle = '#ffff00'
-            bulletsRef.current.forEach(bullet => {
-                ctx.beginPath()
-                ctx.arc(bullet.x, bullet.y, BULLET_SIZE, 0, Math.PI * 2)
-                ctx.fill()
-            })
-
-            // Draw enemies
-            ctx.fillStyle = '#ff0000'
-            enemiesRef.current.forEach(enemy => {
-                ctx.beginPath()
-                ctx.arc(enemy.x, enemy.y, ENEMY_SIZE / 2, 0, Math.PI * 2)
-                ctx.fill()
-            })
-
-            // Draw score
-            ctx.fillStyle = '#ffffff'
-            ctx.font = '20px monospace'
-            ctx.fillText(`Score: ${score}`, 10, 30)
-            ctx.fillText(`High Score: ${highScore}`, 10, 55)
+          shootBullet();
         }
+      }
+    };
 
-        if (gameState === 'paused') {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
-            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
-            ctx.fillStyle = '#ffffff'
-            ctx.font = '40px monospace'
-            ctx.textAlign = 'center'
-            ctx.fillText('PAUSED', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2)
-            ctx.font = '20px monospace'
-            ctx.fillText('Press ESC to resume', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 40)
-        }
+    const handleKeyUp = (e: KeyboardEvent) => {
+      setKeys(prev => ({ ...prev, [e.code]: false }));
+    };
 
-        if (gameState === 'gameover') {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
-            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
-            ctx.fillStyle = '#ffffff'
-            ctx.font = '40px monospace'
-            ctx.textAlign = 'center'
-            ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 40)
-            ctx.font = '24px monospace'
-            ctx.fillText(`Final Score: ${score}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2)
-            ctx.font = '18px monospace'
-            ctx.fillText(`High Score: ${highScore}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 40)
-        }
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [gameState]);
 
-        if (gameState !== 'gameover') {
-            animationFrameRef.current = requestAnimationFrame(draw)
-        }
-    }, [gameState, score, highScore, updateGame])
+  // Touch handling for mobile
+  useEffect(() => {
+    const handleTouch = (e: TouchEvent) => {
+      e.preventDefault();
+      if (gameState === 'playing') {
+        shootBullet();
+      }
+    };
 
-    useEffect(() => {
-        if (gameState === 'playing' || gameState === 'menu') {
-            draw()
+    if (containerRef.current) {
+      containerRef.current.addEventListener('touchstart', handleTouch, { passive: false });
+      return () => {
+        if (containerRef.current) {
+          containerRef.current.removeEventListener('touchstart', handleTouch);
         }
-        return () => {
-            if (animationFrameRef.current) {
-                cancelAnimationFrame(animationFrameRef.current)
-            }
-        }
-    }, [gameState, draw])
-
-    const startGame = () => {
-        // Reset game state
-        playerRef.current = { x: CANVAS_WIDTH / 2, y: 550 }
-        bulletsRef.current = []
-        enemiesRef.current = []
-        keysRef.current.clear()
-        lastEnemySpawnRef.current = 0
-        setScore(0)
-        setGameState('playing')
+      };
     }
+  }, [gameState]);
 
-    const restartGame = () => {
-        startGame()
-    }
+  const shootBullet = useCallback(() => {
+    const now = Date.now();
+    if (now - lastBulletTimeRef.current < BULLET_COOLDOWN) return;
 
+    lastBulletTimeRef.current = now;
+    const newBullet: Bullet = {
+      id: Math.random().toString(36).substr(2, 9),
+      x: playerPos.x,
+      y: playerPos.y - PLAYER_SIZE / 2,
+      vx: 0,
+      vy: -BULLET_SPEED
+    };
+
+    setBullets(prev => [...prev, newBullet]);
+  }, [playerPos]);
+
+  // Game loop
+  useEffect(() => {
+    if (gameState !== 'playing') return;
+
+    const gameLoop = () => {
+      setPlayerPos(prev => {
+        let newX = prev.x;
+        let newY = prev.y;
+
+        if (keys['ArrowLeft'] || keys['KeyA']) {
+          newX = Math.max(PLAYER_SIZE / 2, newX - PLAYER_SPEED);
+        }
+        if (keys['ArrowRight'] || keys['KeyD']) {
+          newX = Math.min(gameDimensions.width - PLAYER_SIZE / 2, newX + PLAYER_SPEED);
+        }
+        if (keys['ArrowUp'] || keys['KeyW']) {
+          newY = Math.max(PLAYER_SIZE / 2, newY - PLAYER_SPEED);
+        }
+        if (keys['ArrowDown'] || keys['KeyS']) {
+          newY = Math.min(gameDimensions.height - PLAYER_SIZE / 2, newY + PLAYER_SPEED);
+        }
+
+        return { x: newX, y: newY };
+      });
+
+      // Update bullets
+      setBullets(prev => {
+        const updated = prev
+          .map(bullet => ({
+            ...bullet,
+            x: bullet.x + bullet.vx,
+            y: bullet.y + bullet.vy
+          }))
+          .filter(bullet => bullet.y > -20 && bullet.x > -20 && bullet.x < gameDimensions.width + 20);
+        
+        bulletsRef.current = updated;
+        return updated;
+      });
+
+      // Spawn enemies
+      const now = Date.now();
+      if (now - lastEnemyTimeRef.current > ENEMY_SPAWN_RATE) {
+        lastEnemyTimeRef.current = now;
+        const isAsteroid = Math.random() < 0.3;
+        const newEnemy: Enemy = {
+          id: Math.random().toString(36).substr(2, 9),
+          x: Math.random() * (gameDimensions.width - 50) + 25,
+          y: -50,
+          vx: (Math.random() - 0.5) * 2,
+          vy: Math.random() * 2 + 1,
+          type: isAsteroid ? 'asteroid' : 'spaceship',
+          rotation: 0
+        };
+
+        setEnemies(prev => [...prev, newEnemy]);
+      }
+
+      // Update enemies
+      setEnemies(prev => {
+        const updated = prev
+          .map(enemy => ({
+            ...enemy,
+            x: enemy.x + enemy.vx,
+            y: enemy.y + enemy.vy,
+            rotation: enemy.rotation + 0.1
+          }))
+          .filter(enemy => enemy.y < gameDimensions.height + 50);
+        
+        enemiesRef.current = updated;
+        return updated;
+      });
+
+      // Check collisions
+      checkCollisions();
+
+      gameLoopRef.current = requestAnimationFrame(gameLoop);
+    };
+
+    gameLoopRef.current = requestAnimationFrame(gameLoop);
+
+    return () => {
+      if (gameLoopRef.current) {
+        cancelAnimationFrame(gameLoopRef.current);
+      }
+    };
+  }, [gameState, keys, gameDimensions, playerPos]);
+
+  const checkCollisions = () => {
+    const currentBullets = bulletsRef.current;
+    const currentEnemies = enemiesRef.current;
+
+    // Bullet vs Enemy collisions
+    currentBullets.forEach((bullet, bulletIndex) => {
+      currentEnemies.forEach((enemy, enemyIndex) => {
+        const distance = Math.sqrt(
+          Math.pow(bullet.x - enemy.x, 2) + Math.pow(bullet.y - enemy.y, 2)
+        );
+        const enemySize = enemy.type === 'asteroid' ? ASTEROID_SIZE : ENEMY_SIZE;
+
+        if (distance < enemySize / 2 + 10) {
+          // Collision detected
+          setBullets(prev => prev.filter((_, i) => i !== bulletIndex));
+          setEnemies(prev => prev.filter((_, i) => i !== enemyIndex));
+          setScore(prev => prev + (enemy.type === 'asteroid' ? 10 : 20));
+        }
+      });
+    });
+
+    // Player vs Enemy collisions
+    currentEnemies.forEach((enemy) => {
+      const distance = Math.sqrt(
+        Math.pow(playerPos.x - enemy.x, 2) + Math.pow(playerPos.y - enemy.y, 2)
+      );
+      const enemySize = enemy.type === 'asteroid' ? ASTEROID_SIZE : ENEMY_SIZE;
+
+      if (distance < PLAYER_SIZE / 2 + enemySize / 2) {
+        // Game over
+        setGameState('gameover');
+        if (score > highScore) {
+          setHighScore(score);
+          localStorage.setItem('spaceGameHighScore', score.toString());
+        }
+      }
+    });
+  };
+
+  const startGame = () => {
+    setGameState('playing');
+    setScore(0);
+    setBullets([]);
+    setEnemies([]);
+    setPlayerPos({
+      x: gameDimensions.width / 2,
+      y: gameDimensions.height - 100
+    });
+  };
+
+  const resetGame = () => {
+    setGameState('menu');
+    setScore(0);
+    setBullets([]);
+    setEnemies([]);
+  };
+
+  const pauseGame = () => {
+    setGameState(gameState === 'playing' ? 'paused' : 'playing');
+  };
+
+  // Render game objects
+  const renderBullets = () => {
+    return bullets.map(bullet => (
+      <Graphics
+        key={bullet.id}
+        draw={(g) => {
+          g.clear();
+          g.beginFill(0x00ff00);
+          g.drawRect(bullet.x - 2, bullet.y - 8, 4, 16);
+          g.endFill();
+        }}
+      />
+    ));
+  };
+
+  const renderEnemies = () => {
+    return enemies.map(enemy => {
+      const texture = enemy.type === 'asteroid' ? textures.asteroid : textures.enemy;
+      const size = enemy.type === 'asteroid' ? ASTEROID_SIZE : ENEMY_SIZE;
+      
+      if (!texture) return null;
+      
+      return (
+        <Sprite
+          key={enemy.id}
+          texture={texture}
+          x={enemy.x}
+          y={enemy.y}
+          width={size}
+          height={size}
+          rotation={enemy.rotation}
+          anchor={0.5}
+        />
+      );
+    });
+  };
+
+  const renderPlayer = () => {
+    if (!textures.player) return null;
+    
     return (
-        <div
-            style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                width: '100vw',
-                height: '100vh',
-                background: 'rgba(0, 0, 0, 0.9)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 9999,
-                padding: '20px',
-                boxSizing: 'border-box'
-            }}
-        >
-            <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-                <button
-                    onClick={onClose}
-                    style={{
-                        position: 'absolute',
-                        top: '20px',
-                        right: '20px',
-                        background: '#ff0000',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '8px',
-                        padding: '10px 20px',
-                        cursor: 'pointer',
-                        fontSize: '16px',
-                        fontWeight: 'bold'
-                    }}
-                >
-                    ✕ Close
-                </button>
+      <Sprite
+        texture={textures.player}
+        x={playerPos.x}
+        y={playerPos.y}
+        width={PLAYER_SIZE}
+        height={PLAYER_SIZE}
+        anchor={0.5}
+      />
+    );
+  };
 
-                {gameState === 'menu' && (
-                    <div style={{ textAlign: 'center', color: '#fff' }}>
-                        <h1 style={{ fontSize: '48px', marginBottom: '20px' }}>SPACE GAME</h1>
-                        <p style={{ fontSize: '18px', marginBottom: '30px' }}>
-                            Use A/D or Arrow Keys to move, SPACE to shoot
-                        </p>
-                        <button
-                            onClick={startGame}
-                            style={{
-                                background: '#00ff00',
-                                color: '#000',
-                                border: 'none',
-                                borderRadius: '8px',
-                                padding: '15px 40px',
-                                cursor: 'pointer',
-                                fontSize: '20px',
-                                fontWeight: 'bold'
-                            }}
-                        >
-                            START GAME
-                        </button>
-                    </div>
-                )}
-
-                {gameState === 'gameover' && (
-                    <div style={{ textAlign: 'center', color: '#fff' }}>
-                        <button
-                            onClick={restartGame}
-                            style={{
-                                background: '#00ff00',
-                                color: '#000',
-                                border: 'none',
-                                borderRadius: '8px',
-                                padding: '15px 40px',
-                                cursor: 'pointer',
-                                fontSize: '20px',
-                                fontWeight: 'bold',
-                                marginTop: '20px'
-                            }}
-                        >
-                            PLAY AGAIN
-                        </button>
-                    </div>
-                )}
-            </div>
-
-            <canvas
-                ref={canvasRef}
-                width={CANVAS_WIDTH}
-                height={CANVAS_HEIGHT}
+  return (
+    <div 
+      ref={containerRef}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: '#000',
+        zIndex: 9999,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}
+    >
+      <Stage
+        width={gameDimensions.width}
+        height={gameDimensions.height}
+        options={{
+          backgroundColor: 0x000011,
+          antialias: true
+        }}
+      >
+        <Container>
+          {gameState === 'playing' && (
+            <>
+              {renderPlayer()}
+              {renderBullets()}
+              {renderEnemies()}
+            </>
+          )}
+          
+          {gameState === 'menu' && (
+            <Container>
+              <Text
+                text="SPACE SHOOTER"
+                x={gameDimensions.width / 2}
+                y={gameDimensions.height / 2 - 100}
+                anchor={0.5}
                 style={{
-                    border: '2px solid #00ff00',
-                    borderRadius: '8px',
-                    maxWidth: '100%',
-                    maxHeight: 'calc(100vh - 200px)',
-                    width: 'auto',
-                    height: 'auto',
-                    touchAction: 'none'
+                  fontSize: 48,
+                  fill: 0x00ff00,
+                  fontWeight: 'bold'
                 }}
+              />
+              <Text
+                text="High Score: " + highScore
+                x={gameDimensions.width / 2}
+                y={gameDimensions.height / 2 - 40}
+                anchor={0.5}
+                style={{
+                  fontSize: 24,
+                  fill: 0xffffff
+                }}
+              />
+            </Container>
+          )}
+          
+          {gameState === 'paused' && (
+            <Text
+              text="PAUSED"
+              x={gameDimensions.width / 2}
+              y={gameDimensions.height / 2}
+              anchor={0.5}
+              style={{
+                fontSize: 48,
+                fill: 0xffff00,
+                fontWeight: 'bold'
+              }}
             />
-        </div>
-    )
-}
+          )}
+          
+          {gameState === 'gameover' && (
+            <Container>
+              <Text
+                text="GAME OVER"
+                x={gameDimensions.width / 2}
+                y={gameDimensions.height / 2 - 50}
+                anchor={0.5}
+                style={{
+                  fontSize: 48,
+                  fill: 0xff0000,
+                  fontWeight: 'bold'
+                }}
+              />
+              <Text
+                text={`Score: ${score}`}
+                x={gameDimensions.width / 2}
+                y={gameDimensions.height / 2 + 10}
+                anchor={0.5}
+                style={{
+                  fontSize: 24,
+                  fill: 0xffffff
+                }}
+              />
+            </Container>
+          )}
+          
+          {/* UI Elements */}
+          {gameState === 'playing' && (
+            <>
+              <Text
+                text={`Score: ${score}`}
+                x={20}
+                y={20}
+                style={{
+                  fontSize: 24,
+                  fill: 0x00ff00,
+                  fontWeight: 'bold'
+                }}
+              />
+              <Text
+                text={`High Score: ${highScore}`}
+                x={20}
+                y={50}
+                style={{
+                  fontSize: 18,
+                  fill: 0xffffff
+                }}
+              />
+            </>
+          )}
+        </Container>
+      </Stage>
 
+      {/* Game Controls */}
+      <div style={{
+        position: 'absolute',
+        bottom: 20,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        display: 'flex',
+        gap: '10px',
+        flexWrap: 'wrap',
+        justifyContent: 'center'
+      }}>
+        {gameState === 'menu' && (
+          <>
+            <button
+              onClick={startGame}
+              style={{
+                padding: '12px 24px',
+                fontSize: '18px',
+                fontWeight: 'bold',
+                backgroundColor: '#00ff00',
+                color: '#000',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                boxShadow: '0 0 20px #00ff00',
+                minWidth: '120px'
+              }}
+            >
+              START GAME
+            </button>
+            <button
+              onClick={onClose}
+              style={{
+                padding: '12px 24px',
+                fontSize: '18px',
+                fontWeight: 'bold',
+                backgroundColor: '#ff0000',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                boxShadow: '0 0 20px #ff0000',
+                minWidth: '120px'
+              }}
+            >
+              CLOSE
+            </button>
+          </>
+        )}
+        
+        {gameState === 'playing' && (
+          <button
+            onClick={pauseGame}
+            style={{
+              padding: '12px 24px',
+              fontSize: '18px',
+              fontWeight: 'bold',
+              backgroundColor: '#ffff00',
+              color: '#000',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              boxShadow: '0 0 20px #ffff00',
+              minWidth: '120px'
+            }}
+          >
+            PAUSE
+          </button>
+        )}
+        
+        {gameState === 'paused' && (
+          <>
+            <button
+              onClick={pauseGame}
+              style={{
+                padding: '12px 24px',
+                fontSize: '18px',
+                fontWeight: 'bold',
+                backgroundColor: '#00ff00',
+                color: '#000',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                boxShadow: '0 0 20px #00ff00',
+                minWidth: '120px'
+              }}
+            >
+              RESUME
+            </button>
+            <button
+              onClick={resetGame}
+              style={{
+                padding: '12px 24px',
+                fontSize: '18px',
+                fontWeight: 'bold',
+                backgroundColor: '#ff0000',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                boxShadow: '0 0 20px #ff0000',
+                minWidth: '120px'
+              }}
+            >
+              MENU
+            </button>
+          </>
+        )}
+        
+        {gameState === 'gameover' && (
+          <>
+            <button
+              onClick={startGame}
+              style={{
+                padding: '12px 24px',
+                fontSize: '18px',
+                fontWeight: 'bold',
+                backgroundColor: '#00ff00',
+                color: '#000',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                boxShadow: '0 0 20px #00ff00',
+                minWidth: '120px'
+              }}
+            >
+              PLAY AGAIN
+            </button>
+            <button
+              onClick={resetGame}
+              style={{
+                padding: '12px 24px',
+                fontSize: '18px',
+                fontWeight: 'bold',
+                backgroundColor: '#ff0000',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                boxShadow: '0 0 20px #ff0000',
+                minWidth: '120px'
+              }}
+            >
+              MENU
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* Instructions */}
+      <div style={{
+        position: 'absolute',
+        top: 20,
+        right: 20,
+        color: '#ffffff',
+        fontSize: '14px',
+        textAlign: 'right',
+        maxWidth: '200px'
+      }}>
+        {gameState === 'playing' && (
+          <div>
+            <div>WASD or Arrow Keys to move</div>
+            <div>Space or Tap to shoot</div>
+            <div>P to pause</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default SpaceGame;

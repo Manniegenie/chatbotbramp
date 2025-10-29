@@ -9,8 +9,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@pixi/react": "^1.0.0",
     "crypto-js": "^4.2.0",
     "framer-motion": "^12.23.24",
+    "pixi.js": "^8.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-webcam": "^7.2.0",
