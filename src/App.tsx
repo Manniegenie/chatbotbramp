@@ -8,7 +8,6 @@ import { authFetch, getAuthState, setupAutoLogoutTimer, clearAuth } from './lib/
 import { useInactivityTimer } from './lib/useInactivityTimer'
 import SellModal from './sell'
 import WallpaperSlideshow from './WallpaperSlideshow'
-// Game feature is disabled on main
 // Import logo from assets
 import BrampLogo from './assets/logo.png'
 import SolanaIcon from './assets/solana.png'
@@ -273,7 +272,6 @@ export default function App() {
   const [showSell, setShowSell] = useState(false)
   const [openSellAfterAuth, setOpenSellAfterAuth] = useState(false)
   const [shouldOpenSell, setShouldOpenSell] = useState(false)
-  // const [showGame, setShowGame] = useState(false)
 
   const [auth, setAuth] = useState<SignInResult | null>(() => {
     const authState = getAuthState()
@@ -526,10 +524,6 @@ export default function App() {
     console.log('KYC button clicked - functionality disabled')
   }
 
-  // function handleGameClick(event?: React.MouseEvent) {
-  //   event?.preventDefault()
-  //   setShowGame(true)
-  // }
 
 
   function echoFromModalToChat(text: string) {
@@ -869,7 +863,6 @@ export default function App() {
               <button className="btn" onClick={handleKycClick} style={{ opacity: 0.6, cursor: 'not-allowed' }}>
                 KYC
               </button>
-              {/* Game button disabled on main */}
               <button className="btn" onClick={signOut}>
                 Sign out
               </button>
@@ -1156,8 +1149,6 @@ export default function App() {
         )}
 
         <SellModal open={showSell} onClose={() => setShowSell(false)} onChatEcho={echoFromModalToChat} onStartInteraction={() => setShowCenteredInput(false)} />
-
-        {/* Game overlay disabled on main */}
 
         <footer className="footer">
           <div className="footer-links">
