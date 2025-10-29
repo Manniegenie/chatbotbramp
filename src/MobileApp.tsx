@@ -8,6 +8,7 @@ import MobileSignIn, { SignInResult } from './MobileSignIn'
 import MobileSignUp, { SignUpResult } from './MobileSignUp'
 import MobileSell from './MobileSell'
 import WallpaperSlideshow from './WallpaperSlideshow'
+import SpaceGame from './game'
 import BrampLogo from './assets/logo.png'
 import SolanaIcon from './assets/solana.png'
 import TetherIcon from './assets/tether.png'
@@ -250,6 +251,7 @@ export default function MobileApp() {
   const [showMenu, setShowMenu] = useState(false)
   const [openSellAfterAuth, setOpenSellAfterAuth] = useState(false)
   const [shouldOpenSell, setShouldOpenSell] = useState(false)
+  const [showGame, setShowGame] = useState(false)
 
   const [auth, setAuth] = useState<SignInResult | null>(() => {
     const authState = getAuthState()
@@ -557,6 +559,12 @@ export default function MobileApp() {
     setShowMenu(false)
     // KYC functionality disabled for now
     console.log('KYC button clicked - functionality disabled')
+  }
+
+  function handleGameClick(event?: React.MouseEvent) {
+    event?.preventDefault()
+    setShowMenu(false)
+    setShowGame(true)
   }
 
   function echoFromModalToChat(text: string) {
@@ -872,6 +880,14 @@ export default function MobileApp() {
                   KYC
                 </button>
                 <button
+                  className="mobile-sell-btn"
+                  onClick={handleGameClick}
+                  style={{ marginLeft: '8px' }}
+                  aria-label="Game"
+                >
+                  Game
+                </button>
+                <button
                   className="mobile-menu-btn"
                   onClick={() => setShowMenu(!showMenu)}
                   aria-label="Menu"
@@ -960,6 +976,8 @@ export default function MobileApp() {
         onChatEcho={echoFromModalToChat}
         onStartInteraction={() => setShowCenteredInput(false)}
       />
+
+      {showGame && <SpaceGame onClose={() => setShowGame(false)} />}
 
       <footer className="mobile-footer">
         <div className="mobile-footer-links-bottom">
