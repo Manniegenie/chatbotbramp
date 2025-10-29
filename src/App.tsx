@@ -822,7 +822,7 @@ export default function App() {
                   e.currentTarget.style.display = 'none'
                 }}
               />
-              <h1 className="brand-text">ChatBramp AI</h1>
+              <h1 className="brand-text">Bramp</h1>
             </div>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div className="ticker-wrap" aria-live="polite" aria-atomic="true">
@@ -1002,16 +1002,13 @@ export default function App() {
               <div className="centered-input-desktop">
                 <div className="centered-form-desktop">
                   <h2 style={{ 
-                    textAlign: 'center', 
-                    marginBottom: '16px', 
-                    color: 'var(--txt)', 
-                    fontSize: '24px', 
-                    fontWeight: '600',
                     position: 'absolute',
                     left: '-9999px',
+                    top: '-9999px',
                     width: '1px',
                     height: '1px',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    visibility: 'hidden'
                   }}>
                     Secure Crypto to NGN Exchange
                   </h2>

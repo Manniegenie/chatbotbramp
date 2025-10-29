@@ -692,16 +692,13 @@ export default function MobileApp() {
           <div className="mobile-centered-input">
             <div className="mobile-centered-form">
               <h2 style={{ 
-                textAlign: 'center', 
-                marginBottom: '16px', 
-                color: 'var(--txt)', 
-                fontSize: '20px', 
-                fontWeight: '600',
                 position: 'absolute',
                 left: '-9999px',
+                top: '-9999px',
                 width: '1px',
                 height: '1px',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                visibility: 'hidden'
               }}>
                 Secure Crypto to NGN Exchange
               </h2>
@@ -839,7 +836,7 @@ export default function MobileApp() {
                 e.currentTarget.style.display = 'none'
               }}
             />
-            <h1 className="mobile-brand-text">ChatBramp AI</h1>
+            <h1 className="mobile-brand-text">Bramp</h1>
           </div>
 
           <div className="mobile-nav-buttons">
