@@ -364,10 +364,6 @@ export default function App() {
     }
   })
 
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, loading, showSignIn, showSignUp, showSell])
-
 
   /* ------------------- Price ticker: fetch & formatting ------------------- */
   const TICKER_SYMBOLS = ['BTC', 'ETH', 'USDT', 'USDC', 'BNB', 'SOL', 'NGNB']
@@ -641,6 +637,31 @@ export default function App() {
             }
           }
 
+          /* Disable scrolling on the page */
+          .page {
+            overflow: hidden;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+          }
+
+          /* Disable scrolling on messages container */
+          .messages {
+            overflow: hidden;
+            height: calc(100vh - 200px);
+            max-height: calc(100vh - 200px);
+          }
+
+          /* Ensure no scrollbars anywhere */
+          html, body {
+            overflow: hidden;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+          }
 
           /* Animation for spinner */
           @keyframes spin {
