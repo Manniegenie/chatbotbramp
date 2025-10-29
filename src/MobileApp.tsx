@@ -481,24 +481,25 @@ export default function MobileApp() {
 
   // Load Tawk.to widget (hidden by default)
   useEffect(() => {
-    // Check if Tawk.to is already loaded
     if (typeof window !== 'undefined' && !window.Tawk_API) {
       window.Tawk_API = window.Tawk_API || {}
       window.Tawk_LoadStart = new Date()
 
-      // Hide widget by default
+      // Set up widget control functions
       window.Tawk_API.hideWidget = function () {
         if (window.Tawk_API && window.Tawk_API.hideWidget) {
           window.Tawk_API.hideWidget()
         }
       }
 
-      // Show widget function
       window.Tawk_API.showWidget = function () {
         if (window.Tawk_API && window.Tawk_API.showWidget) {
           window.Tawk_API.showWidget()
         }
       }
+
+      // Set widget to be hidden by default
+      window.Tawk_API.hideWidget()
 
       const script = document.createElement('script')
       script.async = true
@@ -509,16 +510,13 @@ export default function MobileApp() {
       const firstScript = document.getElementsByTagName('script')[0]
       firstScript.parentNode?.insertBefore(script, firstScript)
 
-      console.log('Tawk.to widget loading (hidden by default)...')
-
-      // Hide widget after it loads
+      // Ensure widget is hidden after loading
       script.onload = () => {
         setTimeout(() => {
           if (window.Tawk_API && window.Tawk_API.hideWidget) {
             window.Tawk_API.hideWidget()
-            console.log('Tawk.to widget hidden')
           }
-        }, 2000) // Wait 2 seconds for widget to fully load
+        }, 1000)
       }
     }
   }, [])
