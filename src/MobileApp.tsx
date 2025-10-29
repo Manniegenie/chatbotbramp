@@ -691,7 +691,18 @@ export default function MobileApp() {
         {showCenteredInput ? (
           <div className="mobile-centered-input">
             <div className="mobile-centered-form">
-              <h2 style={{ textAlign: 'center', marginBottom: '16px', color: 'var(--txt)', fontSize: '20px', fontWeight: '600' }}>
+              <h2 style={{ 
+                textAlign: 'center', 
+                marginBottom: '16px', 
+                color: 'var(--txt)', 
+                fontSize: '20px', 
+                fontWeight: '600',
+                position: 'absolute',
+                left: '-9999px',
+                width: '1px',
+                height: '1px',
+                overflow: 'hidden'
+              }}>
                 Secure Crypto to NGN Exchange
               </h2>
               <div style={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
