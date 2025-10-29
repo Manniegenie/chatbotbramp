@@ -266,7 +266,6 @@ export default function App() {
 
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [isInitialLoading, setIsInitialLoading] = useState(true)
   const [showCenteredInput, setShowCenteredInput] = useState(true)
 
   const [showSignIn, setShowSignIn] = useState(false)
@@ -320,16 +319,8 @@ export default function App() {
   // keep a loading flag internally but DO NOT display loading text in UI
   const [tickerLoading, setTickerLoading] = useState<boolean>(false)
 
-  // Handle initial loading animation
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsInitialLoading(false)
-    }, 1500) // Show loading for 1.5 seconds
 
-    return () => clearTimeout(timer)
-  }, [])
-
-  // Scrub sensitive URL params on load and setup token refresh timer
+  // Clean URL on load (background operation)
   useEffect(() => {
     try {
       const url = new URL(window.location.href)
@@ -373,9 +364,6 @@ export default function App() {
     }
   })
 
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, loading, showSignIn, showSignUp, showSell])
 
   /* ------------------- Price ticker: fetch & formatting ------------------- */
   const TICKER_SYMBOLS = ['BTC', 'ETH', 'USDT', 'USDC', 'BNB', 'SOL', 'NGNB']
@@ -432,21 +420,18 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Load Tawk.to widget (hidden by default)
+  // Load Tawk.to widget (background operation)
   useEffect(() => {
-    // Check if Tawk.to is already loaded
     if (typeof window !== 'undefined' && !window.Tawk_API) {
       window.Tawk_API = window.Tawk_API || {}
       window.Tawk_LoadStart = new Date()
 
-      // Hide widget by default
       window.Tawk_API.hideWidget = function () {
         if (window.Tawk_API && window.Tawk_API.hideWidget) {
           window.Tawk_API.hideWidget()
         }
       }
 
-      // Show widget function
       window.Tawk_API.showWidget = function () {
         if (window.Tawk_API && window.Tawk_API.showWidget) {
           window.Tawk_API.showWidget()
@@ -462,16 +447,10 @@ export default function App() {
       const firstScript = document.getElementsByTagName('script')[0]
       firstScript.parentNode?.insertBefore(script, firstScript)
 
-      console.log('Tawk.to widget loading (hidden by default)...')
-
-      // Hide widget after it loads
       script.onload = () => {
-        setTimeout(() => {
-          if (window.Tawk_API && window.Tawk_API.hideWidget) {
-            window.Tawk_API.hideWidget()
-            console.log('Tawk.to widget hidden')
-          }
-        }, 2000) // Wait 2 seconds for widget to fully load
+        if (window.Tawk_API && window.Tawk_API.hideWidget) {
+          window.Tawk_API.hideWidget()
+        }
       }
     }
   }, [])
@@ -621,86 +600,6 @@ export default function App() {
     }
   }
 
-  // Show loading screen during initial load
-  if (isInitialLoading) {
-    return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'linear-gradient(135deg, #0a0b0f 0%, #1a1d23 100%)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999,
-        color: 'white'
-      }}>
-        {/* Logo/Brand */}
-        <div style={{
-          width: '80px',
-          height: '80px',
-          borderRadius: '20px',
-          background: 'linear-gradient(135deg, #007337 0%, #00a847 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: '24px',
-          animation: 'pulse 2s ease-in-out infinite'
-        }}>
-          <span style={{ fontSize: '32px' }}>🚀</span>
-        </div>
-
-        {/* Loading text */}
-        <h1 style={{
-          fontSize: '24px',
-          fontWeight: '700',
-          margin: '0 0 8px 0',
-          background: 'linear-gradient(135deg, #007337 0%, #00a847 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text'
-        }}>
-          Bramp
-        </h1>
-
-        <p style={{
-          fontSize: '16px',
-          color: '#a0a0a0',
-          margin: '0 0 32px 0',
-          textAlign: 'center'
-        }}>
-          Loading your crypto experience...
-        </p>
-
-        {/* Loading spinner */}
-        <div style={{
-          width: '40px',
-          height: '40px',
-          border: '3px solid rgba(255, 255, 255, 0.1)',
-          borderTop: '3px solid #007337',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }} />
-
-        {/* CSS Animations */}
-        <style>
-          {`
-            @keyframes pulse {
-              0%, 100% { transform: scale(1); }
-              50% { transform: scale(1.05); }
-            }
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          `}
-        </style>
-      </div>
-    )
-  }
 
   return (
     <>
@@ -729,6 +628,32 @@ export default function App() {
             .footer {
               padding-bottom: max(14px, calc(14px + env(safe-area-inset-bottom))) !important;
             }
+          }
+
+          /* Disable scrolling on the page */
+          .page {
+            overflow: hidden;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+          }
+
+          /* Disable scrolling on messages container */
+          .messages {
+            overflow: hidden;
+            height: calc(100vh - 200px);
+            max-height: calc(100vh - 200px);
+          }
+
+          /* Ensure no scrollbars anywhere */
+          html, body {
+            overflow: hidden;
+            height: 100%;
+            margin: 0;
+            padding: 0;
           }
 
           /* Animation for spinner */
@@ -1277,28 +1202,11 @@ export default function App() {
             <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
             <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
             <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
-            <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
+            <a href="/terms.html" target="_blank" rel="noopener noreferrer">Terms</a>
           </div>
         </footer>
       </div>
 
-      {/* Tawk.to Support Widget - Placed before closing body tag */}
-      <script
-        type="text/javascript"
-        dangerouslySetInnerHTML={{
-          __html: `
-            var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
-            (function(){
-            var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
-            s1.async=true;
-            s1.src='https://embed.tawk.to/68ff552f1a60b619594aac17/1j8im9gmc';
-            s1.charset='UTF-8';
-            s1.setAttribute('crossorigin','*');
-            s0.parentNode.insertBefore(s1,s0);
-            })();
-          `
-        }}
-      />
     </>
   )
 }
