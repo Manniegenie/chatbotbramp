@@ -691,6 +691,9 @@ export default function MobileApp() {
         {showCenteredInput ? (
           <div className="mobile-centered-input">
             <div className="mobile-centered-form">
+              <h2 style={{ textAlign: 'center', marginBottom: '16px', color: 'var(--txt)', fontSize: '20px', fontWeight: '600' }}>
+                Secure Crypto to NGN Exchange
+              </h2>
               <div style={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <AnimatePresence mode="wait">
                   <motion.img
@@ -825,7 +828,7 @@ export default function MobileApp() {
                 e.currentTarget.style.display = 'none'
               }}
             />
-            <span className="mobile-brand-text">Bramp</span>
+            <h1 className="mobile-brand-text">ChatBramp AI</h1>
           </div>
 
           <div className="mobile-nav-buttons">
