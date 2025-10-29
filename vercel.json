@@ -1,0 +1,30 @@
+{
+  "redirects": [
+    {
+      "source": "https://chatbramp.com/(.*)",
+      "destination": "https://www.chatbramp.com/$1",
+      "permanent": true
+    },
+    {
+      "source": "http://www.chatbramp.com/(.*)",
+      "destination": "https://www.chatbramp.com/$1",
+      "permanent": true
+    },
+    {
+      "source": "http://chatbramp.com/(.*)",
+      "destination": "https://www.chatbramp.com/$1",
+      "permanent": true
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "index, follow"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+# Apache redirects for canonical www.chatbramp.com
+RewriteEngine On
+
+# Force HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://www.chatbramp.com/$1 [R=301,L]
+
+# Force www
+RewriteCond %{HTTP_HOST} ^chatbramp\.com$ [NC]
+RewriteRule ^(.*)$ https://www.chatbramp.com/$1 [R=301,L]
+
+# Remove trailing slash (optional)
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} (.+)/$
+RewriteRule ^ %1 [R=301,L]
+
+# SPA fallback
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]

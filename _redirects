@@ -1,0 +1,7 @@
+# Netlify redirects - canonical to www.chatbramp.com
+https://chatbramp.com/* https://www.chatbramp.com/:splat 301!
+http://www.chatbramp.com/* https://www.chatbramp.com/:splat 301!
+http://chatbramp.com/* https://www.chatbramp.com/:splat 301!
+
+# Handle trailing slash consistently
+/* /index.html 200
