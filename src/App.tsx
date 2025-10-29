@@ -1001,7 +1001,7 @@ export default function App() {
             {showCenteredInput ? (
               <div className="centered-input-desktop">
                 <div className="centered-form-desktop">
-                  <h2 style={{ 
+                  <h2 style={{
                     position: 'absolute',
                     left: '-9999px',
                     top: '-9999px',
@@ -1157,6 +1157,7 @@ export default function App() {
             <a href="/terms.html" target="_blank" rel="noopener noreferrer">Terms</a>
             <a href="https://www.youtube.com/@Chatbramp" target="_blank" rel="noopener noreferrer">YouTube</a>
             <a href="https://x.com/Chatbramp" target="_blank" rel="noopener noreferrer">Twitter</a>
+            <a href="https://medium.com/@chatbramp" target="_blank" rel="noopener noreferrer">Medium</a>
           </div>
         </footer>
       </div>

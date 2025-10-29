@@ -691,7 +691,7 @@ export default function MobileApp() {
         {showCenteredInput ? (
           <div className="mobile-centered-input">
             <div className="mobile-centered-form">
-              <h2 style={{ 
+              <h2 style={{
                 position: 'absolute',
                 left: '-9999px',
                 top: '-9999px',
@@ -969,6 +969,7 @@ export default function MobileApp() {
           <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
           <a href="https://www.youtube.com/@Chatbramp" target="_blank" rel="noopener noreferrer">YouTube</a>
           <a href="https://x.com/Chatbramp" target="_blank" rel="noopener noreferrer">Twitter</a>
+          <a href="https://medium.com/@chatbramp" target="_blank" rel="noopener noreferrer">Medium</a>
         </div>
       </footer>
 
