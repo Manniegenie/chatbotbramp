@@ -836,7 +836,7 @@ export default function MobileApp() {
                 e.currentTarget.style.display = 'none'
               }}
             />
-            <h1 className="mobile-brand-text">Bramp</h1>
+            <h1 className="mobile-brand-text">ChatBramp AI</h1>
           </div>
 
           <div className="mobile-nav-buttons">

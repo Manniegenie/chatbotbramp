@@ -822,7 +822,7 @@ export default function App() {
                   e.currentTarget.style.display = 'none'
                 }}
               />
-              <h1 className="brand-text">Bramp</h1>
+              <h1 className="brand-text">ChatBramp AI</h1>
             </div>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div className="ticker-wrap" aria-live="polite" aria-atomic="true">
