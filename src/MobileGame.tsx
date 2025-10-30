@@ -230,7 +230,7 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
                         <div className="mobile-wam-overlay" style={{ width: gridW, height: gridH }}>
                             {gameState === 'menu' && (
                                 <>
-                                    <div className="mobile-wam-title">WHACK-A-MOLE!</div>
+                                    <div className="mobile-wam-title">Space Watch</div>
                                     <div style={{ fontWeight: 400, fontSize: 18, color: '#fff', marginBottom: 20, textShadow: '0 1px 8px #121' }}>Hit as many as you can in 60s!</div>
                                     <button
                                         onClick={startGame}
