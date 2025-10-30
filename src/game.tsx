@@ -30,7 +30,7 @@ export default function WhackAMole({ onClose }: { onClose?: () => void }) {
   const [highScore, setHighScore] = useState(0);
   const [moleIdx, setMoleIdx] = useState<number | null>(null);
   const [fakeDown, setFakeDown] = useState(false);
-  const timeout = useRef<NodeJS.Timeout | null>(null);
+  const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const difficulty = useRef(1);
   const playing = useRef(false);
 
