@@ -841,9 +841,9 @@ export default function MobileApp() {
 
   // Normal (non-game) mobile app UI
   return (
-    <div className="mobile-scale-90">
-      <div className="mobile-page">
-        <WallpaperSlideshow />
+    <div className="mobile-page">
+      <WallpaperSlideshow />
+      <div className="mobile-scale-90">
         <header className="mobile-header">
           <div className="mobile-header-top">
             <div className="mobile-brand">
@@ -969,7 +969,7 @@ export default function MobileApp() {
                 Terms of Service
               </a>
               <div className="mobile-menu-divider"></div>
-              <div className="mobile-menu-copyright">© 2025 Bramp Africa Limited</div>
+              <div className="mobile-menuopyright">© 2025 Bramp Africa Limited</div>
             </div>
           </div>
         )}
