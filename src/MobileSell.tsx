@@ -19,6 +19,7 @@ type InitiateSellRes = {
     memo?: string | null
     token: string
     network: string
+    amount?: number
   }
   quote: {
     rate: number
@@ -150,7 +151,10 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
   // Step 1 (Start Sell)
   const [token, setToken] = useState<TokenSym>('USDT')
   const [network, setNetwork] = useState(NETWORKS_BY_TOKEN['USDT'][0].code)
-  // Amount/currency removed — address-based flow
+  // Optional estimation inputs
+  const [currency, setCurrency] = useState<'TOKEN' | 'NGN'>('TOKEN')
+  const [amount, setAmount] = useState<string>('')
+  const [nairaAmount, setNairaAmount] = useState<string>('')
   const [initLoading, setInitLoading] = useState(false)
   const [initError, setInitError] = useState<string | null>(null)
   const [initData, setInitData] = useState<InitiateSellRes | null>(null)
@@ -198,7 +202,9 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
     setBanksLoading(false)
     setBanksError(null)
     setBankOptions([])
-
+    setCurrency('TOKEN')
+    setAmount('')
+    setNairaAmount('')
     banksFetchedRef.current = false
   }, [open])
 
@@ -305,7 +311,14 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
       const res = await fetch(`${API_BASE}/sell/initiate`, {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify({ token, network }),
+        body: JSON.stringify({
+          token,
+          network,
+          ...(currency === 'TOKEN' && amount && !isNaN(+amount) && +amount > 0 ? { sellAmount: +amount, currency } : {}),
+          ...(currency === 'NGN' && nairaAmount && !isNaN(+nairaAmount.replace(/,/g, '')) && +nairaAmount.replace(/,/g, '') > 0
+            ? { sellAmount: +nairaAmount.replace(/,/g, ''), currency }
+            : {})
+        }),
       })
       const data: InitiateSellRes = await res.json()
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
@@ -495,7 +508,54 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                   </label>
                 </div>
 
-                {/* Amount entry removed — user will send any amount to their address */}
+                {/* Optional Currency and Amount */}
+                <div className="mobile-sell-row">
+                  <label className="mobile-sell-input-wrap">
+                    <span className="mobile-sell-label">Currency <span style={{ fontSize: '10px', opacity: 0.7 }}>▼</span></span>
+                    <select
+                      className="mobile-sell-input"
+                      value={currency}
+                      onChange={e => setCurrency(e.target.value as 'TOKEN' | 'NGN')}
+                    >
+                      <option value="TOKEN">{token}</option>
+                      <option value="NGN">NGN</option>
+                    </select>
+                  </label>
+
+                  {currency === 'TOKEN' ? (
+                    <label className="mobile-sell-input-wrap">
+                      <span className="mobile-sell-label">Amount ({token})</span>
+                      <input
+                        className="mobile-sell-input"
+                        inputMode="decimal"
+                        placeholder={`e.g. 100`}
+                        value={amount}
+                        onChange={e => {
+                          setAmount(e.target.value)
+                          onStartInteraction?.()
+                        }}
+                      />
+                    </label>
+                  ) : (
+                    <label className="mobile-sell-input-wrap">
+                      <span className="mobile-sell-label">Amount (NGN)</span>
+                      <input
+                        className="mobile-sell-input"
+                        inputMode="decimal"
+                        placeholder="e.g. 50,000"
+                        value={nairaAmount}
+                        onChange={e => {
+                          const cleanValue = e.target.value.replace(/[^\d.]/g, '')
+                          setNairaAmount(cleanValue)
+                        }}
+                        onBlur={e => {
+                          const num = parseFloat(e.target.value)
+                          if (!isNaN(num) && num > 0) setNairaAmount(num.toLocaleString('en-US'))
+                        }}
+                      />
+                    </label>
+                  )}
+                </div>
 
                 <div className="mobile-sell-button-row">
                   <button className="mobile-sell-button primary" disabled={initLoading}>
@@ -520,6 +580,22 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                   <div className="mobile-sell-card">
                     <h3 className="mobile-sell-card-title">Sell Summary</h3>
                     <div className="mobile-sell-grid">
+                      {!!(initData.deposit.amount && initData.deposit.amount > 0) && (
+                        <div className="mobile-sell-grid-item">
+                          <div className="mobile-sell-key">Amount to Send</div>
+                          <div className="mobile-sell-value">
+                            {prettyAmount(initData.deposit.amount!)} {initData.deposit.token}
+                          </div>
+                        </div>
+                      )}
+                      {!!(initData.quote.receiveAmount && initData.quote.receiveAmount > 0) && (
+                        <div className="mobile-sell-grid-item">
+                          <div className="mobile-sell-key">You Receive</div>
+                          <div className="mobile-sell-value">
+                            {prettyNgn(initData.quote.receiveAmount)} ({initData.quote.receiveCurrency})
+                          </div>
+                        </div>
+                      )}
                       <div className="mobile-sell-grid-item">
                         <div className="mobile-sell-key">Your Address</div>
                         <div className="mobile-sell-value mono wrap">{initData.deposit.address}</div>
