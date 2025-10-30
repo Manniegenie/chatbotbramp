@@ -559,6 +559,20 @@ export default function App() {
     );
   }
 
+  if (showSell) {
+    return (
+      <div className="page" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+        <WallpaperSlideshow />
+        <SellModal
+          open={showSell}
+          onClose={() => setShowSell(false)}
+          onChatEcho={echoFromModalToChat}
+          onStartInteraction={() => setShowCenteredInput(false)}
+        />
+      </div>
+    );
+  }
+
   return (
     <>
       <style>

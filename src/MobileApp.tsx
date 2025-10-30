@@ -839,6 +839,20 @@ export default function MobileApp() {
     );
   }
 
+  if (showSell) {
+    return (
+      <>
+        <WallpaperSlideshow />
+        <MobileSell
+          open={showSell}
+          onClose={() => setShowSell(false)}
+          onChatEcho={echoFromModalToChat}
+          onStartInteraction={() => setShowCenteredInput(false)}
+        />
+      </>
+    );
+  }
+
   // Normal (non-game) mobile app UI
   return (
     <div className="mobile-page">
@@ -875,7 +889,7 @@ export default function MobileApp() {
             ) : (
               <>
                 <button
-                  className="mobile-sell-btn"
+                  className="mobile-sell-btn mobile-sell-btn--no-border"
                   onClick={handleSellClick}
                   aria-label="Pay Crypto"
                 >

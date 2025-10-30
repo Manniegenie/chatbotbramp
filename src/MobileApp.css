@@ -252,6 +252,10 @@ a {
   transition: all 0.2s ease;
 }
 
+.mobile-sell-btn.mobile-sell-btn--no-border {
+  border: none;
+}
+
 .mobile-sell-btn:active {
   transform: scale(0.95);
 }
