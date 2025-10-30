@@ -115,9 +115,9 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
                 position: 'relative',
                 zIndex: 2,
             }}>
-                <div className="mobile-wam-scorebar">
+                <div className="mobile-wam-scorebar" style={{ justifyContent: 'flex-start', gap: 18, position: 'absolute', top: 16, left: 18, zIndex: 21 }}>
                     <div>Score: {score}</div>
-                    <div style={{ color: '#9ef57c', textShadow: '0 0 6px #222' }}>High: {highScore}</div>
+                    <div style={{ color: '#9ef57c' }}>High: {highScore}</div>
                 </div>
                 <div
                     className="mobile-wam-grid"
