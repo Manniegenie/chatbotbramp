@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 const GRID_ROWS = 3;
 const GRID_COLS = 4;
 const HOLE_SIZE = 150;
-const MOLE_POP_TIME = 720;
+const MOLE_POP_TIME = 670;
 
 function useWindowSize() {
   const [size, setSize] = useState({ width: window.innerWidth, height: window.innerHeight });
@@ -41,7 +41,7 @@ export default function WhackAMole({ onClose }: { onClose?: () => void }) {
     const idx = Math.floor(Math.random() * totalHoles);
     setMoleIdx(idx);
     timeout.current = setTimeout(nextMole, MOLE_POP_TIME / difficulty.current);
-    if (difficulty.current < 1.9) difficulty.current += 0.007;
+    if (difficulty.current < 2.05) difficulty.current += 0.008;
   }, [totalHoles]);
 
   useEffect(() => {
@@ -65,7 +65,7 @@ export default function WhackAMole({ onClose }: { onClose?: () => void }) {
     setScore((s) => s + 1);
     setMoleIdx(null);
     if (timeout.current) clearTimeout(timeout.current);
-    setTimeout(nextMole, 130);
+    setTimeout(nextMole, 110);
   };
 
   useEffect(() => {

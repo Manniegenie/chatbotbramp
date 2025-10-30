@@ -10,7 +10,7 @@ import AstronautImg from './assets/astronout.png';
 const GRID_ROWS = 3;
 const GRID_COLS = 4;
 // const HOLE_SIZE = 88; // px, fits mobile
-const MOLE_POP_TIME = 720;
+const MOLE_POP_TIME = 670;
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000';
 
@@ -58,7 +58,7 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
         const idx = Math.floor(Math.random() * totalHoles);
         setMoleIdx(idx);
         timeout.current = setTimeout(nextMole, MOLE_POP_TIME / difficulty.current);
-        if (difficulty.current < 1.9) difficulty.current += 0.007;
+        if (difficulty.current < 2.05) difficulty.current += 0.008;
     }, [totalHoles]);
 
     useEffect(() => {
@@ -87,7 +87,7 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
         // fire-and-forget backend update
         postScoreUpdate();
         if (timeout.current) clearTimeout(timeout.current);
-        setTimeout(nextMole, 130);
+        setTimeout(nextMole, 110);
     };
 
     useEffect(() => {
