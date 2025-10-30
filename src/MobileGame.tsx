@@ -122,7 +122,7 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
                 left: 0,
                 width: '100vw',
                 height: '100vh',
-                background: 'transparent',
+                background: 'rgba(0, 0, 0, 0.5)',
                 zIndex: 2000,
                 display: 'flex',
                 alignItems: 'center',

@@ -396,7 +396,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
       left: 0,
       width: '100vw',
       height: '100vh',
-      background: 'transparent',
+      background: 'rgba(0, 0, 0, 0.5)',
       zIndex: 1000,
       display: 'flex',
       alignItems: 'flex-start',
@@ -406,7 +406,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
       touchAction: 'none'
     }} onClick={onClose}>
       <div style={{
-        maxWidth: '460px',
+        maxWidth: '420px',
         width: '100%',
         maxHeight: '80vh',
         marginTop: '2vh',
@@ -461,7 +461,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
         </div>
 
         {/* Body */}
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0, maxWidth: '92%', margin: '0 auto' }}>
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           {/* STEP 1 — Start a Payment */}
           {step === 1 && (
             <div className="mobile-sell-section">

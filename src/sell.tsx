@@ -202,7 +202,7 @@ const overlayStyle: React.CSSProperties = {
   left: 0,
   width: '100vw',
   height: '100vh',
-  background: 'transparent',
+  background: 'rgba(0, 0, 0, 0.5)',
   zIndex: 1000,
   display: 'flex',
   alignItems: 'flex-start',

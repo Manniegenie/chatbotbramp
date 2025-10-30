@@ -152,7 +152,7 @@ export default function MobileSignIn({
       left: 0,
       width: '100vw',
       height: '100vh',
-      background: 'transparent',
+      background: 'rgba(0, 0, 0, 0.5)',
       zIndex: 1000,
       display: 'flex',
       alignItems: 'flex-start',
@@ -162,7 +162,7 @@ export default function MobileSignIn({
       touchAction: 'none'
     }}>
       <div style={{
-        maxWidth: '400px',
+        maxWidth: '359px',
         width: '100%',
         maxHeight: '64.125vh',
         marginTop: '3.42vh',
@@ -184,7 +184,7 @@ export default function MobileSignIn({
           </p>
         </div>
 
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0, maxWidth: '92%', margin: '0 auto' }}>
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <form onSubmit={submit} className="mobile-auth-form">
             <label className="mobile-auth-input-wrap">
               <span className="mobile-auth-label">Phone number</span>
