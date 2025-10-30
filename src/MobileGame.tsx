@@ -81,6 +81,8 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
         setTimeout(() => setFakeDown(false), 75);
         setScore((s) => s + 1);
         setMoleIdx(null);
+        // Light haptic feedback on supported devices
+        try { (navigator as any)?.vibrate?.(35); } catch { /* noop */ }
         // trigger explosion animation for this hole
         setExplosions((prev) => [...prev, idx]);
         setTimeout(() => setExplosions((prev) => prev.filter((i) => i !== idx)), 300);
