@@ -887,13 +887,13 @@ export default function App() {
               <span style={{ color: 'var(--muted)', fontSize: 13 }}>
                 {auth.user?.username ? `${auth.user.username} 💚` : 'User 💚'}
               </span>
-              <button className="btn" onClick={handleSellClick}>
+              <button className="btn" onClick={handleSellClick} style={{ color: '#fff' }}>
                 Pay
               </button>
               <button className="btn" onClick={handleKycClick} style={{ opacity: 0.6, cursor: 'not-allowed' }}>
                 KYC
               </button>
-              <button className="btn" onClick={handleGameClick}>
+              <button className="btn" onClick={handleGameClick} style={{ color: '#fff' }}>
                 Game
               </button>
               <button className="btn" onClick={signOut}>
