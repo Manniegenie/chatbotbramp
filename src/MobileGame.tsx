@@ -132,7 +132,7 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
                 touchAction: 'none',
                 minHeight: '100vh',
             }}
-            onClick={onClose}
+
         >
             {/* REAL NAV BAR (like in MobileApp.tsx) */}
             <div className="mobile-header" style={{ zIndex: 2500, position: 'fixed', top: 0, left: 0, width: '100vw', background: 'transparent', boxShadow: 'none' }}>
@@ -158,109 +158,89 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
                     >✕</button>
                 </div>
             </div>
-            {/* Modal card and grid/overlay remain unchanged below */}
-            <div
-                style={{
-                    maxWidth: width >= 1200 ? '760px' : width >= 1024 ? '720px' : width >= 768 ? '600px' : '500px',
-                    width: '100%',
-                    maxHeight: '92vh',
-                    background: 'transparent',
-                    border: 'none',
-                    borderRadius: '14px',
-                    padding: 0,
-                    boxShadow: 'none',
-                    overflow: 'hidden',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    position: 'relative',
-                    transform: 'translateY(-30%)',
-                }}
-                onClick={e => e.stopPropagation()}
-            >
-                <div style={{ width: '100%', position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <div
-                        className="mobile-wam-grid"
-                        style={{
-                            gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`,
-                            gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)`,
-                            width: gridW,
-                            height: gridH,
-                        }}
-                    >
-                        {[...Array(totalHoles)].map((_, idx) => {
-                            const whacked = fakeDown && moleIdx === idx;
-                            const showExplosion = explosions.includes(idx);
-                            return (
-                                <div
-                                    key={idx}
-                                    className="mobile-wam-hole"
-                                    onClick={() => handleWhack(idx)}
-                                    style={{ minHeight: holeSize, minWidth: holeSize }}
-                                >
-                                    <div className="mobile-wam-hole-shadow"></div>
-                                    {showExplosion && (
-                                        <span
-                                            className="wam-explosion"
-                                            style={{
-                                                width: Math.max(24, Math.floor(holeSize * 0.9)),
-                                                height: Math.max(24, Math.floor(holeSize * 0.9)),
-                                            }}
-                                        />
-                                    )}
-                                    {moleIdx === idx && gameState === 'playing' && (
-                                        <img
-                                            src={(useAltAsset ? spaceshipImg : asteroidImg) + '?v=1'}
-                                            alt="Mole"
-                                            className="mobile-wam-mole"
-                                            style={{
-                                                width: whacked ? holeSize - 18 : holeSize - 7,
-                                                height: whacked ? holeSize - 18 : holeSize - 7,
-                                                filter: whacked ? 'brightness(1.4) drop-shadow(0 0 22px #ffe49b)' : 'drop-shadow(0 0 6px #ffe49b66)',
-                                                transform: whacked ? 'scale(0.92)' : 'scale(1)',
-                                                objectFit: 'contain'
-                                            }}
-                                            draggable={false}
-                                            decoding="async"
-                                            loading="eager"
-                                            onError={() => setUseAltAsset(true)}
-                                        />
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                    {gameState !== 'playing' && (
-                        <div className="mobile-wam-overlay" style={{ width: gridW, height: gridH }}>
-                            {gameState === 'menu' && (
-                                <>
-                                    <div className="mobile-wam-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                                        <span>Space Watch</span>
-                                        <img src={AstronautImg} alt="Astronaut" style={{ width: '1em', height: '1em', objectFit: 'contain' }} />
-                                    </div>
-                                    <div style={{ fontWeight: 400, fontSize: 18, color: '#fff', marginBottom: 20, textShadow: '0 1px 8px #121' }}>Hit as many as you can in 60s!</div>
-                                    <button
-                                        onClick={startGame}
-                                        style={{ background: '#18f96e', color: '#111', fontSize: 23, fontWeight: 'bold', padding: '18px 44px', border: 'none', borderRadius: 18, marginTop: 14, boxShadow: '0 0 16px #0004', letterSpacing: 1 }}
-                                        className="mobile-menu-btn"
-                                        autoFocus
-                                    >START</button>
-                                </>
-                            )}
-                            {gameState === 'gameover' && (
-                                <>
-                                    <div className="mobile-wam-gameover">GAME OVER</div>
-                                    <div style={{ fontWeight: 600, fontSize: 21, color: '#fff', marginBottom: 18 }}>Final Score: {score}</div>
-                                    <button
-                                        onClick={startGame}
-                                        style={{ background: '#18f96e', color: '#111', fontSize: 23, fontWeight: 'bold', padding: '16px 38px', border: 'none', borderRadius: 18, marginTop: 12, boxShadow: '0 0 14px #0004', letterSpacing: 1 }}
-                                        className="mobile-menu-btn"
-                                    >PLAY AGAIN</button>
-                                </>
-                            )}
-                        </div>
-                    )}
+            {/* No modal: render grid directly on transparent background */}
+            <div style={{ width: '100%', position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <div
+                    className="mobile-wam-grid"
+                    style={{
+                        gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`,
+                        gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)`,
+                        width: gridW,
+                        height: gridH,
+                    }}
+                >
+                    {[...Array(totalHoles)].map((_, idx) => {
+                        const whacked = fakeDown && moleIdx === idx;
+                        const showExplosion = explosions.includes(idx);
+                        return (
+                            <div
+                                key={idx}
+                                className="mobile-wam-hole"
+                                onClick={() => handleWhack(idx)}
+                                style={{ minHeight: holeSize, minWidth: holeSize, padding: 6 }}
+                            >
+                                <div className="mobile-wam-hole-shadow"></div>
+                                {showExplosion && (
+                                    <span
+                                        className="wam-explosion"
+                                        style={{
+                                            width: Math.max(24, Math.floor(holeSize * 0.9)),
+                                            height: Math.max(24, Math.floor(holeSize * 0.9)),
+                                        }}
+                                    />
+                                )}
+                                {moleIdx === idx && gameState === 'playing' && (
+                                    <img
+                                        src={(useAltAsset ? spaceshipImg : asteroidImg) + '?v=1'}
+                                        alt="Mole"
+                                        className="mobile-wam-mole"
+                                        style={{
+                                            width: whacked ? holeSize - 18 : holeSize - 7,
+                                            height: whacked ? holeSize - 18 : holeSize - 7,
+                                            filter: whacked ? 'brightness(1.4) drop-shadow(0 0 22px #ffe49b)' : 'drop-shadow(0 0 6px #ffe49b66)',
+                                            transform: whacked ? 'scale(0.92)' : 'scale(1)',
+                                            objectFit: 'contain'
+                                        }}
+                                        draggable={false}
+                                        decoding="async"
+                                        loading="eager"
+                                        onError={() => setUseAltAsset(true)}
+                                    />
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
+                {gameState !== 'playing' && (
+                    <div className="mobile-wam-overlay" style={{ width: gridW, height: gridH }}>
+                        {gameState === 'menu' && (
+                            <>
+                                <div className="mobile-wam-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                                    <span>Space Watch</span>
+                                    <img src={AstronautImg} alt="Astronaut" style={{ width: '1em', height: '1em', objectFit: 'contain' }} />
+                                </div>
+                                <div style={{ fontWeight: 400, fontSize: 18, color: '#fff', marginBottom: 20, textShadow: '0 1px 8px #121' }}>Hit as many as you can in 60s!</div>
+                                <button
+                                    onClick={startGame}
+                                    style={{ background: '#18f96e', color: '#111', fontSize: 23, fontWeight: 'bold', padding: '18px 44px', border: 'none', borderRadius: 18, marginTop: 14, boxShadow: '0 0 16px #0004', letterSpacing: 1 }}
+                                    className="mobile-menu-btn"
+                                    autoFocus
+                                >START</button>
+                            </>
+                        )}
+                        {gameState === 'gameover' && (
+                            <>
+                                <div className="mobile-wam-gameover">GAME OVER</div>
+                                <div style={{ fontWeight: 600, fontSize: 21, color: '#fff', marginBottom: 18 }}>Final Score: {score}</div>
+                                <button
+                                    onClick={startGame}
+                                    style={{ background: '#18f96e', color: '#111', fontSize: 23, fontWeight: 'bold', padding: '16px 38px', border: 'none', borderRadius: 18, marginTop: 12, boxShadow: '0 0 14px #0004', letterSpacing: 1 }}
+                                    className="mobile-menu-btn"
+                                >PLAY AGAIN</button>
+                            </>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
