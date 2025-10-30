@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import { Stage, Layer, Image as KonvaImage, Circle, Text, Group, Rect } from "react-konva";
-import { useImage } from 'react-konva';
 import { useImage } from './useImage';
 
 const PLAYER_SIZE = 80;
