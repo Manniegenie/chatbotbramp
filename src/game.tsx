@@ -1,17 +1,9 @@
-import React, { useRef, useState, useEffect, useCallback } from "react";
-import { Stage, Layer, Image as KonvaImage, Circle, Text, Group, Rect } from "react-konva";
-import { useImage } from './useImage';
+import React, { useState, useEffect, useRef, useCallback } from "react";
 
-const PLAYER_SIZE = 80;
-const ENEMY_SIZE = 64;
-const BULLET_SIZE = 13;
-const PLAYER_SPEED = 7;
-const BULLET_SPEED = 12;
-const ENEMY_SPAWN_RATE = 58;
-const ENEMY_SPEED_BASE = 2.2;
-const MAX_BULLETS = 8;
-
-const getHighScore = () => parseInt(localStorage.getItem("konvaGameHighScore") ?? "0");
+const GRID_ROWS = 3;
+const GRID_COLS = 4;
+const HOLE_SIZE = 150;
+const MOLE_POP_TIME = 600;
 
 function useWindowSize() {
   const [size, setSize] = useState({ width: window.innerWidth, height: window.innerHeight });
@@ -25,219 +17,163 @@ function useWindowSize() {
   return size;
 }
 
-export default function SpaceGame({ onClose }: { onClose: () => void }) {
+export default function WhackAMole({ onClose }: { onClose?: () => void }) {
   const { width, height } = useWindowSize();
-  const [playerImg] = useImage('/src/assets/spaceship.png');
-  const [asteroidImg] = useImage('/src/assets/asteroid.png');
 
-  const [player, setPlayer] = useState({ x: width / 2, y: height - 110 });
-  const [bullets, setBullets] = useState<{ x: number; y: number; id: number }[]>([]);
-  const [enemies, setEnemies] = useState<{ x: number; y: number; id: number; speed: number }[]>([]);
-  const [gameState, setGameState] = useState<'menu' | 'playing' | 'paused' | 'gameover'>('menu');
+  const gridW = Math.min(width * 0.93, GRID_COLS * HOLE_SIZE + 30);
+  const gridH = Math.min(height * 0.83, GRID_ROWS * HOLE_SIZE + 30);
+  const startX = (width - gridW) / 2;
+  const startY = (height - gridH) / 2 + 30;
+
+  const [gameState, setGameState] = useState<'menu' | 'playing' | 'gameover'>('menu');
   const [score, setScore] = useState(0);
-  const [highScore, setHighScore] = useState(getHighScore());
-  const keys = useRef<Set<string>>(new Set());
-  const bulletId = useRef(0);
-  const enemyId = useRef(0);
-  const frame = useRef(0);
+  const [highScore, setHighScore] = useState(0);
+  const [moleIdx, setMoleIdx] = useState<number | null>(null);
+  const [fakeDown, setFakeDown] = useState(false);
+  const timeout = useRef<NodeJS.Timeout | null>(null);
+  const difficulty = useRef(1);
+  const playing = useRef(false);
 
-  // Responsive player
-  useEffect(() => {
-    setPlayer((p) => ({ ...p, x: width / 2, y: height - 110 }));
-  }, [width, height]);
+  const totalHoles = GRID_ROWS * GRID_COLS;
 
-  // Keyboard controls
+  const nextMole = useCallback(() => {
+    if (!playing.current) return;
+    const idx = Math.floor(Math.random() * totalHoles);
+    setMoleIdx(idx);
+    timeout.current = setTimeout(nextMole, MOLE_POP_TIME / difficulty.current);
+    if (difficulty.current < 2.2) difficulty.current += 0.009;
+  }, [totalHoles]);
+
   useEffect(() => {
-    function down(e: KeyboardEvent) {
-      keys.current.add(e.key.toLowerCase());
-      if (e.key === " ") e.preventDefault();
+    if (gameState !== 'playing') {
+      setMoleIdx(null);
+      playing.current = false;
+      if (timeout.current) clearTimeout(timeout.current);
+      return;
     }
-    function up(e: KeyboardEvent) {
-      keys.current.delete(e.key.toLowerCase());
-    }
-    window.addEventListener("keydown", down);
-    window.addEventListener("keyup", up);
-    return () => {
-      window.removeEventListener("keydown", down);
-      window.removeEventListener("keyup", up);
-    };
+    setScore(0);
+    playing.current = true;
+    difficulty.current = 1;
+    nextMole();
+    return () => { if (timeout.current) clearTimeout(timeout.current); };
+  }, [gameState, nextMole]);
+
+  const handleWhack = (idx: number) => {
+    if (!playing.current || idx !== moleIdx) return;
+    setFakeDown(true);
+    setTimeout(() => setFakeDown(false), 75);
+    setScore((s) => s + 1);
+    setMoleIdx(null);
+    if (timeout.current) clearTimeout(timeout.current);
+    setTimeout(nextMole, 100);
+  };
+
+  useEffect(() => {
+    if (!playing.current) return;
+    const timer = setTimeout(() => {
+      endGame();
+    }, 60000);
+    return () => clearTimeout(timer);
+  }, [gameState, score]);
+
+  const endGame = useCallback(() => {
+    playing.current = false;
+    setGameState('gameover');
+    setMoleIdx(null);
+    setHighScore(h => {
+      if (score > h) {
+        return score;
+      }
+      return h;
+    });
+  }, [score]);
+
+  const startGame = useCallback(() => {
+    setScore(0);
+    setGameState('playing');
+    playing.current = true;
+    setMoleIdx(null);
   }, []);
 
-  // Touch controls: left/right half of screen
-  useEffect(() => {
-    function touchStart(e: TouchEvent) {
-      if (gameState !== "playing") return;
-      const touch = e.touches[0];
-      if (!touch) return;
-      const x = touch.clientX;
-      if (x < width / 2) keys.current.add("a");
-      if (x >= width / 2) keys.current.add("d");
-    }
-    function touchEnd() {
-      keys.current.delete("a");
-      keys.current.delete("d");
-    }
-    window.addEventListener("touchstart", touchStart);
-    window.addEventListener("touchend", touchEnd);
-    return () => {
-      window.removeEventListener("touchstart", touchStart);
-      window.removeEventListener("touchend", touchEnd);
-    };
-  }, [width, gameState]);
-
-  // Main game loop
-  useEffect(() => {
-    if (gameState !== "playing") return;
-    let running = true;
-    function loop() {
-      if (!running) return;
-      // Move player
-      setPlayer((p) => {
-        let x = p.x;
-        if (keys.current.has("a") || keys.current.has("arrowleft")) x -= PLAYER_SPEED;
-        if (keys.current.has("d") || keys.current.has("arrowright")) x += PLAYER_SPEED;
-        x = Math.max(PLAYER_SIZE / 2, Math.min(width - PLAYER_SIZE / 2, x));
-        return { ...p, x };
-      });
-      // Shooting
-      if (keys.current.has(" ")) {
-        setBullets((bul) =>
-          bul.length < MAX_BULLETS
-            ? [...bul, { x: player.x, y: player.y - PLAYER_SIZE / 2 - BULLET_SIZE, id: bulletId.current++ }]
-            : bul
-        );
-        keys.current.delete(" ");
-      }
-      // Move bullets
-      setBullets((bul) => bul.map((b) => ({ ...b, y: b.y - BULLET_SPEED })).filter((b) => b.y > -BULLET_SIZE));
-      // Spawn asteroids
-      if (frame.current % ENEMY_SPAWN_RATE === 0) {
-        setEnemies((enemies) => [
-          ...enemies,
-          {
-            x: Math.random() * (width - ENEMY_SIZE) + ENEMY_SIZE / 2,
-            y: -ENEMY_SIZE,
-            id: enemyId.current++,
-            speed: ENEMY_SPEED_BASE + Math.random() * 2 + score / 700,
-          },
-        ]);
-      }
-      // Move asteroids
-      setEnemies((es) => es.map((e) => ({ ...e, y: e.y + e.speed })));
-
-      // Bullet-asteroid collisions
-      setBullets((bullets) => {
-        let newB = [...bullets];
-        setEnemies((enemies) => {
-          let newEnemies = [...enemies];
-          bullets.forEach((b) => {
-            const idx = newEnemies.findIndex((e) => Math.abs(b.x - e.x) < ENEMY_SIZE / 2 && Math.abs(b.y - e.y) < ENEMY_SIZE / 2);
-            if (idx !== -1) {
-              newEnemies.splice(idx, 1);
-              newB = newB.filter((bb) => bb.id !== b.id);
-              setScore((s) => s + 10);
-            }
-          });
-          return newEnemies;
-        });
-        return newB;
-      });
-
-      // Asteroid-player collision or missed
-      setEnemies((enemies) => {
-        const hit = enemies.some((e) =>
-          Math.abs(player.x - e.x) < (PLAYER_SIZE * 0.45 + ENEMY_SIZE / 2) && Math.abs(player.y - e.y) < (PLAYER_SIZE * 0.45 + ENEMY_SIZE / 2)
-        );
-        if (hit || enemies.some((e) => e.y > height)) {
-          setGameState("gameover");
-          setHighScore((h) => {
-            const ns = Math.max(score, h);
-            localStorage.setItem("konvaGameHighScore", ns.toString());
-            return ns;
-          });
-          return [];
-        }
-        return enemies.filter((e) => e.y < height + ENEMY_SIZE);
-      });
-      frame.current++;
-      requestAnimationFrame(loop);
-    }
-    loop();
-    return () => {
-      running = false;
-    };
-    // eslint-disable-next-line
-  }, [gameState, player.x, player.y, width, height, score]);
-
-  // Start game
-  const startGame = useCallback(() => {
-    setPlayer({ x: width / 2, y: height - 110 });
-    setBullets([]);
-    setEnemies([]);
-    setScore(0);
-    frame.current = 0;
-    setGameState("playing");
-  }, [width, height]);
-
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#000', zIndex: 99999 }}>
-      <button onClick={onClose} style={{ position: 'absolute', top: 18, right: 18, zIndex: 20, background: '#f33', color: '#fff', fontSize: 18, border: 'none', padding: '8px 18px', fontWeight: 'bold', borderRadius: 10 }}>
-        ✕ Close
-      </button>
-      <Stage width={width} height={height} style={{ background: '#1b1e33', width: '100vw', height: '100vh' }}>
-        <Layer>
-          {/* Player as image */}
-          {playerImg && (
-            <KonvaImage
-              image={playerImg}
-              x={player.x - PLAYER_SIZE / 2}
-              y={player.y - PLAYER_SIZE / 2}
-              width={PLAYER_SIZE}
-              height={PLAYER_SIZE}
-              rotation={-90}
-              perfectDrawEnabled={false}
-            />
-          )}
-          {/* Bullets */}
-          {bullets.map((b) => (
-            <Circle key={b.id} x={b.x} y={b.y} radius={BULLET_SIZE} fill="#f8ea32" shadowBlur={7} />
-          ))}
-          {/* Asteroids (enemies) as images */}
-          {asteroidImg && enemies.map((e) => (
-            <KonvaImage
-              key={e.id}
-              image={asteroidImg}
-              x={e.x - ENEMY_SIZE / 2}
-              y={e.y - ENEMY_SIZE / 2}
-              width={ENEMY_SIZE}
-              height={ENEMY_SIZE}
-              perfectDrawEnabled={false}
-            />
-          ))}
-          {/* Score */}
-          <Text x={18} y={18} text={`Score: ${score}`} fontSize={26} fill="#fff" fontStyle="bold" shadowBlur={6} />
-          <Text x={18} y={52} text={`High Score: ${highScore}`} fontSize={20} fill="#fff" shadowBlur={5} />
-          {/* Overlays */}
-          {gameState === 'menu' && (
-            <Group>
-              <Rect x={0} y={0} width={width} height={height} fill="#000c" />
-              <Text x={width / 2 - 110} y={height / 2 - 80} text="SPACE SHOOTER" fontSize={52} fill="#1af" fontStyle="bold" />
-              <Text x={width / 2 - 130} y={height / 2 - 20} text="A/D or ⬅/➡: Move    SPACE: Shoot" fontSize={26} fill="#fff" />
-              <Rect x={width / 2 - 110} y={height / 2 + 40} width={225} height={70} fill="#18f96e" cornerRadius={16} onClick={startGame} />
-              <Text x={width / 2 - 62} y={height / 2 + 61} text="START GAME" fontSize={32} fill="#000" onClick={startGame} />
-            </Group>
-          )}
-          {gameState === 'gameover' && (
-            <Group>
-              <Rect x={0} y={0} width={width} height={height} fill="#000d" />
-              <Text x={width / 2 - 110} y={height / 2 - 60} text={`GAME OVER`} fontSize={46} fill="#fff" />
-              <Text x={width / 2 - 105} y={height / 2} text={`Final: ${score}`} fontSize={28} fill="#fff" />
-              <Rect x={width / 2 - 85} y={height / 2 + 44} width={170} height={55} fill="#18f96e" cornerRadius={12} onClick={startGame} />
-              <Text x={width / 2 - 61} y={height / 2 + 65} text="PLAY AGAIN" fontSize={27} fill="#000" onClick={startGame} />
-            </Group>
-          )}
-        </Layer>
-      </Stage>
+    <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'#111',zIndex:99999}}>
+      {onClose && (
+        <button onClick={onClose} style={{position:'absolute',top:18,right:18,zIndex:20,background:'#f33',color:'#fff',fontSize:18,border:'none',padding:'8px 18px',fontWeight:'bold',borderRadius:10}}>
+          ✕ Close
+        </button>
+      )}
+      <svg width={width} height={height} style={{position:'absolute',top:0,left:0,background:'#233'}}>
+        {/* Score UI */}
+        <text x="28" y="54" fontSize="32" fill="#fff" fontWeight="bold" style={{textShadow:'0 0 6px rgba(0,0,0,0.8)'}}>
+          Score: {score}
+        </text>
+        <text x={width - 210} y="50" fontSize="28" fill="#fff" style={{textShadow:'0 0 5px rgba(0,0,0,0.8)'}}>
+          High: {highScore}
+        </text>
+
+        {/* Holes and moles */}
+        {[...Array(totalHoles)].map((_, idx) => {
+          const row = Math.floor(idx / GRID_COLS);
+          const col = idx % GRID_COLS;
+          const x = startX + col * (HOLE_SIZE + 6);
+          const y = startY + row * (HOLE_SIZE + 6);
+          const whacked = fakeDown && moleIdx === idx;
+          
+          return (
+            <g key={idx} onClick={() => handleWhack(idx)} style={{cursor: 'pointer'}}>
+              {/* Hole shadow */}
+              <rect x={x + 8} y={y + HOLE_SIZE - 25} width={HOLE_SIZE - 16} height={22} fill="#222" style={{filter:'drop-shadow(0 7px 9px rgba(0,0,0,0.5))'}}/>
+              {/* Hole */}
+              <rect x={x} y={y} width={HOLE_SIZE} height={HOLE_SIZE} fill="rgba(0,0,0,0.13)" rx={18}/>
+              {/* Mole/Asteroid */}
+              {moleIdx === idx && (
+                <circle 
+                  cx={x + HOLE_SIZE/2 + (whacked ? 5 : 0)}
+                  cy={y + HOLE_SIZE/2 + (whacked ? 5 : 0)}
+                  r={(HOLE_SIZE - 36 - (whacked ? 10 : 0))/2}
+                  fill="#f5d21f"
+                  style={{filter: `drop-shadow(0 0 ${whacked ? 30 : 14}px #f5d21f)`}}
+                />
+              )}
+            </g>
+          );
+        })}
+
+        {/* Overlays */}
+        {gameState !== 'playing' && (
+          <g>
+            <rect x="0" y="0" width={width} height={height} fill="#000" opacity="0.75"/>
+            {gameState === 'menu' && (
+              <g>
+                <text x={width/2} y={height/2 - 120} fontSize="58" fill="#18f96e" fontWeight="bold" textAnchor="middle">
+                  WHACK-A-MOLE!
+                </text>
+                <text x={width/2} y={height/2 - 44} fontSize="32" fill="#fff" textAnchor="middle">
+                  Hit as many as you can in 60s!
+                </text>
+                <rect x={width/2 - 112.5} y={height/2 + 18} width="225" height="80" fill="#18f96e" rx={18} onClick={startGame} style={{cursor:'pointer'}}/>
+                <text x={width/2} y={height/2 + 63} fontSize="33" fill="#000" fontWeight="bold" textAnchor="middle" onClick={startGame} style={{cursor:'pointer'}}>
+                  START GAME
+                </text>
+              </g>
+            )}
+            {gameState === 'gameover' && (
+              <g>
+                <text x={width/2} y={height/2 - 120} fontSize="54" fill="#fff" textAnchor="middle">
+                  GAME OVER
+                </text>
+                <text x={width/2} y={height/2 - 44} fontSize="34" fill="#fff" textAnchor="middle">
+                  Final Score: {score}
+                </text>
+                <rect x={width/2 - 95} y={height/2 + 26} width="190" height="75" fill="#18f96e" rx={18} onClick={startGame} style={{cursor:'pointer'}}/>
+                <text x={width/2} y={height/2 + 71} fontSize="33" fill="#000" fontWeight="bold" textAnchor="middle" onClick={startGame} style={{cursor:'pointer'}}>
+                  PLAY AGAIN
+                </text>
+              </g>
+            )}
+          </g>
+        )}
+      </svg>
     </div>
   );
 }
