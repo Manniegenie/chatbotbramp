@@ -1030,7 +1030,7 @@ export default function MobileApp() {
               Terms of Service
             </a>
             <div className="mobile-menu-divider"></div>
-            <div className="mobile-menuopyright">© 2025 Bramp Africa Limited</div>
+            <div className="mobile-menu-copyright">© 2025 Bramp Africa Limited</div>
           </div>
         </div>
       )}
