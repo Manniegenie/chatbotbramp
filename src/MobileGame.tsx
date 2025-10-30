@@ -5,6 +5,7 @@ import WallpaperSlideshow from './WallpaperSlideshow';
 import asteroidImg from './assets/asteroid.png';
 import spaceshipImg from './assets/spaceship.png';
 import { authFetch } from './lib/tokenManager';
+import AstronautImg from './assets/astronout.png';
 
 const GRID_ROWS = 3;
 const GRID_COLS = 4;
@@ -230,7 +231,10 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
                         <div className="mobile-wam-overlay" style={{ width: gridW, height: gridH }}>
                             {gameState === 'menu' && (
                                 <>
-                                    <div className="mobile-wam-title">Space Watch</div>
+                                    <div className="mobile-wam-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                                        <span>Space Watch</span>
+                                        <img src={AstronautImg} alt="Astronaut" style={{ width: '1em', height: '1em', objectFit: 'contain' }} />
+                                    </div>
                                     <div style={{ fontWeight: 400, fontSize: 18, color: '#fff', marginBottom: 20, textShadow: '0 1px 8px #121' }}>Hit as many as you can in 60s!</div>
                                     <button
                                         onClick={startGame}
