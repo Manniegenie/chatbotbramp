@@ -8,6 +8,7 @@ import MobileSignIn, { SignInResult } from './MobileSignIn'
 import MobileSignUp, { SignUpResult } from './MobileSignUp'
 import MobileSell from './MobileSell'
 import WallpaperSlideshow from './WallpaperSlideshow'
+import MobileGame from './MobileGame';
 import BrampLogo from './assets/logo.png'
 import SolanaIcon from './assets/solana.png'
 import TetherIcon from './assets/tether.png'
@@ -250,6 +251,7 @@ export default function MobileApp() {
   const [showMenu, setShowMenu] = useState(false)
   const [openSellAfterAuth, setOpenSellAfterAuth] = useState(false)
   const [shouldOpenSell, setShouldOpenSell] = useState(false)
+  const [showGame, setShowGame] = useState(false)
 
   const [auth, setAuth] = useState<SignInResult | null>(() => {
     const authState = getAuthState()
@@ -559,6 +561,11 @@ export default function MobileApp() {
     console.log('KYC button clicked - functionality disabled')
   }
 
+  function handleGameClick(event?: React.MouseEvent) {
+    event?.preventDefault()
+    setShowMenu(false)
+    setShowGame(true)
+  }
 
   function echoFromModalToChat(text: string) {
     if (!text) return
@@ -823,6 +830,16 @@ export default function MobileApp() {
     )
   }
 
+  if (showGame) {
+    return (
+      <>
+        <WallpaperSlideshow />
+        <MobileGame onClose={() => setShowGame(false)} />
+      </>
+    );
+  }
+
+  // Normal (non-game) mobile app UI
   return (
     <div className="mobile-page">
       <WallpaperSlideshow />
@@ -866,11 +883,11 @@ export default function MobileApp() {
                 </button>
                 <button
                   className="mobile-sell-btn"
-                  onClick={handleKycClick}
-                  style={{ opacity: 0.6, cursor: 'not-allowed', marginLeft: '8px' }}
-                  aria-label="KYC"
+                  onClick={handleGameClick}
+                  style={{ marginLeft: '8px' }}
+                  aria-label="Game"
                 >
-                  KYC
+                  Game
                 </button>
                 <button
                   className="mobile-menu-btn"
@@ -908,6 +925,9 @@ export default function MobileApp() {
         <div className="mobile-menu-overlay" onClick={() => setShowMenu(false)}>
           <div className="mobile-menu" onClick={(e) => e.stopPropagation()}>
             <div className="mobile-menu-user">{auth.user?.username || 'User'}</div>
+            <button className="mobile-menu-item" onClick={handleKycClick}>
+              KYC
+            </button>
             <button className="mobile-menu-item primary" onClick={handleSellClick}>
               Pay Crypto
             </button>
@@ -948,7 +968,7 @@ export default function MobileApp() {
               Terms of Service
             </a>
             <div className="mobile-menu-divider"></div>
-            <div className="mobile-menu-copyright">© 2025 Bramp Africa Limited</div>
+            <div className="mobile-menuopyright">© 2025 Bramp Africa Limited</div>
           </div>
         </div>
       )}
@@ -962,7 +982,6 @@ export default function MobileApp() {
         onStartInteraction={() => setShowCenteredInput(false)}
       />
 
-
       <footer className="mobile-footer">
         <div className="mobile-footer-links-bottom">
           <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
@@ -974,7 +993,6 @@ export default function MobileApp() {
           <a href="https://medium.com/@chatbramp" target="_blank" rel="noopener noreferrer">Medium</a>
         </div>
       </footer>
-
     </div>
-  )
+  );
 }
