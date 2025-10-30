@@ -172,6 +172,7 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
                     flexDirection: 'column',
                     alignItems: 'center',
                     position: 'relative',
+                    marginTop: '-24px',
                 }}
                 onClick={e => e.stopPropagation()}
             >
