@@ -98,10 +98,10 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
                 left: 0,
                 width: '100vw',
                 height: '100vh',
-                background: 'linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.60)), url(/src/assets/wallpaper1.jpg) center/cover no-repeat',
+                background: 'transparent', // formerly gradient + wallpaper bg
                 zIndex: 2000,
                 display: 'flex',
-                alignItems: 'center', // was flex-start
+                alignItems: 'center',
                 justifyContent: 'center',
                 padding: '16px 12px',
                 overflow: 'hidden',
@@ -112,9 +112,9 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
         >
             <div
                 style={{
-                    maxWidth: '420px',
+                    maxWidth: '500px', // larger modal
                     width: '100%',
-                    maxHeight: '80vh',
+                    maxHeight: '92vh', // taller modal
                     background: 'var(--card,#18181f)',
                     border: '1px solid var(--border,#252738)',
                     borderRadius: '14px',
@@ -125,7 +125,6 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
                     flexDirection: 'column',
                     alignItems: 'center',
                     position: 'relative'
-                    // removed marginTop
                 }}
                 onClick={e => e.stopPropagation()}
             >
