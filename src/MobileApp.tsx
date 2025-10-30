@@ -946,7 +946,7 @@ export default function MobileApp() {
                 <button
                   className="btn mobile-sell-btn"
                   onClick={handleGameClick}
-                  style={{ marginLeft: '8px' }}
+                  style={{ marginLeft: '8px', border: '2px solid var(--accent)' }}
                   aria-label="Game"
                 >
                   Game
@@ -1029,8 +1029,6 @@ export default function MobileApp() {
             >
               Terms of Service
             </a>
-            <div className="mobile-menu-divider"></div>
-            <div className="mobile-menu-copyright">© 2025 Bramp Africa Limited</div>
           </div>
         </div>
       )}

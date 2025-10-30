@@ -174,7 +174,7 @@ export default function SignIn({
         flexDirection: 'column'
       }}>
         <div style={{ marginBottom: '16px', flexShrink: 0 }}>
-          <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 600, color: 'var(--txt)' }}>
+          <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 600, color: 'var(--accent)' }}>
             Sign in
           </h2>
           <p style={{ marginTop: '6px', color: 'var(--muted)', fontSize: '0.85rem' }}>

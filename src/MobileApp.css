@@ -361,11 +361,9 @@ a {
 .mobile-menu-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: transparent;
   z-index: 100;
   animation: fadeIn 0.2s ease-out;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
 }
 
 @keyframes fadeIn {
@@ -384,14 +382,14 @@ a {
   width: 280px;
   max-width: 85vw;
   height: 100%;
-  background: var(--card);
-  border-left: 1px solid var(--border);
+  background: transparent;
+  border-left: none;
   padding-top: max(16px, var(--safe-top));
   padding-bottom: max(16px, var(--safe-bottom));
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: -4px 0 20px var(--shadow);
+  box-shadow: none;
 }
 
 @keyframes slideInRight {
@@ -407,42 +405,54 @@ a {
   padding: 20px 20px 16px;
   font-size: 18px;
   font-weight: 700;
-  color: var(--txt);
-  border-bottom: 1px solid var(--border);
+  color: #fff;
+  border-bottom: none;
   word-break: break-word;
   overflow-wrap: break-word;
 }
 
 .mobile-menu-item {
   width: 100%;
-  padding: 16px 20px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
-  color: white;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
   text-align: left;
-  font-size: 16px;
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: box-shadow .18s ease, transform .08s ease, opacity .2s ease, background .2s ease, border-color .2s ease;
   display: flex;
   align-items: center;
   text-decoration: none;
-  min-height: 54px;
-  border-radius: 8px;
+  min-height: 44px;
+  border-radius: 10px;
   margin: 4px 0;
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+}
+
+.mobile-menu-item:hover {
+  box-shadow: 0 0 0 4px rgba(0,115,55,.12);
+  transform: translateY(-1px);
 }
 
 .mobile-menu-item:active {
-  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(1px);
+}
+
+.mobile-menu-item:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(0,115,55,.25);
 }
 
 .mobile-menu-item.primary {
   color: var(--accent);
-  font-weight: 600;
 }
 
 .mobile-menu-divider {
   height: 1px;
-  background: var(--border);
+  background: rgba(255, 255, 255, 0.1);
   margin: 8px 0;
 }
 

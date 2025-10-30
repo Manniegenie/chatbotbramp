@@ -949,7 +949,7 @@ export default function App() {
               <button className="btn" onClick={handleKycClick} style={{ opacity: 0.6, cursor: 'not-allowed' }}>
                 KYC
               </button>
-              <button className="btn" onClick={handleGameClick} style={{ color: '#fff' }}>
+              <button className="btn" onClick={handleGameClick} style={{ color: '#fff', border: '2px solid var(--accent)' }}>
                 Game
               </button>
               <button className="btn" onClick={signOut}>
