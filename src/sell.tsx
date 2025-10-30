@@ -196,13 +196,13 @@ function QRCode({ data, size = 120 }: { data: string; size?: number }) {
 }
 
 /* ===== Minimal inline modal styles ===== */
-const overlayStyle: React.CSSProperties = { 
-  position: 'fixed', 
-  top: 0, 
-  left: 0, 
-  width: '100vw', 
-  height: '100vh', 
-  background: 'linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(/src/assets/wallpaper1.jpg) center/cover no-repeat', 
+const overlayStyle: React.CSSProperties = {
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  width: '100vw',
+  height: '100vh',
+  background: 'transparent',
   zIndex: 1000,
   display: 'flex',
   alignItems: 'flex-start',
@@ -211,16 +211,16 @@ const overlayStyle: React.CSSProperties = {
   overflow: 'hidden',
   touchAction: 'none'
 }
-const sheetStyle: React.CSSProperties = { 
-  maxWidth: '600px', 
+const sheetStyle: React.CSSProperties = {
+  maxWidth: '600px',
   width: '100%',
   maxHeight: '90vh',
   marginTop: '2vh',
-  background: 'var(--card)',
-  border: '1px solid var(--border)',
+  background: 'transparent',
+  border: '1px solid transparent',
   borderRadius: '16px',
   padding: '32px',
-  boxShadow: 'var(--shadow)',
+  boxShadow: 'none',
   overflow: 'hidden',
   display: 'flex',
   flexDirection: 'column'
@@ -230,7 +230,7 @@ const titleRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'cente
 const stepperStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--muted)' }
 const dot = (active: boolean): React.CSSProperties => ({ width: 8, height: 8, borderRadius: 999, background: active ? 'var(--accent)' : 'var(--border)' })
 const bodyStyle: React.CSSProperties = { flex: 1, overflow: 'auto', minHeight: 0 }
-const footerStyle: React.CSSProperties = { padding: 10, display: 'flex', justifyContent: 'space-between', gap: 8, borderTop: '1px solid var(--border)', background: 'linear-gradient(180deg, transparent, rgba(0,0,0,.05))' }
+const footerStyle: React.CSSProperties = { padding: 10, display: 'flex', justifyContent: 'space-between', gap: 8, borderTop: 'none', background: 'transparent' }
 const btn: React.CSSProperties = { appearance: 'none', border: '1px solid var(--border)', background: 'transparent', color: 'var(--txt)', padding: '8px 12px', borderRadius: 8, cursor: 'pointer' }
 const btnPrimary: React.CSSProperties = { ...btn, border: 'none', background: 'var(--accent)', color: 'white' }
 const btnDangerGhost: React.CSSProperties = { ...btn, borderColor: 'var(--border)', color: 'var(--muted)' }
@@ -805,7 +805,7 @@ export default function SellModal({ open, onClose, onChatEcho, onStartInteractio
                             title="Copy address"
                           >
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z" fill="currentColor"/>
+                              <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z" fill="currentColor" />
                             </svg>
                           </button>
                         </div>
@@ -831,7 +831,7 @@ export default function SellModal({ open, onClose, onChatEcho, onStartInteractio
                               title="Copy memo"
                             >
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z" fill="currentColor"/>
+                                <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z" fill="currentColor" />
                               </svg>
                             </button>
                           </div>

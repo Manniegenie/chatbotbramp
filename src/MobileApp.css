@@ -244,8 +244,10 @@ a {
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: transparent;
+  color: var(--accent);
+  border: 2px solid var(--accent);
+  box-shadow: none;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -1051,7 +1053,7 @@ a:focus-visible,
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: transparent;
   display: flex;
   flex-direction: column;
   align-items: center;
