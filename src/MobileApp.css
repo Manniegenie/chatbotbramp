@@ -1180,5 +1180,7 @@ a:focus-visible,
 /* Utility: uniform 90% scale for MobileApp UI */
 .mobile-scale-90 {
   transform: scale(0.9);
-  transform-origin: top center;
+  transform-origin: top left; /* preserve original left/top alignment */
+  width: calc(100% / 0.9);    /* compensate width so layout positions remain intact */
+  overflow-x: hidden;         /* avoid accidental horizontal scroll due to width compensation */
 }
