@@ -843,156 +843,158 @@ export default function MobileApp() {
   return (
     <div className="mobile-page">
       <WallpaperSlideshow />
-      <header className="mobile-header">
-        <div className="mobile-header-top">
-          <div className="mobile-brand">
-            <img
-              src={BrampLogo}
-              alt="Bramp"
-              className="mobile-logo"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none'
-              }}
-            />
-            <h1 className="mobile-brand-text">Bramp</h1>
-          </div>
+      <div className="ui-90">
+        <header className="mobile-header">
+          <div className="mobile-header-top">
+            <div className="mobile-brand">
+              <img
+                src={BrampLogo}
+                alt="Bramp"
+                className="mobile-logo"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none'
+                }}
+              />
+              <h1 className="mobile-brand-text">Bramp</h1>
+            </div>
 
-          <div className="mobile-nav-buttons">
-            {!auth ? (
-              <>
-                <div className="mobile-auth-buttons">
-                  <button className="mobile-auth-btn" onClick={() => setShowSignIn(true)}>
-                    Sign in
+            <div className="mobile-nav-buttons">
+              {!auth ? (
+                <>
+                  <div className="mobile-auth-buttons">
+                    <button className="mobile-auth-btn" onClick={() => setShowSignIn(true)}>
+                      Sign in
+                    </button>
+                    <button
+                      className="mobile-auth-btn mobile-auth-btn-secondary"
+                      onClick={() => setShowSignUp(true)}
+                    >
+                      Sign up
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <button
+                    className="mobile-sell-btn"
+                    onClick={handleSellClick}
+                    aria-label="Pay Crypto"
+                  >
+                    Pay
                   </button>
                   <button
-                    className="mobile-auth-btn mobile-auth-btn-secondary"
-                    onClick={() => setShowSignUp(true)}
+                    className="mobile-sell-btn"
+                    onClick={handleGameClick}
+                    style={{ marginLeft: '8px' }}
+                    aria-label="Game"
                   >
-                    Sign up
+                    Game
                   </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <button
-                  className="mobile-sell-btn"
-                  onClick={handleSellClick}
-                  aria-label="Pay Crypto"
-                >
-                  Pay
-                </button>
-                <button
-                  className="mobile-sell-btn"
-                  onClick={handleGameClick}
-                  style={{ marginLeft: '8px' }}
-                  aria-label="Game"
-                >
-                  Game
-                </button>
-                <button
-                  className="mobile-menu-btn"
-                  onClick={() => setShowMenu(!showMenu)}
-                  aria-label="Menu"
-                >
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
+                  <button
+                    className="mobile-menu-btn"
+                    onClick={() => setShowMenu(!showMenu)}
+                    aria-label="Menu"
                   >
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                  </svg>
-                </button>
-              </>
-            )}
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <line x1="3" y1="12" x2="21" y2="12"></line>
+                      <line x1="3" y1="6" x2="21" y2="6"></line>
+                      <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                  </button>
+                </>
+              )}
+            </div>
           </div>
-        </div>
 
-        {tickerText && (
-          <div className="mobile-ticker-wrap" style={{ display: 'block', visibility: 'visible' }}>
-            <div className="mobile-ticker">
-              {tickerText}  •  {tickerText}
+          {tickerText && (
+            <div className="mobile-ticker-wrap" style={{ display: 'block', visibility: 'visible' }}>
+              <div className="mobile-ticker">
+                {tickerText}  •  {tickerText}
+              </div>
+            </div>
+          )}
+        </header>
+
+        {showMenu && auth && (
+          <div className="mobile-menu-overlay" onClick={() => setShowMenu(false)}>
+            <div className="mobile-menu" onClick={(e) => e.stopPropagation()}>
+              <div className="mobile-menu-user">{auth.user?.username || 'User'}</div>
+              <button className="mobile-menu-item" onClick={handleKycClick}>
+                KYC
+              </button>
+              <button className="mobile-menu-item primary" onClick={handleSellClick}>
+                Pay Crypto
+              </button>
+              <button className="mobile-menu-item" onClick={signOut}>
+                Sign Out
+              </button>
+              <div className="mobile-menu-divider"></div>
+              <a
+                className="mobile-menu-item"
+                href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                AML/CFT Policy
+              </a>
+              <a
+                className="mobile-menu-item"
+                href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Risk Disclaimer
+              </a>
+              <a
+                className="mobile-menu-item"
+                href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Privacy Policy
+              </a>
+              <a
+                className="mobile-menu-item"
+                href="/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Terms of Service
+              </a>
+              <div className="mobile-menu-divider"></div>
+              <div className="mobile-menuopyright">© 2025 Bramp Africa Limited</div>
             </div>
           </div>
         )}
-      </header>
 
-      {showMenu && auth && (
-        <div className="mobile-menu-overlay" onClick={() => setShowMenu(false)}>
-          <div className="mobile-menu" onClick={(e) => e.stopPropagation()}>
-            <div className="mobile-menu-user">{auth.user?.username || 'User'}</div>
-            <button className="mobile-menu-item" onClick={handleKycClick}>
-              KYC
-            </button>
-            <button className="mobile-menu-item primary" onClick={handleSellClick}>
-              Pay Crypto
-            </button>
-            <button className="mobile-menu-item" onClick={signOut}>
-              Sign Out
-            </button>
-            <div className="mobile-menu-divider"></div>
-            <a
-              className="mobile-menu-item"
-              href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              AML/CFT Policy
-            </a>
-            <a
-              className="mobile-menu-item"
-              href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Risk Disclaimer
-            </a>
-            <a
-              className="mobile-menu-item"
-              href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Privacy Policy
-            </a>
-            <a
-              className="mobile-menu-item"
-              href="/terms"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Terms of Service
-            </a>
-            <div className="mobile-menu-divider"></div>
-            <div className="mobile-menuopyright">© 2025 Bramp Africa Limited</div>
+        {renderMainContent()}
+
+        <MobileSell
+          open={showSell}
+          onClose={() => setShowSell(false)}
+          onChatEcho={echoFromModalToChat}
+          onStartInteraction={() => setShowCenteredInput(false)}
+        />
+
+        <footer className="mobile-footer">
+          <div className="mobile-footer-links-bottom">
+            <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
+            <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
+            <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
+            <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
+            <a href="https://www.youtube.com/@Chatbramp" target="_blank" rel="noopener noreferrer">YouTube</a>
+            <a href="https://x.com/Chatbramp" target="_blank" rel="noopener noreferrer">Twitter</a>
+            <a href="https://medium.com/@chatbramp" target="_blank" rel="noopener noreferrer">Medium</a>
           </div>
-        </div>
-      )}
-
-      {renderMainContent()}
-
-      <MobileSell
-        open={showSell}
-        onClose={() => setShowSell(false)}
-        onChatEcho={echoFromModalToChat}
-        onStartInteraction={() => setShowCenteredInput(false)}
-      />
-
-      <footer className="mobile-footer">
-        <div className="mobile-footer-links-bottom">
-          <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
-          <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
-          <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
-          <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
-          <a href="https://www.youtube.com/@Chatbramp" target="_blank" rel="noopener noreferrer">YouTube</a>
-          <a href="https://x.com/Chatbramp" target="_blank" rel="noopener noreferrer">Twitter</a>
-          <a href="https://medium.com/@chatbramp" target="_blank" rel="noopener noreferrer">Medium</a>
-        </div>
-      </footer>
+        </footer>
+      </div>
     </div>
   );
 }
