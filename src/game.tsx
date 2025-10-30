@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Stage, Container, Sprite, Text, Graphics } from '@pixi/react';
+import { Stage, Container, Sprite, Text, Graphics } from '@inlet/react-pixi';
 import { Application, Texture, Graphics as PIXIGraphics, Rectangle } from 'pixi.js';
 import * as PIXI from 'pixi.js';
 

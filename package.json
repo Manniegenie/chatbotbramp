@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@pixi/react": "^1.0.0",
+    "@inlet/react-pixi": "^7.5.10",
     "crypto-js": "^4.2.0",
     "framer-motion": "^12.23.24",
     "pixi.js": "^8.0.0",
