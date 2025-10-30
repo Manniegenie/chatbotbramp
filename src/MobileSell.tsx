@@ -101,6 +101,10 @@ function prettyNgn(n: number) {
 
 // Countdown removed — no timeouts
 
+function friendlyError(_: any, fallback: string) {
+  return 'Service unavailable. Please try again.'
+}
+
 function toNetworkLabel(token: string, code: string) {
   const t = (token || '').toUpperCase() as TokenSym
   const list = NETWORKS_BY_TOKEN[t]
@@ -243,7 +247,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
             setBankName('')
           }
         } catch (e: any) {
-          setBanksError(e?.message || 'Failed to load banks')
+          setBanksError(friendlyError(e, 'Failed to load banks'))
           setBankOptions([])
           setBankCode('')
           setBankName('')
@@ -283,7 +287,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
         }
       } catch (err: any) {
         setAccountName('')
-        setAccountNameError(err?.message || 'Failed to resolve account name')
+        setAccountNameError(friendlyError(err, 'Failed to resolve account name'))
       } finally {
         setAccountNameLoading(false)
       }
@@ -308,7 +312,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
       setInitData(data)
       setStep(2)
     } catch (err: any) {
-      setInitError(err.message || 'Failed to initiate sell')
+      setInitError(friendlyError(err, 'Failed to initiate sell'))
     } finally {
       setInitLoading(false)
     }
@@ -343,7 +347,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
       setPayData(data)
       onChatEcho?.(buildPayoutRecap(initData, data))
     } catch (err: any) {
-      setPayError(err.message || 'Failed to save payout details')
+      setPayError(friendlyError(err, 'Failed to save payout details'))
     } finally {
       setPayLoading(false)
     }
@@ -684,12 +688,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                       <div className="mobile-sell-key">Status</div>
                       <div className="mobile-sell-value">{payData.status}</div>
                     </div>
-                    <div className="mobile-sell-grid-item">
-                      <div className="mobile-sell-key">You Receive</div>
-                      <div className="mobile-sell-value">
-                        {prettyNgn((initData.quote.receiveAmount) || 0)} ({initData.quote.receiveCurrency})
-                      </div>
-                    </div>
+
                     <div className="mobile-sell-grid-item">
                       <div className="mobile-sell-key">Rate</div>
                       <div className="mobile-sell-value">{prettyAmount(initData.quote.rate)} NGN/{initData.deposit.token}</div>
