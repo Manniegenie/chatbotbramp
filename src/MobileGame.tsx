@@ -167,6 +167,8 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
                         gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)`,
                         width: gridW,
                         height: gridH,
+                        margin: '0 auto',
+                        transform: 'translateY(-30%)',
                     }}
                 >
                     {[...Array(totalHoles)].map((_, idx) => {
@@ -212,7 +214,7 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
                     })}
                 </div>
                 {gameState !== 'playing' && (
-                    <div className="mobile-wam-overlay" style={{ width: gridW, height: gridH }}>
+                    <div className="mobile-wam-overlay" style={{ width: gridW, height: gridH, margin: '0 auto', transform: 'translateY(-30%)' }}>
                         {gameState === 'menu' && (
                             <>
                                 <div className="mobile-wam-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
