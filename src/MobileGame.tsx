@@ -7,7 +7,7 @@ import spaceshipImg from './assets/spaceship.png';
 
 const GRID_ROWS = 3;
 const GRID_COLS = 4;
-const HOLE_SIZE = 88; // px, fits mobile
+// const HOLE_SIZE = 88; // px, fits mobile
 const MOLE_POP_TIME = 600;
 
 // Responsive window size hook for mobile
@@ -25,8 +25,10 @@ function useWindowSize() {
 
 export default function MobileGame({ onClose }: { onClose?: () => void }) {
     const { width, height } = useWindowSize();
-    const gridW = Math.min(width * 0.97, GRID_COLS * (HOLE_SIZE + 18));
-    const gridH = Math.min(height * 0.70, GRID_ROWS * (HOLE_SIZE + 18));
+    // Responsive hole size by viewport for desktop/tablet
+    const holeSize = width >= 1200 ? 128 : width >= 1024 ? 120 : width >= 768 ? 104 : 88;
+    const gridW = Math.min(width * 0.97, GRID_COLS * (holeSize + 18));
+    const gridH = Math.min(height * 0.70, GRID_ROWS * (holeSize + 18));
     const [gameState, setGameState] = useState<'menu' | 'playing' | 'gameover'>('menu');
     const [score, setScore] = useState(0);
     const [highScore, setHighScore] = useState(0);
@@ -139,7 +141,7 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
             {/* Modal card and grid/overlay remain unchanged below */}
             <div
                 style={{
-                    maxWidth: '500px',
+                    maxWidth: width >= 1200 ? '760px' : width >= 1024 ? '720px' : width >= 768 ? '600px' : '500px',
                     width: '100%',
                     maxHeight: '92vh',
                     background: 'transparent',
@@ -172,6 +174,7 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
                                     key={idx}
                                     className="mobile-wam-hole"
                                     onClick={() => handleWhack(idx)}
+                                    style={{ minHeight: holeSize, minWidth: holeSize }}
                                 >
                                     <div className="mobile-wam-hole-shadow"></div>
                                     {moleIdx === idx && gameState === 'playing' && (
@@ -180,8 +183,8 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
                                             alt="Mole"
                                             className="mobile-wam-mole"
                                             style={{
-                                                width: whacked ? HOLE_SIZE - 18 : HOLE_SIZE - 7,
-                                                height: whacked ? HOLE_SIZE - 18 : HOLE_SIZE - 7,
+                                                width: whacked ? holeSize - 18 : holeSize - 7,
+                                                height: whacked ? holeSize - 18 : holeSize - 7,
                                                 filter: whacked ? 'brightness(1.4) drop-shadow(0 0 22px #ffe49b)' : 'drop-shadow(0 0 6px #ffe49b66)',
                                                 transform: whacked ? 'scale(0.92)' : 'scale(1)',
                                                 objectFit: 'contain'
