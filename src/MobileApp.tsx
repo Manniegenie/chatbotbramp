@@ -8,7 +8,7 @@ import MobileSignIn, { SignInResult } from './MobileSignIn'
 import MobileSignUp, { SignUpResult } from './MobileSignUp'
 import MobileSell from './MobileSell'
 import WallpaperSlideshow from './WallpaperSlideshow'
-import SpaceGame from './game'
+import MobileGame from './MobileGame';
 import BrampLogo from './assets/logo.png'
 import SolanaIcon from './assets/solana.png'
 import TetherIcon from './assets/tether.png'
@@ -977,7 +977,7 @@ export default function MobileApp() {
         onStartInteraction={() => setShowCenteredInput(false)}
       />
 
-      {showGame && <SpaceGame onClose={() => setShowGame(false)} />}
+      {showGame && <MobileGame onClose={() => setShowGame(false)} />}
 
       <footer className="mobile-footer">
         <div className="mobile-footer-links-bottom">
