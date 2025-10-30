@@ -830,6 +830,15 @@ export default function MobileApp() {
     )
   }
 
+  if (showGame) {
+    return (
+      <>
+        <WallpaperSlideshow />
+        <MobileGame onClose={() => setShowGame(false)} />
+      </>
+    );
+  }
+
   return (
     <div className="mobile-page">
       <WallpaperSlideshow />

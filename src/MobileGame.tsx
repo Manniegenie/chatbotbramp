@@ -106,47 +106,52 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
                 padding: '16px 12px',
                 overflow: 'hidden',
                 touchAction: 'none',
-                minHeight: '100vh'
+                minHeight: '100vh',
             }}
             onClick={onClose}
         >
+            {/* Close button top-right, out of card */}
+            {onClose && (
+                <button
+                    onClick={onClose}
+                    className="mobile-menu-btn"
+                    style={{
+                        position: 'fixed',
+                        top: 18,
+                        right: 24,
+                        background: '#f33',
+                        color: '#fff',
+                        fontWeight: 700,
+                        zIndex: 2500,
+                    }}
+                    aria-label="Close Game"
+                >✕</button>
+            )}
+            {/* Score and high score top-left, out of card */}
+            <div className="mobile-wam-scorebar" style={{ position: 'fixed', top: 18, left: 24, zIndex: 2500, background: 'rgba(0,0,0,0.13)', borderRadius: 12, padding: '5px 17px', display: 'flex', alignItems: 'center', gap: 18 }}>
+                <div>Score: {score}</div>
+                <div style={{ color: '#9ef57c' }}>High: {highScore}</div>
+            </div>
+            {/* Modal card with only the grid/overlays */}
             <div
                 style={{
                     maxWidth: '500px',
                     width: '100%',
                     maxHeight: '92vh',
-                    background: 'transparent', // make card transparent
-                    border: 'none',            // remove border
+                    background: 'transparent',
+                    border: 'none',
                     borderRadius: '14px',
-                    padding: 0,                // remove extra padding
-                    boxShadow: 'none',         // remove shadow
+                    padding: 0,
+                    boxShadow: 'none',
                     overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    position: 'relative'
+                    position: 'relative',
                 }}
                 onClick={e => e.stopPropagation()}
             >
-                <button
-                    onClick={onClose}
-                    className="mobile-menu-btn"
-                    style={{
-                        position: 'absolute',
-                        top: 18,
-                        right: 18,
-                        background: '#f33',
-                        color: '#fff',
-                        fontWeight: 700,
-                        zIndex: 22
-                    }}
-                    aria-label="Close Game"
-                >✕</button>
                 <div style={{ width: '100%', position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <div className="mobile-wam-scorebar" style={{ justifyContent: 'flex-start', gap: 18, position: 'absolute', top: 0, left: 18, zIndex: 21 }}>
-                        <div>Score: {score}</div>
-                        <div style={{ color: '#9ef57c' }}>High: {highScore}</div>
-                    </div>
                     <div
                         className="mobile-wam-grid"
                         style={{
