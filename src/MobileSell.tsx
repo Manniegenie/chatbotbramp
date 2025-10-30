@@ -26,6 +26,9 @@ type InitiateSellRes = {
     receiveCurrency: string
     receiveAmount: number
     expiresAt: string
+    breakdown?: {
+      displayFeeNgn: number
+    }
   }
   message?: string
 }
@@ -193,7 +196,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
   const [banksError, setBanksError] = useState<string | null>(null)
   const [bankOptions, setBankOptions] = useState<BankOption[]>([])
   const banksFetchedRef = useRef(false)
-  
+
 
 
   // Reset on open
@@ -418,13 +421,13 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
     ) : ''
 
   return (
-    <div style={{ 
-      position: 'fixed', 
-      top: 0, 
-      left: 0, 
-      width: '100vw', 
-      height: '100vh', 
-      background: 'linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(/src/assets/wallpaper1.jpg) center/cover no-repeat', 
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      background: 'linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(/src/assets/wallpaper1.jpg) center/cover no-repeat',
       zIndex: 1000,
       display: 'flex',
       alignItems: 'flex-start',
@@ -433,8 +436,8 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
       overflow: 'hidden',
       touchAction: 'none'
     }} onClick={onClose}>
-      <div style={{ 
-        maxWidth: '420px', 
+      <div style={{
+        maxWidth: '420px',
         width: '100%',
         maxHeight: '80vh',
         marginTop: '2vh',
@@ -470,8 +473,8 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
               <span style={{ width: 8, height: 8, borderRadius: 999, background: step >= 2 ? 'var(--accent)' : 'var(--border)' }}></span>
             </div>
           </div>
-          <button 
-            style={{ 
+          <button
+            style={{
               appearance: 'none',
               border: '1px solid var(--border)',
               background: 'transparent',
@@ -481,7 +484,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
               cursor: 'pointer',
               fontSize: '14px',
               alignSelf: 'flex-start'
-            }} 
+            }}
             onClick={onClose}
           >
             ✕
@@ -628,6 +631,12 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                         <div className="mobile-sell-key">Rate</div>
                         <div className="mobile-sell-value">{prettyAmount(initData.quote.rate)} NGN/{initData.deposit.token}</div>
                       </div>
+                      {initData?.quote?.breakdown?.displayFeeNgn != null && (
+                        <div className="mobile-sell-grid-item">
+                          <div className="mobile-sell-key">Fee</div>
+                          <div className="mobile-sell-value">{prettyNgn(initData.quote.breakdown.displayFeeNgn)}</div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -731,7 +740,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                             title="Copy address"
                           >
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z" fill="currentColor"/>
+                              <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z" fill="currentColor" />
                             </svg>
                           </button>
                         </div>
@@ -757,7 +766,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                               title="Copy memo"
                             >
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z" fill="currentColor"/>
+                                <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z" fill="currentColor" />
                               </svg>
                             </button>
                           </div>
@@ -818,9 +827,9 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
           <div className="mobile-sell-button-row">
             {step === 2 ? (
               !showFinalSummary ? (
-                <button 
-                  className="mobile-sell-button primary" 
-                  type="submit" 
+                <button
+                  className="mobile-sell-button primary"
+                  type="submit"
                   form="payout-form"
                   disabled={payLoading || !bankCode || banksLoading || !accountName}
                 >
