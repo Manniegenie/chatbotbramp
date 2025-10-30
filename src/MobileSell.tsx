@@ -19,13 +19,11 @@ type InitiateSellRes = {
     memo?: string | null
     token: string
     network: string
-    amount: number
   }
   quote: {
     rate: number
     receiveCurrency: string
     receiveAmount: number
-    expiresAt: string
     breakdown?: {
       displayFeeNgn: number
     }
@@ -44,7 +42,6 @@ type PayoutRes = {
     rate: number
     receiveCurrency: string
     receiveAmount: number
-    expiresAt: string
   }
   payout: {
     bankName: string
@@ -102,25 +99,7 @@ function prettyNgn(n: number) {
   return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 2 }).format(n)
 }
 
-function useCountdown(expiryIso?: string | null) {
-  const [msLeft, setMsLeft] = useState<number>(() => {
-    if (!expiryIso) return 0
-    return Math.max(0, new Date(expiryIso).getTime() - Date.now())
-  })
-
-  useEffect(() => {
-    if (!expiryIso) return
-    const t = setInterval(() => {
-      const left = Math.max(0, new Date(expiryIso).getTime() - Date.now())
-      setMsLeft(left)
-    }, 250)
-    return () => clearInterval(t)
-  }, [expiryIso])
-
-  const mm = Math.floor(msLeft / 60000)
-  const ss = Math.floor((msLeft % 60000) / 1000)
-  return { msLeft, text: `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`, expired: msLeft <= 0 }
-}
+// Countdown removed — no timeouts
 
 function toNetworkLabel(token: string, code: string) {
   const t = (token || '').toUpperCase() as TokenSym
@@ -132,7 +111,6 @@ function toNetworkLabel(token: string, code: string) {
 function buildPayoutRecap(init: InitiateSellRes | null, p: PayoutRes) {
   const t = (init?.deposit?.token || init?.token || '').toUpperCase()
   const netLabel = toNetworkLabel(t, init?.deposit?.network || init?.network || '')
-  const payAmount = init?.deposit?.amount ?? init?.sellAmount
   const recv = init?.quote?.receiveAmount ?? p.quote?.receiveAmount
   const rate = init?.quote?.rate ?? p.quote?.rate
 
@@ -141,9 +119,8 @@ function buildPayoutRecap(init: InitiateSellRes | null, p: PayoutRes) {
     `Bank: ${p.payout.bankName}`,
     `Account: ${p.payout.accountName} — ${p.payout.accountNumber}`,
     '',
-    `Recap: pay **${prettyAmount(Number(payAmount || 0))} ${t}** on **${netLabel}**.`,
-    `You'll receive: **${prettyNgn(Number(recv || 0))}** at **${prettyAmount(Number(rate || 0))} NGN/${t}**.`,
-    `⚠️ Remember: pay the **exact amount** shown for smooth processing.`,
+    `Deposit to your address on **${netLabel}**.`,
+    `You'll receive: **${prettyNgn(Number(recv || 0))}** at **${prettyAmount(Number(rate || 0))} NGN/${t}** when your deposit confirms.`,
   ].join('\n')
 }
 
@@ -169,9 +146,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
   // Step 1 (Start Sell)
   const [token, setToken] = useState<TokenSym>('USDT')
   const [network, setNetwork] = useState(NETWORKS_BY_TOKEN['USDT'][0].code)
-  const [amount, setAmount] = useState<string>('100')
-  const [currency, setCurrency] = useState<'TOKEN' | 'NGN'>('TOKEN')
-  const [nairaAmount, setNairaAmount] = useState<string>('')
+  // Amount/currency removed — address-based flow
   const [initLoading, setInitLoading] = useState(false)
   const [initError, setInitError] = useState<string | null>(null)
   const [initData, setInitData] = useState<InitiateSellRes | null>(null)
@@ -187,9 +162,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
   const [payError, setPayError] = useState<string | null>(null)
   const [payData, setPayData] = useState<PayoutRes | null>(null)
 
-  // Countdown should start only AFTER payout is saved (local 10:00 window)
-  const [summaryExpiresAt, setSummaryExpiresAt] = useState<string | null>(null)
-  const { text: countdown, expired } = useCountdown(summaryExpiresAt)
+  // No countdown
 
   // Banks
   const [banksLoading, setBanksLoading] = useState(false)
@@ -205,9 +178,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
     setStep(1)
     setToken('USDT')
     setNetwork(NETWORKS_BY_TOKEN['USDT'][0].code)
-    setAmount('100')
-    setCurrency('TOKEN')
-    setNairaAmount('')
+
     setInitLoading(false)
     setInitError(null)
     setInitData(null)
@@ -223,7 +194,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
     setBanksLoading(false)
     setBanksError(null)
     setBankOptions([])
-    setSummaryExpiresAt(null)
+
     banksFetchedRef.current = false
   }, [open])
 
@@ -325,30 +296,12 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
     e.preventDefault()
     setInitError(null)
 
-    let amountNum: number
-
-    if (currency === 'TOKEN') {
-      if (!amount || isNaN(+amount) || +amount <= 0) {
-        setInitError('Enter a valid token amount')
-        return
-      }
-      amountNum = +amount
-    } else {
-      // Remove commas for validation
-      const cleanNairaAmount = nairaAmount.replace(/,/g, '');
-      if (!cleanNairaAmount || isNaN(+cleanNairaAmount) || +cleanNairaAmount <= 0) {
-        setInitError('Enter a valid Naira amount')
-        return
-      }
-      amountNum = +cleanNairaAmount
-    }
-
     setInitLoading(true)
     try {
       const res = await fetch(`${API_BASE}/sell/initiate`, {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify({ token, network, sellAmount: amountNum, currency }),
+        body: JSON.stringify({ token, network }),
       })
       const data: InitiateSellRes = await res.json()
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
@@ -539,58 +492,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                   </label>
                 </div>
 
-                {/* Currency and Amount on same line */}
-                <div className="mobile-sell-row">
-                  <label className="mobile-sell-input-wrap">
-                    <span className="mobile-sell-label">Currency <span style={{ fontSize: '10px', opacity: 0.7 }}>▼</span></span>
-                    <select
-                      className="mobile-sell-input"
-                      value={currency}
-                      onChange={e => setCurrency(e.target.value as 'TOKEN' | 'NGN')}
-                    >
-                      <option value="TOKEN">{token}</option>
-                      <option value="NGN">NGN</option>
-                    </select>
-                  </label>
-
-                  {currency === 'TOKEN' ? (
-                    <label className="mobile-sell-input-wrap">
-                      <span className="mobile-sell-label">Amount ({token})</span>
-                      <input
-                        className="mobile-sell-input"
-                        inputMode="decimal"
-                        placeholder="e.g. 100"
-                        value={amount}
-                        onChange={e => {
-                          setAmount(e.target.value)
-                          onStartInteraction?.()
-                        }}
-                      />
-                    </label>
-                  ) : (
-                    <label className="mobile-sell-input-wrap">
-                      <span className="mobile-sell-label">Amount (NGN)</span>
-                      <input
-                        className="mobile-sell-input"
-                        inputMode="decimal"
-                        placeholder="e.g. 50,000"
-                        value={nairaAmount}
-                        onChange={e => {
-                          // Remove commas and non-numeric characters except decimal point
-                          const cleanValue = e.target.value.replace(/[^\d.]/g, '');
-                          setNairaAmount(cleanValue);
-                        }}
-                        onBlur={e => {
-                          // Format with commas when user finishes typing
-                          const num = parseFloat(e.target.value);
-                          if (!isNaN(num) && num > 0) {
-                            setNairaAmount(num.toLocaleString('en-US'));
-                          }
-                        }}
-                      />
-                    </label>
-                  )}
-                </div>
+                {/* Amount entry removed — user will send any amount to their address */}
 
                 <div className="mobile-sell-button-row">
                   <button className="mobile-sell-button primary" disabled={initLoading}>
@@ -616,17 +518,15 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                     <h3 className="mobile-sell-card-title">Sell Summary</h3>
                     <div className="mobile-sell-grid">
                       <div className="mobile-sell-grid-item">
-                        <div className="mobile-sell-key">Amount to Send</div>
-                        <div className="mobile-sell-value">
-                          {prettyAmount(initData.deposit.amount)} {initData.deposit.token}
-                        </div>
+                        <div className="mobile-sell-key">Your Address</div>
+                        <div className="mobile-sell-value mono wrap">{initData.deposit.address}</div>
                       </div>
-                      <div className="mobile-sell-grid-item">
-                        <div className="mobile-sell-key">You Receive</div>
-                        <div className="mobile-sell-value">
-                          {prettyNgn(initData.quote.receiveAmount)} ({initData.quote.receiveCurrency})
+                      {!!initData.deposit.memo && (
+                        <div className="mobile-sell-grid-item">
+                          <div className="mobile-sell-key">Memo/Tag</div>
+                          <div className="mobile-sell-value mono wrap">{initData.deposit.memo}</div>
                         </div>
-                      </div>
+                      )}
                       <div className="mobile-sell-grid-item">
                         <div className="mobile-sell-key">Rate</div>
                         <div className="mobile-sell-value">{prettyAmount(initData.quote.rate)} NGN/{initData.deposit.token}</div>
@@ -711,9 +611,6 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                 <div className="mobile-sell-success-card">
                   <div className="mobile-sell-success-header">
                     <h3 className="mobile-sell-card-title"></h3>
-                    <div className="mobile-sell-countdown">
-                      ⏱ {expired ? 'Expired' : countdown} <span>of 10:00</span>
-                    </div>
                   </div>
 
                   {/* Enhanced deposit details section with QR code */}
@@ -774,7 +671,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                       )}
 
                       <div className="mobile-sell-warning">
-                        ⚠️ Send exactly {prettyAmount(initData.deposit.amount)} {initData.deposit.token} on {toNetworkLabel(initData.deposit.token, initData.deposit.network)} before the timer runs out.
+                        ⚠️ Send {initData.deposit.token} on {toNetworkLabel(initData.deposit.token, initData.deposit.network)} to your address above. Any amount you send will be credited at the live rate.
                       </div>
                     </div>
 
