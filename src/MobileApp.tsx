@@ -986,7 +986,10 @@ export default function MobileApp() {
       {showMenu && auth && (
         <div className="mobile-menu-overlay" onClick={() => setShowMenu(false)}>
           <div className="mobile-menu" onClick={(e) => e.stopPropagation()}>
-            <div className="mobile-menu-user">{auth.user?.username || 'User'}</div>
+            <div className="mobile-menu-user">
+              {auth.user?.username || 'User'}
+              <span style={{ color: 'var(--accent)', marginLeft: '6px', fontSize: '0.9em' }}>♥</span>
+            </div>
             <button className="mobile-menu-item" onClick={handleKycClick}>
               KYC
             </button>
@@ -1042,17 +1045,19 @@ export default function MobileApp() {
         onStartInteraction={() => setShowCenteredInput(false)}
       />
 
-      <footer className="mobile-footer">
-        <div className="mobile-footer-links-bottom">
-          <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
-          <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
-          <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
-          <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
-          <a href="https://www.youtube.com/@Chatbramp" target="_blank" rel="noopener noreferrer">YouTube</a>
-          <a href="https://x.com/Chatbramp" target="_blank" rel="noopener noreferrer">Twitter</a>
-          <a href="https://medium.com/@chatbramp" target="_blank" rel="noopener noreferrer">Medium</a>
-        </div>
-      </footer>
+      {!auth && (
+        <footer className="mobile-footer">
+          <div className="mobile-footer-links-bottom">
+            <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
+            <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
+            <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
+            <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
+            <a href="https://www.youtube.com/@Chatbramp" target="_blank" rel="noopener noreferrer">YouTube</a>
+            <a href="https://x.com/Chatbramp" target="_blank" rel="noopener noreferrer">Twitter</a>
+            <a href="https://medium.com/@chatbramp" target="_blank" rel="noopener noreferrer">Medium</a>
+          </div>
+        </footer>
+      )}
     </div>
   );
 }
