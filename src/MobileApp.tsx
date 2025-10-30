@@ -853,6 +853,54 @@ export default function MobileApp() {
     );
   }
 
+  if (showSignIn) {
+    return (
+      <>
+        <WallpaperSlideshow />
+        <MobileSignIn
+          onCancel={() => {
+            setShowSignIn(false);
+            setOpenSellAfterAuth(false);
+          }}
+          onSuccess={(res) => {
+            setAuth(res);
+            setShowSignIn(false);
+            setShowCenteredInput(false);
+            const greeting = getTimeBasedGreeting();
+            const name = res.user.username || (res.user as any).firstname || 'there';
+            setMessages([
+              { id: crypto.randomUUID(), role: 'assistant', text: `${greeting}, ${name}! How can I help you today?`, ts: Date.now() },
+            ]);
+            if (openSellAfterAuth) {
+              setOpenSellAfterAuth(false);
+              setShowSell(true);
+            }
+          }}
+        />
+      </>
+    );
+  }
+
+  if (showSignUp) {
+    return (
+      <>
+        <WallpaperSlideshow />
+        <MobileSignUp
+          onCancel={() => setShowSignUp(false)}
+          onSuccess={(_res: SignUpResult) => {
+            setShowSignUp(false);
+            setShowCenteredInput(false);
+            setMessages((prev) => [
+              ...prev,
+              { id: crypto.randomUUID(), role: 'assistant', text: 'Account created! Please verify your OTP to complete signup.', ts: Date.now() },
+            ]);
+            setShowSignIn(true);
+          }}
+        />
+      </>
+    );
+  }
+
   // Normal (non-game) mobile app UI
   return (
     <div className="mobile-page">

@@ -573,6 +573,62 @@ export default function App() {
     );
   }
 
+  if (showSignIn) {
+    return (
+      <div className="page" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+        <WallpaperSlideshow />
+        <SignIn
+          onCancel={() => { setShowSignIn(false); setOpenSellAfterAuth(false) }}
+          onSuccess={(res) => {
+            setAuth(res)
+            setShowSignIn(false)
+            setShowCenteredInput(false)
+            const greeting = getTimeBasedGreeting()
+            const name = res.user.username || (res.user as any).firstname || 'there'
+            setMessages([{ id: crypto.randomUUID(), role: 'assistant', text: `${greeting}, ${name}, what would you like me to do for you today?`, ts: Date.now() }])
+            if (openSellAfterAuth) { setOpenSellAfterAuth(false); setShowSell(true) }
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (showSignUp) {
+    return (
+      <div className="page" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+        <WallpaperSlideshow />
+        <SignUp
+          onCancel={() => setShowSignUp(false)}
+          onSuccess={(res: SignUpResult) => {
+            setShowSignUp(false)
+            if (res.accessToken && res.refreshToken) {
+              tokenStore.setTokens(res.accessToken, res.refreshToken)
+              setShowCenteredInput(false)
+              if (res.user) {
+                const user = {
+                  id: res.userId || '',
+                  phonenumber: res.user.phonenumber || '',
+                  firstname: res.user.firstname,
+                  lastname: res.user.lastname,
+                  email: res.user.email,
+                  username: res.user.username
+                }
+                tokenStore.setUser(user)
+                setAuth({ accessToken: res.accessToken, refreshToken: res.refreshToken, user })
+              } else {
+                setAuth({ accessToken: res.accessToken, refreshToken: res.refreshToken, user: { id: res.userId || '', phonenumber: '' } })
+              }
+              setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'assistant', text: 'Welcome! Your account has been created successfully.', ts: Date.now() }])
+            } else {
+              setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'assistant', text: 'Account created! Please sign in to continue.', ts: Date.now() }])
+              setShowSignIn(true)
+            }
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <>
       <style>

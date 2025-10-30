@@ -85,7 +85,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
   const [lastname, setLastname] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
-  
+
   // Auto-fill BVN with random 11-digit number for test flight (hidden from user)
   const [bvn, setBvn] = useState(() => {
     return Math.floor(10000000000 + Math.random() * 90000000000).toString()
@@ -113,10 +113,10 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
       setResendError('Phone number is required')
       return
     }
-    
+
     setResendLoading(true)
     setResendError(null)
-    
+
     try {
       const response = await fetch(`${API_BASE}/resend-otp/resend-otp`, {
         method: 'POST',
@@ -125,17 +125,17 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
         },
         body: JSON.stringify({ phonenumber: phone }),
       })
-      
+
       const data = await response.json()
-      
+
       if (!response.ok) {
         throw new Error(data.message || 'Failed to resend OTP')
       }
-      
+
       // Clear any existing OTP error and show success
       setOtpError(null)
       // You could add a success message here if needed
-      
+
     } catch (err: any) {
       setResendError(err.message || 'Failed to resend OTP')
     } finally {
@@ -145,18 +145,18 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
 
   function normalizePhone(input: string) {
     const d = input.replace(/[^\d+]/g, '')
-    
+
     // Handle Nigerian phone numbers specifically
     if (/^0\d{10}$/.test(d)) return '+234' + d.slice(1) // 08123456789 -> +2348123456789
     if (/^234\d{10}$/.test(d)) return '+' + d // 2348123456789 -> +2348123456789
     if (/^\+234\d{10}$/.test(d)) return d // +2348123456789 -> +2348123456789
-    
+
     // Handle 10-digit numbers that could be Nigerian (starting with 7, 8, or 9)
     if (/^[789]\d{9}$/.test(d)) return '+234' + d // 8123456789 -> +2348123456789
-    
+
     // Handle other international formats
     if (/^\+?\d{10,15}$/.test(d)) return d.startsWith('+') ? d : '+' + d
-    
+
     return d
   }
 
@@ -404,7 +404,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
   function ProgressDots() {
     const visibleSteps = steps
     const currentVisibleIndex = visibleSteps.indexOf(currentStepId)
-    
+
     return (
       <div className="mobile-auth-progress">
         {visibleSteps.map((_, i) => (
@@ -603,13 +603,13 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
   }
 
   return (
-    <div style={{ 
-      position: 'fixed', 
-      top: 0, 
-      left: 0, 
-      width: '100vw', 
-      height: '100vh', 
-      background: 'linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(/src/assets/wallpaper1.jpg) center/cover no-repeat', 
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      background: 'transparent',
       zIndex: 1000,
       display: 'flex',
       alignItems: 'flex-start',
@@ -623,11 +623,11 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
         width: '100%',
         maxHeight: '64.125vh',
         marginTop: '3.42vh',
-        background: 'var(--card)',
-        border: '1px solid var(--border)',
+        background: 'transparent',
+        border: '1px solid transparent',
         borderRadius: '6.84px',
         padding: '20.52px',
-        boxShadow: 'var(--shadow)',
+        boxShadow: 'none',
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column'
@@ -679,8 +679,8 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
                     Cancel
                   </button>
                   <button type="submit" className="mobile-auth-button primary" disabled={loading}>
-                    {loading 
-                      ? 'Processing…' 
+                    {loading
+                      ? 'Processing…'
                       : currentStepGroup === 'names'
                         ? 'Continue'
                         : currentStepGroup === 'contact'

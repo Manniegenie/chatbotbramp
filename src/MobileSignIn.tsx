@@ -60,37 +60,37 @@ export default function MobileSignIn({
   // Phone number normalization function
   function normalizePhone(input: string): string {
     const d = input.replace(/[^\d+]/g, '')
-    
+
     // Handle Nigerian phone numbers specifically
     if (/^0\d{10}$/.test(d)) return '+234' + d.slice(1) // 08123456789 -> +2348123456789
     if (/^234\d{10}$/.test(d)) return '+' + d // 2348123456789 -> +2348123456789
     if (/^\+234\d{10}$/.test(d)) return d // +2348123456789 -> +2348123456789
-    
+
     // Handle 10-digit numbers that could be Nigerian (starting with 7, 8, or 9)
     if (/^[789]\d{9}$/.test(d)) return '+234' + d // 8123456789 -> +2348123456789
-    
+
     // Handle other international formats
     if (/^\+?\d{10,15}$/.test(d)) return d.startsWith('+') ? d : '+' + d
-    
+
     return d
   }
 
   function handlePhoneChange(value: string) {
     // Remove all non-digits
     let digits = value.replace(/\D/g, '')
-    
+
     // Limit to 11 digits (allowing 0 at the beginning)
     digits = digits.slice(0, 11)
-    
+
     setPhone(digits)
   }
 
   async function submit(e?: React.FormEvent) {
     e?.preventDefault()
-    
+
     // Prevent duplicate submissions
     if (loading) return
-    
+
     setError(null)
 
     // Normalize phone number
@@ -146,13 +146,13 @@ export default function MobileSignIn({
   }
 
   return (
-    <div style={{ 
-      position: 'fixed', 
-      top: 0, 
-      left: 0, 
-      width: '100vw', 
-      height: '100vh', 
-      background: 'linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(/src/assets/wallpaper1.jpg) center/cover no-repeat', 
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      background: 'transparent',
       zIndex: 1000,
       display: 'flex',
       alignItems: 'flex-start',
@@ -161,16 +161,16 @@ export default function MobileSignIn({
       overflow: 'hidden',
       touchAction: 'none'
     }}>
-      <div style={{ 
-        maxWidth: '359px', 
+      <div style={{
+        maxWidth: '359px',
         width: '100%',
         maxHeight: '64.125vh',
         marginTop: '3.42vh',
-        background: 'var(--card)',
-        border: '1px solid var(--border)',
+        background: 'transparent',
+        border: '1px solid transparent',
         borderRadius: '6.84px',
         padding: '20.52px',
-        boxShadow: 'var(--shadow)',
+        boxShadow: 'none',
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column'

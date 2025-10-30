@@ -772,59 +772,59 @@ export default function SignUp({
 
     return null
 
-      // KYC render cases commented out for test flight
-      /*
-      case 'id-type-selection':
-        return (
-          <>
-            <label style={{ fontSize: '0.8rem', color: 'var(--muted)', marginBottom: 12, display: 'block' }}>
-              Choose an ID type for verification
-            </label>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {[
-                { value: 'nin', label: 'National Identification Number (NIN)', description: '11-digit number' },
-                { value: 'drivers_license', label: 'Driver\'s License', description: 'Valid Nigerian driver\'s license' },
-                { value: 'passport', label: 'International Passport', description: 'Letter + 8 digits format' }
-              ].map((option) => (
-                <div
-                  key={option.value}
-                  onClick={() => setSelectedIdType(option.value as IdType)}
-                  style={{
-                    padding: 16,
-                    border: `2px solid ${selectedIdType === option.value ? 'var(--accent)' : 'var(--border)'}`,
-                    borderRadius: 8,
-                    cursor: 'pointer',
-                    background: selectedIdType === option.value ? 'rgba(var(--accent-rgb), 0.1)' : 'var(--card)',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  <div style={{ fontWeight: '500', color: 'var(--txt)', marginBottom: 4 }}>
-                    {option.label}
-                  </div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
-                    {option.description}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-              <button type="button" className="btn btn-outline" onClick={goBack} disabled={loading}>
-                Back
-              </button>
-              <button 
-                className="btn" 
-                onClick={goNext} 
-                disabled={!selectedIdType}
+    // KYC render cases commented out for test flight
+    /*
+    case 'id-type-selection':
+      return (
+        <>
+          <label style={{ fontSize: '0.8rem', color: 'var(--muted)', marginBottom: 12, display: 'block' }}>
+            Choose an ID type for verification
+          </label>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {[
+              { value: 'nin', label: 'National Identification Number (NIN)', description: '11-digit number' },
+              { value: 'drivers_license', label: 'Driver\'s License', description: 'Valid Nigerian driver\'s license' },
+              { value: 'passport', label: 'International Passport', description: 'Letter + 8 digits format' }
+            ].map((option) => (
+              <div
+                key={option.value}
+                onClick={() => setSelectedIdType(option.value as IdType)}
+                style={{
+                  padding: 16,
+                  border: `2px solid ${selectedIdType === option.value ? 'var(--accent)' : 'var(--border)'}`,
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  background: selectedIdType === option.value ? 'rgba(var(--accent-rgb), 0.1)' : 'var(--card)',
+                  transition: 'all 0.2s ease'
+                }}
               >
-                Continue
-              </button>
-            </div>
-          </>
-        )
-      // ... other KYC cases
-      */
+                <div style={{ fontWeight: '500', color: 'var(--txt)', marginBottom: 4 }}>
+                  {option.label}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
+                  {option.description}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+            <button type="button" className="btn btn-outline" onClick={goBack} disabled={loading}>
+              Back
+            </button>
+            <button 
+              className="btn" 
+              onClick={goNext} 
+              disabled={!selectedIdType}
+            >
+              Continue
+            </button>
+          </div>
+        </>
+      )
+    // ... other KYC cases
+    */
   }
 
   return (
@@ -834,7 +834,7 @@ export default function SignUp({
       left: 0,
       width: '100vw',
       height: '100vh',
-      background: 'linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(/src/assets/wallpaper1.jpg) center/cover no-repeat',
+      background: 'transparent',
       zIndex: 1000,
       display: 'flex',
       alignItems: 'flex-start',
@@ -848,11 +848,11 @@ export default function SignUp({
         width: '100%',
         maxHeight: '80vh',
         marginTop: '6vh',
-        background: 'var(--card)',
-        border: '1px solid var(--border)',
+        background: 'transparent',
+        border: '1px solid transparent',
         borderRadius: '8px',
         padding: '28px',
-        boxShadow: 'var(--shadow)',
+        boxShadow: 'none',
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column'
@@ -885,39 +885,39 @@ export default function SignUp({
         </div>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <form onSubmit={handleSubmit}>
-              {!loading && (
-                <>
-                  {renderStep()}
-                  {error && (
-                    <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
-                      ⚠️ {error}
-                    </div>
-                  )}
-                  <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                    <button
-                      type="button"
-                      className="btn btn-outline"
-                      onClick={onCancel}
-                      disabled={loading}
-                    >
-                      Cancel
-                    </button>
-                    <button type="submit" className="btn" disabled={loading}>
-                      {loading 
-                        ? 'Processing…' 
-                        : currentStepGroup === 'names'
-                          ? 'Continue'
-                          : currentStepGroup === 'contact'
-                            ? 'Create Account'
-                            : currentStepId === 'otp'
-                              ? 'Verify OTP'
-                              : currentStepId === 'pin'
-                                ? 'Complete'
-                                : 'Next'}
-                    </button>
+            {!loading && (
+              <>
+                {renderStep()}
+                {error && (
+                  <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
+                    ⚠️ {error}
                   </div>
-                </>
-              )}
+                )}
+                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={onCancel}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn" disabled={loading}>
+                    {loading
+                      ? 'Processing…'
+                      : currentStepGroup === 'names'
+                        ? 'Continue'
+                        : currentStepGroup === 'contact'
+                          ? 'Create Account'
+                          : currentStepId === 'otp'
+                            ? 'Verify OTP'
+                            : currentStepId === 'pin'
+                              ? 'Complete'
+                              : 'Next'}
+                  </button>
+                </div>
+              </>
+            )}
           </form>
         </div>
       </div>

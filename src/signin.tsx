@@ -58,37 +58,37 @@ export default function SignIn({
   // Phone number normalization function
   function normalizePhone(input: string): string {
     const d = input.replace(/[^\d+]/g, '')
-    
+
     // Handle Nigerian phone numbers specifically
     if (/^0\d{10}$/.test(d)) return '+234' + d.slice(1) // 08123456789 -> +2348123456789
     if (/^234\d{10}$/.test(d)) return '+' + d // 2348123456789 -> +2348123456789
     if (/^\+234\d{10}$/.test(d)) return d // +2348123456789 -> +2348123456789
-    
+
     // Handle 10-digit numbers that could be Nigerian (starting with 7, 8, or 9)
     if (/^[789]\d{9}$/.test(d)) return '+234' + d // 8123456789 -> +2348123456789
-    
+
     // Handle other international formats
     if (/^\+?\d{10,15}$/.test(d)) return d.startsWith('+') ? d : '+' + d
-    
+
     return d
   }
 
   function handlePhoneChange(value: string) {
     // Remove all non-digits
     let digits = value.replace(/\D/g, '')
-    
+
     // Limit to 11 digits (allowing 0 at the beginning)
     digits = digits.slice(0, 11)
-    
+
     setPhone(digits)
   }
 
   async function submit(e?: React.FormEvent) {
     e?.preventDefault()
-    
+
     // Prevent duplicate submissions
     if (loading) return
-    
+
     setError(null)
 
     // Normalize phone number
@@ -144,13 +144,13 @@ export default function SignIn({
   }
 
   return (
-    <div style={{ 
-      position: 'fixed', 
-      top: 0, 
-      left: 0, 
-      width: '100vw', 
-      height: '100vh', 
-      background: 'linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(/src/assets/wallpaper1.jpg) center/cover no-repeat', 
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      background: 'transparent',
       zIndex: 1000,
       display: 'flex',
       alignItems: 'flex-start',
@@ -159,16 +159,16 @@ export default function SignIn({
       overflow: 'hidden',
       touchAction: 'none'
     }}>
-      <div style={{ 
-        maxWidth: '480px', 
+      <div style={{
+        maxWidth: '480px',
         width: '100%',
         maxHeight: '80vh',
         marginTop: '6vh',
-        background: 'var(--card)',
-        border: '1px solid var(--border)',
+        background: 'transparent',
+        border: '1px solid transparent',
         borderRadius: '8px',
         padding: '28px',
-        boxShadow: 'var(--shadow)',
+        boxShadow: 'none',
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column'
@@ -184,51 +184,51 @@ export default function SignIn({
 
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <form onSubmit={submit}>
-              <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Phone number</label>
-              <input
-                placeholder="08123456789"
-                value={phone}
-                onChange={(e) => handlePhoneChange(e.target.value)}
-                inputMode="numeric"
-                autoFocus
-                style={inputStyle}
-                className="no-zoom"
-                maxLength={11}
-              />
+            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Phone number</label>
+            <input
+              placeholder="08123456789"
+              value={phone}
+              onChange={(e) => handlePhoneChange(e.target.value)}
+              inputMode="numeric"
+              autoFocus
+              style={inputStyle}
+              className="no-zoom"
+              maxLength={11}
+            />
 
-              <div style={{ height: 8 }} />
+            <div style={{ height: 8 }} />
 
-              <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>PIN (6 digits)</label>
-              <input
-                placeholder="••••••"
-                value={pin}
-                onChange={(e) => setPin(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
-                type="password"
-                inputMode="numeric"
-                maxLength={6}
-                style={inputStyle}
-                className="no-zoom"
-              />
+            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>PIN (6 digits)</label>
+            <input
+              placeholder="••••••"
+              value={pin}
+              onChange={(e) => setPin(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
+              type="password"
+              inputMode="numeric"
+              maxLength={6}
+              style={inputStyle}
+              className="no-zoom"
+            />
 
-              {error && (
-                <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
-                  ⚠️ {error}
-                </div>
-              )}
-
-              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                <button className="btn" type="submit" disabled={loading}>
-                  {loading ? 'Signing in…' : 'Sign in'}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-outline"
-                  onClick={onCancel}
-                  disabled={loading}
-                >
-                  Cancel
-                </button>
+            {error && (
+              <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
+                ⚠️ {error}
               </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <button className="btn" type="submit" disabled={loading}>
+                {loading ? 'Signing in…' : 'Sign in'}
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={onCancel}
+                disabled={loading}
+              >
+                Cancel
+              </button>
+            </div>
           </form>
 
           <p style={{ marginTop: 12, fontSize: '0.8rem', color: 'var(--muted)' }}>
