@@ -10,7 +10,7 @@ type BankOption = { name: string; code: string }
 type InitiateSellRes = {
   success: boolean
   paymentId: string
-  reference: string
+  reference?: string
   token?: string
   network?: string
   sellAmount?: number
@@ -342,7 +342,6 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
       if (!res.ok || !data.success) throw new Error(data?.message || `HTTP ${res.status}`)
       setPayData(data)
       onChatEcho?.(buildPayoutRecap(initData, data))
-      setSummaryExpiresAt(new Date(Date.now() + 10 * 60 * 1000).toISOString())
     } catch (err: any) {
       setPayError(err.message || 'Failed to save payout details')
     } finally {
