@@ -4,11 +4,14 @@ import './MobileGame.css';
 import WallpaperSlideshow from './WallpaperSlideshow';
 import asteroidImg from './assets/asteroid.png';
 import spaceshipImg from './assets/spaceship.png';
+import { authFetch } from './lib/tokenManager';
 
 const GRID_ROWS = 3;
 const GRID_COLS = 4;
 // const HOLE_SIZE = 88; // px, fits mobile
 const MOLE_POP_TIME = 600;
+
+const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000';
 
 // Responsive window size hook for mobile
 function useWindowSize() {
@@ -41,6 +44,14 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
     const [useAltAsset, setUseAltAsset] = useState(false);
     const [explosions, setExplosions] = useState<number[]>([]);
 
+    async function postScoreUpdate() {
+        try {
+            const resp = await authFetch(`${API_BASE}/game/score`, { method: 'POST' });
+            // Intentionally ignore UI updates to avoid touching anything else
+            await resp.json().catch(() => ({}));
+        } catch (_) { /* silent */ }
+    }
+
     const nextMole = useCallback(() => {
         if (!playing.current) return;
         const idx = Math.floor(Math.random() * totalHoles);
@@ -72,6 +83,8 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
         // trigger explosion animation for this hole
         setExplosions((prev) => [...prev, idx]);
         setTimeout(() => setExplosions((prev) => prev.filter((i) => i !== idx)), 300);
+        // fire-and-forget backend update
+        postScoreUpdate();
         if (timeout.current) clearTimeout(timeout.current);
         setTimeout(nextMole, 90);
     };
