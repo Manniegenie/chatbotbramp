@@ -39,6 +39,7 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
     const playing = useRef(false);
     const totalHoles = GRID_ROWS * GRID_COLS;
     const [useAltAsset, setUseAltAsset] = useState(false);
+    const [explosions, setExplosions] = useState<number[]>([]);
 
     const nextMole = useCallback(() => {
         if (!playing.current) return;
@@ -68,6 +69,9 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
         setTimeout(() => setFakeDown(false), 75);
         setScore((s) => s + 1);
         setMoleIdx(null);
+        // trigger explosion animation for this hole
+        setExplosions((prev) => [...prev, idx]);
+        setTimeout(() => setExplosions((prev) => prev.filter((i) => i !== idx)), 300);
         if (timeout.current) clearTimeout(timeout.current);
         setTimeout(nextMole, 90);
     };
@@ -169,6 +173,7 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
                     >
                         {[...Array(totalHoles)].map((_, idx) => {
                             const whacked = fakeDown && moleIdx === idx;
+                            const showExplosion = explosions.includes(idx);
                             return (
                                 <div
                                     key={idx}
@@ -177,6 +182,15 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
                                     style={{ minHeight: holeSize, minWidth: holeSize }}
                                 >
                                     <div className="mobile-wam-hole-shadow"></div>
+                                    {showExplosion && (
+                                        <span
+                                            className="wam-explosion"
+                                            style={{
+                                                width: Math.max(24, Math.floor(holeSize * 0.9)),
+                                                height: Math.max(24, Math.floor(holeSize * 0.9)),
+                                            }}
+                                        />
+                                    )}
                                     {moleIdx === idx && gameState === 'playing' && (
                                         <img
                                             src={(useAltAsset ? spaceshipImg : asteroidImg) + '?v=1'}
