@@ -240,17 +240,20 @@ a {
 }
 
 .mobile-sell-btn {
-  padding: 8px 16px;
-  border-radius: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
   font-size: 14px;
-  font-weight: 600;
-  background: transparent;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.05);
   color: #fff;
-  border: 2px solid var(--accent);
-  box-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(15px);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: box-shadow .18s ease, transform .08s ease, opacity .2s ease, background .2s ease, border-color .2s ease;
 }
+.mobile-sell-btn:hover { box-shadow: 0 0 0 4px rgba(0,115,55,.12); transform: translateY(-1px); }
+.mobile-sell-btn:active { transform: translateY(1px); }
+.mobile-sell-btn:focus-visible { outline: none; box-shadow: 0 0 0 4px rgba(0,115,55,.25); }
 
 .mobile-sell-btn.mobile-sell-btn--no-border {
   border: none;

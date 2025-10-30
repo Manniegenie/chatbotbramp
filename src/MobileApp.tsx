@@ -937,14 +937,14 @@ export default function MobileApp() {
             ) : (
               <>
                 <button
-                  className="mobile-sell-btn mobile-sell-btn--no-border"
+                  className="btn mobile-sell-btn mobile-sell-btn--no-border"
                   onClick={handleSellClick}
                   aria-label="Pay Crypto"
                 >
                   Pay
                 </button>
                 <button
-                  className="mobile-sell-btn"
+                  className="btn mobile-sell-btn"
                   onClick={handleGameClick}
                   style={{ marginLeft: '8px' }}
                   aria-label="Game"
