@@ -3,6 +3,7 @@ import './MobileApp.css';
 import './MobileGame.css';
 import WallpaperSlideshow from './WallpaperSlideshow';
 import asteroidImg from './assets/asteroid.png';
+import spaceshipImg from './assets/spaceship.png';
 
 const GRID_ROWS = 3;
 const GRID_COLS = 4;
@@ -35,6 +36,7 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
     const difficulty = useRef(1);
     const playing = useRef(false);
     const totalHoles = GRID_ROWS * GRID_COLS;
+    const [useAltAsset, setUseAltAsset] = useState(false);
 
     const nextMole = useCallback(() => {
         if (!playing.current) return;
@@ -174,7 +176,7 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
                                     <div className="mobile-wam-hole-shadow"></div>
                                     {moleIdx === idx && gameState === 'playing' && (
                                         <img
-                                            src={asteroidImg}
+                                            src={(useAltAsset ? spaceshipImg : asteroidImg) + '?v=1'}
                                             alt="Mole"
                                             className="mobile-wam-mole"
                                             style={{
@@ -182,8 +184,12 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
                                                 height: whacked ? HOLE_SIZE - 18 : HOLE_SIZE - 7,
                                                 filter: whacked ? 'brightness(1.4) drop-shadow(0 0 22px #ffe49b)' : 'drop-shadow(0 0 6px #ffe49b66)',
                                                 transform: whacked ? 'scale(0.92)' : 'scale(1)',
+                                                objectFit: 'contain'
                                             }}
                                             draggable={false}
+                                            decoding="async"
+                                            loading="eager"
+                                            onError={() => setUseAltAsset(true)}
                                         />
                                     )}
                                 </div>

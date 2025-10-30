@@ -9,6 +9,7 @@ import { useInactivityTimer } from './lib/useInactivityTimer'
 import SellModal from './sell'
 import WallpaperSlideshow from './WallpaperSlideshow'
 import SpaceGame from './game'
+import MobileGame from './MobileGame';
 // Import logo from assets
 import BrampLogo from './assets/logo.png'
 import SolanaIcon from './assets/solana.png'
@@ -553,32 +554,7 @@ export default function App() {
     return (
       <div className="page" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
         <WallpaperSlideshow />
-        {/* Nav bar/header at top, desktop style */}
-        <header className="header" style={{ zIndex: 2000, position: 'fixed', top: 0, left: 0, width: '100vw', background: 'rgba(0,0,0,0.08)', border: 'none', boxShadow: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', minHeight: 56 }}>
-          <div className="brand" style={{ display: 'flex', alignItems: 'center', gap: 26 }}>
-            <div style={{ fontWeight: 700, fontSize: 18, color: '#fff', letterSpacing: 1 }}>Score: {/* get score from state or props */}0</div>
-            <div style={{ color: '#9ef57c', fontWeight: 700, fontSize: 18 }}>High: {/* get highScore from state or props */}0</div>
-          </div>
-          <button
-            onClick={() => setShowGame(false)}
-            className="btn"
-            style={{
-              background: '#f33',
-              color: '#fff',
-              fontWeight: 700,
-              borderRadius: 12,
-              width: 44,
-              height: 44,
-              minWidth: 44,
-              minHeight: 44
-            }}
-            aria-label="Close Game"
-          >✕</button>
-        </header>
-        {/* Centered game overlay/modal below nav */}
-        <div style={{ paddingTop: 80, minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <SpaceGame onClose={() => setShowGame(false)} />
-        </div>
+        <MobileGame onClose={() => setShowGame(false)} />
       </div>
     );
   }
@@ -1192,8 +1168,6 @@ export default function App() {
         )}
 
         <SellModal open={showSell} onClose={() => setShowSell(false)} onChatEcho={echoFromModalToChat} onStartInteraction={() => setShowCenteredInput(false)} />
-
-        {showGame && <SpaceGame onClose={() => setShowGame(false)} />}
 
         <footer className="footer">
           <div className="footer-links">
