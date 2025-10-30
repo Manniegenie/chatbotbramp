@@ -98,7 +98,7 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
                 left: 0,
                 width: '100vw',
                 height: '100vh',
-                background: 'transparent', // formerly gradient + wallpaper bg
+                background: 'transparent',
                 zIndex: 2000,
                 display: 'flex',
                 alignItems: 'center',
@@ -112,14 +112,14 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
         >
             <div
                 style={{
-                    maxWidth: '500px', // larger modal
+                    maxWidth: '500px',
                     width: '100%',
-                    maxHeight: '92vh', // taller modal
-                    background: 'var(--card,#18181f)',
-                    border: '1px solid var(--border,#252738)',
+                    maxHeight: '92vh',
+                    background: 'transparent', // make card transparent
+                    border: 'none',            // remove border
                     borderRadius: '14px',
-                    padding: '24px 0 20px 0',
-                    boxShadow: 'var(--shadow,0 0 8px #000a)',
+                    padding: 0,                // remove extra padding
+                    boxShadow: 'none',         // remove shadow
                     overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
@@ -142,7 +142,6 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
                     }}
                     aria-label="Close Game"
                 >✕</button>
-                {/* Score bar, grid, overlays - insert previous inner content here */}
                 <div style={{ width: '100%', position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                     <div className="mobile-wam-scorebar" style={{ justifyContent: 'flex-start', gap: 18, position: 'absolute', top: 0, left: 18, zIndex: 21 }}>
                         <div>Score: {score}</div>
@@ -184,7 +183,6 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
                             );
                         })}
                     </div>
-                    {/* OVERLAY UI */}
                     {gameState !== 'playing' && (
                         <div className="mobile-wam-overlay" style={{ width: gridW, height: gridH }}>
                             {gameState === 'menu' && (
