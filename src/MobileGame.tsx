@@ -110,29 +110,31 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
             }}
             onClick={onClose}
         >
-            {/* Close button top-right, out of card */}
-            {onClose && (
-                <button
-                    onClick={onClose}
-                    className="mobile-menu-btn"
-                    style={{
-                        position: 'fixed',
-                        top: 18,
-                        right: 24,
-                        background: '#f33',
-                        color: '#fff',
-                        fontWeight: 700,
-                        zIndex: 2500,
-                    }}
-                    aria-label="Close Game"
-                >✕</button>
-            )}
-            {/* Score and high score top-left, out of card */}
-            <div className="mobile-wam-scorebar" style={{ position: 'fixed', top: 18, left: 24, zIndex: 2500, background: 'rgba(0,0,0,0.13)', borderRadius: 12, padding: '5px 17px', display: 'flex', alignItems: 'center', gap: 18 }}>
-                <div>Score: {score}</div>
-                <div style={{ color: '#9ef57c' }}>High: {highScore}</div>
+            {/* REAL NAV BAR (like in MobileApp.tsx) */}
+            <div className="mobile-header" style={{ zIndex: 2500, position: 'fixed', top: 0, left: 0, width: '100vw', background: 'transparent', boxShadow: 'none' }}>
+                <div className="mobile-header-top" style={{ justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.08)', border: 'none', boxShadow: 'none', minHeight: 56, padding: '12px 16px 8px 16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                        <div style={{ fontWeight: 700, fontSize: 16, color: '#fff', letterSpacing: 1 }}>Score: {score}</div>
+                        <div style={{ color: '#9ef57c', fontWeight: 700, fontSize: 16 }}>High: {highScore}</div>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="mobile-menu-btn"
+                        style={{
+                            background: '#f33',
+                            color: '#fff',
+                            fontWeight: 700,
+                            borderRadius: 12,
+                            width: 44,
+                            height: 44,
+                            minWidth: 44,
+                            minHeight: 44
+                        }}
+                        aria-label="Close Game"
+                    >✕</button>
+                </div>
             </div>
-            {/* Modal card with only the grid/overlays */}
+            {/* Modal card and grid/overlay remain unchanged below */}
             <div
                 style={{
                     maxWidth: '500px',
