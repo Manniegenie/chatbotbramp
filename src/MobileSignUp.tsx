@@ -619,7 +619,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
       touchAction: 'none'
     }}>
       <div style={{
-        maxWidth: '359px',
+        maxWidth: '400px',
         width: '100%',
         maxHeight: '64.125vh',
         marginTop: '3.42vh',
@@ -659,7 +659,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
           {currentStepId === 'otp' || currentStepId === 'pin' ? <ProgressDots /> : null}
         </div>
 
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0, maxWidth: '92%', margin: '0 auto' }}>
           <form onSubmit={handleSubmit} className="mobile-auth-form">
             {!loading && (
               <>
