@@ -128,15 +128,53 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                 }
             };
 
+            const recordingStartTime = Date.now();
+
             mediaRecorder.onstop = async () => {
+                const recordingDuration = Date.now() - recordingStartTime;
+                const minRecordingDuration = 500; // Minimum 500ms (0.5 seconds) - Whisper needs at least 0.1s
+
                 if (audioChunksRef.current.length === 0) {
+                    console.log('No audio chunks recorded');
                     isRecordingRef.current = false;
                     setIsRecording(false);
+                    setError('No audio recorded. Please hold the button and speak.');
+                    setTimeout(() => setError(null), 3000);
                     return;
                 }
 
                 const blobType = mediaRecorder?.mimeType || 'audio/webm';
                 const audioBlob = new Blob(audioChunksRef.current, { type: blobType });
+
+                console.log('Recording stopped:', {
+                    duration: recordingDuration + 'ms',
+                    blobSize: audioBlob.size,
+                    chunkCount: audioChunksRef.current.length
+                });
+
+                // Validate minimum recording duration (Whisper requires at least 0.1s, we require 0.5s for safety)
+                if (recordingDuration < minRecordingDuration) {
+                    console.warn('Recording too short:', recordingDuration + 'ms', 'required:', minRecordingDuration + 'ms');
+                    setError(`Recording too short (${recordingDuration}ms). Please hold the button for at least 0.5 seconds.`);
+                    isRecordingRef.current = false;
+                    setIsRecording(false);
+                    audioChunksRef.current = [];
+                    setTimeout(() => setError(null), 4000);
+                    return;
+                }
+
+                // Validate minimum audio size (roughly 0.2 seconds of audio at 128kbps)
+                const minAudioSize = 2000; // Minimum ~2KB to ensure enough audio data
+                if (audioBlob.size < minAudioSize) {
+                    console.warn('Audio blob too small:', audioBlob.size + ' bytes', 'required:', minAudioSize + ' bytes');
+                    setError('Recording too short. Please speak for at least half a second.');
+                    isRecordingRef.current = false;
+                    setIsRecording(false);
+                    audioChunksRef.current = [];
+                    setTimeout(() => setError(null), 4000);
+                    return;
+                }
+
                 isRecordingRef.current = false;
                 setIsRecording(false);
                 await processAudio(audioBlob);
@@ -211,14 +249,21 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
 
             if (!transcribeRes.ok) {
                 const errorData = await transcribeRes.json().catch(() => ({}));
-                throw new Error(errorData.message || 'Transcription failed');
+                const errorMessage = errorData.message || errorData.error || 'Transcription failed';
+
+                // Handle specific error cases
+                if (errorMessage.includes('too short') || errorMessage.includes('Audio file is too short')) {
+                    throw new Error('Recording too short. Please hold the button longer (at least 0.5 seconds).');
+                }
+
+                throw new Error(errorMessage);
             }
 
             const transcribeData = await transcribeRes.json();
             const transcribedText = transcribeData.transcript?.trim();
 
             if (!transcribedText || transcribedText.length === 0) {
-                setError('No speech detected. Please try again.');
+                setError('No speech detected. Please speak clearly and try again.');
                 setIsProcessing(false);
                 return;
             }
@@ -278,6 +323,7 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
             // Play TTS audio if provided
             if (data.audioBase64 && typeof data.audioBase64 === 'string' && data.audioBase64.length > 0) {
                 console.log('Attempting to play audio, length:', data.audioBase64.length);
+                // Play audio (preparation is handled inside playAudio for mobile compatibility)
                 await playAudio(data.audioBase64);
             } else {
                 console.warn('No audio received in response');
@@ -295,6 +341,7 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
         }
     }
 
+
     async function playAudio(base64: string): Promise<void> {
         return new Promise((resolve, reject) => {
             try {
@@ -307,6 +354,7 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                         audioRef.current.src = '';
                         audioRef.current.onended = null;
                         audioRef.current.onerror = null;
+                        audioRef.current.load(); // Reset audio element
                         // Remove from DOM if it was added
                         if (audioRef.current.parentNode) {
                             audioRef.current.parentNode.removeChild(audioRef.current);
@@ -332,15 +380,19 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
 
                 console.log('Audio blob created, objectUrl:', objectUrl.substring(0, 50) + '...');
 
+                // Create audio element with mobile-specific settings
                 const audio = new Audio();
                 audio.src = objectUrl;
                 audio.preload = 'auto';
                 audio.volume = 1;
-                // Ensure audio plays even when modal/page is in background
+
+                // Mobile/iOS specific attributes for inline playback
                 audio.setAttribute('playsinline', 'true');
                 audio.setAttribute('webkit-playsinline', 'true');
-                // Attach audio element to body to ensure it's in the DOM and can play
-                if (!audio.parentNode && typeof document !== 'undefined') {
+                audio.setAttribute('preload', 'auto');
+
+                // Attach audio element to body immediately (required for mobile browsers)
+                if (typeof document !== 'undefined') {
                     audio.style.position = 'absolute';
                     audio.style.left = '-9999px';
                     audio.style.top = '-9999px';
@@ -348,8 +400,11 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                     audio.style.height = '1px';
                     audio.style.opacity = '0';
                     audio.style.pointerEvents = 'none';
+                    audio.style.zIndex = '-1';
                     document.body.appendChild(audio);
+                    console.log('Audio element attached to DOM for mobile playback');
                 }
+
                 audioRef.current = audio;
 
                 // Play audio and wait for it to finish
@@ -376,8 +431,25 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                 // Try to play immediately - ensure it works even when modal is open
                 const tryPlay = async () => {
                     console.log('Attempting to play audio, readyState:', audio.readyState, 'paused:', audio.paused);
+
+                    // Mobile/iOS workaround: Ensure audio is loaded and ready
+                    if (audio.readyState < 2) {
+                        console.log('Audio not ready, waiting for canplay...');
+                        await new Promise<void>((resolve) => {
+                            const onCanPlay = () => {
+                                audio.removeEventListener('canplay', onCanPlay);
+                                resolve();
+                            };
+                            audio.addEventListener('canplay', onCanPlay);
+                            setTimeout(() => {
+                                audio.removeEventListener('canplay', onCanPlay);
+                                resolve();
+                            }, 2000); // Max wait 2 seconds
+                        });
+                    }
+
                     try {
-                        // Force play even if browser thinks it's paused
+                        // Force play - mobile browsers require this within user gesture
                         const playPromise = audio.play();
 
                         if (playPromise !== undefined) {
@@ -388,32 +460,24 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                         }
                     } catch (e: any) {
                         console.error('Audio play() failed:', e);
-                        // If it's an autoplay policy error, try with user interaction simulation
+
+                        // Mobile-specific: If autoplay is blocked, try user-triggered playback
                         if (e.name === 'NotAllowedError' || e.message?.includes('play')) {
-                            console.log('Autoplay blocked, trying alternative method...');
-                            // Try again after a short delay
-                            setTimeout(async () => {
-                                try {
-                                    await audio.play();
-                                    console.log('Audio play() retry successful');
-                                } catch (retryErr) {
-                                    console.error('Audio play() retry failed:', retryErr);
-                                    // If still failing, try to focus the window/modal to get user gesture context
-                                    if (typeof window !== 'undefined') {
-                                        window.focus();
-                                    }
-                                    // One more retry
-                                    setTimeout(async () => {
-                                        try {
-                                            await audio.play();
-                                            console.log('Audio play() final retry successful');
-                                        } catch (finalErr) {
-                                            console.error('Audio play() final retry failed:', finalErr);
-                                            handleError(new Event('error'));
-                                        }
-                                    }, 300);
-                                }
-                            }, 200);
+                            console.log('Autoplay blocked on mobile, trying user-triggered method...');
+
+                            // Create a visible play button as fallback for mobile
+                            // But first, try one more time with immediate interaction
+                            try {
+                                // Small delay to let browser process
+                                await new Promise(resolve => setTimeout(resolve, 100));
+                                await audio.play();
+                                console.log('Audio play() mobile retry successful');
+                            } catch (retryErr: any) {
+                                console.error('Audio play() mobile retry failed:', retryErr);
+                                // Show error but don't reject - let user know
+                                setError('Audio playback blocked. Please tap the mic again after response.');
+                                handleError(new Event('error'));
+                            }
                         } else {
                             handleError(e);
                         }
@@ -422,32 +486,43 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
 
                 // Wait for audio to be ready - try multiple times
                 const attemptPlayback = () => {
-                    if (audio.readyState >= 2) {
+                    // Mobile: Try to play immediately if audio is already prepared
+                    if (audio.readyState >= 3) {
+                        console.log('Audio already fully loaded, playing immediately');
                         setTimeout(tryPlay, 50);
+                    } else if (audio.readyState >= 2) {
+                        console.log('Audio has enough data, playing');
+                        setTimeout(tryPlay, 100);
                     } else {
-                        const onCanPlay = () => {
-                            console.log('Audio can play, readyState:', audio.readyState);
+                        // Wait for audio to load
+                        const onCanPlayThrough = () => {
+                            console.log('Audio can play through, readyState:', audio.readyState);
                             tryPlay();
                         };
+                        audio.addEventListener('canplaythrough', onCanPlayThrough, { once: true });
+
+                        const onCanPlay = () => {
+                            console.log('Audio can play, readyState:', audio.readyState);
+                            setTimeout(() => tryPlay(), 100);
+                        };
                         audio.addEventListener('canplay', onCanPlay, { once: true });
-                        audio.addEventListener('canplaythrough', () => {
-                            console.log('Audio can play through');
-                            if (audio.paused) {
-                                tryPlay();
-                            }
-                        }, { once: true });
-                        audio.addEventListener('loadeddata', () => {
+
+                        const onLoadedData = () => {
                             console.log('Audio data loaded, readyState:', audio.readyState);
                             if (audio.readyState >= 2) {
-                                tryPlay();
+                                setTimeout(() => tryPlay(), 150);
                             }
-                        }, { once: true });
+                        };
+                        audio.addEventListener('loadeddata', onLoadedData, { once: true });
+
                         // Force load
                         try {
                             audio.load();
                             console.log('Called audio.load()');
                         } catch (e) {
                             console.error('audio.load() error:', e);
+                            // If load fails, try playing anyway after a delay
+                            setTimeout(() => tryPlay(), 500);
                         }
                     }
                 };
@@ -613,9 +688,9 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                     ) : isProcessing ? (
                         'Processing...'
                     ) : isRecording ? (
-                        'Recording... Release to send'
+                        'Recording... Hold longer, then release to send'
                     ) : sessionActive ? (
-                        'Press and hold to speak'
+                        'Press and hold to speak (hold for at least 0.5s)'
                     ) : (
                         'Starting...'
                     )}
