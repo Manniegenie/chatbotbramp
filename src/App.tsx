@@ -1032,7 +1032,7 @@ export default function App() {
           ) : (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <button className="btn" onClick={handleSellClick} style={{ color: '#fff' }}>
-                Pay
+                Sell
               </button>
               <button className="btn" onClick={handleKycClick} style={{ opacity: 0.6, cursor: 'not-allowed' }}>
                 KYC

@@ -985,9 +985,9 @@ export default function MobileApp() {
                 <button
                   className="btn mobile-sell-btn mobile-sell-btn--no-border"
                   onClick={handleSellClick}
-                  aria-label="Pay Crypto"
+                  aria-label="Sell Crypto"
                 >
-                  Pay
+                  Sell
                 </button>
                 <button
                   className="btn mobile-sell-btn"
@@ -1036,7 +1036,7 @@ export default function MobileApp() {
               KYC
             </button>
             <button className="mobile-menu-item primary" onClick={handleSellClick}>
-              Pay Crypto
+              Sell Crypto
             </button>
             <button className="mobile-menu-item" onClick={signOut}>
               Sign Out

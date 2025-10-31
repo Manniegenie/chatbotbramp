@@ -382,7 +382,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
   if (!open) return null
 
   const headerTitle =
-    step === 1 ? 'Start a Payment'
+    step === 1 ? 'Start a Trade'
       : (!payData ? 'Payout Details' : 'Transaction Summary')
 
   const showFinalSummary = !!payData
@@ -441,7 +441,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
         <div style={{ marginBottom: '16px', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div style={{ flex: 1 }}>
             <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 600, color: 'var(--txt)' }}>
-              {step === 1 ? 'Start a Payment' : 'Payout Details'}
+              {step === 1 ? 'Start a Trade' : 'Payout Details'}
             </h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: '8px' }}>
               <span style={{ width: 8, height: 8, borderRadius: 999, background: step >= 1 ? 'var(--accent)' : 'var(--border)' }}></span>
@@ -468,7 +468,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
 
         {/* Body */}
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          {/* STEP 1 — Start a Payment */}
+          {/* STEP 1 — Start a Trade */}
           {step === 1 && (
             <div className="mobile-sell-section">
 
