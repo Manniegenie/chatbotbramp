@@ -1030,9 +1030,6 @@ export default function App() {
             </div>
           ) : (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <span style={{ color: 'var(--muted)', fontSize: 13 }}>
-                {auth.user?.username ? `${auth.user.username} 💚` : 'User 💚'}
-              </span>
               <button className="btn" onClick={handleSellClick} style={{ color: '#fff' }}>
                 Pay
               </button>

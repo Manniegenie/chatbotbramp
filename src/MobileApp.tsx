@@ -1032,10 +1032,6 @@ export default function MobileApp() {
       {showMenu && auth && (
         <div className="mobile-menu-overlay" onClick={() => setShowMenu(false)}>
           <div className="mobile-menu" onClick={(e) => e.stopPropagation()}>
-            <div className="mobile-menu-user">
-              {auth.user?.username || 'User'}
-              <span style={{ color: 'var(--accent)', marginLeft: '6px', fontSize: '0.9em' }}>♥</span>
-            </div>
             <button className="mobile-menu-item" onClick={handleKycClick}>
               KYC
             </button>

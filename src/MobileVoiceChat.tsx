@@ -381,18 +381,12 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent }: Mo
                     }
 
                     if (data.audioBase64 && typeof data.audioBase64 === 'string' && data.audioBase64.length > 0) {
-                        // Try to play immediately after session restart
-                        try {
-                            await playAudio(data.audioBase64);
-                        } catch (audioErr) {
-                            // If playback fails, show play button for iOS
-                            setPendingAudio(data.audioBase64);
-                        }
-                    } else {
-                        awaitingTTSRef.current = false;
-                        setIsResponding(false);
-                        setIsProcessing(false);
+                        // Always show play button on mobile (no autoplay)
+                        setPendingAudio(data.audioBase64);
                     }
+                    awaitingTTSRef.current = false;
+                    setIsResponding(false);
+                    setIsProcessing(false);
                     return;
                 }
 
@@ -417,21 +411,14 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent }: Mo
                 }, 500);
             }
 
-            // Play TTS audio if provided
+            // On mobile, always show play button (no autoplay)
             if (data.audioBase64 && typeof data.audioBase64 === 'string' && data.audioBase64.length > 0) {
-                console.log('Attempting to play audio, length:', data.audioBase64.length);
-
-                try {
-                    // Try to play audio (preparation is handled inside playAudio for mobile compatibility)
-                    await playAudio(data.audioBase64);
-                } catch (audioErr: any) {
-                    // If playback fails (especially on iOS), show a play button
-                    console.warn('Audio playback failed, showing play button:', audioErr);
-                    setPendingAudio(data.audioBase64);
-                    awaitingTTSRef.current = false;
-                    setIsResponding(false);
-                    setIsProcessing(false);
-                }
+                console.log('Audio received, showing play button for mobile:', data.audioBase64.length);
+                // Always use play button on mobile (autoplay doesn't work reliably)
+                setPendingAudio(data.audioBase64);
+                awaitingTTSRef.current = false;
+                setIsResponding(false);
+                setIsProcessing(false);
             } else {
                 console.warn('No audio received in response');
                 awaitingTTSRef.current = false;
