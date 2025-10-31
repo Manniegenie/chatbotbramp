@@ -9,7 +9,9 @@ import MobileSignUp, { SignUpResult } from './MobileSignUp'
 import MobileSell from './MobileSell'
 import WallpaperSlideshow from './WallpaperSlideshow'
 import MobileGame from './MobileGame';
+import MobileVoiceChat from './MobileVoiceChat';
 import BrampLogo from './assets/logo.png'
+import micIcon from './assets/mic.png'
 import SolanaIcon from './assets/solana.png'
 import TetherIcon from './assets/tether.png'
 import CryptocurrencyIcon from './assets/cryptocurrency.png'
@@ -252,6 +254,7 @@ export default function MobileApp() {
   const [openSellAfterAuth, setOpenSellAfterAuth] = useState(false)
   const [shouldOpenSell, setShouldOpenSell] = useState(false)
   const [showGame, setShowGame] = useState(false)
+  const [showVoiceChat, setShowVoiceChat] = useState(false)
 
   const [auth, setAuth] = useState<SignInResult | null>(() => {
     const authState = getAuthState()
@@ -739,31 +742,52 @@ export default function MobileApp() {
                   placeholder="Try: Sell 100 USDT to NGN"
                   disabled={loading}
                 />
-                <button
-                  type="submit"
-                  className="mobile-send-btn mobile-send-inline"
-                  disabled={loading || !input.trim()}
-                  aria-label="Send message"
-                  onClick={sendMessage}
-                >
-                  {loading ? (
-                    <div className="mobile-spinner" />
-                  ) : (
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <line x1="22" y1="2" x2="11" y2="13" />
-                      <polygon points="22,2 15,22 11,13 2,9" />
-                    </svg>
-                  )}
-                </button>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    className="mobile-send-btn mobile-send-inline"
+                    onClick={() => setShowVoiceChat(true)}
+                    disabled={loading || !auth}
+                    aria-label="Voice chat"
+                    style={{
+                      background: 'transparent',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      padding: '8px',
+                      minWidth: '44px',
+                      height: '44px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <img src={micIcon} alt="Mic" style={{ width: '24px', height: '24px' }} />
+                  </button>
+                  <button
+                    type="submit"
+                    className="mobile-send-btn mobile-send-inline"
+                    disabled={loading || !input.trim()}
+                    aria-label="Send message"
+                    onClick={sendMessage}
+                  >
+                    {loading ? (
+                      <div className="mobile-spinner" />
+                    ) : (
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <line x1="22" y1="2" x2="11" y2="13" />
+                        <polygon points="22,2 15,22 11,13 2,9" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -799,30 +823,51 @@ export default function MobileApp() {
                 placeholder={loading ? 'Please wait…' : 'Chat Bramp AI...'}
                 disabled={loading}
               />
-              <button
-                type="submit"
-                className="mobile-send-btn"
-                disabled={loading || !input.trim()}
-                aria-label="Send message"
-              >
-                {loading ? (
-                  <div className="mobile-spinner" />
-                ) : (
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <line x1="22" y1="2" x2="11" y2="13" />
-                    <polygon points="22,2 15,22 11,13 2,9" />
-                  </svg>
-                )}
-              </button>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <button
+                  type="button"
+                  className="mobile-send-btn"
+                  onClick={() => setShowVoiceChat(true)}
+                  disabled={loading || !auth}
+                  aria-label="Voice chat"
+                  style={{
+                    background: 'transparent',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    padding: '8px',
+                    minWidth: '44px',
+                    height: '44px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <img src={micIcon} alt="Mic" style={{ width: '24px', height: '24px' }} />
+                </button>
+                <button
+                  type="submit"
+                  className="mobile-send-btn"
+                  disabled={loading || !input.trim()}
+                  aria-label="Send message"
+                >
+                  {loading ? (
+                    <div className="mobile-spinner" />
+                  ) : (
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <line x1="22" y1="2" x2="11" y2="13" />
+                      <polygon points="22,2 15,22 11,13 2,9" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </form>
           </>
         )}
@@ -835,6 +880,23 @@ export default function MobileApp() {
       <>
         <WallpaperSlideshow />
         <MobileGame onClose={() => setShowGame(false)} />
+      </>
+    );
+  }
+
+  if (showVoiceChat) {
+    return (
+      <>
+        <WallpaperSlideshow />
+        <MobileVoiceChat
+          onClose={() => setShowVoiceChat(false)}
+          onMessage={(text) => {
+            // Echo voice assistant response to chat
+            if (text) {
+              echoFromModalToChat(text);
+            }
+          }}
+        />
       </>
     );
   }
