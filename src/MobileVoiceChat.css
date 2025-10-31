@@ -1,0 +1,46 @@
+/* MobileVoiceChat.css */
+.mobile-voice-mic-container {
+  position: relative;
+  transition: all 0.3s ease;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none; /* Prevent iOS callout menu */
+  -webkit-tap-highlight-color: transparent; /* Remove tap highlight */
+}
+
+.mobile-voice-mic-container.active {
+  animation: voicePulse 1.5s ease-in-out infinite;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 20px rgba(0, 115, 55, 0.4) !important;
+}
+
+.mobile-voice-mic-container.thinking {
+  animation: thinkingPulse 1.5s ease-in-out infinite;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 20px rgba(0, 115, 55, 0.4) !important;
+}
+
+@keyframes voicePulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(0, 115, 55, 0.4), 0 0 20px rgba(0, 115, 55, 0.4);
+    border-width: 3px;
+  }
+  50% {
+    box-shadow: 0 0 0 15px rgba(0, 115, 55, 0), 0 0 30px rgba(0, 115, 55, 0.6);
+    border-width: 4px;
+  }
+}
+
+@keyframes thinkingPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(0, 115, 55, 0.4), 0 0 20px rgba(0, 115, 55, 0.4);
+    border-width: 3px;
+    opacity: 0.8;
+  }
+  50% {
+    box-shadow: 0 0 0 15px rgba(0, 115, 55, 0), 0 0 30px rgba(0, 115, 55, 0.6);
+    border-width: 4px;
+    opacity: 1;
+  }
+}
+
