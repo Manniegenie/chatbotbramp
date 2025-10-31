@@ -13,12 +13,12 @@ interface MobileVoiceChatProps {
 }
 
 export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatProps) {
-    const [isListening, setIsListening] = useState(false);
-    const [isActive, setIsActive] = useState(false);
+    const [isRecording, setIsRecording] = useState(false);
     const [transcript, setTranscript] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [sessionActive, setSessionActive] = useState(false);
     const [isResponding, setIsResponding] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
@@ -27,10 +27,9 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
     const audioUrlRef = useRef<string | null>(null);
     const sessionActiveRef = useRef<boolean>(false);
     const awaitingTTSRef = useRef<boolean>(false);
-    const silenceTimeoutRef = useRef<number | null>(null);
     const isRecordingRef = useRef<boolean>(false);
 
-    // Initialize audio recording
+    // Initialize voice session
     useEffect(() => {
         startVoiceSession();
 
@@ -43,7 +42,6 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                 try {
                     audioRef.current.pause();
                     audioRef.current.src = '';
-                    // Remove from DOM if it was added
                     if (audioRef.current.parentNode) {
                         audioRef.current.parentNode.removeChild(audioRef.current);
                     }
@@ -70,11 +68,11 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
             sessionActiveRef.current = true;
             setError(null);
 
-            // Request microphone access and start recording
+            // Request microphone access (don't start recording yet - wait for press)
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 streamRef.current = stream;
-                startRecording(stream);
+                // Don't start recording automatically - wait for user to press and hold
             } catch (err: any) {
                 setError(err.message || 'Failed to access microphone');
                 console.error('Microphone access error:', err);
@@ -85,29 +83,31 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
         }
     }
 
-    function startRecording(stream: MediaStream) {
+    // Press to talk: Start recording when user presses/holds button
+    function startRecording() {
+        if (!streamRef.current || isRecordingRef.current || isProcessing) {
+            return;
+        }
+
         try {
-            // Try to use the best available audio format for better transcription accuracy
-            // Prefer formats that Whisper handles well (webm/opus is excellent for quality)
+            const stream = streamRef.current;
             const options = [
-                { mimeType: 'audio/webm;codecs=opus', bitrate: 128000 }, // High quality for better transcription
+                { mimeType: 'audio/webm;codecs=opus', bitrate: 128000 },
                 { mimeType: 'audio/webm;codecs=opus' },
                 { mimeType: 'audio/webm' },
-                { mimeType: 'audio/mp4' },
-                { mimeType: 'audio/ogg;codecs=opus' }
+                { mimeType: 'audio/mp4' }
             ];
 
             let mediaRecorder: MediaRecorder | null = null;
             for (const opt of options) {
                 if (MediaRecorder.isTypeSupported(opt.mimeType)) {
                     try {
-                        // Try with bitrate if specified, fallback to default
                         const config: any = { mimeType: opt.mimeType };
                         if (opt.bitrate) {
                             config.audioBitsPerSecond = opt.bitrate;
                         }
                         mediaRecorder = new MediaRecorder(stream, config);
-                        console.log('Using audio format:', opt.mimeType, opt.bitrate ? `at ${opt.bitrate}bps` : '');
+                        console.log('Using audio format:', opt.mimeType);
                         break;
                     } catch (e) {
                         console.warn('Failed to create MediaRecorder with:', opt.mimeType, e);
@@ -116,8 +116,7 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
             }
 
             if (!mediaRecorder) {
-                mediaRecorder = new MediaRecorder(stream); // Fallback to default
-                console.log('Using default MediaRecorder');
+                mediaRecorder = new MediaRecorder(stream);
             }
 
             mediaRecorderRef.current = mediaRecorder;
@@ -130,88 +129,61 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
             };
 
             mediaRecorder.onstop = async () => {
-                if (audioChunksRef.current.length === 0) return;
+                if (audioChunksRef.current.length === 0) {
+                    isRecordingRef.current = false;
+                    setIsRecording(false);
+                    return;
+                }
 
                 const blobType = mediaRecorder?.mimeType || 'audio/webm';
                 const audioBlob = new Blob(audioChunksRef.current, { type: blobType });
+                isRecordingRef.current = false;
+                setIsRecording(false);
                 await processAudio(audioBlob);
-
-                // Resume recording after processing
-                if (sessionActiveRef.current && streamRef.current && !isRecordingRef.current) {
-                    setTimeout(() => {
-                        if (sessionActiveRef.current && streamRef.current) {
-                            startRecording(streamRef.current);
-                        }
-                    }, 500);
-                }
             };
 
             mediaRecorder.onerror = (event: any) => {
                 console.error('MediaRecorder error:', event.error);
                 setError('Recording error occurred');
+                isRecordingRef.current = false;
+                setIsRecording(false);
             };
 
-            // Use smaller chunks for faster processing (500ms)
-            mediaRecorder.start(500);
+            // Start recording (no timeout - user releases button to stop)
+            mediaRecorder.start();
             isRecordingRef.current = true;
-            setIsListening(true);
-            setIsActive(true);
-
-            // Clear any existing silence timeout
-            if (silenceTimeoutRef.current) {
-                clearTimeout(silenceTimeoutRef.current);
-            }
-
-            // Set timeout to stop and process after 4 seconds of recording (slightly longer for better context)
-            silenceTimeoutRef.current = window.setTimeout(() => {
-                stopAndProcess();
-            }, 4000);
+            setIsRecording(true);
+            setTranscript('');
+            setError(null);
         } catch (err: any) {
             console.error('Start recording error:', err);
             setError(err.message || 'Failed to start recording');
+            isRecordingRef.current = false;
+            setIsRecording(false);
         }
     }
 
+    // Release button: Stop recording and process
     function stopRecording() {
         if (mediaRecorderRef.current && isRecordingRef.current) {
             try {
-                if (mediaRecorderRef.current.state !== 'inactive') {
+                if (mediaRecorderRef.current.state === 'recording') {
                     mediaRecorderRef.current.stop();
                 }
-                isRecordingRef.current = false;
-                setIsListening(false);
-                setIsActive(false);
             } catch (err) {
                 console.error('Stop recording error:', err);
             }
         }
-        if (silenceTimeoutRef.current) {
-            clearTimeout(silenceTimeoutRef.current);
-            silenceTimeoutRef.current = null;
-        }
-    }
-
-    async function stopAndProcess() {
-        stopRecording();
-        if (audioChunksRef.current.length > 0) {
-            const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-            audioChunksRef.current = [];
-            await processAudio(audioBlob);
-        }
+        // Don't reset state here - let onstop handler do it
     }
 
     async function processAudio(audioBlob: Blob) {
         if (!sessionActiveRef.current || audioBlob.size === 0) {
-            // Restart recording if session is active
-            if (sessionActiveRef.current && streamRef.current) {
-                setTimeout(() => {
-                    if (sessionActiveRef.current && streamRef.current) {
-                        startRecording(streamRef.current);
-                    }
-                }, 500);
-            }
             return;
         }
+
+        setIsProcessing(true);
+        setError(null);
 
         try {
             // Convert blob to base64
@@ -225,7 +197,7 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                 reader.readAsDataURL(audioBlob);
             });
 
-            // Send to backend for Whisper transcription with audio format info
+            // Send to backend for Whisper transcription
             const transcribeRes = await authFetch(`${API_BASE}/voice/transcribe`, {
                 method: 'POST',
                 headers: {
@@ -233,26 +205,21 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                 },
                 body: JSON.stringify({
                     audioBase64,
-                    audioMimeType: audioBlob.type || 'audio/webm' // Include MIME type for better format detection
+                    audioMimeType: audioBlob.type || 'audio/webm'
                 }),
             });
 
             if (!transcribeRes.ok) {
-                throw new Error('Transcription failed');
+                const errorData = await transcribeRes.json().catch(() => ({}));
+                throw new Error(errorData.message || 'Transcription failed');
             }
 
             const transcribeData = await transcribeRes.json();
             const transcribedText = transcribeData.transcript?.trim();
 
             if (!transcribedText || transcribedText.length === 0) {
-                // No speech detected, restart recording
-                if (sessionActiveRef.current && streamRef.current) {
-                    setTimeout(() => {
-                        if (sessionActiveRef.current && streamRef.current) {
-                            startRecording(streamRef.current);
-                        }
-                    }, 500);
-                }
+                setError('No speech detected. Please try again.');
+                setIsProcessing(false);
                 return;
             }
 
@@ -261,16 +228,10 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
 
             // Send transcribed text to get AI response
             await handleVoiceMessage(transcribedText);
-        } catch (err) {
+        } catch (err: any) {
             console.error('Process audio error:', err);
-            // Restart recording on error
-            if (sessionActiveRef.current && streamRef.current) {
-                setTimeout(() => {
-                    if (sessionActiveRef.current && streamRef.current) {
-                        startRecording(streamRef.current);
-                    }
-                }, 500);
-            }
+            setError(err.message || 'Failed to process audio');
+            setIsProcessing(false);
         }
     }
 
@@ -322,14 +283,7 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                 console.warn('No audio received in response');
                 awaitingTTSRef.current = false;
                 setIsResponding(false);
-                // Restart recording
-                if (sessionActiveRef.current && streamRef.current) {
-                    setTimeout(() => {
-                        if (sessionActiveRef.current && streamRef.current) {
-                            startRecording(streamRef.current);
-                        }
-                    }, 500);
-                }
+                setIsProcessing(false);
             }
         } catch (err) {
             console.error('Voice message error:', err);
@@ -409,15 +363,9 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                     console.log('Audio playback ended');
                     awaitingTTSRef.current = false;
                     setIsResponding(false);
+                    setIsProcessing(false);
                     resolve();
-                    // Restart recording after audio finishes
-                    if (sessionActiveRef.current && streamRef.current) {
-                        setTimeout(() => {
-                            if (sessionActiveRef.current && streamRef.current && !isRecordingRef.current) {
-                                startRecording(streamRef.current);
-                            }
-                        }, 300);
-                    }
+                    // Ready for next press-to-talk
                 };
 
                 const handleError: OnErrorEventHandler = (event: Event | string) => {
@@ -574,9 +522,9 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                     ✕
                 </button>
 
-                {/* Mic icon with green border animation */}
-                <div
-                    className={`mobile-voice-mic-container ${isActive ? 'active' : ''}`}
+                {/* Mic icon with press-to-talk button */}
+                <button
+                    className={`mobile-voice-mic-container ${isRecording ? 'active' : ''}`}
                     style={{
                         width: '120px',
                         height: '120px',
@@ -584,13 +532,43 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        border: isActive ? '3px solid var(--accent)' : '3px solid rgba(255, 255, 255, 0.2)',
+                        background: isRecording ? 'rgba(0, 115, 55, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                        border: isRecording ? '3px solid var(--accent)' : '3px solid rgba(255, 255, 255, 0.2)',
                         transition: 'all 0.3s ease',
-                        boxShadow: isActive ? '0 0 20px rgba(0, 115, 55, 0.4)' : 'none',
-                        outline: isActive ? '2px solid var(--accent)' : 'none',
-                        outlineOffset: isActive ? '4px' : '0',
+                        boxShadow: isRecording ? '0 0 20px rgba(0, 115, 55, 0.4)' : 'none',
+                        outline: 'none',
+                        cursor: isProcessing || isResponding ? 'not-allowed' : 'pointer',
                     }}
+                    onMouseDown={(e) => {
+                        e.preventDefault();
+                        if (!isProcessing && !isResponding && !isRecording) {
+                            startRecording();
+                        }
+                    }}
+                    onMouseUp={(e) => {
+                        e.preventDefault();
+                        if (isRecording) {
+                            stopRecording();
+                        }
+                    }}
+                    onMouseLeave={(e) => {
+                        if (isRecording) {
+                            stopRecording();
+                        }
+                    }}
+                    onTouchStart={(e) => {
+                        e.preventDefault();
+                        if (!isProcessing && !isResponding && !isRecording) {
+                            startRecording();
+                        }
+                    }}
+                    onTouchEnd={(e) => {
+                        e.preventDefault();
+                        if (isRecording) {
+                            stopRecording();
+                        }
+                    }}
+                    disabled={isProcessing || isResponding}
                 >
                     <img
                         src={micIcon}
@@ -598,10 +576,10 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                         style={{
                             width: '64px',
                             height: '64px',
-                            opacity: isListening ? 1 : 0.6,
+                            opacity: isRecording ? 1 : 0.6,
                         }}
                     />
-                </div>
+                </button>
 
                 {/* Transcript display */}
                 {transcript && (
@@ -637,11 +615,13 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                     {error ? (
                         <span style={{ color: '#ff6b6b' }}>⚠️ {error}</span>
                     ) : isResponding ? (
-                        'Processing…'
-                    ) : isListening ? (
-                        'Listening...'
+                        'Playing response...'
+                    ) : isProcessing ? (
+                        'Processing...'
+                    ) : isRecording ? (
+                        'Recording... Release to send'
                     ) : sessionActive ? (
-                        'Say something...'
+                        'Press and hold to speak'
                     ) : (
                         'Starting...'
                     )}
