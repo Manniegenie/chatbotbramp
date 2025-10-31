@@ -22,6 +22,8 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const lastTranscriptRef = useRef<string>('');
     const sessionActiveRef = useRef<boolean>(false);
+    const silenceTimeoutRef = useRef<number | null>(null);
+    const pendingTranscriptRef = useRef<string>('');
 
     // Initialize speech recognition
     useEffect(() => {
@@ -36,9 +38,36 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
         recognition.interimResults = true;
         recognition.lang = 'en-US';
 
+        // Clear any existing silence timeout
+        function clearSilenceTimeout() {
+            if (silenceTimeoutRef.current !== null) {
+                clearTimeout(silenceTimeoutRef.current);
+                silenceTimeoutRef.current = null;
+            }
+        }
+
+        // Process pending transcript after silence
+        function processAfterSilence() {
+            if (pendingTranscriptRef.current.trim()) {
+                const text = pendingTranscriptRef.current.trim();
+                pendingTranscriptRef.current = '';
+                clearSilenceTimeout();
+                try {
+                    if (recognitionRef.current) {
+                        try { recognitionRef.current.stop(); } catch { }
+                    }
+                    setIsListening(false);
+                    setIsActive(false);
+                } finally {
+                    handleVoiceMessage(text);
+                }
+            }
+        }
+
         recognition.onstart = () => {
             setIsListening(true);
             setIsActive(true);
+            clearSilenceTimeout();
         };
 
         recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -59,9 +88,20 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                 setTranscript(fullTranscript);
                 lastTranscriptRef.current = fullTranscript;
 
-                // If we have a final transcript, send it to the backend
+                // Update pending transcript
+                pendingTranscriptRef.current = fullTranscript;
+
+                // Clear existing silence timeout
+                clearSilenceTimeout();
+
+                // If we have a final transcript, process immediately
                 if (finalTranscript.trim()) {
-                    handleVoiceMessage(finalTranscript.trim());
+                    processAfterSilence();
+                } else if (interimTranscript.trim()) {
+                    // If we have interim results, wait for silence (1 second of no new results)
+                    silenceTimeoutRef.current = window.setTimeout(() => {
+                        processAfterSilence();
+                    }, 1000);
                 }
             }
         };
@@ -77,19 +117,35 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
         };
 
         recognition.onend = () => {
+            clearSilenceTimeout();
+
+            // Process any pending transcript before restarting
+            if (pendingTranscriptRef.current.trim()) {
+                const text = pendingTranscriptRef.current.trim();
+                pendingTranscriptRef.current = '';
+                setIsListening(false);
+                setIsActive(false);
+
+                // Process the transcript - restart will happen after TTS finishes
+                handleVoiceMessage(text);
+                return;
+            }
+
+            // Only restart if there's no pending transcript
             setIsListening(false);
             setIsActive(false);
-            // Restart if session is still active
+
+            // Restart if session is still active and no transcript was processed
             if (sessionActiveRef.current && !error) {
                 setTimeout(() => {
-                    if (sessionActiveRef.current && recognitionRef.current) {
+                    if (sessionActiveRef.current && recognitionRef.current && !pendingTranscriptRef.current.trim()) {
                         try {
                             recognitionRef.current.start();
                         } catch (e) {
                             console.error('Failed to restart recognition:', e);
                         }
                     }
-                }, 100);
+                }, 300);
             }
         };
 
@@ -99,6 +155,7 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
         startVoiceSession();
 
         return () => {
+            clearSilenceTimeout();
             if (recognitionRef.current) {
                 try {
                     recognitionRef.current.stop();
@@ -195,6 +252,14 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
             const audio = new Audio(`data:audio/mp3;base64,${base64}`);
             audioRef.current = audio;
             // Attempt to play (mobile may require user gesture; mic press counts)
+            audio.onended = () => {
+                // Resume recognition after TTS finishes
+                if (sessionActiveRef.current && recognitionRef.current) {
+                    try { recognitionRef.current.start(); } catch { }
+                    setIsListening(true);
+                    setIsActive(true);
+                }
+            };
             audio.play().catch((e) => {
                 console.error('Audio play error:', e);
             });
