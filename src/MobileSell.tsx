@@ -176,6 +176,10 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
   const [banksLoading, setBanksLoading] = useState(false)
   const [banksError, setBanksError] = useState<string | null>(null)
   const [bankOptions, setBankOptions] = useState<BankOption[]>([])
+
+  // OCR Scan
+  const [ocrLoading, setOcrLoading] = useState(false)
+  const [ocrError, setOcrError] = useState<string | null>(null)
   const banksFetchedRef = useRef(false)
 
 
@@ -398,9 +402,8 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
       height: '100vh',
       background: 'rgba(0, 0, 0, 0.5)',
       zIndex: 1000,
-      display: 'flex',
-      alignItems: 'flex-start',
-      justifyContent: 'center',
+      display: 'grid',
+      placeItems: 'start center',
       padding: '16px',
       overflow: 'hidden',
       touchAction: 'none'
@@ -623,9 +626,13 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                             capture="environment"
                             style={{ display: 'none' }}
                             onChange={async (e) => {
+                              const file = e.currentTarget.files?.[0]
+                              if (!file) return
+
+                              setOcrLoading(true)
+                              setOcrError(null)
+
                               try {
-                                const file = e.currentTarget.files && e.currentTarget.files[0]
-                                if (!file) return
                                 // Read file to dataURL
                                 const dataUrl: string = await new Promise((resolve, reject) => {
                                   const r = new FileReader()
@@ -633,40 +640,64 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                                   r.onerror = reject
                                   r.readAsDataURL(file)
                                 })
-                                // OCR via tesseract.js worker with CDN paths (reliable in Vercel/Vite)
-                                const { createWorker } = await import('tesseract.js') as any
-                                const worker = await createWorker({
-                                  logger: undefined,
-                                  workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js',
-                                  corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5/tesseract-core.wasm.js'
-                                })
-                                await worker.load()
-                                await worker.loadLanguage('eng')
-                                await worker.initialize('eng')
+
+                                // OCR via tesseract.js - use CDN paths for Vercel/Vite builds
+                                const { createWorker } = await import('tesseract.js')
+
+                                console.log('Creating Tesseract worker...')
+
+                                // Try with CDN paths first (required for Vercel/Vite)
+                                let worker
+                                try {
+                                  // Tesseract.js v5 API: createWorker(lang, OSD, options)
+                                  worker = await createWorker('eng', 1, {
+                                    workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js',
+                                    corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5/tesseract-core.wasm.js',
+                                    langPath: 'https://cdn.jsdelivr.net/npm/tesseract.js-data@5'
+                                  })
+                                  console.log('Worker created with CDN paths')
+                                } catch (workerError) {
+                                  console.warn('CDN worker creation failed, trying default:', workerError)
+                                  // Fallback to default (works in dev, may fail in production)
+                                  worker = await createWorker('eng')
+                                  console.log('Worker created with default paths')
+                                }
+
+                                console.log('Starting OCR recognition...')
                                 const { data: { text: ocrText } } = await worker.recognize(dataUrl)
                                 await worker.terminate()
-                                const text = String(ocrText || '').slice(0, 10000)
-                                if (!text.trim()) {
-                                  console.warn('Scan: empty OCR text')
+                                console.log('OCR completed, text length:', ocrText?.length || 0)
+
+                                const text = String(ocrText || '').trim().slice(0, 10000)
+                                if (!text) {
+                                  setOcrError('No text found in image. Please try a clearer picture.')
                                   return
                                 }
+
                                 // Call backend AI scan
                                 const resp = await fetch(`${API_BASE}/scan/text`, {
                                   method: 'POST',
                                   headers: getHeaders(),
                                   body: JSON.stringify({ text })
                                 })
+
                                 if (!resp.ok) {
-                                  console.warn('Scan API failed', resp.status)
+                                  setOcrError(`Scan failed (${resp.status}). Please try again.`)
                                   return
                                 }
-                                const payload = await resp.json().catch(() => ({} as any))
-                                const detected = payload?.detected || {}
-                                const detectedBank = String(detected.bankName || '').toLowerCase()
-                                const detectedAcct = String(detected.accountNumber || '')
+
+                                const payload = await resp.json().catch(() => ({ success: false }))
+                                if (!payload.success) {
+                                  setOcrError(payload.message || 'Could not extract account details.')
+                                  return
+                                }
+
+                                const detected = payload.detected || {}
+                                const detectedBank = String(detected.bankName || '').toLowerCase().trim()
+                                const detectedAcct = String(detected.accountNumber || '').trim()
 
                                 // Map bank name -> bankCode
-                                if (detectedBank && Array.isArray(bankOptions) && bankOptions.length) {
+                                if (detectedBank && bankOptions.length > 0) {
                                   const hit = bankOptions.find((b: BankOption) => {
                                     const bn = String(b.name || '').toLowerCase()
                                     return bn === detectedBank || bn.includes(detectedBank) || detectedBank.includes(bn)
@@ -674,18 +705,25 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                                   if (hit) {
                                     setBankCode(hit.code)
                                     setBankName(hit.name)
+                                  } else {
+                                    setOcrError(`Bank "${detected.bankName}" not found. Please select manually.`)
                                   }
                                 }
+
                                 // Fill account number (must be 10 digits)
                                 if (/^\d{10}$/.test(detectedAcct)) {
                                   setAccountNumber(detectedAcct)
+                                } else if (detectedAcct) {
+                                  setOcrError(`Invalid account number: "${detectedAcct}". Must be 10 digits.`)
                                 }
-                                // Trigger account name resolution if your existing effect listens to bankCode+accountNumber
-                              } catch (err) {
+
+                              } catch (err: any) {
                                 console.error('Scan flow failed', err)
+                                setOcrError(err.message || 'Failed to scan image. Please try again.')
                               } finally {
-                                // reset input to allow same file re-select
-                                try { e.currentTarget.value = '' } catch { }
+                                setOcrLoading(false)
+                                // Reset input to allow same file re-select
+                                e.currentTarget.value = ''
                               }
                             }}
                           />
@@ -696,9 +734,15 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                               const el = document.getElementById('account-scan-input') as HTMLInputElement | null
                               el?.click()
                             }}
+                            disabled={ocrLoading}
                           >
-                            Scan with Camera
+                            {ocrLoading ? 'Scanning...' : 'Scan with Camera'}
                           </button>
+                          {ocrError && (
+                            <div className="mobile-sell-error" style={{ marginTop: '8px', fontSize: '13px', color: '#ff6b6b' }}>
+                              ⚠️ {ocrError}
+                            </div>
+                          )}
                         </div>
                       </div>
                       {initData?.quote?.breakdown?.displayFeeNgn != null && (

@@ -836,9 +836,8 @@ export default function SignUp({
       height: '100vh',
       background: 'rgba(0, 0, 0, 0.5)',
       zIndex: 1000,
-      display: 'flex',
-      alignItems: 'flex-start',
-      justifyContent: 'center',
+      display: 'grid',
+      placeItems: 'start center',
       padding: '20px',
       overflow: 'hidden',
       touchAction: 'none'

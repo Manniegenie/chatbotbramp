@@ -154,9 +154,8 @@ export default function MobileSignIn({
       height: '100vh',
       background: 'rgba(0, 0, 0, 0.5)',
       zIndex: 1000,
-      display: 'flex',
-      alignItems: 'flex-start',
-      justifyContent: 'center',
+      display: 'grid',
+      placeItems: 'start center',
       padding: '16px',
       overflow: 'hidden',
       touchAction: 'none'
