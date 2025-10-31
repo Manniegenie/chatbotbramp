@@ -11,9 +11,10 @@ interface MobileVoiceChatProps {
     onClose: () => void;
     onMessage?: (text: string) => void;
     onSellIntent?: () => void; // Callback to open sell modal when sell intent detected
+    isMobile?: boolean; // Whether this is mobile (show play button) or desktop (auto-play)
 }
 
-export default function MobileVoiceChat({ onClose, onMessage, onSellIntent }: MobileVoiceChatProps) {
+export default function MobileVoiceChat({ onClose, onMessage, onSellIntent, isMobile = true }: MobileVoiceChatProps) {
     const [isRecording, setIsRecording] = useState(false);
     const [transcript, setTranscript] = useState('');
     const [error, setError] = useState<string | null>(null);
@@ -87,22 +88,41 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent }: Mo
 
     // Press to talk: Start recording when user presses/holds button
     function startRecording() {
-        if (!streamRef.current || isRecordingRef.current || isProcessing) {
+        // Prevent multiple simultaneous recordings
+        if (!streamRef.current || isRecordingRef.current) {
+            console.log('startRecording blocked:', { hasStream: !!streamRef.current, isRecording: isRecordingRef.current });
             return;
+        }
+
+        // Ensure previous recording state is fully cleared
+        if (isProcessing || isResponding) {
+            console.log('startRecording blocked: still processing/responding');
+            // Don't block if we're just waiting - let the user retry
+            // But ensure we're not in a recording state
+            if (isRecordingRef.current) {
+                return;
+            }
         }
 
         try {
             // Clean up any existing MediaRecorder before starting new one
             if (mediaRecorderRef.current) {
                 try {
+                    // Capture the old recorder to compare later
+                    const oldRecorder = mediaRecorderRef.current;
+
                     // Remove old event handlers to prevent them from firing
-                    mediaRecorderRef.current.onstop = null;
-                    mediaRecorderRef.current.ondataavailable = null;
-                    mediaRecorderRef.current.onerror = null;
+                    oldRecorder.onstop = null;
+                    oldRecorder.ondataavailable = null;
+                    oldRecorder.onerror = null;
 
                     // Stop and clean up if it's still active
-                    if (mediaRecorderRef.current.state === 'recording') {
-                        mediaRecorderRef.current.stop();
+                    if (oldRecorder.state === 'recording' || oldRecorder.state === 'paused') {
+                        try {
+                            oldRecorder.stop();
+                        } catch (stopErr) {
+                            console.warn('Error stopping old MediaRecorder:', stopErr);
+                        }
                     }
                 } catch (cleanupErr) {
                     console.warn('Error cleaning up previous MediaRecorder:', cleanupErr);
@@ -110,8 +130,11 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent }: Mo
                 mediaRecorderRef.current = null;
             }
 
-            // Clear audio chunks from any previous recording
+            // Ensure all state is reset before starting
+            isRecordingRef.current = false;
+            setIsRecording(false);
             audioChunksRef.current = [];
+            setError(null);
 
             const stream = streamRef.current;
             const options = [
@@ -142,10 +165,15 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent }: Mo
                 mediaRecorder = new MediaRecorder(stream);
             }
 
-            // Store recording start time before setting up handlers
+            // Store recording start time INSIDE the handler closure - use timestamp as part of recorder
+            const recordingId = `recording_${Date.now()}_${Math.random()}`;
             const recordingStartTime = Date.now();
-            const recordingId = `recording_${recordingStartTime}_${Math.random()}`;
-            console.log('Starting new recording:', recordingId);
+
+            // Store start time on the recorder itself to avoid closure issues
+            (mediaRecorder as any)._recordingStartTime = recordingStartTime;
+            (mediaRecorder as any)._recordingId = recordingId;
+
+            console.log('Starting new recording:', recordingId, { startTime: recordingStartTime });
 
             mediaRecorder.ondataavailable = (event) => {
                 // Only add chunks if this is still the current recording
@@ -161,20 +189,28 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent }: Mo
                     return;
                 }
 
-                const recordingDuration = Date.now() - recordingStartTime;
+                // Get start time from recorder itself (more reliable than closure)
+                const startTime = (mediaRecorder as any)._recordingStartTime || recordingStartTime;
+                const recId = (mediaRecorder as any)._recordingId || recordingId;
+                const recordingDuration = Date.now() - startTime;
                 const minRecordingDuration = 500; // Minimum 500ms (0.5 seconds) - Whisper needs at least 0.1s
 
                 console.log('Recording stopped:', {
-                    recordingId,
+                    recordingId: recId,
                     duration: recordingDuration + 'ms',
+                    startTime,
+                    endTime: Date.now(),
                     chunkCount: audioChunksRef.current.length,
                     timestamp: new Date().toISOString()
                 });
 
+                // Immediately clear recording state to prevent race conditions
+                isRecordingRef.current = false;
+                setIsRecording(false);
+
                 if (audioChunksRef.current.length === 0) {
                     console.log('No audio chunks recorded');
-                    isRecordingRef.current = false;
-                    setIsRecording(false);
+                    audioChunksRef.current = [];
                     setError('No audio recorded. Please hold the button and speak.');
                     setTimeout(() => setError(null), 3000);
                     return;
@@ -184,7 +220,7 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent }: Mo
                 const audioBlob = new Blob(audioChunksRef.current, { type: blobType });
 
                 console.log('Recording validation:', {
-                    recordingId,
+                    recordingId: recId,
                     duration: recordingDuration + 'ms',
                     blobSize: audioBlob.size,
                     chunkCount: audioChunksRef.current.length
@@ -192,9 +228,7 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent }: Mo
 
                 // Validate minimum recording duration (Whisper requires at least 0.1s, we require 0.5s for safety)
                 if (recordingDuration < minRecordingDuration) {
-                    console.warn('Recording too short:', recordingDuration + 'ms', 'required:', minRecordingDuration + 'ms');
-                    isRecordingRef.current = false;
-                    setIsRecording(false);
+                    console.warn('Recording too short:', recordingDuration + 'ms', 'required:', minRecordingDuration + 'ms', 'startTime:', startTime);
                     audioChunksRef.current = [];
                     setError(`Recording too short (${recordingDuration}ms). Please hold the button for at least 0.5 seconds.`);
                     setTimeout(() => setError(null), 4000);
@@ -205,8 +239,6 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent }: Mo
                 const minAudioSize = 2000; // Minimum ~2KB to ensure enough audio data
                 if (audioBlob.size < minAudioSize) {
                     console.warn('Audio blob too small:', audioBlob.size + ' bytes', 'required:', minAudioSize + ' bytes');
-                    isRecordingRef.current = false;
-                    setIsRecording(false);
                     audioChunksRef.current = [];
                     setError('Recording too short. Please speak for at least half a second.');
                     setTimeout(() => setError(null), 4000);
@@ -217,8 +249,9 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent }: Mo
                 const finalBlob = audioBlob;
                 audioChunksRef.current = [];
 
-                isRecordingRef.current = false;
-                setIsRecording(false);
+                // Clear recorder reference AFTER capturing blob to prevent race
+                mediaRecorderRef.current = null;
+
                 await processAudio(finalBlob);
             };
 
@@ -253,16 +286,26 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent }: Mo
 
     // Release button: Stop recording and process
     function stopRecording() {
-        if (mediaRecorderRef.current && isRecordingRef.current) {
+        const recorder = mediaRecorderRef.current;
+        if (recorder && (recorder.state === 'recording' || recorder.state === 'paused')) {
             try {
-                if (mediaRecorderRef.current.state === 'recording') {
-                    mediaRecorderRef.current.stop();
-                }
+                console.log('stopRecording called, MediaRecorder state:', recorder.state);
+                recorder.stop();
             } catch (err) {
                 console.error('Stop recording error:', err);
+                // Force cleanup on error
+                isRecordingRef.current = false;
+                setIsRecording(false);
+                audioChunksRef.current = [];
             }
+        } else {
+            console.log('stopRecording: No active recorder or not recording', {
+                hasRecorder: !!recorder,
+                state: recorder?.state,
+                isRecording: isRecordingRef.current
+            });
         }
-        // Don't reset state here - let onstop handler do it
+        // State reset is handled in onstop handler
     }
 
     async function processAudio(audioBlob: Blob) {
@@ -364,6 +407,10 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent }: Mo
             console.error('Process audio error:', err);
             setError(err.message || 'Failed to process audio');
             setIsProcessing(false);
+            // Ensure recording state is cleared
+            isRecordingRef.current = false;
+            setIsRecording(false);
+            audioChunksRef.current = [];
         }
     }
 
@@ -429,12 +476,21 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent }: Mo
                     }
 
                     if (data.audioBase64 && typeof data.audioBase64 === 'string' && data.audioBase64.length > 0) {
-                        // Always show play button on mobile (no autoplay)
-                        setPendingAudio(data.audioBase64);
+                        // Auto-play on desktop, show play button on mobile
+                        if (isMobile) {
+                            setPendingAudio(data.audioBase64);
+                        } else {
+                            // Desktop: auto-play
+                            await playAudio(data.audioBase64);
+                        }
                     }
+                    // Always clear processing/responding state
                     awaitingTTSRef.current = false;
                     setIsResponding(false);
                     setIsProcessing(false);
+                    // Ensure recording state is cleared
+                    isRecordingRef.current = false;
+                    setIsRecording(false);
                     return;
                 }
 
@@ -459,20 +515,26 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent }: Mo
                 }, 500);
             }
 
-            // On mobile, always show play button (no autoplay)
+            // Auto-play on desktop, show play button on mobile
             if (data.audioBase64 && typeof data.audioBase64 === 'string' && data.audioBase64.length > 0) {
-                console.log('Audio received, showing play button for mobile:', data.audioBase64.length);
-                // Always use play button on mobile (autoplay doesn't work reliably)
-                setPendingAudio(data.audioBase64);
-                awaitingTTSRef.current = false;
-                setIsResponding(false);
-                setIsProcessing(false);
+                if (isMobile) {
+                    console.log('Audio received, showing play button for mobile:', data.audioBase64.length);
+                    setPendingAudio(data.audioBase64);
+                } else {
+                    console.log('Audio received, auto-playing on desktop:', data.audioBase64.length);
+                    // Desktop: auto-play
+                    await playAudio(data.audioBase64);
+                }
             } else {
                 console.warn('No audio received in response');
-                awaitingTTSRef.current = false;
-                setIsResponding(false);
-                setIsProcessing(false);
             }
+            // Always clear processing/responding state when response received
+            awaitingTTSRef.current = false;
+            setIsResponding(false);
+            setIsProcessing(false);
+            // Ensure recording state is cleared
+            isRecordingRef.current = false;
+            setIsRecording(false);
         } catch (err) {
             console.error('Voice message error:', err);
             setError('Failed to process voice message');
@@ -556,6 +618,10 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent }: Mo
                     setIsResponding(false);
                     setIsProcessing(false);
                     setTranscript(''); // Clear transcript after playback on mobile
+                    // Ensure recording state is fully cleared
+                    isRecordingRef.current = false;
+                    setIsRecording(false);
+                    audioChunksRef.current = [];
                     resolve();
                     // Ready for next press-to-talk
                 };
@@ -604,9 +670,9 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent }: Mo
                     } catch (e: any) {
                         console.error('Audio play() failed:', e);
 
-                        // Mobile-specific: If autoplay is blocked, show play button instead
+                        // If autoplay is blocked (mobile or desktop), show play button instead
                         if (e.name === 'NotAllowedError' || e.message?.includes('play')) {
-                            console.log('Autoplay blocked on iOS/mobile - will show play button');
+                            console.log('Autoplay blocked - will show play button as fallback');
                             // Don't reject - we'll show a play button
                             // Store the audio for manual playback
                             setPendingAudio(base64);
@@ -730,7 +796,7 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent }: Mo
 
                 {/* Mic icon OR Play button (conditional) - in same position */}
                 {pendingAudio ? (
-                    // Play button replaces mic when pending audio exists
+                    // Play button replaces mic when pending audio exists (mobile only, or desktop fallback if autoplay fails)
                     <button
                         onClick={async () => {
                             try {

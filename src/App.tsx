@@ -603,6 +603,7 @@ export default function App() {
       <>
         <WallpaperSlideshow />
         <MobileVoiceChat
+          isMobile={false}
           onClose={() => setShowVoiceChat(false)}
           onMessage={(text) => {
             // Echo voice assistant response to chat
