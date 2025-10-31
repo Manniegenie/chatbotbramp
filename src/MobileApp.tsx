@@ -875,6 +875,11 @@ export default function MobileApp() {
               echoFromModalToChat(text);
             }
           }}
+          onSellIntent={() => {
+            // Open sell modal when sell intent detected in voice chat
+            setShowVoiceChat(false);
+            setShowSell(true);
+          }}
         />
       </>
     );

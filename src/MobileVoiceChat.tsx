@@ -10,15 +10,17 @@ const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000';
 interface MobileVoiceChatProps {
     onClose: () => void;
     onMessage?: (text: string) => void;
+    onSellIntent?: () => void; // Callback to open sell modal when sell intent detected
 }
 
-export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatProps) {
+export default function MobileVoiceChat({ onClose, onMessage, onSellIntent }: MobileVoiceChatProps) {
     const [isRecording, setIsRecording] = useState(false);
     const [transcript, setTranscript] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [sessionActive, setSessionActive] = useState(false);
     const [isResponding, setIsResponding] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [pendingAudio, setPendingAudio] = useState<string | null>(null); // For iOS playback fallback
 
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
@@ -251,6 +253,43 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                 const errorData = await transcribeRes.json().catch(() => ({}));
                 const errorMessage = errorData.message || errorData.error || 'Transcription failed';
 
+                // Handle session expiration - auto-restart session
+                if (transcribeRes.status === 410 || errorMessage.includes('expired') || errorMessage.includes('not found')) {
+                    console.log('Voice session expired, restarting...');
+                    await startVoiceSession();
+                    // Retry transcription after session restart
+                    const retryRes = await authFetch(`${API_BASE}/voice/transcribe`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            audioBase64,
+                            audioMimeType: audioBlob.type || 'audio/webm'
+                        }),
+                    });
+
+                    if (!retryRes.ok) {
+                        const retryErrorData = await retryRes.json().catch(() => ({}));
+                        throw new Error(retryErrorData.message || 'Transcription failed after session restart');
+                    }
+
+                    // Use the retry response instead
+                    const transcribeData = await retryRes.json();
+                    const transcribedText = transcribeData.transcript?.trim();
+
+                    if (!transcribedText || transcribedText.length === 0) {
+                        setError('No speech detected. Please hold the button longer (at least 0.5s) and speak clearly.');
+                        setIsProcessing(false);
+                        setTimeout(() => setError(null), 4000);
+                        return;
+                    }
+
+                    setTranscript(transcribedText);
+                    await handleVoiceMessage(transcribedText);
+                    return;
+                }
+
                 // Handle specific error cases
                 if (errorMessage.includes('too short') || errorMessage.includes('Audio file is too short')) {
                     throw new Error('Recording too short. Please hold the button longer (at least 0.5 seconds).');
@@ -309,6 +348,54 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
             });
 
             if (!res.ok) {
+                // Handle session expiration for /respond endpoint
+                if (res.status === 410) {
+                    console.log('Voice session expired during response, restarting...');
+                    await startVoiceSession();
+                    // Retry the request
+                    const retryRes = await authFetch(`${API_BASE}/voice/respond`, {
+                        method: 'POST',
+                        body: JSON.stringify({ message: text }),
+                    });
+
+                    if (!retryRes.ok) {
+                        throw new Error('Voice response failed after session restart');
+                    }
+
+                    // Use the retry response
+                    const data = await retryRes.json();
+
+                    console.log('Voice response received (retry):', {
+                        hasAudio: !!data.audioBase64,
+                        audioLength: data.audioBase64 ? data.audioBase64.length : 0,
+                        success: data.success,
+                        intent: data.intent
+                    });
+
+                    // Check if sell intent was detected - open sell modal
+                    if (data.intent === 'sell' && onSellIntent) {
+                        console.log('Sell intent detected in voice chat (retry), opening sell modal');
+                        setTimeout(() => {
+                            onSellIntent();
+                        }, 500);
+                    }
+
+                    if (data.audioBase64 && typeof data.audioBase64 === 'string' && data.audioBase64.length > 0) {
+                        // Try to play immediately after session restart
+                        try {
+                            await playAudio(data.audioBase64);
+                        } catch (audioErr) {
+                            // If playback fails, show play button for iOS
+                            setPendingAudio(data.audioBase64);
+                        }
+                    } else {
+                        awaitingTTSRef.current = false;
+                        setIsResponding(false);
+                        setIsProcessing(false);
+                    }
+                    return;
+                }
+
                 throw new Error('Voice response failed');
             }
 
@@ -317,14 +404,34 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
             console.log('Voice response received:', {
                 hasAudio: !!data.audioBase64,
                 audioLength: data.audioBase64 ? data.audioBase64.length : 0,
-                success: data.success
+                success: data.success,
+                intent: data.intent
             });
+
+            // Check if sell intent was detected - open sell modal
+            if (data.intent === 'sell' && onSellIntent) {
+                console.log('Sell intent detected in voice chat, opening sell modal');
+                // Small delay to ensure audio starts playing, then open modal
+                setTimeout(() => {
+                    onSellIntent();
+                }, 500);
+            }
 
             // Play TTS audio if provided
             if (data.audioBase64 && typeof data.audioBase64 === 'string' && data.audioBase64.length > 0) {
                 console.log('Attempting to play audio, length:', data.audioBase64.length);
-                // Play audio (preparation is handled inside playAudio for mobile compatibility)
-                await playAudio(data.audioBase64);
+
+                try {
+                    // Try to play audio (preparation is handled inside playAudio for mobile compatibility)
+                    await playAudio(data.audioBase64);
+                } catch (audioErr: any) {
+                    // If playback fails (especially on iOS), show a play button
+                    console.warn('Audio playback failed, showing play button:', audioErr);
+                    setPendingAudio(data.audioBase64);
+                    awaitingTTSRef.current = false;
+                    setIsResponding(false);
+                    setIsProcessing(false);
+                }
             } else {
                 console.warn('No audio received in response');
                 awaitingTTSRef.current = false;
@@ -461,23 +568,17 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                     } catch (e: any) {
                         console.error('Audio play() failed:', e);
 
-                        // Mobile-specific: If autoplay is blocked, try user-triggered playback
+                        // Mobile-specific: If autoplay is blocked, show play button instead
                         if (e.name === 'NotAllowedError' || e.message?.includes('play')) {
-                            console.log('Autoplay blocked on mobile, trying user-triggered method...');
-
-                            // Create a visible play button as fallback for mobile
-                            // But first, try one more time with immediate interaction
-                            try {
-                                // Small delay to let browser process
-                                await new Promise(resolve => setTimeout(resolve, 100));
-                                await audio.play();
-                                console.log('Audio play() mobile retry successful');
-                            } catch (retryErr: any) {
-                                console.error('Audio play() mobile retry failed:', retryErr);
-                                // Show error but don't reject - let user know
-                                setError('Audio playback blocked. Please tap the mic again after response.');
-                                handleError(new Event('error'));
-                            }
+                            console.log('Autoplay blocked on iOS/mobile - will show play button');
+                            // Don't reject - we'll show a play button
+                            // Store the audio for manual playback
+                            setPendingAudio(base64);
+                            awaitingTTSRef.current = false;
+                            setIsResponding(false);
+                            setIsProcessing(false);
+                            resolve(); // Resolve so the promise doesn't hang
+                            return;
                         } else {
                             handleError(e);
                         }
@@ -672,6 +773,56 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                     </div>
                 )}
 
+                {/* Play button for iOS when autoplay is blocked */}
+                {pendingAudio && (
+                    <button
+                        onClick={async () => {
+                            try {
+                                setPendingAudio(null);
+                                setIsResponding(true);
+                                await playAudio(pendingAudio);
+                            } catch (err) {
+                                console.error('Manual audio play failed:', err);
+                                setError('Failed to play audio. Please try again.');
+                            }
+                        }}
+                        style={{
+                            background: 'var(--accent)',
+                            border: '2px solid var(--accent)',
+                            borderRadius: '50%',
+                            width: '80px',
+                            height: '80px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            padding: 0,
+                            boxShadow: '0 0 20px rgba(0, 115, 55, 0.4)',
+                            transition: 'all 0.3s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'scale(1.1)';
+                            e.currentTarget.style.boxShadow = '0 0 30px rgba(0, 115, 55, 0.6)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'scale(1)';
+                            e.currentTarget.style.boxShadow = '0 0 20px rgba(0, 115, 55, 0.4)';
+                        }}
+                        aria-label="Play audio response"
+                    >
+                        <svg
+                            width="32"
+                            height="32"
+                            viewBox="0 0 24 24"
+                            fill="white"
+                            stroke="white"
+                            strokeWidth="2"
+                        >
+                            <polygon points="8,5 19,12 8,19" />
+                        </svg>
+                    </button>
+                )}
+
                 {/* Status */}
                 <div
                     style={{
@@ -683,6 +834,8 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                 >
                     {error ? (
                         <span style={{ color: '#ff6b6b' }}>⚠️ {error}</span>
+                    ) : pendingAudio ? (
+                        'Tap play button to hear response'
                     ) : isResponding ? (
                         'Playing response...'
                     ) : isProcessing ? (
