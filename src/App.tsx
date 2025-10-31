@@ -432,21 +432,21 @@ export default function App() {
     const messagesEl = messagesRef.current
     if (!messagesEl) return
 
-    let scrollTimeout: NodeJS.Timeout | null = null
-    let clickTimeout: NodeJS.Timeout | null = null
+    let scrollTimeout: number | null = null
+    let clickTimeout: number | null = null
 
     const handleScroll = () => {
       messagesEl.classList.add('scrolling')
-      if (scrollTimeout) clearTimeout(scrollTimeout)
-      scrollTimeout = setTimeout(() => {
+      if (scrollTimeout) window.clearTimeout(scrollTimeout)
+      scrollTimeout = window.setTimeout(() => {
         messagesEl.classList.remove('scrolling')
       }, 1500) // Hide after 1.5 seconds of no scrolling
     }
 
     const handleClick = () => {
       messagesEl.classList.add('scrolling')
-      if (clickTimeout) clearTimeout(clickTimeout)
-      clickTimeout = setTimeout(() => {
+      if (clickTimeout) window.clearTimeout(clickTimeout)
+      clickTimeout = window.setTimeout(() => {
         messagesEl.classList.remove('scrolling')
       }, 2000) // Hide after 2 seconds of no interaction
     }
@@ -457,8 +457,8 @@ export default function App() {
     return () => {
       messagesEl.removeEventListener('scroll', handleScroll)
       messagesEl.removeEventListener('click', handleClick)
-      if (scrollTimeout) clearTimeout(scrollTimeout)
-      if (clickTimeout) clearTimeout(clickTimeout)
+      if (scrollTimeout) window.clearTimeout(scrollTimeout)
+      if (clickTimeout) window.clearTimeout(clickTimeout)
     }
   }, [messages])
 
