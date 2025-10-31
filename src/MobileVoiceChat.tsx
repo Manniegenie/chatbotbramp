@@ -18,10 +18,12 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
     const [transcript, setTranscript] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [sessionActive, setSessionActive] = useState(false);
+    const [isResponding, setIsResponding] = useState(false);
     const recognitionRef = useRef<SpeechRecognition | null>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const lastTranscriptRef = useRef<string>('');
     const sessionActiveRef = useRef<boolean>(false);
+    const awaitingTTSRef = useRef<boolean>(false);
     const silenceTimeoutRef = useRef<number | null>(null);
     const pendingTranscriptRef = useRef<string>('');
 
@@ -131,21 +133,21 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                 return;
             }
 
-            // Only restart if there's no pending transcript
+            // Only restart if there's no pending transcript and we are not awaiting TTS
             setIsListening(false);
             setIsActive(false);
 
-            // Restart if session is still active and no transcript was processed
-            if (sessionActiveRef.current && !error) {
+            // Restart if session is still active, not awaiting TTS, and no transcript was processed
+            if (sessionActiveRef.current && !awaitingTTSRef.current && !error) {
                 setTimeout(() => {
-                    if (sessionActiveRef.current && recognitionRef.current && !pendingTranscriptRef.current.trim()) {
+                    if (sessionActiveRef.current && recognitionRef.current && !pendingTranscriptRef.current.trim() && !awaitingTTSRef.current) {
                         try {
                             recognitionRef.current.start();
                         } catch (e) {
                             console.error('Failed to restart recognition:', e);
                         }
                     }
-                }, 300);
+                }, 400);
             }
         };
 
@@ -217,6 +219,10 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
         if (!sessionActiveRef.current || !text.trim()) return;
 
         try {
+            // Mark awaiting TTS/response
+            setIsResponding(true);
+            awaitingTTSRef.current = true;
+
             const res = await authFetch(`${API_BASE}/voice/respond`, {
                 method: 'POST',
                 body: JSON.stringify({ message: text }),
@@ -228,18 +234,31 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
 
             const data = await res.json();
 
-            // Call onMessage callback if provided
-            if (onMessage && data.reply) {
-                onMessage(data.reply);
-            }
+            // Voice chat: Don't add text to chat - only play audio response
+            // No onMessage callback - we don't want text responses in voice mode
 
             // Play TTS audio if provided
             if (data.audioBase64 && typeof data.audioBase64 === 'string') {
                 playAudio(data.audioBase64);
+            } else {
+                // No audio: clear responding state and restart listening after slight delay
+                awaitingTTSRef.current = false;
+                setIsResponding(false);
+                if (sessionActiveRef.current && recognitionRef.current) {
+                    setTimeout(() => {
+                        if (sessionActiveRef.current && recognitionRef.current) {
+                            try { recognitionRef.current.start(); } catch { }
+                            setIsListening(true);
+                            setIsActive(true);
+                        }
+                    }, 500);
+                }
             }
         } catch (err) {
             console.error('Voice message error:', err);
             setError('Failed to process voice message');
+            awaitingTTSRef.current = false;
+            setIsResponding(false);
         }
     }
 
@@ -254,17 +273,27 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
             // Attempt to play (mobile may require user gesture; mic press counts)
             audio.onended = () => {
                 // Resume recognition after TTS finishes
+                awaitingTTSRef.current = false;
+                setIsResponding(false);
                 if (sessionActiveRef.current && recognitionRef.current) {
-                    try { recognitionRef.current.start(); } catch { }
-                    setIsListening(true);
-                    setIsActive(true);
+                    setTimeout(() => {
+                        if (sessionActiveRef.current && recognitionRef.current) {
+                            try { recognitionRef.current.start(); } catch { }
+                            setIsListening(true);
+                            setIsActive(true);
+                        }
+                    }, 300);
                 }
             };
             audio.play().catch((e) => {
                 console.error('Audio play error:', e);
+                awaitingTTSRef.current = false;
+                setIsResponding(false);
             });
         } catch (err) {
             console.error('Audio play error:', err);
+            awaitingTTSRef.current = false;
+            setIsResponding(false);
         }
     }
 
