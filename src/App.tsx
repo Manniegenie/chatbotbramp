@@ -10,8 +10,10 @@ import SellModal from './sell'
 import WallpaperSlideshow from './WallpaperSlideshow'
 import SpaceGame from './game'
 import MobileGame from './MobileGame';
+import MobileVoiceChat from './MobileVoiceChat';
 // Import logo from assets
 import BrampLogo from './assets/logo.png'
+import micIcon from './assets/mic.png'
 import SolanaIcon from './assets/solana.png'
 import TetherIcon from './assets/tether.png'
 import CryptocurrencyIcon from './assets/cryptocurrency.png'
@@ -273,6 +275,7 @@ export default function App() {
   const [showSignUp, setShowSignUp] = useState(false)
   const [showSell, setShowSell] = useState(false)
   const [openSellAfterAuth, setOpenSellAfterAuth] = useState(false)
+  const [showVoiceChat, setShowVoiceChat] = useState(false)
   const [shouldOpenSell, setShouldOpenSell] = useState(false)
   const [showGame, setShowGame] = useState(false)
 
@@ -592,6 +595,23 @@ export default function App() {
         <WallpaperSlideshow />
         <MobileGame onClose={() => setShowGame(false)} />
       </div>
+    );
+  }
+
+  if (showVoiceChat) {
+    return (
+      <>
+        <WallpaperSlideshow />
+        <MobileVoiceChat
+          onClose={() => setShowVoiceChat(false)}
+          onMessage={(text) => {
+            // Echo voice assistant response to chat
+            if (text) {
+              echoFromModalToChat(text);
+            }
+          }}
+        />
+      </>
     );
   }
 
@@ -1234,63 +1254,89 @@ export default function App() {
                   autoFocus
                   disabled={loading}
                 />
-                <button
-                  type="submit"
-                  className="btn"
-                  disabled={loading || !input.trim()}
-                  style={{
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '0',
-                    background: loading || !input.trim() ? '#ccc' : 'var(--accent)',
-                    color: 'white',
-                    border: 'none',
-                    cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s ease',
-                    boxShadow: loading || !input.trim() ? 'none' : '0 2px 8px rgba(0,115,55,0.18)',
-                    minWidth: '44px',
-                    flexShrink: 0
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!loading && input.trim()) {
-                      e.currentTarget.style.transform = 'scale(1.05)'
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,115,55,0.26)'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'scale(1)'
-                    e.currentTarget.style.boxShadow = loading || !input.trim() ? 'none' : '0 2px 8px rgba(0,115,55,0.18)'
-                  }}
-                >
-                  {loading ? (
-                    <div style={{
-                      width: '16px',
-                      height: '16px',
-                      border: '2px solid transparent',
-                      borderTop: '2px solid white',
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => setShowVoiceChat(true)}
+                    disabled={loading || !auth}
+                    aria-label="Voice chat"
+                    style={{
+                      background: 'transparent',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      padding: '8px',
+                      minWidth: '44px',
+                      height: '44px',
+                      width: '44px',
                       borderRadius: '50%',
-                      animation: 'spin 1s linear infinite'
-                    }} />
-                  ) : (
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <line x1="22" y1="2" x2="11" y2="13" />
-                      <polygon points="22,2 15,22 11,13 2,9" />
-                    </svg>
-                  )}
-                </button>
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: loading || !auth ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.2s ease',
+                      flexShrink: 0
+                    }}
+                  >
+                    <img src={micIcon} alt="Mic" style={{ width: '24px', height: '24px' }} />
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn"
+                    disabled={loading || !input.trim()}
+                    style={{
+                      width: '44px',
+                      height: '44px',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '0',
+                      background: loading || !input.trim() ? '#ccc' : 'var(--accent)',
+                      color: 'white',
+                      border: 'none',
+                      cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.2s ease',
+                      boxShadow: loading || !input.trim() ? 'none' : '0 2px 8px rgba(0,115,55,0.18)',
+                      minWidth: '44px',
+                      flexShrink: 0
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!loading && input.trim()) {
+                        e.currentTarget.style.transform = 'scale(1.05)'
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,115,55,0.26)'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)'
+                      e.currentTarget.style.boxShadow = loading || !input.trim() ? 'none' : '0 2px 8px rgba(0,115,55,0.18)'
+                    }}
+                  >
+                    {loading ? (
+                      <div style={{
+                        width: '16px',
+                        height: '16px',
+                        border: '2px solid transparent',
+                        borderTop: '2px solid white',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite'
+                      }} />
+                    ) : (
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="white"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <line x1="22" y1="2" x2="11" y2="13" />
+                        <polygon points="22,2 15,22 11,13 2,9" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </form>
             )}
 

@@ -235,13 +235,21 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
 
             const data = await res.json();
 
+            console.log('Voice response received:', {
+                hasAudio: !!data.audioBase64,
+                audioLength: data.audioBase64 ? data.audioBase64.length : 0,
+                success: data.success
+            });
+
             // Voice chat: Don't add text to chat - only play audio response
             // No onMessage callback - we don't want text responses in voice mode
 
             // Play TTS audio if provided
-            if (data.audioBase64 && typeof data.audioBase64 === 'string') {
+            if (data.audioBase64 && typeof data.audioBase64 === 'string' && data.audioBase64.length > 0) {
+                console.log('Attempting to play audio, length:', data.audioBase64.length);
                 playAudio(data.audioBase64);
             } else {
+                console.warn('No audio received in response');
                 // No audio: clear responding state and restart listening after slight delay
                 awaitingTTSRef.current = false;
                 setIsResponding(false);
@@ -265,9 +273,14 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
 
     function playAudio(base64: string) {
         try {
+            console.log('playAudio called, base64 length:', base64.length);
+
             // Stop any existing playback first
             if (audioRef.current) {
-                try { audioRef.current.pause(); } catch { }
+                try {
+                    audioRef.current.pause();
+                    audioRef.current.src = '';
+                } catch { }
             }
             // Revoke old object URL if any
             if (audioUrlRef.current) {
@@ -284,15 +297,54 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
             const objectUrl = URL.createObjectURL(blob);
             audioUrlRef.current = objectUrl;
 
+            console.log('Audio blob created, objectUrl:', objectUrl.substring(0, 50) + '...');
+
             const audio = new Audio();
             audio.src = objectUrl;
             audio.preload = 'auto';
-            audio.autoplay = false;
             audio.volume = 1;
             audioRef.current = audio;
+
+            let playTimeout: number | null = null;
+            let hasStartedPlaying = false;
+
+            // Timeout fallback - if audio doesn't start in 15 seconds, reset
+            playTimeout = window.setTimeout(() => {
+                if (!hasStartedPlaying) {
+                    console.warn('Audio playback timeout (15s) - resetting state');
+                    if (audioRef.current) {
+                        try {
+                            audioRef.current.pause();
+                            audioRef.current.src = '';
+                        } catch { }
+                    }
+                    if (audioUrlRef.current) {
+                        try { URL.revokeObjectURL(audioUrlRef.current); } catch { }
+                        audioUrlRef.current = null;
+                    }
+                    awaitingTTSRef.current = false;
+                    setIsResponding(false);
+                    if (sessionActiveRef.current && recognitionRef.current) {
+                        setTimeout(() => {
+                            if (sessionActiveRef.current && recognitionRef.current) {
+                                try {
+                                    recognitionRef.current.start();
+                                    setIsListening(true);
+                                    setIsActive(true);
+                                } catch (e) {
+                                    console.error('Failed to restart after timeout:', e);
+                                }
+                            }
+                        }, 300);
+                    }
+                }
+            }, 15000);
+
             // Attempt to play once ready
             audio.onended = () => {
-                // Resume recognition after TTS finishes
+                console.log('Audio playback ended');
+                if (playTimeout) clearTimeout(playTimeout);
+                hasStartedPlaying = true;
                 awaitingTTSRef.current = false;
                 setIsResponding(false);
                 if (sessionActiveRef.current && recognitionRef.current) {
@@ -305,33 +357,101 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                     }, 300);
                 }
             };
+
             audio.onerror = (e) => {
-                console.error('Audio element error:', e);
+                console.error('Audio element error:', e, audio.error);
+                if (playTimeout) clearTimeout(playTimeout);
                 awaitingTTSRef.current = false;
                 setIsResponding(false);
             };
-            const tryPlay = () => {
-                audio.play().catch((e) => {
-                    console.error('Audio play error:', e);
-                    // As a fallback, try again shortly once canplaythrough fires
-                });
-            };
+
             audio.oncanplaythrough = () => {
-                // small delay helps iOS start
-                setTimeout(tryPlay, 100);
+                console.log('Audio can play through');
                 audio.oncanplaythrough = null;
             };
-            // If it is already buffered enough
-            if (audio.readyState >= 3) {
-                setTimeout(tryPlay, 50);
-            }
-            try { audio.load(); } catch { }
+
+            const tryPlay = () => {
+                console.log('Attempting to play audio, readyState:', audio.readyState);
+                audio.play()
+                    .then(() => {
+                        console.log('Audio play() successful');
+                        hasStartedPlaying = true;
+                        if (playTimeout) clearTimeout(playTimeout);
+                    })
+                    .catch((e) => {
+                        console.error('Audio play() failed:', e);
+                        // Retry after a short delay
+                        setTimeout(() => {
+                            if (audio.paused && !hasStartedPlaying) {
+                                console.log('Retrying audio play...');
+                                tryPlay();
+                            }
+                        }, 500);
+                    });
+            };
+
+            audio.onloadeddata = () => {
+                console.log('Audio loaded, readyState:', audio.readyState);
+                setTimeout(tryPlay, 100);
+            };
+
+            audio.onloadedmetadata = () => {
+                console.log('Audio metadata loaded');
+            };
+
+            // Multiple ways to trigger playback for iOS compatibility
+            const startPlayback = () => {
+                // If it is already buffered enough, try immediately
+                if (audio.readyState >= 3) {
+                    console.log('Audio already ready, playing immediately');
+                    tryPlay();
+                } else if (audio.readyState >= 2) {
+                    console.log('Audio has enough data, trying to play');
+                    tryPlay();
+                } else {
+                    // Force load
+                    try {
+                        audio.load();
+                        console.log('Called audio.load()');
+                        // Try after load completes
+                        audio.addEventListener('canplay', () => {
+                            console.log('Audio can play');
+                            tryPlay();
+                        }, { once: true });
+                    } catch (e) {
+                        console.error('audio.load() error:', e);
+                    }
+                }
+            };
+
+            // Start playback attempts immediately (user gesture from mic button enables autoplay)
+            startPlayback();
+
+            // Immediate attempt - user gesture from mic press should allow this
             setTimeout(() => {
-                if (!audio.paused) return;
-                tryPlay();
-            }, 500);
+                if (audio.paused && !hasStartedPlaying && audio.readyState >= 1) {
+                    console.log('Immediate playback attempt after 200ms');
+                    tryPlay();
+                }
+            }, 200);
+
+            // Fallback: try after canplaythrough
+            audio.addEventListener('canplaythrough', () => {
+                console.log('Audio can play through');
+                if (audio.paused && !hasStartedPlaying) {
+                    tryPlay();
+                }
+            }, { once: true });
+
+            // Also try on canplay
+            audio.addEventListener('canplay', () => {
+                console.log('Audio can play');
+                if (audio.paused && !hasStartedPlaying) {
+                    setTimeout(() => tryPlay(), 100);
+                }
+            }, { once: true });
         } catch (err) {
-            console.error('Audio play error:', err);
+            console.error('playAudio exception:', err);
             awaitingTTSRef.current = false;
             setIsResponding(false);
         }
