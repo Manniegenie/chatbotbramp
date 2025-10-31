@@ -153,6 +153,8 @@
   background: #0f1117;
   color: var(--txt);
   border: 1px solid var(--border);
+  /* ensure single, thin border on mobile */
+  border-width: 1px;
   border-radius: 10px;
   padding: 10px 12px;
   outline: none;
@@ -162,6 +164,9 @@
 
 .mobile-sell-input:focus {
   border-color: var(--accent);
+  /* prevent double accent ring/border */
+  box-shadow: none;
+  outline: none;
 }
 
 .mobile-sell-select-wrapper {

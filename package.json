@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "tesseract.js": "^5.1.0",
     "react-konva": "^18.2.4",
     "konva": "^9.3.3",
     "crypto-js": "^4.2.0",
