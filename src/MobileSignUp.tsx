@@ -614,7 +614,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
       display: 'flex',
       alignItems: 'flex-start',
       justifyContent: 'center',
-      padding: '16px 12px',
+      padding: '16px',
       overflow: 'hidden',
       touchAction: 'none'
     }}>
@@ -623,6 +623,8 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
         width: '100%',
         maxHeight: '64.125vh',
         marginTop: '3.42vh',
+        marginLeft: 'auto',
+        marginRight: 'auto',
         background: 'transparent',
         border: '1px solid transparent',
         borderRadius: '6.84px',

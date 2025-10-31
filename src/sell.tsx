@@ -207,7 +207,7 @@ const overlayStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'flex-start',
   justifyContent: 'center',
-  padding: '20px 16px',
+  padding: '20px',
   overflow: 'hidden',
   touchAction: 'none'
 }
@@ -216,6 +216,8 @@ const sheetStyle: React.CSSProperties = {
   width: '100%',
   maxHeight: '90vh',
   marginTop: '2vh',
+  marginLeft: 'auto',
+  marginRight: 'auto',
   background: 'transparent',
   border: '1px solid transparent',
   borderRadius: '16px',

@@ -157,7 +157,7 @@ export default function MobileSignIn({
       display: 'flex',
       alignItems: 'flex-start',
       justifyContent: 'center',
-      padding: '16px 12px',
+      padding: '16px',
       overflow: 'hidden',
       touchAction: 'none'
     }}>
@@ -166,6 +166,8 @@ export default function MobileSignIn({
         width: '100%',
         maxHeight: '64.125vh',
         marginTop: '3.42vh',
+        marginLeft: 'auto',
+        marginRight: 'auto',
         background: 'transparent',
         border: '1px solid transparent',
         borderRadius: '6.84px',

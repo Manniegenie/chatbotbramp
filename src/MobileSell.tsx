@@ -401,7 +401,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
       display: 'flex',
       alignItems: 'flex-start',
       justifyContent: 'center',
-      padding: '16px 12px',
+      padding: '16px',
       overflow: 'hidden',
       touchAction: 'none'
     }} onClick={onClose}>
@@ -410,6 +410,8 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
         width: '100%',
         maxHeight: '80vh',
         marginTop: '2vh',
+        marginLeft: 'auto',
+        marginRight: 'auto',
         background: 'transparent',
         border: '1px solid transparent',
         borderRadius: '6.84px',

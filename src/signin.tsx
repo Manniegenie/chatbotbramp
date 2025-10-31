@@ -155,7 +155,7 @@ export default function SignIn({
       display: 'flex',
       alignItems: 'flex-start',
       justifyContent: 'center',
-      padding: '20px 16px',
+      padding: '20px',
       overflow: 'hidden',
       touchAction: 'none'
     }}>
@@ -164,6 +164,8 @@ export default function SignIn({
         width: '100%',
         maxHeight: '80vh',
         marginTop: '6vh',
+        marginLeft: 'auto',
+        marginRight: 'auto',
         background: 'transparent',
         border: '1px solid transparent',
         borderRadius: '8px',
