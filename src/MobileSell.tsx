@@ -633,10 +633,19 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                                   r.onerror = reject
                                   r.readAsDataURL(file)
                                 })
-                                // OCR via dynamic import (tesseract.js)
-                                const Tesseract = await import('tesseract.js')
-                                const result = await Tesseract.recognize(dataUrl, 'eng')
-                                const text = String(result?.data?.text || '').slice(0, 10000)
+                                // OCR via tesseract.js worker with CDN paths (reliable in Vercel/Vite)
+                                const { createWorker } = await import('tesseract.js') as any
+                                const worker = await createWorker({
+                                  logger: undefined,
+                                  workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js',
+                                  corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5/tesseract-core.wasm.js'
+                                })
+                                await worker.load()
+                                await worker.loadLanguage('eng')
+                                await worker.initialize('eng')
+                                const { data: { text: ocrText } } = await worker.recognize(dataUrl)
+                                await worker.terminate()
+                                const text = String(ocrText || '').slice(0, 10000)
                                 if (!text.trim()) {
                                   console.warn('Scan: empty OCR text')
                                   return
