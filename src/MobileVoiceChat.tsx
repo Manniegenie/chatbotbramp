@@ -420,8 +420,9 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                     }
                 };
 
-                const handleError = (e: Event) => {
-                    console.error('Audio element error:', e, audio.error);
+                const handleError: OnErrorEventHandler = (event: Event | string) => {
+                    const evt = typeof event === 'string' ? new Event(event) : event;
+                    console.error('Audio element error:', evt, audio.error);
                     awaitingTTSRef.current = false;
                     setIsResponding(false);
                     reject(new Error('Audio playback failed'));
