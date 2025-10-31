@@ -290,14 +290,8 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
             setError('Failed to process voice message');
             awaitingTTSRef.current = false;
             setIsResponding(false);
-            // Restart recording on error
-            if (sessionActiveRef.current && streamRef.current) {
-                setTimeout(() => {
-                    if (sessionActiveRef.current && streamRef.current) {
-                        startRecording(streamRef.current);
-                    }
-                }, 500);
-            }
+            setIsProcessing(false);
+            // Ready for next press-to-talk - don't auto-restart
         }
     }
 
