@@ -89,3 +89,12 @@ body{ margin:0; background:transparent; color:var(--txt); font-family: -apple-sy
 
 .footer{ display:flex; gap:12px; justify-content:center; padding:24px 10px; border-top:1px solid var(--border); color:var(--muted) }
 .footer a{ color:var(--muted); text-decoration:none }
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

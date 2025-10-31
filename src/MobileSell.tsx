@@ -749,19 +749,31 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                               justifyContent: 'center',
                               padding: '8px',
                               minWidth: '44px',
-                              height: '44px'
+                              height: '44px',
+                              position: 'relative'
                             }}
                             title={ocrLoading ? 'Scanning...' : 'Scan with Camera'}
                           >
-                            <img
-                              src={scannerIcon}
-                              alt="Scan"
-                              style={{
+                            {ocrLoading ? (
+                              <div style={{
                                 width: '24px',
                                 height: '24px',
-                                opacity: ocrLoading ? 0.5 : 1
-                              }}
-                            />
+                                border: '2px solid rgba(0, 115, 55, 0.3)',
+                                borderTop: '2px solid var(--accent)',
+                                borderRadius: '50%',
+                                animation: 'spin 1s linear infinite'
+                              }} />
+                            ) : (
+                              <img
+                                src={scannerIcon}
+                                alt="Scan"
+                                style={{
+                                  width: '24px',
+                                  height: '24px',
+                                  opacity: 1
+                                }}
+                              />
+                            )}
                           </button>
                           {ocrError && (
                             <div className="mobile-sell-error" style={{ marginTop: '8px', fontSize: '13px', color: '#ff6b6b' }}>

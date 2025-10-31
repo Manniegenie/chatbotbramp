@@ -821,7 +821,8 @@ export default function SellModal({ open, onClose, onChatEcho, onStartInteractio
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            padding: '8px'
+                            padding: '8px',
+                            position: 'relative'
                           }}
                           onClick={() => {
                             const el = document.getElementById('desktop-account-scan-input') as HTMLInputElement | null
@@ -830,15 +831,26 @@ export default function SellModal({ open, onClose, onChatEcho, onStartInteractio
                           disabled={ocrLoading}
                           title={ocrLoading ? 'Scanning…' : 'Upload account image'}
                         >
-                          <img
-                            src={scannerIcon}
-                            alt="Scan"
-                            style={{
+                          {ocrLoading ? (
+                            <div style={{
                               width: '24px',
                               height: '24px',
-                              opacity: ocrLoading ? 0.5 : 1
-                            }}
-                          />
+                              border: '2px solid rgba(0, 115, 55, 0.3)',
+                              borderTop: '2px solid var(--accent)',
+                              borderRadius: '50%',
+                              animation: 'spin 1s linear infinite'
+                            }} />
+                          ) : (
+                            <img
+                              src={scannerIcon}
+                              alt="Scan"
+                              style={{
+                                width: '24px',
+                                height: '24px',
+                                opacity: 1
+                              }}
+                            />
+                          )}
                         </button>
                         {ocrError && (
                           <div role="alert" style={{ color: '#ff6b6b', fontSize: 12 }}>
