@@ -698,11 +698,21 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                                 }
 
                                 const detected = payload.detected || {}
-                                const detectedBank = String(detected.bankName || '').toLowerCase().trim()
                                 const detectedAcct = String(detected.accountNumber || '').trim()
 
-                                // Map bank name -> bankCode
-                                if (detectedBank && bankOptions.length > 0) {
+                                // Use bankMatch from backend if available (backend already did fuzzy matching)
+                                if (payload.bankMatch?.matched && payload.bankMatch?.code) {
+                                  setBankCode(payload.bankMatch.code)
+                                  setBankName(payload.bankMatch.matched)
+                                  console.log('Scan: Using matched bank from backend', {
+                                    original: payload.bankMatch.original,
+                                    matched: payload.bankMatch.matched,
+                                    code: payload.bankMatch.code,
+                                    score: payload.bankMatch.score
+                                  })
+                                } else if (detected.bankName && bankOptions.length > 0) {
+                                  // Fallback: try to find in frontend bank list
+                                  const detectedBank = String(detected.bankName || '').toLowerCase().trim()
                                   const hit = bankOptions.find((b: BankOption) => {
                                     const bn = String(b.name || '').toLowerCase()
                                     return bn === detectedBank || bn.includes(detectedBank) || detectedBank.includes(bn)
@@ -710,7 +720,8 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                                   if (hit) {
                                     setBankCode(hit.code)
                                     setBankName(hit.name)
-                                  } else if (detected.bankName) {
+                                  } else {
+                                    // Backend couldn't match, and frontend also couldn't find it
                                     setOcrError(`Bank "${detected.bankName}" not found. Please select manually.`)
                                   }
                                 }
