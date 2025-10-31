@@ -195,6 +195,7 @@ export default function SignIn({
               style={inputStyle}
               className="no-zoom"
               maxLength={11}
+              autoComplete="tel"
             />
 
             <div style={{ height: 8 }} />
@@ -209,6 +210,7 @@ export default function SignIn({
               maxLength={6}
               style={inputStyle}
               className="no-zoom"
+              autoComplete="current-password"
             />
 
             {error && (

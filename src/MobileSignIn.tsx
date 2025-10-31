@@ -197,6 +197,7 @@ export default function MobileSignIn({
                 inputMode="numeric"
                 autoFocus
                 maxLength={11}
+                autoComplete="tel"
               />
             </label>
 
@@ -210,6 +211,7 @@ export default function MobileSignIn({
                 type="password"
                 inputMode="numeric"
                 maxLength={6}
+                autoComplete="current-password"
               />
             </label>
 

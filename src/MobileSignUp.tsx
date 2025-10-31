@@ -457,6 +457,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
               onChange={(e) => setPhone(e.target.value)}
               inputMode="tel"
               autoFocus
+              autoComplete="tel"
             />
           </label>
           <label className="mobile-auth-input-wrap">
@@ -467,6 +468,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               type="email"
+              autoComplete="email"
             />
           </label>
         </div>
@@ -504,6 +506,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
               inputMode="numeric"
               maxLength={6}
               autoFocus
+              autoComplete="new-password"
             />
           </label>
           <label className="mobile-auth-input-wrap">
@@ -516,6 +519,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
               type="password"
               inputMode="numeric"
               maxLength={6}
+              autoComplete="new-password"
             />
           </label>
         </>

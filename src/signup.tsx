@@ -685,6 +685,7 @@ export default function SignUp({
               autoFocus
               style={inputStyle}
               className="no-zoom"
+              autoComplete="tel"
             />
           </label>
           <label style={{ display: 'grid', gap: 4 }}>
@@ -697,6 +698,7 @@ export default function SignUp({
               inputMode="email"
               style={inputStyle}
               className="no-zoom"
+              autoComplete="email"
             />
           </label>
         </div>
@@ -747,6 +749,7 @@ export default function SignUp({
             autoFocus
             style={inputStyle}
             className="no-zoom"
+            autoComplete="new-password"
           />
           <div style={{ height: 8 }} />
           <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Confirm PIN</label>
@@ -760,6 +763,7 @@ export default function SignUp({
             maxLength={6}
             style={inputStyle}
             className="no-zoom"
+            autoComplete="new-password"
           />
           {pinError && (
             <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
