@@ -176,8 +176,8 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                 onMessage(data.reply);
             }
 
-            // Play audio response
-            if (data.audioBase64) {
+            // Play TTS audio if provided
+            if (data.audioBase64 && typeof data.audioBase64 === 'string') {
                 playAudio(data.audioBase64);
             }
         } catch (err) {
@@ -188,8 +188,13 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
 
     function playAudio(base64: string) {
         try {
+            // Stop any existing playback first
+            if (audioRef.current) {
+                try { audioRef.current.pause(); } catch { }
+            }
             const audio = new Audio(`data:audio/mp3;base64,${base64}`);
             audioRef.current = audio;
+            // Attempt to play (mobile may require user gesture; mic press counts)
             audio.play().catch((e) => {
                 console.error('Audio play error:', e);
             });
