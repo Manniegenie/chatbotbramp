@@ -287,6 +287,7 @@ export default function App() {
   })
 
   const endRef = useRef<HTMLDivElement>(null)
+  const messagesRef = useRef<HTMLDivElement>(null)
 
   const icons = [SolanaIcon, TetherIcon, CryptocurrencyIcon]
   const [currentIconIndex, setCurrentIconIndex] = useState(0)
@@ -425,6 +426,41 @@ export default function App() {
     }, 3000)
     return () => clearInterval(interval)
   }, [icons.length])
+
+  // Handle scrollbar auto-hide on messages container
+  useEffect(() => {
+    const messagesEl = messagesRef.current
+    if (!messagesEl) return
+
+    let scrollTimeout: NodeJS.Timeout | null = null
+    let clickTimeout: NodeJS.Timeout | null = null
+
+    const handleScroll = () => {
+      messagesEl.classList.add('scrolling')
+      if (scrollTimeout) clearTimeout(scrollTimeout)
+      scrollTimeout = setTimeout(() => {
+        messagesEl.classList.remove('scrolling')
+      }, 1500) // Hide after 1.5 seconds of no scrolling
+    }
+
+    const handleClick = () => {
+      messagesEl.classList.add('scrolling')
+      if (clickTimeout) clearTimeout(clickTimeout)
+      clickTimeout = setTimeout(() => {
+        messagesEl.classList.remove('scrolling')
+      }, 2000) // Hide after 2 seconds of no interaction
+    }
+
+    messagesEl.addEventListener('scroll', handleScroll, { passive: true })
+    messagesEl.addEventListener('click', handleClick, { passive: true })
+
+    return () => {
+      messagesEl.removeEventListener('scroll', handleScroll)
+      messagesEl.removeEventListener('click', handleClick)
+      if (scrollTimeout) clearTimeout(scrollTimeout)
+      if (clickTimeout) clearTimeout(clickTimeout)
+    }
+  }, [messages])
 
   // Handle automatic sell modal opening
   useEffect(() => {
@@ -676,6 +712,33 @@ export default function App() {
             height: calc(100vh - 200px);
             max-height: calc(100vh - 200px);
             -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+          }
+
+          /* Hide scrollbar by default, show on hover/scroll */
+          .messages::-webkit-scrollbar {
+            width: 8px;
+          }
+
+          .messages::-webkit-scrollbar-track {
+            background: transparent;
+          }
+
+          .messages::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0);
+            border-radius: 4px;
+            transition: background 0.3s ease;
+          }
+
+          /* Show scrollbar on hover or when scrolling */
+          .messages:hover::-webkit-scrollbar-thumb,
+          .messages.scrolling::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+          }
+
+          .messages:hover::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
           }
 
           /* Ensure no scrollbars anywhere */
@@ -1053,7 +1116,7 @@ export default function App() {
           />
         ) : (
           <main className="chat">
-            <div className="messages">
+            <div className="messages" ref={messagesRef}>
               {messages.map((m) => (
                 <div key={m.id} className={`bubble ${m.role}`}>
                   <div className="role">
