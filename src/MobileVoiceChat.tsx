@@ -19,152 +19,40 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
     const [error, setError] = useState<string | null>(null);
     const [sessionActive, setSessionActive] = useState(false);
     const [isResponding, setIsResponding] = useState(false);
-    const recognitionRef = useRef<SpeechRecognition | null>(null);
+
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const audioChunksRef = useRef<Blob[]>([]);
+    const streamRef = useRef<MediaStream | null>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const audioUrlRef = useRef<string | null>(null);
-    const lastTranscriptRef = useRef<string>('');
     const sessionActiveRef = useRef<boolean>(false);
     const awaitingTTSRef = useRef<boolean>(false);
     const silenceTimeoutRef = useRef<number | null>(null);
-    const pendingTranscriptRef = useRef<string>('');
+    const isRecordingRef = useRef<boolean>(false);
 
-    // Initialize speech recognition
+    // Initialize audio recording
     useEffect(() => {
-        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-        if (!SpeechRecognition) {
-            setError('Speech recognition not supported in this browser');
-            return;
-        }
-
-        const recognition = new SpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.lang = 'en-US';
-
-        // Clear any existing silence timeout
-        function clearSilenceTimeout() {
-            if (silenceTimeoutRef.current !== null) {
-                clearTimeout(silenceTimeoutRef.current);
-                silenceTimeoutRef.current = null;
-            }
-        }
-
-        // Process pending transcript after silence
-        function processAfterSilence() {
-            if (pendingTranscriptRef.current.trim()) {
-                const text = pendingTranscriptRef.current.trim();
-                pendingTranscriptRef.current = '';
-                clearSilenceTimeout();
-                try {
-                    if (recognitionRef.current) {
-                        try { recognitionRef.current.stop(); } catch { }
-                    }
-                    setIsListening(false);
-                    setIsActive(false);
-                } finally {
-                    handleVoiceMessage(text);
-                }
-            }
-        }
-
-        recognition.onstart = () => {
-            setIsListening(true);
-            setIsActive(true);
-            clearSilenceTimeout();
-        };
-
-        recognition.onresult = (event: SpeechRecognitionEvent) => {
-            let interimTranscript = '';
-            let finalTranscript = '';
-
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-                const transcript = event.results[i][0].transcript;
-                if (event.results[i].isFinal) {
-                    finalTranscript += transcript + ' ';
-                } else {
-                    interimTranscript += transcript;
-                }
-            }
-
-            const fullTranscript = (finalTranscript + interimTranscript).trim();
-            if (fullTranscript) {
-                setTranscript(fullTranscript);
-                lastTranscriptRef.current = fullTranscript;
-
-                // Update pending transcript
-                pendingTranscriptRef.current = fullTranscript;
-
-                // Clear existing silence timeout
-                clearSilenceTimeout();
-
-                // If we have a final transcript, process immediately
-                if (finalTranscript.trim()) {
-                    processAfterSilence();
-                } else if (interimTranscript.trim()) {
-                    // If we have interim results, wait for silence (1 second of no new results)
-                    silenceTimeoutRef.current = window.setTimeout(() => {
-                        processAfterSilence();
-                    }, 1000);
-                }
-            }
-        };
-
-        recognition.onerror = (event: any) => {
-            console.error('Speech recognition error:', event.error);
-            if (event.error === 'no-speech') {
-                setIsActive(false);
-            } else if (event.error !== 'aborted') {
-                setError(`Speech recognition error: ${event.error}`);
-                setIsListening(false);
-            }
-        };
-
-        recognition.onend = () => {
-            clearSilenceTimeout();
-
-            // Process any pending transcript before restarting
-            if (pendingTranscriptRef.current.trim()) {
-                const text = pendingTranscriptRef.current.trim();
-                pendingTranscriptRef.current = '';
-                setIsListening(false);
-                setIsActive(false);
-
-                // Process the transcript - restart will happen after TTS finishes
-                handleVoiceMessage(text);
-                return;
-            }
-
-            // Only restart if there's no pending transcript and we are not awaiting TTS
-            setIsListening(false);
-            setIsActive(false);
-
-            // Restart if session is still active, not awaiting TTS, and no transcript was processed
-            if (sessionActiveRef.current && !awaitingTTSRef.current && !error) {
-                setTimeout(() => {
-                    if (sessionActiveRef.current && recognitionRef.current && !pendingTranscriptRef.current.trim() && !awaitingTTSRef.current) {
-                        try {
-                            recognitionRef.current.start();
-                        } catch (e) {
-                            console.error('Failed to restart recognition:', e);
-                        }
-                    }
-                }, 400);
-            }
-        };
-
-        recognitionRef.current = recognition;
-
-        // Start session
         startVoiceSession();
 
         return () => {
-            clearSilenceTimeout();
-            if (recognitionRef.current) {
+            stopRecording();
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach(track => track.stop());
+            }
+            if (audioRef.current) {
                 try {
-                    recognitionRef.current.stop();
-                } catch (e) {
-                    // Ignore
-                }
+                    audioRef.current.pause();
+                    audioRef.current.src = '';
+                    // Remove from DOM if it was added
+                    if (audioRef.current.parentNode) {
+                        audioRef.current.parentNode.removeChild(audioRef.current);
+                    }
+                } catch { }
+            }
+            if (audioUrlRef.current) {
+                try {
+                    URL.revokeObjectURL(audioUrlRef.current);
+                } catch { }
             }
             endVoiceSession();
         };
@@ -182,34 +70,219 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
             sessionActiveRef.current = true;
             setError(null);
 
-            // Start recognition after session is set
-            setTimeout(() => {
-                if (recognitionRef.current) {
-                    try {
-                        recognitionRef.current.start();
-                    } catch (e) {
-                        console.error('Failed to start recognition:', e);
-                    }
-                }
-            }, 500);
+            // Request microphone access and start recording
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                streamRef.current = stream;
+                startRecording(stream);
+            } catch (err: any) {
+                setError(err.message || 'Failed to access microphone');
+                console.error('Microphone access error:', err);
+            }
         } catch (err: any) {
             setError(err.message || 'Failed to start voice session');
             console.error('Start voice session error:', err);
         }
     }
 
+    function startRecording(stream: MediaStream) {
+        try {
+            // Try to use the best available audio format for better transcription accuracy
+            // Prefer formats that Whisper handles well (webm/opus is excellent for quality)
+            const options = [
+                { mimeType: 'audio/webm;codecs=opus', bitrate: 128000 }, // High quality for better transcription
+                { mimeType: 'audio/webm;codecs=opus' },
+                { mimeType: 'audio/webm' },
+                { mimeType: 'audio/mp4' },
+                { mimeType: 'audio/ogg;codecs=opus' }
+            ];
+
+            let mediaRecorder: MediaRecorder | null = null;
+            for (const opt of options) {
+                if (MediaRecorder.isTypeSupported(opt.mimeType)) {
+                    try {
+                        // Try with bitrate if specified, fallback to default
+                        const config: any = { mimeType: opt.mimeType };
+                        if (opt.bitrate) {
+                            config.audioBitsPerSecond = opt.bitrate;
+                        }
+                        mediaRecorder = new MediaRecorder(stream, config);
+                        console.log('Using audio format:', opt.mimeType, opt.bitrate ? `at ${opt.bitrate}bps` : '');
+                        break;
+                    } catch (e) {
+                        console.warn('Failed to create MediaRecorder with:', opt.mimeType, e);
+                    }
+                }
+            }
+
+            if (!mediaRecorder) {
+                mediaRecorder = new MediaRecorder(stream); // Fallback to default
+                console.log('Using default MediaRecorder');
+            }
+
+            mediaRecorderRef.current = mediaRecorder;
+            audioChunksRef.current = [];
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    audioChunksRef.current.push(event.data);
+                }
+            };
+
+            mediaRecorder.onstop = async () => {
+                if (audioChunksRef.current.length === 0) return;
+
+                const blobType = mediaRecorder?.mimeType || 'audio/webm';
+                const audioBlob = new Blob(audioChunksRef.current, { type: blobType });
+                await processAudio(audioBlob);
+
+                // Resume recording after processing
+                if (sessionActiveRef.current && streamRef.current && !isRecordingRef.current) {
+                    setTimeout(() => {
+                        if (sessionActiveRef.current && streamRef.current) {
+                            startRecording(streamRef.current);
+                        }
+                    }, 500);
+                }
+            };
+
+            mediaRecorder.onerror = (event: any) => {
+                console.error('MediaRecorder error:', event.error);
+                setError('Recording error occurred');
+            };
+
+            // Use smaller chunks for faster processing (500ms)
+            mediaRecorder.start(500);
+            isRecordingRef.current = true;
+            setIsListening(true);
+            setIsActive(true);
+
+            // Clear any existing silence timeout
+            if (silenceTimeoutRef.current) {
+                clearTimeout(silenceTimeoutRef.current);
+            }
+
+            // Set timeout to stop and process after 4 seconds of recording (slightly longer for better context)
+            silenceTimeoutRef.current = window.setTimeout(() => {
+                stopAndProcess();
+            }, 4000);
+        } catch (err: any) {
+            console.error('Start recording error:', err);
+            setError(err.message || 'Failed to start recording');
+        }
+    }
+
+    function stopRecording() {
+        if (mediaRecorderRef.current && isRecordingRef.current) {
+            try {
+                if (mediaRecorderRef.current.state !== 'inactive') {
+                    mediaRecorderRef.current.stop();
+                }
+                isRecordingRef.current = false;
+                setIsListening(false);
+                setIsActive(false);
+            } catch (err) {
+                console.error('Stop recording error:', err);
+            }
+        }
+        if (silenceTimeoutRef.current) {
+            clearTimeout(silenceTimeoutRef.current);
+            silenceTimeoutRef.current = null;
+        }
+    }
+
+    async function stopAndProcess() {
+        stopRecording();
+        if (audioChunksRef.current.length > 0) {
+            const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+            audioChunksRef.current = [];
+            await processAudio(audioBlob);
+        }
+    }
+
+    async function processAudio(audioBlob: Blob) {
+        if (!sessionActiveRef.current || audioBlob.size === 0) {
+            // Restart recording if session is active
+            if (sessionActiveRef.current && streamRef.current) {
+                setTimeout(() => {
+                    if (sessionActiveRef.current && streamRef.current) {
+                        startRecording(streamRef.current);
+                    }
+                }, 500);
+            }
+            return;
+        }
+
+        try {
+            // Convert blob to base64
+            const reader = new FileReader();
+            const audioBase64 = await new Promise<string>((resolve, reject) => {
+                reader.onloadend = () => {
+                    const base64 = (reader.result as string).split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(audioBlob);
+            });
+
+            // Send to backend for Whisper transcription with audio format info
+            const transcribeRes = await authFetch(`${API_BASE}/voice/transcribe`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    audioBase64,
+                    audioMimeType: audioBlob.type || 'audio/webm' // Include MIME type for better format detection
+                }),
+            });
+
+            if (!transcribeRes.ok) {
+                throw new Error('Transcription failed');
+            }
+
+            const transcribeData = await transcribeRes.json();
+            const transcribedText = transcribeData.transcript?.trim();
+
+            if (!transcribedText || transcribedText.length === 0) {
+                // No speech detected, restart recording
+                if (sessionActiveRef.current && streamRef.current) {
+                    setTimeout(() => {
+                        if (sessionActiveRef.current && streamRef.current) {
+                            startRecording(streamRef.current);
+                        }
+                    }, 500);
+                }
+                return;
+            }
+
+            // Update transcript display
+            setTranscript(transcribedText);
+
+            // Send transcribed text to get AI response
+            await handleVoiceMessage(transcribedText);
+        } catch (err) {
+            console.error('Process audio error:', err);
+            // Restart recording on error
+            if (sessionActiveRef.current && streamRef.current) {
+                setTimeout(() => {
+                    if (sessionActiveRef.current && streamRef.current) {
+                        startRecording(streamRef.current);
+                    }
+                }, 500);
+            }
+        }
+    }
+
     async function endVoiceSession() {
         if (!sessionActiveRef.current) return;
         try {
+            stopRecording();
             await authFetch(`${API_BASE}/voice/end`, { method: 'POST' });
             setSessionActive(false);
             sessionActiveRef.current = false;
-            if (recognitionRef.current) {
-                try {
-                    recognitionRef.current.stop();
-                } catch (e) {
-                    // Ignore
-                }
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach(track => track.stop());
             }
         } catch (err) {
             console.error('End voice session error:', err);
@@ -241,24 +314,19 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                 success: data.success
             });
 
-            // Voice chat: Don't add text to chat - only play audio response
-            // No onMessage callback - we don't want text responses in voice mode
-
             // Play TTS audio if provided
             if (data.audioBase64 && typeof data.audioBase64 === 'string' && data.audioBase64.length > 0) {
                 console.log('Attempting to play audio, length:', data.audioBase64.length);
-                playAudio(data.audioBase64);
+                await playAudio(data.audioBase64);
             } else {
                 console.warn('No audio received in response');
-                // No audio: clear responding state and restart listening after slight delay
                 awaitingTTSRef.current = false;
                 setIsResponding(false);
-                if (sessionActiveRef.current && recognitionRef.current) {
+                // Restart recording
+                if (sessionActiveRef.current && streamRef.current) {
                     setTimeout(() => {
-                        if (sessionActiveRef.current && recognitionRef.current) {
-                            try { recognitionRef.current.start(); } catch { }
-                            setIsListening(true);
-                            setIsActive(true);
+                        if (sessionActiveRef.current && streamRef.current) {
+                            startRecording(streamRef.current);
                         }
                     }, 500);
                 }
@@ -268,193 +336,187 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
             setError('Failed to process voice message');
             awaitingTTSRef.current = false;
             setIsResponding(false);
+            // Restart recording on error
+            if (sessionActiveRef.current && streamRef.current) {
+                setTimeout(() => {
+                    if (sessionActiveRef.current && streamRef.current) {
+                        startRecording(streamRef.current);
+                    }
+                }, 500);
+            }
         }
     }
 
-    function playAudio(base64: string) {
-        try {
-            console.log('playAudio called, base64 length:', base64.length);
+    async function playAudio(base64: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            try {
+                console.log('playAudio called, base64 length:', base64.length);
 
-            // Stop any existing playback first
-            if (audioRef.current) {
-                try {
-                    audioRef.current.pause();
-                    audioRef.current.src = '';
-                } catch { }
-            }
-            // Revoke old object URL if any
-            if (audioUrlRef.current) {
-                try { URL.revokeObjectURL(audioUrlRef.current); } catch { }
-                audioUrlRef.current = null;
-            }
+                // Stop any existing playback first
+                if (audioRef.current) {
+                    try {
+                        audioRef.current.pause();
+                        audioRef.current.src = '';
+                        audioRef.current.onended = null;
+                        audioRef.current.onerror = null;
+                        // Remove from DOM if it was added
+                        if (audioRef.current.parentNode) {
+                            audioRef.current.parentNode.removeChild(audioRef.current);
+                        }
+                    } catch { }
+                }
+                // Revoke old object URL if any
+                if (audioUrlRef.current) {
+                    try {
+                        URL.revokeObjectURL(audioUrlRef.current);
+                    } catch { }
+                    audioUrlRef.current = null;
+                }
 
-            // Convert base64 -> Blob -> Object URL (more reliable on iOS)
-            const binary = atob(base64);
-            const len = binary.length;
-            const bytes = new Uint8Array(len);
-            for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
-            const blob = new Blob([bytes], { type: 'audio/mpeg' });
-            const objectUrl = URL.createObjectURL(blob);
-            audioUrlRef.current = objectUrl;
+                // Convert base64 -> Blob -> Object URL (more reliable on iOS)
+                const binary = atob(base64);
+                const len = binary.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+                const blob = new Blob([bytes], { type: 'audio/mpeg' });
+                const objectUrl = URL.createObjectURL(blob);
+                audioUrlRef.current = objectUrl;
 
-            console.log('Audio blob created, objectUrl:', objectUrl.substring(0, 50) + '...');
+                console.log('Audio blob created, objectUrl:', objectUrl.substring(0, 50) + '...');
 
-            const audio = new Audio();
-            audio.src = objectUrl;
-            audio.preload = 'auto';
-            audio.volume = 1;
-            audioRef.current = audio;
+                const audio = new Audio();
+                audio.src = objectUrl;
+                audio.preload = 'auto';
+                audio.volume = 1;
+                // Ensure audio plays even when modal/page is in background
+                audio.setAttribute('playsinline', 'true');
+                audio.setAttribute('webkit-playsinline', 'true');
+                // Attach audio element to body to ensure it's in the DOM and can play
+                if (!audio.parentNode && typeof document !== 'undefined') {
+                    audio.style.position = 'absolute';
+                    audio.style.left = '-9999px';
+                    audio.style.top = '-9999px';
+                    audio.style.width = '1px';
+                    audio.style.height = '1px';
+                    audio.style.opacity = '0';
+                    audio.style.pointerEvents = 'none';
+                    document.body.appendChild(audio);
+                }
+                audioRef.current = audio;
 
-            let playTimeout: number | null = null;
-            let hasStartedPlaying = false;
-
-            // Timeout fallback - if audio doesn't start in 15 seconds, reset
-            playTimeout = window.setTimeout(() => {
-                if (!hasStartedPlaying) {
-                    console.warn('Audio playback timeout (15s) - resetting state');
-                    if (audioRef.current) {
-                        try {
-                            audioRef.current.pause();
-                            audioRef.current.src = '';
-                        } catch { }
-                    }
-                    if (audioUrlRef.current) {
-                        try { URL.revokeObjectURL(audioUrlRef.current); } catch { }
-                        audioUrlRef.current = null;
-                    }
+                // Play audio and wait for it to finish
+                const handleEnded = () => {
+                    console.log('Audio playback ended');
                     awaitingTTSRef.current = false;
                     setIsResponding(false);
-                    if (sessionActiveRef.current && recognitionRef.current) {
+                    resolve();
+                    // Restart recording after audio finishes
+                    if (sessionActiveRef.current && streamRef.current) {
                         setTimeout(() => {
-                            if (sessionActiveRef.current && recognitionRef.current) {
-                                try {
-                                    recognitionRef.current.start();
-                                    setIsListening(true);
-                                    setIsActive(true);
-                                } catch (e) {
-                                    console.error('Failed to restart after timeout:', e);
-                                }
+                            if (sessionActiveRef.current && streamRef.current && !isRecordingRef.current) {
+                                startRecording(streamRef.current);
                             }
                         }, 300);
                     }
-                }
-            }, 15000);
+                };
 
-            // Attempt to play once ready
-            audio.onended = () => {
-                console.log('Audio playback ended');
-                if (playTimeout) clearTimeout(playTimeout);
-                hasStartedPlaying = true;
-                awaitingTTSRef.current = false;
-                setIsResponding(false);
-                if (sessionActiveRef.current && recognitionRef.current) {
-                    setTimeout(() => {
-                        if (sessionActiveRef.current && recognitionRef.current) {
-                            try { recognitionRef.current.start(); } catch { }
-                            setIsListening(true);
-                            setIsActive(true);
+                const handleError = (e: Event) => {
+                    console.error('Audio element error:', e, audio.error);
+                    awaitingTTSRef.current = false;
+                    setIsResponding(false);
+                    reject(new Error('Audio playback failed'));
+                };
+
+                audio.onended = handleEnded;
+                audio.onerror = handleError;
+
+                // Try to play immediately - ensure it works even when modal is open
+                const tryPlay = async () => {
+                    console.log('Attempting to play audio, readyState:', audio.readyState, 'paused:', audio.paused);
+                    try {
+                        // Force play even if browser thinks it's paused
+                        const playPromise = audio.play();
+
+                        if (playPromise !== undefined) {
+                            await playPromise;
+                            console.log('Audio play() successful - playing now');
+                        } else {
+                            console.log('Audio play() returned undefined, audio should be playing');
                         }
-                    }, 300);
-                }
-            };
-
-            audio.onerror = (e) => {
-                console.error('Audio element error:', e, audio.error);
-                if (playTimeout) clearTimeout(playTimeout);
-                awaitingTTSRef.current = false;
-                setIsResponding(false);
-            };
-
-            audio.oncanplaythrough = () => {
-                console.log('Audio can play through');
-                audio.oncanplaythrough = null;
-            };
-
-            const tryPlay = () => {
-                console.log('Attempting to play audio, readyState:', audio.readyState);
-                audio.play()
-                    .then(() => {
-                        console.log('Audio play() successful');
-                        hasStartedPlaying = true;
-                        if (playTimeout) clearTimeout(playTimeout);
-                    })
-                    .catch((e) => {
+                    } catch (e: any) {
                         console.error('Audio play() failed:', e);
-                        // Retry after a short delay
-                        setTimeout(() => {
-                            if (audio.paused && !hasStartedPlaying) {
-                                console.log('Retrying audio play...');
+                        // If it's an autoplay policy error, try with user interaction simulation
+                        if (e.name === 'NotAllowedError' || e.message?.includes('play')) {
+                            console.log('Autoplay blocked, trying alternative method...');
+                            // Try again after a short delay
+                            setTimeout(async () => {
+                                try {
+                                    await audio.play();
+                                    console.log('Audio play() retry successful');
+                                } catch (retryErr) {
+                                    console.error('Audio play() retry failed:', retryErr);
+                                    // If still failing, try to focus the window/modal to get user gesture context
+                                    if (typeof window !== 'undefined') {
+                                        window.focus();
+                                    }
+                                    // One more retry
+                                    setTimeout(async () => {
+                                        try {
+                                            await audio.play();
+                                            console.log('Audio play() final retry successful');
+                                        } catch (finalErr) {
+                                            console.error('Audio play() final retry failed:', finalErr);
+                                            handleError(new Event('error'));
+                                        }
+                                    }, 300);
+                                }
+                            }, 200);
+                        } else {
+                            handleError(e);
+                        }
+                    }
+                };
+
+                // Wait for audio to be ready - try multiple times
+                const attemptPlayback = () => {
+                    if (audio.readyState >= 2) {
+                        setTimeout(tryPlay, 50);
+                    } else {
+                        const onCanPlay = () => {
+                            console.log('Audio can play, readyState:', audio.readyState);
+                            tryPlay();
+                        };
+                        audio.addEventListener('canplay', onCanPlay, { once: true });
+                        audio.addEventListener('canplaythrough', () => {
+                            console.log('Audio can play through');
+                            if (audio.paused) {
                                 tryPlay();
                             }
-                        }, 500);
-                    });
-            };
-
-            audio.onloadeddata = () => {
-                console.log('Audio loaded, readyState:', audio.readyState);
-                setTimeout(tryPlay, 100);
-            };
-
-            audio.onloadedmetadata = () => {
-                console.log('Audio metadata loaded');
-            };
-
-            // Multiple ways to trigger playback for iOS compatibility
-            const startPlayback = () => {
-                // If it is already buffered enough, try immediately
-                if (audio.readyState >= 3) {
-                    console.log('Audio already ready, playing immediately');
-                    tryPlay();
-                } else if (audio.readyState >= 2) {
-                    console.log('Audio has enough data, trying to play');
-                    tryPlay();
-                } else {
-                    // Force load
-                    try {
-                        audio.load();
-                        console.log('Called audio.load()');
-                        // Try after load completes
-                        audio.addEventListener('canplay', () => {
-                            console.log('Audio can play');
-                            tryPlay();
                         }, { once: true });
-                    } catch (e) {
-                        console.error('audio.load() error:', e);
+                        audio.addEventListener('loadeddata', () => {
+                            console.log('Audio data loaded, readyState:', audio.readyState);
+                            if (audio.readyState >= 2) {
+                                tryPlay();
+                            }
+                        }, { once: true });
+                        // Force load
+                        try {
+                            audio.load();
+                            console.log('Called audio.load()');
+                        } catch (e) {
+                            console.error('audio.load() error:', e);
+                        }
                     }
-                }
-            };
+                };
 
-            // Start playback attempts immediately (user gesture from mic button enables autoplay)
-            startPlayback();
-
-            // Immediate attempt - user gesture from mic press should allow this
-            setTimeout(() => {
-                if (audio.paused && !hasStartedPlaying && audio.readyState >= 1) {
-                    console.log('Immediate playback attempt after 200ms');
-                    tryPlay();
-                }
-            }, 200);
-
-            // Fallback: try after canplaythrough
-            audio.addEventListener('canplaythrough', () => {
-                console.log('Audio can play through');
-                if (audio.paused && !hasStartedPlaying) {
-                    tryPlay();
-                }
-            }, { once: true });
-
-            // Also try on canplay
-            audio.addEventListener('canplay', () => {
-                console.log('Audio can play');
-                if (audio.paused && !hasStartedPlaying) {
-                    setTimeout(() => tryPlay(), 100);
-                }
-            }, { once: true });
-        } catch (err) {
-            console.error('playAudio exception:', err);
-            awaitingTTSRef.current = false;
-            setIsResponding(false);
-        }
+                attemptPlayback();
+            } catch (err) {
+                console.error('playAudio exception:', err);
+                awaitingTTSRef.current = false;
+                setIsResponding(false);
+                reject(err);
+            }
+        });
     }
 
     function handleClose() {
@@ -605,4 +667,3 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
         </div>
     );
 }
-
