@@ -600,7 +600,7 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent, isMo
                 audioRef.current = audio;
 
                 // Play audio and wait for it to finish
-                const handleEnded = () => {
+                const handleEnded = async () => {
                     console.log('Audio playback ended');
                     awaitingTTSRef.current = false;
                     setIsResponding(false);
@@ -610,6 +610,30 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent, isMo
                     isRecordingRef.current = false;
                     setIsRecording(false);
                     audioChunksRef.current = [];
+
+                    // CRITICAL: Restart voice session after playback to reset all state (mobile only)
+                    // This simulates closing and reopening the modal which fixes the recording issue
+                    if (isMobile) {
+                        console.log('🔄 Restarting voice session after playback (mobile)...');
+                        try {
+                            // End current session
+                            await endVoiceSession();
+                            // Small delay to ensure cleanup
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                            // Start fresh session
+                            await startVoiceSession();
+                            console.log('✅ Voice session restarted successfully');
+                        } catch (restartErr) {
+                            console.error('❌ Failed to restart voice session:', restartErr);
+                            // Try to start anyway
+                            try {
+                                await startVoiceSession();
+                            } catch (e) {
+                                console.error('❌ Failed to start new session:', e);
+                            }
+                        }
+                    }
+
                     resolve();
                     // Ready for next press-to-talk
                 };
