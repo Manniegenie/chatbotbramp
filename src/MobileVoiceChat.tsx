@@ -21,6 +21,7 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
     const [isResponding, setIsResponding] = useState(false);
     const recognitionRef = useRef<SpeechRecognition | null>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
+    const audioUrlRef = useRef<string | null>(null);
     const lastTranscriptRef = useRef<string>('');
     const sessionActiveRef = useRef<boolean>(false);
     const awaitingTTSRef = useRef<boolean>(false);
@@ -268,9 +269,26 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
             if (audioRef.current) {
                 try { audioRef.current.pause(); } catch { }
             }
-            const audio = new Audio(`data:audio/mp3;base64,${base64}`);
+            // Revoke old object URL if any
+            if (audioUrlRef.current) {
+                try { URL.revokeObjectURL(audioUrlRef.current); } catch { }
+                audioUrlRef.current = null;
+            }
+
+            // Convert base64 -> Blob -> Object URL (more reliable on iOS)
+            const binary = atob(base64);
+            const len = binary.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+            const blob = new Blob([bytes], { type: 'audio/mpeg' });
+            const objectUrl = URL.createObjectURL(blob);
+            audioUrlRef.current = objectUrl;
+
+            const audio = new Audio();
+            audio.src = objectUrl;
+            audio.preload = 'auto';
             audioRef.current = audio;
-            // Attempt to play (mobile may require user gesture; mic press counts)
+            // Attempt to play once ready
             audio.onended = () => {
                 // Resume recognition after TTS finishes
                 awaitingTTSRef.current = false;
@@ -285,11 +303,21 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                     }, 300);
                 }
             };
-            audio.play().catch((e) => {
-                console.error('Audio play error:', e);
-                awaitingTTSRef.current = false;
-                setIsResponding(false);
-            });
+            const tryPlay = () => {
+                audio.play().catch((e) => {
+                    console.error('Audio play error:', e);
+                    // As a fallback, try again shortly once canplaythrough fires
+                });
+            };
+            audio.oncanplaythrough = () => {
+                // small delay helps iOS start
+                setTimeout(tryPlay, 100);
+                audio.oncanplaythrough = null;
+            };
+            // If it is already buffered enough
+            if (audio.readyState >= 3) {
+                setTimeout(tryPlay, 50);
+            }
         } catch (err) {
             console.error('Audio play error:', err);
             awaitingTTSRef.current = false;
