@@ -583,9 +583,11 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
 
               {initData && !showFinalSummary && (
                 <>
-                  <div className="mobile-sell-card">
-                    <h3 className="mobile-sell-card-title">Sell Summary</h3>
-                    <div className="mobile-sell-grid">
+                  <div className="mobile-sell-success-card">
+                    <div className="mobile-sell-success-header">
+                      <h3 className="mobile-sell-card-title"></h3>
+                    </div>
+                    <div className="mobile-sell-grid mobile-sell-summary-grid">
                       {!!(initData.deposit.amount && initData.deposit.amount > 0) && (
                         <div className="mobile-sell-grid-item">
                           <div className="mobile-sell-key">Amount to Send</div>
@@ -600,16 +602,6 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                           <div className="mobile-sell-value">
                             {prettyNgn(initData.quote.receiveAmount)} ({initData.quote.receiveCurrency})
                           </div>
-                        </div>
-                      )}
-                      <div className="mobile-sell-grid-item">
-                        <div className="mobile-sell-key">Your Address</div>
-                        <div className="mobile-sell-value mono wrap">{initData.deposit.address}</div>
-                      </div>
-                      {!!initData.deposit.memo && (
-                        <div className="mobile-sell-grid-item">
-                          <div className="mobile-sell-key">Memo/Tag</div>
-                          <div className="mobile-sell-value mono wrap">{initData.deposit.memo}</div>
                         </div>
                       )}
                       <div className="mobile-sell-grid-item">
