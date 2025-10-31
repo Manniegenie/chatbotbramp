@@ -669,11 +669,13 @@ export default function App() {
             bottom: 0;
           }
 
-          /* Disable scrolling on messages container */
+          /* Enable scrolling on messages container */
           .messages {
-            overflow: hidden;
+            overflow-y: auto;
+            overflow-x: hidden;
             height: calc(100vh - 200px);
             max-height: calc(100vh - 200px);
+            -webkit-overflow-scrolling: touch;
           }
 
           /* Ensure no scrollbars anywhere */
