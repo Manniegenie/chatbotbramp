@@ -804,25 +804,6 @@ export default function MobileApp() {
               />
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <button
-                  type="button"
-                  className="mobile-send-btn"
-                  onClick={() => setShowVoiceChat(true)}
-                  disabled={loading || !auth}
-                  aria-label="Voice chat"
-                  style={{
-                    background: 'transparent',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    padding: '8px',
-                    minWidth: '44px',
-                    height: '44px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <img src={micIcon} alt="Mic" style={{ width: '24px', height: '24px' }} />
-                </button>
-                <button
                   type="submit"
                   className="mobile-send-btn"
                   disabled={loading || !input.trim()}
@@ -845,6 +826,25 @@ export default function MobileApp() {
                       <polygon points="22,2 15,22 11,13 2,9" />
                     </svg>
                   )}
+                </button>
+                <button
+                  type="button"
+                  className="mobile-send-btn"
+                  onClick={() => setShowVoiceChat(true)}
+                  disabled={loading || !auth}
+                  aria-label="Voice chat"
+                  style={{
+                    background: 'transparent',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    padding: '8px',
+                    minWidth: '44px',
+                    height: '44px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <img src={micIcon} alt="Mic" style={{ width: '24px', height: '24px' }} />
                 </button>
               </div>
             </form>
