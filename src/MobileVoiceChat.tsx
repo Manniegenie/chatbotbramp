@@ -22,6 +22,7 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent, isMo
     const [isResponding, setIsResponding] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [pendingAudio, setPendingAudio] = useState<string | null>(null); // For iOS playback fallback
+    const [isPlaying, setIsPlaying] = useState(false); // Track if audio is currently playing
 
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
@@ -515,11 +516,11 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent, isMo
                 }
             } else {
                 console.warn('No audio received in response');
+                // Clear state if no audio to play
+                awaitingTTSRef.current = false;
+                setIsResponding(false);
+                setIsProcessing(false);
             }
-            // Always clear processing/responding state when response received
-            awaitingTTSRef.current = false;
-            setIsResponding(false);
-            setIsProcessing(false);
             // Ensure recording state is cleared
             isRecordingRef.current = false;
             setIsRecording(false);
@@ -605,6 +606,7 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent, isMo
                     awaitingTTSRef.current = false;
                     setIsResponding(false);
                     setIsProcessing(false);
+                    setIsPlaying(false);
                     setTranscript(''); // Clear transcript after playback on mobile
                     // Ensure recording state is fully cleared
                     isRecordingRef.current = false;
@@ -643,6 +645,7 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent, isMo
                     console.error('Audio element error:', evt, audio.error);
                     awaitingTTSRef.current = false;
                     setIsResponding(false);
+                    setIsPlaying(false);
                     reject(new Error('Audio playback failed'));
                 };
 
@@ -676,8 +679,10 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent, isMo
                         if (playPromise !== undefined) {
                             await playPromise;
                             console.log('Audio play() successful - playing now');
+                            setIsPlaying(true); // Audio is now playing
                         } else {
                             console.log('Audio play() returned undefined, audio should be playing');
+                            setIsPlaying(true); // Audio should be playing
                         }
                     } catch (e: any) {
                         console.error('Audio play() failed:', e);
@@ -814,7 +819,6 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent, isMo
                             try {
                                 const audioToPlay = pendingAudio;
                                 setPendingAudio(null);
-                                setIsResponding(true);
                                 await playAudio(audioToPlay);
                                 // Transcript is cleared in playAudio's handleEnded
                             } catch (err) {
@@ -963,10 +967,12 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent, isMo
                 >
                     {error ? (
                         <span style={{ color: '#ff6b6b' }}>⚠️ {error}</span>
+                    ) : isPlaying ? (
+                        ''  // No text while playing audio
                     ) : pendingAudio ? (
                         'Tap play button to hear response'
                     ) : (isProcessing || isResponding) ? (
-                        'Thinking'
+                        'Thinking...'
                     ) : isRecording ? (
                         'Recording... Hold longer, then release to send'
                     ) : sessionActive ? (
