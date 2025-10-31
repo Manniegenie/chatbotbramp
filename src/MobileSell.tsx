@@ -633,13 +633,43 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                               setOcrError(null)
 
                               try {
-                                // Read file to dataURL
-                                const imageDataUrl: string = await new Promise((resolve, reject) => {
-                                  const r = new FileReader()
-                                  r.onload = () => resolve(String(r.result || ''))
-                                  r.onerror = reject
-                                  r.readAsDataURL(file)
-                                })
+                                // Compress/resize image before sending to reduce payload size
+                                const compressImage = (file: File, maxWidth: number = 1200, quality: number = 0.8): Promise<string> => {
+                                  return new Promise((resolve, reject) => {
+                                    const img = new Image()
+                                    img.onload = () => {
+                                      const canvas = document.createElement('canvas')
+                                      let width = img.width
+                                      let height = img.height
+
+                                      if (width > maxWidth) {
+                                        height = (height * maxWidth) / width
+                                        width = maxWidth
+                                      }
+
+                                      canvas.width = width
+                                      canvas.height = height
+                                      const ctx = canvas.getContext('2d')
+                                      if (!ctx) return reject(new Error('Canvas context not available'))
+
+                                      ctx.drawImage(img, 0, 0, width, height)
+                                      canvas.toBlob((blob) => {
+                                        if (!blob) return reject(new Error('Image compression failed'))
+                                        const reader = new FileReader()
+                                        reader.onload = () => resolve(String(reader.result || ''))
+                                        reader.onerror = reject
+                                        reader.readAsDataURL(blob)
+                                      }, 'image/jpeg', quality)
+                                    }
+                                    img.onerror = reject
+                                    img.src = URL.createObjectURL(file)
+                                  })
+                                }
+
+                                // Compress image first
+                                const imageDataUrl = await compressImage(file)
+
+                                console.log('Sending image to scan endpoint, size:', Math.round(imageDataUrl.length / 1024), 'KB')
 
                                 // Send image directly to backend AI
                                 const resp = await fetch(`${API_BASE}/scan/image`, {
@@ -648,12 +678,20 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                                   body: JSON.stringify({ imageDataUrl })
                                 })
 
+                                console.log('Scan response status:', resp.status)
+
                                 if (!resp.ok) {
+                                  const errorText = await resp.text().catch(() => '')
+                                  console.error('Scan failed:', resp.status, errorText)
                                   setOcrError(`Scan failed (${resp.status}). Please try again.`)
                                   return
                                 }
 
-                                const payload = await resp.json().catch(() => ({ success: false }))
+                                const payload = await resp.json().catch((err) => {
+                                  console.error('Failed to parse response:', err)
+                                  return { success: false }
+                                })
+
                                 if (!payload.success) {
                                   setOcrError(payload.message || 'Could not extract account details.')
                                   return

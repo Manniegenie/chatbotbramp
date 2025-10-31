@@ -287,6 +287,10 @@ export default function SellModal({ open, onClose, onChatEcho, onStartInteractio
   const [bankOptions, setBankOptions] = useState<BankOption[]>([])
   const banksFetchedRef = useRef(false)
 
+  // OCR Scan (desktop upload)
+  const [ocrLoading, setOcrLoading] = useState(false)
+  const [ocrError, setOcrError] = useState<string | null>(null)
+
 
 
   // Reset on open
@@ -697,6 +701,122 @@ export default function SellModal({ open, onClose, onChatEcho, onStartInteractio
                   )}
 
                   <form onSubmit={submitPayout} style={{ display: 'grid', gap: 12 }}>
+
+                    {/* Upload and scan account image (desktop) */}
+                    <div>
+                      <span style={labelText}>Scan account (upload image)</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
+                        <input
+                          id="desktop-account-scan-input"
+                          type="file"
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          onChange={async (e) => {
+                            const file = e.currentTarget.files?.[0]
+                            if (!file) return
+
+                            setOcrLoading(true)
+                            setOcrError(null)
+
+                            try {
+                              const compressImage = (file: File, maxWidth: number = 1200, quality: number = 0.8): Promise<string> => {
+                                return new Promise((resolve, reject) => {
+                                  const img = new Image()
+                                  img.onload = () => {
+                                    const canvas = document.createElement('canvas')
+                                    let width = img.width
+                                    let height = img.height
+                                    if (width > maxWidth) { height = (height * maxWidth) / width; width = maxWidth }
+                                    canvas.width = width
+                                    canvas.height = height
+                                    const ctx = canvas.getContext('2d')
+                                    if (!ctx) return reject(new Error('Canvas context not available'))
+                                    ctx.drawImage(img, 0, 0, width, height)
+                                    canvas.toBlob((blob) => {
+                                      if (!blob) return reject(new Error('Image compression failed'))
+                                      const reader = new FileReader()
+                                      reader.onload = () => resolve(String(reader.result || ''))
+                                      reader.onerror = reject
+                                      reader.readAsDataURL(blob)
+                                    }, 'image/jpeg', quality)
+                                  }
+                                  img.onerror = reject
+                                  img.src = URL.createObjectURL(file)
+                                })
+                              }
+
+                              const imageDataUrl = await compressImage(file)
+
+                              const resp = await fetch(`${API_BASE}/scan/image`, {
+                                method: 'POST',
+                                headers: getHeaders(),
+                                body: JSON.stringify({ imageDataUrl })
+                              })
+
+                              if (!resp.ok) {
+                                const errorText = await resp.text().catch(() => '')
+                                console.error('Scan failed:', resp.status, errorText)
+                                setOcrError(`Scan failed (${resp.status}). Please try again.`)
+                                return
+                              }
+
+                              const payload = await resp.json().catch(() => ({ success: false }))
+                              if (!payload.success) {
+                                setOcrError(payload.message || 'Could not extract account details.')
+                                return
+                              }
+
+                              const detected = payload.detected || {}
+                              const detectedBank = String(detected.bankName || '').toLowerCase().trim()
+                              const detectedAcct = String(detected.accountNumber || '').trim()
+
+                              if (detectedBank && bankOptions.length > 0) {
+                                const hit = bankOptions.find((b: BankOption) => {
+                                  const bn = String(b.name || '').toLowerCase()
+                                  return bn === detectedBank || bn.includes(detectedBank) || detectedBank.includes(bn)
+                                })
+                                if (hit) {
+                                  setBankCode(hit.code)
+                                  setBankName(hit.name)
+                                } else if (detected.bankName) {
+                                  setOcrError(`Bank "${detected.bankName}" not found. Please select manually.`)
+                                }
+                              }
+
+                              if (/^\d{10}$/.test(detectedAcct)) {
+                                setAccountNumber(detectedAcct)
+                              } else if (detectedAcct) {
+                                setOcrError(`Invalid account number: "${detectedAcct}". Must be 10 digits.`)
+                              }
+
+                            } catch (err: any) {
+                              console.error('Desktop scan failed', err)
+                              setOcrError(err.message || 'Failed to scan image. Please try again.')
+                            } finally {
+                              setOcrLoading(false)
+                              try { e.currentTarget.value = '' } catch { }
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          style={{ ...btnOutline, minHeight: 40 }}
+                          onClick={() => {
+                            const el = document.getElementById('desktop-account-scan-input') as HTMLInputElement | null
+                            el?.click()
+                          }}
+                          disabled={ocrLoading}
+                        >
+                          {ocrLoading ? 'Scanning…' : 'Upload account image'}
+                        </button>
+                        {ocrError && (
+                          <div role="alert" style={{ color: '#ff6b6b', fontSize: 12 }}>
+                            ⚠️ {ocrError}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
 
                     <label style={inputWrap}>
                       <span style={labelText}>Bank <span style={{ fontSize: '10px', opacity: 0.7 }}>▼</span></span>
