@@ -287,6 +287,8 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
             const audio = new Audio();
             audio.src = objectUrl;
             audio.preload = 'auto';
+            audio.autoplay = false;
+            audio.volume = 1;
             audioRef.current = audio;
             // Attempt to play once ready
             audio.onended = () => {
@@ -303,6 +305,11 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                     }, 300);
                 }
             };
+            audio.onerror = (e) => {
+                console.error('Audio element error:', e);
+                awaitingTTSRef.current = false;
+                setIsResponding(false);
+            };
             const tryPlay = () => {
                 audio.play().catch((e) => {
                     console.error('Audio play error:', e);
@@ -318,6 +325,11 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
             if (audio.readyState >= 3) {
                 setTimeout(tryPlay, 50);
             }
+            try { audio.load(); } catch { }
+            setTimeout(() => {
+                if (!audio.paused) return;
+                tryPlay();
+            }, 500);
         } catch (err) {
             console.error('Audio play error:', err);
             awaitingTTSRef.current = false;
@@ -441,6 +453,8 @@ export default function MobileVoiceChat({ onClose, onMessage }: MobileVoiceChatP
                 >
                     {error ? (
                         <span style={{ color: '#ff6b6b' }}>⚠️ {error}</span>
+                    ) : isResponding ? (
+                        'Processing…'
                     ) : isListening ? (
                         'Listening...'
                     ) : sessionActive ? (
