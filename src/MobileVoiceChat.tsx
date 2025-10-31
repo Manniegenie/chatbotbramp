@@ -165,21 +165,32 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent, isMo
                 mediaRecorder = new MediaRecorder(stream);
             }
 
-            // Store recording start time INSIDE the handler closure - use timestamp as part of recorder
+            // Generate recording ID
             const recordingId = `recording_${Date.now()}_${Math.random()}`;
-            const recordingStartTime = Date.now();
 
-            // Store start time on the recorder itself to avoid closure issues
-            (mediaRecorder as any)._recordingStartTime = recordingStartTime;
-            (mediaRecorder as any)._recordingId = recordingId;
+            console.log('Preparing new recording:', recordingId);
 
-            console.log('Starting new recording:', recordingId, { startTime: recordingStartTime });
+            // Clear any previous audio chunks FIRST
+            audioChunksRef.current = [];
 
             mediaRecorder.ondataavailable = (event) => {
                 // Only add chunks if this is still the current recording
                 if (mediaRecorderRef.current === mediaRecorder && event.data.size > 0) {
+                    console.log('Audio chunk received:', event.data.size, 'bytes');
                     audioChunksRef.current.push(event.data);
                 }
+            };
+
+            // Set the MediaRecorder reference BEFORE starting
+            mediaRecorderRef.current = mediaRecorder;
+
+            // Capture start time RIGHT when start() is called (most accurate)
+            mediaRecorder.onstart = () => {
+                // This fires when recording actually starts
+                const actualStartTime = Date.now();
+                (mediaRecorder as any)._recordingStartTime = actualStartTime;
+                (mediaRecorder as any)._recordingId = recordingId;
+                console.log('Recording ACTUALLY started:', recordingId, { startTime: actualStartTime });
             };
 
             mediaRecorder.onstop = async () => {
@@ -189,9 +200,21 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent, isMo
                     return;
                 }
 
-                // Get start time from recorder itself (more reliable than closure)
-                const startTime = (mediaRecorder as any)._recordingStartTime || recordingStartTime;
+                // Get start time from recorder (set by onstart handler)
+                const startTime = (mediaRecorder as any)._recordingStartTime;
                 const recId = (mediaRecorder as any)._recordingId || recordingId;
+
+                if (!startTime) {
+                    console.error('No start time found for recording! Using fallback');
+                    // Fallback: this shouldn't happen, but if it does, reject the recording
+                    isRecordingRef.current = false;
+                    setIsRecording(false);
+                    audioChunksRef.current = [];
+                    setError('Recording error: start time not captured');
+                    setTimeout(() => setError(null), 3000);
+                    return;
+                }
+
                 const recordingDuration = Date.now() - startTime;
                 const minRecordingDuration = 500; // Minimum 500ms (0.5 seconds) - Whisper needs at least 0.1s
 
@@ -263,19 +286,28 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent, isMo
                     isRecordingRef.current = false;
                     setIsRecording(false);
                     audioChunksRef.current = [];
+                    // Clear recorder reference
+                    mediaRecorderRef.current = null;
                 }
             };
 
-            // Set the MediaRecorder reference before starting
-            mediaRecorderRef.current = mediaRecorder;
-
             // Start recording (no timeout - user releases button to stop)
-            mediaRecorder.start();
-            isRecordingRef.current = true;
-            setIsRecording(true);
-            setTranscript('');
-            setError(null);
-            console.log('Recording started:', recordingId);
+            // Note: onstart handler will capture the actual start time
+            try {
+                mediaRecorder.start();
+                // Set state immediately after starting (onstart will fire soon)
+                isRecordingRef.current = true;
+                setIsRecording(true);
+                setTranscript('');
+                setError(null);
+                console.log('mediaRecorder.start() called, waiting for onstart event:', recordingId);
+            } catch (startErr: any) {
+                console.error('Failed to start MediaRecorder:', startErr);
+                setError('Failed to start recording: ' + (startErr.message || 'Unknown error'));
+                isRecordingRef.current = false;
+                setIsRecording(false);
+                mediaRecorderRef.current = null;
+            }
         } catch (err: any) {
             console.error('Start recording error:', err);
             setError(err.message || 'Failed to start recording');
@@ -287,9 +319,17 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent, isMo
     // Release button: Stop recording and process
     function stopRecording() {
         const recorder = mediaRecorderRef.current;
-        if (recorder && (recorder.state === 'recording' || recorder.state === 'paused')) {
+        if (!recorder) {
+            console.log('stopRecording: No active recorder');
+            // Force cleanup even if no recorder
+            isRecordingRef.current = false;
+            setIsRecording(false);
+            return;
+        }
+
+        if (recorder.state === 'recording' || recorder.state === 'paused') {
             try {
-                console.log('stopRecording called, MediaRecorder state:', recorder.state);
+                console.log('stopRecording called, MediaRecorder state:', recorder.state, 'chunks:', audioChunksRef.current.length);
                 recorder.stop();
             } catch (err) {
                 console.error('Stop recording error:', err);
@@ -297,15 +337,27 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent, isMo
                 isRecordingRef.current = false;
                 setIsRecording(false);
                 audioChunksRef.current = [];
+                mediaRecorderRef.current = null;
             }
+        } else if (recorder.state === 'inactive') {
+            console.log('stopRecording: Recorder already stopped/inactive');
+            // Already stopped, but ensure state is cleared
+            isRecordingRef.current = false;
+            setIsRecording(false);
         } else {
-            console.log('stopRecording: No active recorder or not recording', {
-                hasRecorder: !!recorder,
-                state: recorder?.state,
-                isRecording: isRecordingRef.current
-            });
+            console.log('stopRecording: Recorder in unexpected state:', recorder.state);
+            // Try to stop anyway, or force cleanup
+            try {
+                if (recorder.state !== 'inactive') {
+                    recorder.stop();
+                }
+            } catch (err) {
+                console.warn('Could not stop recorder:', err);
+            }
+            isRecordingRef.current = false;
+            setIsRecording(false);
         }
-        // State reset is handled in onstop handler
+        // State reset is handled in onstop handler (if it fires)
     }
 
     async function processAudio(audioBlob: Blob) {
