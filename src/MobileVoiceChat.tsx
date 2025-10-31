@@ -90,52 +90,33 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent, isMo
 
     // Press to talk: Start recording when user presses/holds button
     function startRecording() {
-        // Prevent multiple simultaneous recordings
         if (!streamRef.current || isRecordingRef.current) {
-            console.log('startRecording blocked:', { hasStream: !!streamRef.current, isRecording: isRecordingRef.current });
             return;
         }
 
-        // Ensure previous recording state is fully cleared
-        if (isProcessing || isResponding) {
-            console.log('startRecording blocked: still processing/responding');
-            // Don't block if we're just waiting - let the user retry
-            // But ensure we're not in a recording state
-            if (isRecordingRef.current) {
-                return;
-            }
-        }
-
         try {
-            // Clean up any existing MediaRecorder before starting new one
+            // Clean up any existing MediaRecorder completely
             if (mediaRecorderRef.current) {
                 try {
-                    // Capture the old recorder to compare later
                     const oldRecorder = mediaRecorderRef.current;
-
-                    // Remove old event handlers to prevent them from firing
                     oldRecorder.onstop = null;
                     oldRecorder.ondataavailable = null;
                     oldRecorder.onerror = null;
-
-                    // Stop and clean up if it's still active
+                    oldRecorder.onstart = null;
                     if (oldRecorder.state === 'recording' || oldRecorder.state === 'paused') {
-                        try {
-                            oldRecorder.stop();
-                        } catch (stopErr) {
-                            console.warn('Error stopping old MediaRecorder:', stopErr);
-                        }
+                        oldRecorder.stop();
                     }
-                } catch (cleanupErr) {
-                    console.warn('Error cleaning up previous MediaRecorder:', cleanupErr);
+                } catch (e) {
+                    // Ignore cleanup errors
                 }
                 mediaRecorderRef.current = null;
             }
 
-            // Ensure all state is reset before starting
+            // Clear all previous state
+            audioChunksRef.current = [];
             isRecordingRef.current = false;
             setIsRecording(false);
-            audioChunksRef.current = [];
+            currentRecordingIdRef.current = null;
             setError(null);
 
             const stream = streamRef.current;
@@ -155,10 +136,9 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent, isMo
                             config.audioBitsPerSecond = opt.bitrate;
                         }
                         mediaRecorder = new MediaRecorder(stream, config);
-                        console.log('Using audio format:', opt.mimeType);
                         break;
                     } catch (e) {
-                        console.warn('Failed to create MediaRecorder with:', opt.mimeType, e);
+                        // Continue to next option
                     }
                 }
             }
@@ -167,196 +147,108 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent, isMo
                 mediaRecorder = new MediaRecorder(stream);
             }
 
-            // Generate UNIQUE recording ID for THIS recording session
-            const recordingId = `rec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            // Store start time ON the recorder object (more reliable than closure)
+            const recorderStartTime = Date.now();
+            (mediaRecorder as any).__startTime = recorderStartTime;
 
-            // Set current recording ID IMMEDIATELY to track this session
-            currentRecordingIdRef.current = recordingId;
+            // Set reference before setting handlers
+            mediaRecorderRef.current = mediaRecorder;
 
-            console.log('🔵 Preparing NEW recording:', recordingId);
-
-            // CRITICAL: Clear ALL previous state FIRST
-            audioChunksRef.current = [];
-            isRecordingRef.current = false;
-            setIsRecording(false);
-
-            // Create isolated chunk storage for THIS recording
-            const recordingChunks: Blob[] = [];
-
+            // Simple chunk collection
             mediaRecorder.ondataavailable = (event) => {
-                // Verify this is the current recording session
-                if (currentRecordingIdRef.current !== recordingId) {
-                    console.log('⚠️ Ignoring chunk from old recording:', currentRecordingIdRef.current, 'vs', recordingId);
-                    return;
-                }
-
-                // Verify MediaRecorder is still current
-                if (mediaRecorderRef.current !== mediaRecorder) {
-                    console.log('⚠️ Ignoring chunk from old MediaRecorder');
-                    return;
-                }
-
-                if (event.data.size > 0) {
-                    console.log('✅ Audio chunk received for', recordingId, ':', event.data.size, 'bytes');
-                    recordingChunks.push(event.data);
+                if (mediaRecorderRef.current === mediaRecorder && event.data.size > 0) {
                     audioChunksRef.current.push(event.data);
                 }
             };
 
-            // Set the MediaRecorder reference BEFORE starting
-            mediaRecorderRef.current = mediaRecorder;
-
-            // Capture start time RIGHT when start() fires
-            let recordingStartTime: number | null = null;
+            // Capture actual start time when recording begins
             mediaRecorder.onstart = () => {
-                // Verify this is still the current recording
-                if (currentRecordingIdRef.current !== recordingId) {
-                    console.log('⚠️ Ignoring onstart from old recording');
-                    return;
+                if (mediaRecorderRef.current === mediaRecorder) {
+                    const actualStart = Date.now();
+                    (mediaRecorder as any).__startTime = actualStart;
+                    console.log('Recording started at:', actualStart);
                 }
-
-                recordingStartTime = Date.now();
-                console.log('🟢 Recording ACTUALLY started:', recordingId, { startTime: recordingStartTime });
             };
 
+            // Handle stop - simple and direct
             mediaRecorder.onstop = async () => {
-                console.log('🟡 onstop fired for recording:', recordingId, 'currentRecording:', currentRecordingIdRef.current);
-
-                // CRITICAL: Verify this is STILL the current recording session
-                if (currentRecordingIdRef.current !== recordingId) {
-                    console.log('❌ IGNORING onstop from OLD recording:', recordingId, 'current is:', currentRecordingIdRef.current);
-                    return;
-                }
-
-                // Verify MediaRecorder is still current
+                // Only process if this is still the current recorder
                 if (mediaRecorderRef.current !== mediaRecorder) {
-                    console.log('❌ IGNORING onstop from OLD MediaRecorder');
+                    console.log('Ignoring stop from old recorder');
                     return;
                 }
 
-                // Get start time (should be set by onstart)
-                if (!recordingStartTime) {
-                    console.error('❌ No start time found! Recording may have failed to start');
-                    // Clear state
-                    currentRecordingIdRef.current = null;
-                    isRecordingRef.current = false;
-                    setIsRecording(false);
-                    audioChunksRef.current = [];
-                    mediaRecorderRef.current = null;
-                    setError('Recording failed: start time not captured');
-                    setTimeout(() => setError(null), 3000);
-                    return;
-                }
+                // Get start time from recorder (set by onstart or fallback to creation time)
+                const startTime = (mediaRecorder as any).__startTime || recorderStartTime;
+                const duration = Date.now() - startTime;
+                const minDuration = 500;
 
-                const stopTime = Date.now();
-                const recordingDuration = stopTime - recordingStartTime;
-                const minRecordingDuration = 500; // Minimum 500ms (0.5 seconds)
+                console.log('Recording stopped:', { duration, chunks: audioChunksRef.current.length, startTime });
 
-                console.log('🟡 Recording stopped:', {
-                    recordingId,
-                    duration: recordingDuration + 'ms',
-                    startTime: recordingStartTime,
-                    endTime: stopTime,
-                    chunkCount: recordingChunks.length,
-                    refChunkCount: audioChunksRef.current.length,
-                    timestamp: new Date().toISOString()
-                });
-
-                // IMMEDIATELY clear recording ID to prevent this handler from running again
-                currentRecordingIdRef.current = null;
+                // Clear state immediately
                 isRecordingRef.current = false;
                 setIsRecording(false);
 
-                // Use the isolated chunks array (more reliable)
-                const chunksToUse = recordingChunks.length > 0 ? recordingChunks : audioChunksRef.current;
-
-                if (chunksToUse.length === 0) {
-                    console.error('❌ No audio chunks recorded');
-                    audioChunksRef.current = [];
+                // Capture chunks and blob BEFORE clearing anything
+                const chunks = [...audioChunksRef.current];
+                if (chunks.length === 0) {
                     mediaRecorderRef.current = null;
+                    audioChunksRef.current = [];
                     setError('No audio recorded. Please hold the button and speak.');
                     setTimeout(() => setError(null), 3000);
                     return;
                 }
 
-                const blobType = mediaRecorder?.mimeType || 'audio/webm';
-                const audioBlob = new Blob(chunksToUse, { type: blobType });
+                const blob = new Blob(chunks, { type: mediaRecorder?.mimeType || 'audio/webm' });
 
-                console.log('✅ Recording validation:', {
-                    recordingId,
-                    duration: recordingDuration + 'ms',
-                    blobSize: audioBlob.size,
-                    chunkCount: chunksToUse.length
-                });
+                // Clear recorder reference and chunks immediately
+                mediaRecorderRef.current = null;
+                audioChunksRef.current = [];
 
-                // Validate minimum recording duration
-                if (recordingDuration < minRecordingDuration) {
-                    console.error('❌ Recording too short:', recordingDuration + 'ms', 'required:', minRecordingDuration + 'ms', 'recordingId:', recordingId);
-                    audioChunksRef.current = [];
-                    mediaRecorderRef.current = null;
-                    setError(`Recording too short (${recordingDuration}ms). Please hold the button for at least 0.5 seconds.`);
+                // Validate duration
+                if (duration < minDuration) {
+                    console.error('Recording too short:', duration + 'ms');
+                    setError(`Recording too short (${duration}ms). Please hold for at least 0.5 seconds.`);
                     setTimeout(() => setError(null), 4000);
                     return;
                 }
 
-                // Validate minimum audio size
-                const minAudioSize = 2000; // Minimum ~2KB
-                if (audioBlob.size < minAudioSize) {
-                    console.error('❌ Audio blob too small:', audioBlob.size + ' bytes', 'required:', minAudioSize + ' bytes');
-                    audioChunksRef.current = [];
-                    mediaRecorderRef.current = null;
+                // Validate size
+                if (blob.size < 2000) {
+                    console.error('Audio blob too small:', blob.size + ' bytes');
                     setError('Recording too short. Please speak for at least half a second.');
                     setTimeout(() => setError(null), 4000);
                     return;
                 }
 
-                // Clear ALL state before processing
-                audioChunksRef.current = [];
-                mediaRecorderRef.current = null;
-
-                console.log('✅ Passing validated recording to processAudio:', recordingId, audioBlob.size, 'bytes');
-                await processAudio(audioBlob);
+                console.log('Recording validated, processing:', blob.size, 'bytes');
+                // Process audio
+                await processAudio(blob);
             };
 
             mediaRecorder.onerror = (event: any) => {
-                // Verify this is still the current recording
-                if (currentRecordingIdRef.current !== recordingId || mediaRecorderRef.current !== mediaRecorder) {
-                    console.log('⚠️ Ignoring error from old recording');
-                    return;
+                if (mediaRecorderRef.current === mediaRecorder) {
+                    console.error('MediaRecorder error:', event.error);
+                    setError('Recording error occurred');
+                    isRecordingRef.current = false;
+                    setIsRecording(false);
+                    audioChunksRef.current = [];
+                    mediaRecorderRef.current = null;
                 }
-
-                console.error('❌ MediaRecorder error for', recordingId, ':', event.error);
-                setError('Recording error occurred');
-                currentRecordingIdRef.current = null;
-                isRecordingRef.current = false;
-                setIsRecording(false);
-                audioChunksRef.current = [];
-                mediaRecorderRef.current = null;
             };
 
-            // Start recording (no timeout - user releases button to stop)
-            try {
-                console.log('🚀 Calling mediaRecorder.start() for:', recordingId);
-                mediaRecorder.start();
-                // Set state immediately (onstart will fire soon and set the actual start time)
-                isRecordingRef.current = true;
-                setIsRecording(true);
-                setTranscript('');
-                setError(null);
-                console.log('✅ mediaRecorder.start() called, waiting for onstart event:', recordingId);
-            } catch (startErr: any) {
-                console.error('❌ Failed to start MediaRecorder for', recordingId, ':', startErr);
-                currentRecordingIdRef.current = null;
-                setError('Failed to start recording: ' + (startErr.message || 'Unknown error'));
-                isRecordingRef.current = false;
-                setIsRecording(false);
-                mediaRecorderRef.current = null;
-            }
+            // Start recording
+            mediaRecorder.start();
+            isRecordingRef.current = true;
+            setIsRecording(true);
+            setTranscript('');
+            setError(null);
         } catch (err: any) {
             console.error('Start recording error:', err);
             setError(err.message || 'Failed to start recording');
             isRecordingRef.current = false;
             setIsRecording(false);
+            mediaRecorderRef.current = null;
         }
     }
 
