@@ -31,6 +31,8 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent, isMo
     const sessionActiveRef = useRef<boolean>(false);
     const awaitingTTSRef = useRef<boolean>(false);
     const isRecordingRef = useRef<boolean>(false);
+    // Track current recording instance ID to prevent stale handlers
+    const currentRecordingIdRef = useRef<string | null>(null);
 
     // Initialize voice session
     useEffect(() => {
