@@ -610,6 +610,86 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                         <div className="mobile-sell-key">Rate</div>
                         <div className="mobile-sell-value">{prettyAmount(initData.quote.rate)} NGN/{initData.deposit.token}</div>
                       </div>
+                      {/* Camera Scan for Bank + Account Number (under Rate) */}
+                      <div className="mobile-sell-grid-item">
+                        <div className="mobile-sell-key">Scan account</div>
+                        <div className="mobile-sell-value" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          <input
+                            id="account-scan-input"
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            style={{ display: 'none' }}
+                            onChange={async (e) => {
+                              try {
+                                const file = e.currentTarget.files && e.currentTarget.files[0]
+                                if (!file) return
+                                // Read file to dataURL
+                                const dataUrl: string = await new Promise((resolve, reject) => {
+                                  const r = new FileReader()
+                                  r.onload = () => resolve(String(r.result || ''))
+                                  r.onerror = reject
+                                  r.readAsDataURL(file)
+                                })
+                                // OCR via dynamic import (tesseract.js)
+                                const Tesseract = await import('tesseract.js')
+                                const result = await Tesseract.recognize(dataUrl, 'eng')
+                                const text = String(result?.data?.text || '').slice(0, 10000)
+                                if (!text.trim()) {
+                                  console.warn('Scan: empty OCR text')
+                                  return
+                                }
+                                // Call backend AI scan
+                                const resp = await fetch(`${API_BASE}/scan/text`, {
+                                  method: 'POST',
+                                  headers: getHeaders(),
+                                  body: JSON.stringify({ text })
+                                })
+                                if (!resp.ok) {
+                                  console.warn('Scan API failed', resp.status)
+                                  return
+                                }
+                                const payload = await resp.json().catch(() => ({} as any))
+                                const detected = payload?.detected || {}
+                                const detectedBank = String(detected.bankName || '').toLowerCase()
+                                const detectedAcct = String(detected.accountNumber || '')
+
+                                // Map bank name -> bankCode
+                                if (detectedBank && Array.isArray(bankOptions) && bankOptions.length) {
+                                  const hit = bankOptions.find((b: BankOption) => {
+                                    const bn = String(b.name || '').toLowerCase()
+                                    return bn === detectedBank || bn.includes(detectedBank) || detectedBank.includes(bn)
+                                  })
+                                  if (hit) {
+                                    setBankCode(hit.code)
+                                    setBankName(hit.name)
+                                  }
+                                }
+                                // Fill account number (must be 10 digits)
+                                if (/^\d{10}$/.test(detectedAcct)) {
+                                  setAccountNumber(detectedAcct)
+                                }
+                                // Trigger account name resolution if your existing effect listens to bankCode+accountNumber
+                              } catch (err) {
+                                console.error('Scan flow failed', err)
+                              } finally {
+                                // reset input to allow same file re-select
+                                try { e.currentTarget.value = '' } catch { }
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="mobile-sell-button outline"
+                            onClick={() => {
+                              const el = document.getElementById('account-scan-input') as HTMLInputElement | null
+                              el?.click()
+                            }}
+                          >
+                            Scan with Camera
+                          </button>
+                        </div>
+                      </div>
                       {initData?.quote?.breakdown?.displayFeeNgn != null && (
                         <div className="mobile-sell-grid-item">
                           <div className="mobile-sell-key">Fee</div>
