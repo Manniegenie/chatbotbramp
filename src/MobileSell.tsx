@@ -634,51 +634,18 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
 
                               try {
                                 // Read file to dataURL
-                                const dataUrl: string = await new Promise((resolve, reject) => {
+                                const imageDataUrl: string = await new Promise((resolve, reject) => {
                                   const r = new FileReader()
                                   r.onload = () => resolve(String(r.result || ''))
                                   r.onerror = reject
                                   r.readAsDataURL(file)
                                 })
 
-                                // OCR via tesseract.js - use CDN paths for Vercel/Vite builds
-                                const { createWorker } = await import('tesseract.js')
-
-                                console.log('Creating Tesseract worker...')
-
-                                // Try with CDN paths first (required for Vercel/Vite)
-                                let worker
-                                try {
-                                  // Tesseract.js v5 API: createWorker(lang, OSD, options)
-                                  worker = await createWorker('eng', 1, {
-                                    workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js',
-                                    corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5/tesseract-core.wasm.js',
-                                    langPath: 'https://cdn.jsdelivr.net/npm/tesseract.js-data@5'
-                                  })
-                                  console.log('Worker created with CDN paths')
-                                } catch (workerError) {
-                                  console.warn('CDN worker creation failed, trying default:', workerError)
-                                  // Fallback to default (works in dev, may fail in production)
-                                  worker = await createWorker('eng')
-                                  console.log('Worker created with default paths')
-                                }
-
-                                console.log('Starting OCR recognition...')
-                                const { data: { text: ocrText } } = await worker.recognize(dataUrl)
-                                await worker.terminate()
-                                console.log('OCR completed, text length:', ocrText?.length || 0)
-
-                                const text = String(ocrText || '').trim().slice(0, 10000)
-                                if (!text) {
-                                  setOcrError('No text found in image. Please try a clearer picture.')
-                                  return
-                                }
-
-                                // Call backend AI scan
-                                const resp = await fetch(`${API_BASE}/scan/text`, {
+                                // Send image directly to backend AI
+                                const resp = await fetch(`${API_BASE}/scan/image`, {
                                   method: 'POST',
                                   headers: getHeaders(),
-                                  body: JSON.stringify({ text })
+                                  body: JSON.stringify({ imageDataUrl })
                                 })
 
                                 if (!resp.ok) {
@@ -705,7 +672,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                                   if (hit) {
                                     setBankCode(hit.code)
                                     setBankName(hit.name)
-                                  } else {
+                                  } else if (detected.bankName) {
                                     setOcrError(`Bank "${detected.bankName}" not found. Please select manually.`)
                                   }
                                 }
@@ -722,8 +689,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                                 setOcrError(err.message || 'Failed to scan image. Please try again.')
                               } finally {
                                 setOcrLoading(false)
-                                // Reset input to allow same file re-select
-                                e.currentTarget.value = ''
+                                try { e.currentTarget.value = '' } catch { }
                               }
                             }}
                           />
