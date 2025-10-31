@@ -771,10 +771,12 @@ export default function SellModal({ open, onClose, onChatEcho, onStartInteractio
                               const detected = payload.detected || {}
                               const detectedAcct = String(detected.accountNumber || '').trim()
 
-                              // Use bankMatch from backend if available (backend already did fuzzy matching)
+                              // First set bank code to ensure it's ready before account number validation
+                              let bankSet = false
                               if (payload.bankMatch?.matched && payload.bankMatch?.code) {
                                 setBankCode(payload.bankMatch.code)
                                 setBankName(payload.bankMatch.matched)
+                                bankSet = true
                                 console.log('Desktop Scan: Using matched bank from backend', {
                                   original: payload.bankMatch.original,
                                   matched: payload.bankMatch.matched,
@@ -791,14 +793,25 @@ export default function SellModal({ open, onClose, onChatEcho, onStartInteractio
                                 if (hit) {
                                   setBankCode(hit.code)
                                   setBankName(hit.name)
+                                  bankSet = true
                                 } else {
                                   // Backend couldn't match, and frontend also couldn't find it
                                   setOcrError(`Bank "${detected.bankName}" not found. Please select manually.`)
                                 }
                               }
 
+                              // Fill account number (must be 10 digits) - set after bank code is set
+                              // Use setTimeout to ensure bank code state has updated before validation runs
                               if (/^\d{10}$/.test(detectedAcct)) {
-                                setAccountNumber(detectedAcct)
+                                if (bankSet) {
+                                  // Small delay to ensure bankCode state is set before accountNumber triggers validation
+                                  setTimeout(() => {
+                                    setAccountNumber(detectedAcct)
+                                  }, 100)
+                                } else {
+                                  // If no bank was set, still set account number (user can select bank manually)
+                                  setAccountNumber(detectedAcct)
+                                }
                               } else if (detectedAcct) {
                                 setOcrError(`Invalid account number: "${detectedAcct}". Must be 10 digits.`)
                               }
