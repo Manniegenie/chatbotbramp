@@ -323,6 +323,15 @@
   white-space: normal;
 }
 
+/* Reduced text size for summary grid */
+.mobile-sell-summary-grid .mobile-sell-key {
+  font-size: 10px;
+}
+
+.mobile-sell-summary-grid .mobile-sell-value {
+  font-size: 11px;
+}
+
 .mobile-sell-success-card {
   background: rgba(0, 115, 55, 0.12);
   border: 1px solid rgba(0, 115, 55, 0.35);

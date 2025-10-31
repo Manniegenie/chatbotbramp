@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { tokenStore } from './lib/secureStore'
 import './sell-modal-responsive.css'
+import scannerIcon from './assets/scanner.png'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -750,8 +751,25 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                               el?.click()
                             }}
                             disabled={ocrLoading}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              padding: '8px',
+                              minWidth: '44px',
+                              height: '44px'
+                            }}
+                            title={ocrLoading ? 'Scanning...' : 'Scan with Camera'}
                           >
-                            {ocrLoading ? 'Scanning...' : 'Scan with Camera'}
+                            <img
+                              src={scannerIcon}
+                              alt="Scan"
+                              style={{
+                                width: '24px',
+                                height: '24px',
+                                opacity: ocrLoading ? 0.5 : 1
+                              }}
+                            />
                           </button>
                           {ocrError && (
                             <div className="mobile-sell-error" style={{ marginTop: '8px', fontSize: '13px', color: '#ff6b6b' }}>
@@ -909,7 +927,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                   </div>
 
                   {/* Transaction info grid */}
-                  <div className="mobile-sell-grid">
+                  <div className="mobile-sell-grid mobile-sell-summary-grid">
                     <div className="mobile-sell-grid-item">
                       <div className="mobile-sell-key">Status</div>
                       <div className="mobile-sell-value">{payData.status}</div>

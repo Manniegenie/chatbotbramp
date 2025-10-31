@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { tokenStore } from './lib/secureStore'
+import scannerIcon from './assets/scanner.png'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -813,14 +814,31 @@ export default function SellModal({ open, onClose, onChatEcho, onStartInteractio
                         />
                         <button
                           type="button"
-                          style={{ ...btnOutline, minHeight: 40 }}
+                          style={{
+                            ...btnOutline,
+                            minHeight: 40,
+                            minWidth: 44,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '8px'
+                          }}
                           onClick={() => {
                             const el = document.getElementById('desktop-account-scan-input') as HTMLInputElement | null
                             el?.click()
                           }}
                           disabled={ocrLoading}
+                          title={ocrLoading ? 'Scanning…' : 'Upload account image'}
                         >
-                          {ocrLoading ? 'Scanning…' : 'Upload account image'}
+                          <img
+                            src={scannerIcon}
+                            alt="Scan"
+                            style={{
+                              width: '24px',
+                              height: '24px',
+                              opacity: ocrLoading ? 0.5 : 1
+                            }}
+                          />
                         </button>
                         {ocrError && (
                           <div role="alert" style={{ color: '#ff6b6b', fontSize: 12 }}>
