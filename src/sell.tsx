@@ -234,6 +234,7 @@ const bodyStyle: React.CSSProperties = { flex: 1, overflow: 'auto', minHeight: 0
 const footerStyle: React.CSSProperties = { padding: 10, display: 'flex', justifyContent: 'space-between', gap: 8, borderTop: 'none', background: 'transparent' }
 const btn: React.CSSProperties = { appearance: 'none', border: '1px solid var(--border)', background: 'transparent', color: 'var(--txt)', padding: '8px 12px', borderRadius: 8, cursor: 'pointer' }
 const btnPrimary: React.CSSProperties = { ...btn, border: '2px solid var(--accent)', background: 'var(--accent)', color: 'white' }
+const btnOutline: React.CSSProperties = { ...btn, border: '2px solid var(--accent)', background: 'transparent', color: '#fff' }
 const btnDangerGhost: React.CSSProperties = { ...btn, borderColor: 'var(--accent)', color: '#fff', borderWidth: '2px' as any }
 const gridForm: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }
 const inputWrap: React.CSSProperties = { display: 'grid', gap: 4 }
