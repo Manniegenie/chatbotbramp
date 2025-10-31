@@ -273,8 +273,9 @@
 .mobile-sell-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 12px 16px;
   width: 100%;
+  align-items: start;
 }
 
 .mobile-sell-grid .mobile-sell-grid-item:nth-child(n+3) {
@@ -286,11 +287,17 @@
   flex-direction: column;
   gap: 4px;
   width: 100%;
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 
 .mobile-sell-key {
   font-size: 12px;
   color: var(--muted);
+  line-height: 1.4;
+  min-height: 16px;
+  display: flex;
+  align-items: center;
 }
 
 .mobile-sell-value {
@@ -298,6 +305,10 @@
   width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  min-height: 20px;
 }
 
 .mobile-sell-value.mono {

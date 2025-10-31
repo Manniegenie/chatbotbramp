@@ -618,7 +618,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                       {/* Camera Scan for Bank + Account Number (under Rate) */}
                       <div className="mobile-sell-grid-item">
                         <div className="mobile-sell-key">Scan account</div>
-                        <div className="mobile-sell-value" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <div className="mobile-sell-value" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                           <input
                             id="account-scan-input"
                             type="file"

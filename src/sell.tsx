@@ -240,9 +240,10 @@ const inputWrap: React.CSSProperties = { display: 'grid', gap: 4 }
 const labelText: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', whiteSpace: 'nowrap' }
 const inputBase: React.CSSProperties = { background: '#0f1117', color: 'var(--txt)', border: '1px solid var(--border)', borderRadius: 12, padding: '10px 14px', outline: 'none', fontSize: '14px' }
 const card: React.CSSProperties = { border: '1px solid var(--border)', borderRadius: 10, padding: 10, background: '#0e0f15', display: 'grid', gap: 8 }
-const kvGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }
-const kStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', whiteSpace: 'nowrap' }
-const vStyle: React.CSSProperties = { fontWeight: 600, fontSize: 11, whiteSpace: 'nowrap' }
+const kvGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 16px', alignItems: 'start' }
+const kvItem: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start', justifyContent: 'flex-start' }
+const kStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', whiteSpace: 'nowrap', lineHeight: 1.4, minHeight: 16px, display: 'flex', alignItems: 'center' }
+const vStyle: React.CSSProperties = { fontWeight: 600, fontSize: 11, whiteSpace: 'nowrap', lineHeight: 1.5, minHeight: 20px, display: 'flex', alignItems: 'center' }
 const mono: React.CSSProperties = { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace' }
 const smallMuted: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', whiteSpace: 'nowrap' }
 const row: React.CSSProperties = { display: 'flex', gap: 6, flexWrap: 'wrap' }
@@ -787,7 +788,7 @@ export default function SellModal({ open, onClose, onChatEcho, onStartInteractio
                     <div style={{ display: 'grid', gap: 12 }}>
                       <h4 style={{ margin: 0, fontSize: 14, color: 'var(--accent)' }}>📍 Deposit Details</h4>
 
-                      <div>
+                      <div style={kvItem}>
                         <div style={kStyle}>Deposit Address</div>
                         <div style={{ ...vStyle, ...mono, wordBreak: 'break-all', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ flex: 1 }}>{initData.deposit.address}</span>
@@ -813,7 +814,7 @@ export default function SellModal({ open, onClose, onChatEcho, onStartInteractio
                       </div>
 
                       {!!initData.deposit.memo && (
-                        <div>
+                        <div style={kvItem}>
                           <div style={kStyle}>Memo / Tag</div>
                           <div style={{ ...vStyle, ...mono, wordBreak: 'break-all', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
                             <span style={{ flex: 1 }}>{initData.deposit.memo}</span>
@@ -850,25 +851,25 @@ export default function SellModal({ open, onClose, onChatEcho, onStartInteractio
 
                   {/* Transaction info grid */}
                   <div style={kvGrid}>
-                    <div>
+                    <div style={kvItem}>
                       <div style={kStyle}>Status</div>
                       <div style={vStyle}>{payData.status}</div>
                     </div>
-                    <div>
+                    <div style={kvItem}>
                       <div style={kStyle}>You Receive</div>
                       <div style={vStyle}>
                         {prettyNgn((initData.quote.receiveAmount) || 0)} ({initData.quote.receiveCurrency})
                       </div>
                     </div>
-                    <div>
+                    <div style={kvItem}>
                       <div style={kStyle}>Rate</div>
                       <div style={vStyle}>{prettyAmount(initData.quote.rate)} NGN/{initData.deposit.token}</div>
                     </div>
-                    <div>
+                    <div style={kvItem}>
                       <div style={kStyle}>Bank</div>
                       <div style={vStyle}>{payData.payout.bankName}</div>
                     </div>
-                    <div>
+                    <div style={kvItem}>
                       <div style={kStyle}>Account</div>
                       <div style={vStyle}>{payData.payout.accountName} — {payData.payout.accountNumber}</div>
                     </div>
