@@ -692,64 +692,127 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent }: Mo
                     ✕
                 </button>
 
-                {/* Mic icon with press-to-talk button */}
-                <button
-                    className={`mobile-voice-mic-container ${isRecording ? 'active' : ''}`}
-                    style={{
-                        width: '120px',
-                        height: '120px',
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: isRecording ? 'rgba(0, 115, 55, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                        border: isRecording ? '3px solid var(--accent)' : '3px solid rgba(255, 255, 255, 0.2)',
-                        transition: 'all 0.3s ease',
-                        boxShadow: isRecording ? '0 0 20px rgba(0, 115, 55, 0.4)' : 'none',
-                        outline: 'none',
-                        cursor: isProcessing || isResponding ? 'not-allowed' : 'pointer',
-                    }}
-                    onMouseDown={(e) => {
-                        e.preventDefault();
-                        if (!isProcessing && !isResponding && !isRecording) {
-                            startRecording();
-                        }
-                    }}
-                    onMouseUp={(e) => {
-                        e.preventDefault();
-                        if (isRecording) {
-                            stopRecording();
-                        }
-                    }}
-                    onMouseLeave={(e) => {
-                        if (isRecording) {
-                            stopRecording();
-                        }
-                    }}
-                    onTouchStart={(e) => {
-                        e.preventDefault();
-                        if (!isProcessing && !isResponding && !isRecording) {
-                            startRecording();
-                        }
-                    }}
-                    onTouchEnd={(e) => {
-                        e.preventDefault();
-                        if (isRecording) {
-                            stopRecording();
-                        }
-                    }}
-                    disabled={isProcessing || isResponding}
-                >
-                    <img
-                        src={micIcon}
-                        alt="Microphone"
-                        style={{
-                            width: '64px',
-                            height: '64px',
-                            opacity: isRecording ? 1 : 0.6,
+                {/* Mic icon OR Play button (conditional) - in same position */}
+                {pendingAudio ? (
+                    // Play button replaces mic when pending audio exists
+                    <button
+                        onClick={async () => {
+                            try {
+                                setPendingAudio(null);
+                                setIsResponding(true);
+                                await playAudio(pendingAudio);
+                            } catch (err) {
+                                console.error('Manual audio play failed:', err);
+                                setError('Failed to play audio. Please try again.');
+                            }
                         }}
-                    />
-                </button>
+                        onContextMenu={(e) => e.preventDefault()} // Prevent context menu on long-press
+                        style={{
+                            width: '120px',
+                            height: '120px',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'var(--accent)',
+                            border: '3px solid var(--accent)',
+                            transition: 'all 0.3s ease',
+                            boxShadow: '0 0 20px rgba(0, 115, 55, 0.4)',
+                            outline: 'none',
+                            cursor: 'pointer',
+                            padding: 0,
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'scale(1.1)';
+                            e.currentTarget.style.boxShadow = '0 0 30px rgba(0, 115, 55, 0.6)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'scale(1)';
+                            e.currentTarget.style.boxShadow = '0 0 20px rgba(0, 115, 55, 0.4)';
+                        }}
+                        aria-label="Play audio response"
+                    >
+                        <svg
+                            width="48"
+                            height="48"
+                            viewBox="0 0 24 24"
+                            fill="white"
+                            stroke="white"
+                            strokeWidth="2"
+                        >
+                            <polygon points="8,5 19,12 8,19" />
+                        </svg>
+                    </button>
+                ) : (
+                    // Mic button for recording
+                    <button
+                        className={`mobile-voice-mic-container ${isRecording ? 'active' : ''}`}
+                        style={{
+                            width: '120px',
+                            height: '120px',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: isRecording ? 'rgba(0, 115, 55, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                            border: isRecording ? '3px solid var(--accent)' : '3px solid rgba(255, 255, 255, 0.2)',
+                            transition: 'all 0.3s ease',
+                            boxShadow: isRecording ? '0 0 20px rgba(0, 115, 55, 0.4)' : 'none',
+                            outline: 'none',
+                            cursor: isProcessing || isResponding ? 'not-allowed' : 'pointer',
+                        }}
+                        onContextMenu={(e) => e.preventDefault()} // Prevent context menu on long-press
+                        onMouseDown={(e) => {
+                            e.preventDefault();
+                            if (!isProcessing && !isResponding && !isRecording) {
+                                startRecording();
+                            }
+                        }}
+                        onMouseUp={(e) => {
+                            e.preventDefault();
+                            if (isRecording) {
+                                stopRecording();
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            if (isRecording) {
+                                stopRecording();
+                            }
+                        }}
+                        onTouchStart={(e) => {
+                            e.preventDefault();
+                            if (!isProcessing && !isResponding && !isRecording) {
+                                startRecording();
+                            }
+                        }}
+                        onTouchEnd={(e) => {
+                            e.preventDefault();
+                            if (isRecording) {
+                                stopRecording();
+                            }
+                        }}
+                        onTouchCancel={(e) => {
+                            e.preventDefault();
+                            if (isRecording) {
+                                stopRecording();
+                            }
+                        }}
+                        disabled={isProcessing || isResponding}
+                    >
+                        <img
+                            src={micIcon}
+                            alt="Microphone"
+                            style={{
+                                width: '64px',
+                                height: '64px',
+                                opacity: isRecording ? 1 : 0.6,
+                                userSelect: 'none', // Prevent image selection
+                                pointerEvents: 'none', // Prevent image drag
+                            }}
+                            draggable={false} // Prevent image drag
+                        />
+                    </button>
+                )}
 
                 {/* Transcript display */}
                 {transcript && (
@@ -771,56 +834,6 @@ export default function MobileVoiceChat({ onClose, onMessage, onSellIntent }: Mo
                     >
                         {transcript}
                     </div>
-                )}
-
-                {/* Play button for iOS when autoplay is blocked */}
-                {pendingAudio && (
-                    <button
-                        onClick={async () => {
-                            try {
-                                setPendingAudio(null);
-                                setIsResponding(true);
-                                await playAudio(pendingAudio);
-                            } catch (err) {
-                                console.error('Manual audio play failed:', err);
-                                setError('Failed to play audio. Please try again.');
-                            }
-                        }}
-                        style={{
-                            background: 'var(--accent)',
-                            border: '2px solid var(--accent)',
-                            borderRadius: '50%',
-                            width: '80px',
-                            height: '80px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            padding: 0,
-                            boxShadow: '0 0 20px rgba(0, 115, 55, 0.4)',
-                            transition: 'all 0.3s ease',
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'scale(1.1)';
-                            e.currentTarget.style.boxShadow = '0 0 30px rgba(0, 115, 55, 0.6)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'scale(1)';
-                            e.currentTarget.style.boxShadow = '0 0 20px rgba(0, 115, 55, 0.4)';
-                        }}
-                        aria-label="Play audio response"
-                    >
-                        <svg
-                            width="32"
-                            height="32"
-                            viewBox="0 0 24 24"
-                            fill="white"
-                            stroke="white"
-                            strokeWidth="2"
-                        >
-                            <polygon points="8,5 19,12 8,19" />
-                        </svg>
-                    </button>
                 )}
 
                 {/* Status */}
