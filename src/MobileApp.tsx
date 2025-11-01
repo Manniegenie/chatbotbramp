@@ -970,7 +970,7 @@ export default function MobileApp() {
               <>
                 <div className="mobile-auth-buttons">
                   <button className="mobile-auth-btn" onClick={() => setShowSignIn(true)}>
-                    Sign in
+                    Sell
                   </button>
                   <button
                     className="mobile-auth-btn mobile-auth-btn-secondary"

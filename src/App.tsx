@@ -1020,7 +1020,7 @@ export default function App() {
 
           {!auth ? (
             <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn" onClick={() => setShowSignIn(true)}>Sign in</button>
+              <button className="btn" onClick={() => setShowSignIn(true)}>Sell</button>
               <button
                 className="btn"
                 style={{ background: 'transparent', color: 'var(--txt)', border: '1px solid var(--border)' }}
