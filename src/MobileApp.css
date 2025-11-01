@@ -371,14 +371,14 @@ a {
     radial-gradient(1px 1px at 92% 23%, rgba(255,255,255,0.5), transparent), radial-gradient(1px 1px at 95% 28%, rgba(255,220,0,0.4), transparent),
     radial-gradient(1px 1px at 98% 33%, rgba(0,115,55,0.5), transparent),
     /* Deep space nebulae and cosmic clouds for depth */
-    radial-gradient(400px 400px at 20% 30%, rgba(0,115,55,0.03), transparent),
-    radial-gradient(350px 350px at 80% 70%, rgba(255,220,0,0.02), transparent),
+    radial-gradient(400px 400px at 20% 30%, rgba(255,255,255,0.03), transparent),
+    radial-gradient(350px 350px at 80% 70%, rgba(200,200,200,0.02), transparent),
     radial-gradient(300px 300px at 50% 50%, rgba(255,255,255,0.03), transparent),
-    radial-gradient(280px 280px at 15% 75%, rgba(0,115,55,0.02), transparent),
-    radial-gradient(320px 320px at 85% 20%, rgba(255,220,0,0.03), transparent),
-    radial-gradient(380px 380px at 35% 85%, rgba(255,255,255,0.02), transparent),
-    radial-gradient(360px 360px at 65% 15%, rgba(0,115,55,0.03), transparent),
-    radial-gradient(340px 340px at 45% 60%, rgba(255,220,0,0.02), transparent);
+    radial-gradient(280px 280px at 15% 75%, rgba(180,180,180,0.02), transparent),
+    radial-gradient(320px 320px at 85% 20%, rgba(255,255,255,0.03), transparent),
+    radial-gradient(380px 380px at 35% 85%, rgba(220,220,220,0.02), transparent),
+    radial-gradient(360px 360px at 65% 15%, rgba(255,255,255,0.03), transparent),
+    radial-gradient(340px 340px at 45% 60%, rgba(190,190,190,0.02), transparent);
   background-size: 100% 100%;
   background-position: 0 0;
   z-index: -1;
