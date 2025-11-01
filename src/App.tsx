@@ -1307,18 +1307,9 @@ export default function App() {
         <SellModal open={showSell} onClose={() => setShowSell(false)} onChatEcho={echoFromModalToChat} onStartInteraction={() => setShowCenteredInput(false)} />
 
         {showCenteredInput && (
-          <footer className="footer">
-            <div className="footer-links">
-              <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
-              <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
-              <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
-              <a href="/terms.html" target="_blank" rel="noopener noreferrer">Terms</a>
-              <a href="https://www.youtube.com/@Chatbramp" target="_blank" rel="noopener noreferrer">YouTube</a>
-              <a href="https://x.com/Chatbramp" target="_blank" rel="noopener noreferrer">Twitter</a>
-              <a href="https://medium.com/@chatbramp" target="_blank" rel="noopener noreferrer">Medium</a>
-            </div>
+          <>
             {tickerText && (
-              <div className="ticker-wrap" style={{ width: '100%', marginTop: '8px' }} aria-live="polite" aria-atomic="true">
+              <div className="ticker-wrap" style={{ width: '100%', padding: '8px 16px' }} aria-live="polite" aria-atomic="true">
                 <div
                   className={`ticker ${tickerText.length < 40 ? 'idle' : ''}`}
                   key={tickerText}
@@ -1331,7 +1322,18 @@ export default function App() {
                 </div>
               </div>
             )}
-          </footer>
+            <footer className="footer">
+              <div className="footer-links">
+                <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
+                <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
+                <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
+                <a href="/terms.html" target="_blank" rel="noopener noreferrer">Terms</a>
+                <a href="https://www.youtube.com/@Chatbramp" target="_blank" rel="noopener noreferrer">YouTube</a>
+                <a href="https://x.com/Chatbramp" target="_blank" rel="noopener noreferrer">Twitter</a>
+                <a href="https://medium.com/@chatbramp" target="_blank" rel="noopener noreferrer">Medium</a>
+              </div>
+            </footer>
+          </>
         )}
       </div>
 
