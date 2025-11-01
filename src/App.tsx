@@ -369,15 +369,7 @@ export default function App() {
       const { originalPrices = {}, prices = {}, hourlyChanges = {} } = payload.data
       // Use originalPrices for ticker (market prices), fallback to markdown prices if original not available
       const displayPrices = Object.keys(originalPrices).length > 0 ? originalPrices : prices
-      console.log('Ticker prices:', {
-        originalPrices,
-        originalPricesCount: Object.keys(originalPrices).length,
-        prices,
-        pricesCount: Object.keys(prices).length,
-        usingOriginal: Object.keys(originalPrices).length > 0,
-        sampleOriginal: originalPrices.BTC,
-        sampleMarkdown: prices.BTC
-      })
+      console.log('[Ticker Debug] originalPrices:', originalPrices, 'displayPrices:', displayPrices)
 
       // format items without tail text and without emojis
       const items = TICKER_SYMBOLS.filter(s => (s === 'NGNB') || typeof displayPrices[s] === 'number').map((s) => {
