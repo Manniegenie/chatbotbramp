@@ -14,6 +14,8 @@ import MobileVoiceChat from './MobileVoiceChat';
 import BrampLogo from './assets/logo.jpeg'
 import micIcon from './assets/mic.png'
 import AstronautIcon from './assets/astronaut.png'
+import InsuranceIcon from './assets/insurance.png'
+import BullMarketIcon from './assets/bull-market.png'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -289,6 +291,8 @@ export default function App() {
   const endRef = useRef<HTMLDivElement>(null)
   const messagesRef = useRef<HTMLDivElement>(null)
 
+  const icons = [AstronautIcon, InsuranceIcon, BullMarketIcon]
+  const [currentIconIndex, setCurrentIconIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Parse **text** to <strong>text</strong>
@@ -416,6 +420,14 @@ export default function App() {
     onScroll()
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  // Cycle through icons
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIconIndex((prev) => (prev + 1) % icons.length)
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [icons.length])
 
 
   // Handle scrollbar auto-hide on messages container
@@ -1157,11 +1169,24 @@ export default function App() {
                     Secure Crypto to NGN Exchange
                   </h2>
                   <div style={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <img
-                      src={AstronautIcon}
-                      alt="Chat Bramp AI"
-                      className="desktop-app-logo"
-                    />
+                    <AnimatePresence mode="wait">
+                      <motion.img
+                        key={currentIconIndex}
+                        src={icons[currentIconIndex]}
+                        alt="Chat Bramp AI"
+                        className="desktop-app-logo"
+                        initial={{ opacity: 0, scale: 0.8, rotateY: -90 }}
+                        animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+                        exit={{ opacity: 0, scale: 0.8, rotateY: 90 }}
+                        transition={{
+                          duration: 0.6,
+                          ease: "easeInOut",
+                          type: "spring",
+                          stiffness: 100,
+                          damping: 15
+                        }}
+                      />
+                    </AnimatePresence>
                   </div>
                   <div style={{ position: 'relative', width: '100%' }}>
                     <input
