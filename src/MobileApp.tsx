@@ -976,7 +976,7 @@ export default function MobileApp() {
                     className="mobile-auth-btn mobile-auth-btn-secondary"
                     onClick={() => setShowSignUp(true)}
                   >
-                    Sign up
+                    Signup
                   </button>
                 </div>
               </>

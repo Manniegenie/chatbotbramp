@@ -1026,7 +1026,7 @@ export default function App() {
                 style={{ background: 'transparent', color: 'var(--txt)', border: '1px solid var(--border)' }}
                 onClick={() => setShowSignUp(true)}
               >
-                Sign up
+                Signup
               </button>
             </div>
           ) : (
