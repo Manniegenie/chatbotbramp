@@ -855,79 +855,89 @@ export default function MobileApp() {
 
   if (showGame) {
     return (
-      <MobileGame onClose={() => setShowGame(false)} />
+      <div className="mobile-page" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+        <MobileGame onClose={() => setShowGame(false)} />
+      </div>
     );
   }
 
   if (showVoiceChat) {
     return (
-      <MobileVoiceChat
-        onClose={() => setShowVoiceChat(false)}
-        onMessage={(text) => {
-          // Echo voice assistant response to chat
-          if (text) {
-            echoFromModalToChat(text);
-          }
-        }}
-        onSellIntent={() => {
-          // Open sell modal when sell intent detected in voice chat
-          setShowVoiceChat(false);
-          setShowSell(true);
-        }}
-      />
+      <div className="mobile-page" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+        <MobileVoiceChat
+          onClose={() => setShowVoiceChat(false)}
+          onMessage={(text) => {
+            // Echo voice assistant response to chat
+            if (text) {
+              echoFromModalToChat(text);
+            }
+          }}
+          onSellIntent={() => {
+            // Open sell modal when sell intent detected in voice chat
+            setShowVoiceChat(false);
+            setShowSell(true);
+          }}
+        />
+      </div>
     );
   }
 
   if (showSell) {
     return (
-      <MobileSell
-        open={showSell}
-        onClose={() => setShowSell(false)}
-        onChatEcho={echoFromModalToChat}
-        onStartInteraction={() => setShowCenteredInput(false)}
-      />
+      <div className="mobile-page" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+        <MobileSell
+          open={showSell}
+          onClose={() => setShowSell(false)}
+          onChatEcho={echoFromModalToChat}
+          onStartInteraction={() => setShowCenteredInput(false)}
+        />
+      </div>
     );
   }
 
   if (showSignIn) {
     return (
-      <MobileSignIn
-        onCancel={() => {
-          setShowSignIn(false);
-          setOpenSellAfterAuth(false);
-        }}
-        onSuccess={(res) => {
-          setAuth(res);
-          setShowSignIn(false);
-          setShowCenteredInput(false);
-          const greeting = getTimeBasedGreeting();
-          const name = res.user.username || (res.user as any).firstname || 'there';
-          setMessages([
-            { id: crypto.randomUUID(), role: 'assistant', text: `${greeting}, ${name}! How can I help you today?`, ts: Date.now() },
-          ]);
-          if (openSellAfterAuth) {
+      <div className="mobile-page" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+        <MobileSignIn
+          onCancel={() => {
+            setShowSignIn(false);
             setOpenSellAfterAuth(false);
-            setShowSell(true);
-          }
-        }}
-      />
+          }}
+          onSuccess={(res) => {
+            setAuth(res);
+            setShowSignIn(false);
+            setShowCenteredInput(false);
+            const greeting = getTimeBasedGreeting();
+            const name = res.user.username || (res.user as any).firstname || 'there';
+            setMessages([
+              { id: crypto.randomUUID(), role: 'assistant', text: `${greeting}, ${name}! How can I help you today?`, ts: Date.now() },
+            ]);
+            if (openSellAfterAuth) {
+              setOpenSellAfterAuth(false);
+              setShowSell(true);
+            }
+          }}
+        />
+      </div>
     );
   }
 
   if (showSignUp) {
     return (
-      <MobileSignUp
-        onCancel={() => setShowSignUp(false)}
-        onSuccess={(_res: SignUpResult) => {
-          setShowSignUp(false);
-          setShowCenteredInput(false);
-          setMessages((prev) => [
-            ...prev,
-            { id: crypto.randomUUID(), role: 'assistant', text: 'Account created! Please verify your OTP to complete signup.', ts: Date.now() },
-          ]);
-          setShowSignIn(true);
-        }}
-      />
+      <div className="mobile-page" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+        <MobileSignUp
+          onCancel={() => setShowSignUp(false)}
+          onSuccess={(_res: SignUpResult) => {
+            setShowSignUp(false);
+            setShowCenteredInput(false);
+            setMessages((prev) => [
+              ...prev,
+              { id: crypto.randomUUID(), role: 'assistant', text: 'Account created! Please verify your OTP to complete signup.', ts: Date.now() },
+            ]);
+            setShowSignIn(true);
+          }}
+        />
+      </div>
     );
   }
 
