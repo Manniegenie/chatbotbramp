@@ -1003,7 +1003,7 @@ export default function App() {
               <button className="btn" onClick={() => setShowSignIn(true)}>Sell</button>
               <button
                 className="btn"
-                style={{ background: 'transparent', color: 'var(--txt)', border: '1px solid var(--border)' }}
+                style={{ background: 'transparent', color: 'var(--txt)', border: '1px solid #007337' }}
                 onClick={() => setShowSignUp(true)}
               >
                 Sign Up
