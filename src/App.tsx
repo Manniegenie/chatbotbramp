@@ -788,7 +788,7 @@ export default function App() {
             gap: 12px;
             padding: 12px 16px;
             transition: box-shadow 200ms ease, transform 160ms ease;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: none;
           }
           .header.pinned {
             box-shadow: 0 6px 20px rgba(0,0,0,0.25);
@@ -940,7 +940,7 @@ export default function App() {
           .input-centered-desktop {
             width: 100%;
             border-radius: 40px;
-            padding: 28px 68px 28px 28px;
+            padding: 28px;
             font-size: 18px;
             caret-color: var(--accent);
             box-sizing: border-box;
@@ -953,10 +953,6 @@ export default function App() {
           }
           
           .send-btn-inline-desktop {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
             width: 52px;
             height: 52px;
             background: var(--accent);
@@ -967,6 +963,7 @@ export default function App() {
             border: none;
             cursor: pointer;
             padding: 0;
+            flex-shrink: 0;
           }
           
           .send-btn-inline-desktop svg {
@@ -1191,7 +1188,7 @@ export default function App() {
                       />
                     </AnimatePresence>
                   </div>
-                  <div style={{ position: 'relative', width: '100%' }}>
+                  <div style={{ display: 'flex', gap: '8px', width: '100%', alignItems: 'center' }}>
                     <input
                       ref={inputRef}
                       className="input-centered-desktop"
@@ -1234,6 +1231,12 @@ export default function App() {
                   ref={inputRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      sendMessage(e)
+                    }
+                  }}
                   placeholder={loading ? 'Please wait…' : 'Try: Sell 100 USDT to NGN'}
                   autoFocus
                   disabled={loading}
@@ -1251,14 +1254,15 @@ export default function App() {
                       alignItems: 'center',
                       justifyContent: 'center',
                       padding: '0',
-                      background: loading || !input.trim() ? '#ccc' : 'var(--accent)',
+                      background: loading || !input.trim() ? 'transparent' : 'var(--accent)',
                       color: 'white',
-                      border: 'none',
+                      border: loading || !input.trim() ? 'none' : 'none',
                       cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
                       transition: 'all 0.2s ease',
                       boxShadow: loading || !input.trim() ? 'none' : '0 2px 8px rgba(0,115,55,0.18)',
                       minWidth: '44px',
-                      flexShrink: 0
+                      flexShrink: 0,
+                      opacity: loading || !input.trim() ? 0.3 : 1
                     }}
                     onMouseEnter={(e) => {
                       if (!loading && input.trim()) {

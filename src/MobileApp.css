@@ -1427,7 +1427,7 @@ a:focus-visible,
 .mobile-input-centered {
   width: 100%;
   border-radius: 32px;
-  padding: 24px 50px 24px 24px;
+  padding: 24px;
   font-size: 16px;
   caret-color: var(--accent);
   box-sizing: border-box;
@@ -1437,10 +1437,6 @@ a:focus-visible,
 }
 
 .mobile-send-inline {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
   width: 36px;
   height: 36px;
   background: var(--accent);
@@ -1451,6 +1447,7 @@ a:focus-visible,
   border: none;
   cursor: pointer;
   padding: 0;
+  flex-shrink: 0;
 }
 
 .mobile-footer-links-bottom {

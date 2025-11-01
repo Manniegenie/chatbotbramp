@@ -735,7 +735,7 @@ export default function MobileApp() {
                   />
                 </AnimatePresence>
               </div>
-              <div style={{ position: 'relative', width: '100%' }}>
+              <div style={{ display: 'flex', gap: '8px', width: '100%', alignItems: 'center' }}>
                 <input
                   ref={inputRef}
                   className="mobile-input mobile-input-centered"
