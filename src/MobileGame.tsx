@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import './MobileApp.css';
 import './MobileGame.css';
 import asteroidImg from './assets/asteroid.png';
-import spaceshipImg from './assets/spaceship.png';
 import { authFetch } from './lib/tokenManager';
 import AstronautImg from './assets/astronout.png';
 
@@ -192,7 +191,7 @@ export default function MobileGame({ onClose }: { onClose?: () => void }) {
                                 )}
                                 {moleIdx === idx && gameState === 'playing' && (
                                     <img
-                                        src={(useAltAsset ? spaceshipImg : asteroidImg) + '?v=1'}
+                                        src={asteroidImg + '?v=1'}
                                         alt="Mole"
                                         className="mobile-wam-mole"
                                         style={{
