@@ -1150,7 +1150,7 @@ a:focus-visible,
   caret-color: var(--accent);
   box-sizing: border-box;
   min-height: 64px;
-  background: rgba(18, 18, 26, 0.7);
+  background: rgba(18, 18, 26, 0.4);
   backdrop-filter: blur(10px);
 }
 

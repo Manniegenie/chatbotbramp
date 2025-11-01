@@ -948,7 +948,7 @@ export default function App() {
             caret-color: var(--accent);
             box-sizing: border-box;
             min-height: 72px;
-            background: rgba(18, 18, 26, 0.7);
+            background: rgba(18, 18, 26, 0.4);
             backdrop-filter: blur(10px);
             border: 1px solid var(--border);
             color: var(--txt);
