@@ -177,12 +177,12 @@ a:hover { opacity: .92; }
 
 /* Bubbles */
 .bubble {
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: transparent;
+  border: none;
   padding: 12px 14px;
   border-radius: 14px;
   max-width: 94%;
-  box-shadow: var(--shadow);
+  box-shadow: none;
   font-size: 15px;
   line-height: 1.6;
   word-wrap: break-word;
@@ -194,13 +194,13 @@ a:hover { opacity: .92; }
 
 .bubble.user {
   align-self: flex-end;
-  background: #0f3a23;
-  border-color: #1a4d2f;
+  background: transparent;
+  border: none;
 }
 .bubble.assistant {
   align-self: flex-start;
-  background: var(--card);
-  border-color: var(--border);
+  background: transparent;
+  border: none;
 }
 .bubble.user .role { color: var(--muted); }
 .bubble.assistant .role { color: var(--accent); font-weight: 700; }
@@ -232,7 +232,7 @@ a:hover { opacity: .92; }
   grid-template-columns: 1fr auto;
   gap: 10px;
   padding: 10px 14px calc(10px + var(--sa-bottom));
-  border-top: 1px solid var(--border);
+  border-top: none;
   background: linear-gradient(180deg, rgba(11,11,16,0), rgba(11,11,16,.92));
   backdrop-filter: saturate(120%) blur(6px);
   -webkit-backdrop-filter: saturate(120%) blur(6px);
