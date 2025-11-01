@@ -4,31 +4,30 @@ import { createRoot } from 'react-dom/client'
 import App from './App'
 import './index.css'
 
-//
-// Inject Google Fonts <link> tags (so you don't have to touch index.html)
-//
-;(function injectSFFonts() {
-  // avoid duplicates if HMR reloads
-  if (document.querySelector('link[href*="family=SF+Pro+Display"]')) return
+  //
+  // Inject Google Fonts <link> tags (so you don't have to touch index.html)
+  //
+  ; (function injectSFFonts() {
+    // avoid duplicates if HMR reloads
+    if (document.querySelector('link[href*="family=SF+Pro+Display"]')) return
 
-  const preconnect1 = document.createElement('link')
-  preconnect1.rel = 'preconnect'
-  preconnect1.href = 'https://fonts.googleapis.com'
+    const preconnect1 = document.createElement('link')
+    preconnect1.rel = 'preconnect'
+    preconnect1.href = 'https://fonts.googleapis.com'
 
-  const preconnect2 = document.createElement('link')
-  preconnect2.rel = 'preconnect'
-  preconnect2.href = 'https://fonts.gstatic.com'
-  preconnect2.crossOrigin = 'anonymous'
+    const preconnect2 = document.createElement('link')
+    preconnect2.rel = 'preconnect'
+    preconnect2.href = 'https://fonts.gstatic.com'
+    preconnect2.crossOrigin = 'anonymous'
 
-  const stylesheet = document.createElement('link')
-  stylesheet.rel = 'stylesheet'
-  stylesheet.href =
-    'https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..800&display=swap'
+    const stylesheet = document.createElement('link')
+    stylesheet.rel = 'stylesheet'
+    stylesheet.href =
+      'https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..800&display=swap'
 
-  document.head.append(preconnect1, preconnect2, stylesheet)
-})()
+    document.head.append(preconnect1, preconnect2, stylesheet)
+  })()
 
-// --- Background is now handled by WallpaperSlideshow component ---
 
 //
 // --- Prevent unwanted zooming while maintaining usability ---
@@ -66,14 +65,14 @@ if ('serviceWorker' in navigator) {
 document.addEventListener('touchend', (e) => {
   const now = Date.now()
   const DOUBLE_TAP_DELAY = 300
-  
+
   if (document.documentElement.hasAttribute('data-last-tap')) {
     const lastTap = parseInt(document.documentElement.getAttribute('data-last-tap') || '0')
     if (now - lastTap < DOUBLE_TAP_DELAY) {
       e.preventDefault()
     }
   }
-  
+
   document.documentElement.setAttribute('data-last-tap', now.toString())
 }, { passive: false })
 
@@ -95,10 +94,10 @@ const hot = (import.meta as any).hot as { dispose(cb: () => void): void } | unde
 if (hot) {
   hot.dispose(() => {
     // Clean up event listeners
-    document.removeEventListener('touchend', () => {})
-    document.removeEventListener('gesturestart', () => {})
-    document.removeEventListener('gesturechange', () => {})
-    document.removeEventListener('gestureend', () => {})
+    document.removeEventListener('touchend', () => { })
+    document.removeEventListener('gesturestart', () => { })
+    document.removeEventListener('gesturechange', () => { })
+    document.removeEventListener('gestureend', () => { })
   })
 }
 
@@ -152,7 +151,7 @@ const root = document.getElementById('root')!
 // Load the appropriate app version
 if (shouldLoadMobileApp()) {
   console.log('📱 Loading Mobile App...')
-  
+
   // Dynamically import mobile app
   import('./MobileApp').then(({ default: MobileApp }) => {
     createRoot(root).render(<MobileApp />)
@@ -165,7 +164,7 @@ if (shouldLoadMobileApp()) {
   })
 } else {
   console.log('🖥️ Loading Desktop App...')
-  
+
   // Load desktop app
   import('./App').then(({ default: App }) => {
     createRoot(root).render(<App />)

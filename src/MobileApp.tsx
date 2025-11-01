@@ -7,7 +7,6 @@ import { useInactivityTimer } from './lib/useInactivityTimer'
 import MobileSignIn, { SignInResult } from './MobileSignIn'
 import MobileSignUp, { SignUpResult } from './MobileSignUp'
 import MobileSell from './MobileSell'
-import WallpaperSlideshow from './WallpaperSlideshow'
 import MobileGame from './MobileGame';
 import MobileVoiceChat from './MobileVoiceChat';
 import BrampLogo from './assets/logo.png'
@@ -856,243 +855,225 @@ export default function MobileApp() {
 
   if (showGame) {
     return (
-      <>
-        <WallpaperSlideshow />
-        <MobileGame onClose={() => setShowGame(false)} />
-      </>
+      <MobileGame onClose={() => setShowGame(false)} />
     );
   }
 
   if (showVoiceChat) {
     return (
-      <>
-        <WallpaperSlideshow />
-        <MobileVoiceChat
-          onClose={() => setShowVoiceChat(false)}
-          onMessage={(text) => {
-            // Echo voice assistant response to chat
-            if (text) {
-              echoFromModalToChat(text);
-            }
-          }}
-          onSellIntent={() => {
-            // Open sell modal when sell intent detected in voice chat
-            setShowVoiceChat(false);
-            setShowSell(true);
-          }}
-        />
-      </>
+      <MobileVoiceChat
+        onClose={() => setShowVoiceChat(false)}
+        onMessage={(text) => {
+          // Echo voice assistant response to chat
+          if (text) {
+            echoFromModalToChat(text);
+          }
+        }}
+        onSellIntent={() => {
+          // Open sell modal when sell intent detected in voice chat
+          setShowVoiceChat(false);
+          setShowSell(true);
+        }}
+      />
     );
   }
 
   if (showSell) {
     return (
-      <>
-        <WallpaperSlideshow />
-        <MobileSell
-          open={showSell}
-          onClose={() => setShowSell(false)}
-          onChatEcho={echoFromModalToChat}
-          onStartInteraction={() => setShowCenteredInput(false)}
-        />
-      </>
+      <MobileSell
+        open={showSell}
+        onClose={() => setShowSell(false)}
+        onChatEcho={echoFromModalToChat}
+        onStartInteraction={() => setShowCenteredInput(false)}
+      />
     );
   }
 
   if (showSignIn) {
     return (
-      <>
-        <WallpaperSlideshow />
-        <MobileSignIn
-          onCancel={() => {
-            setShowSignIn(false);
+      <MobileSignIn
+        onCancel={() => {
+          setShowSignIn(false);
+          setOpenSellAfterAuth(false);
+        }}
+        onSuccess={(res) => {
+          setAuth(res);
+          setShowSignIn(false);
+          setShowCenteredInput(false);
+          const greeting = getTimeBasedGreeting();
+          const name = res.user.username || (res.user as any).firstname || 'there';
+          setMessages([
+            { id: crypto.randomUUID(), role: 'assistant', text: `${greeting}, ${name}! How can I help you today?`, ts: Date.now() },
+          ]);
+          if (openSellAfterAuth) {
             setOpenSellAfterAuth(false);
-          }}
-          onSuccess={(res) => {
-            setAuth(res);
-            setShowSignIn(false);
-            setShowCenteredInput(false);
-            const greeting = getTimeBasedGreeting();
-            const name = res.user.username || (res.user as any).firstname || 'there';
-            setMessages([
-              { id: crypto.randomUUID(), role: 'assistant', text: `${greeting}, ${name}! How can I help you today?`, ts: Date.now() },
-            ]);
-            if (openSellAfterAuth) {
-              setOpenSellAfterAuth(false);
-              setShowSell(true);
-            }
-          }}
-        />
-      </>
+            setShowSell(true);
+          }
+        }}
+      />
     );
   }
 
   if (showSignUp) {
     return (
-      <>
-        <WallpaperSlideshow />
-        <MobileSignUp
-          onCancel={() => setShowSignUp(false)}
-          onSuccess={(_res: SignUpResult) => {
-            setShowSignUp(false);
-            setShowCenteredInput(false);
-            setMessages((prev) => [
-              ...prev,
-              { id: crypto.randomUUID(), role: 'assistant', text: 'Account created! Please verify your OTP to complete signup.', ts: Date.now() },
-            ]);
-            setShowSignIn(true);
-          }}
-        />
-      </>
+      <MobileSignUp
+        onCancel={() => setShowSignUp(false)}
+        onSuccess={(_res: SignUpResult) => {
+          setShowSignUp(false);
+          setShowCenteredInput(false);
+          setMessages((prev) => [
+            ...prev,
+            { id: crypto.randomUUID(), role: 'assistant', text: 'Account created! Please verify your OTP to complete signup.', ts: Date.now() },
+          ]);
+          setShowSignIn(true);
+        }}
+      />
     );
   }
 
   // Normal (non-game) mobile app UI
   return (
-    <>
-      <WallpaperSlideshow />
-      <div className="mobile-page">
-        <header className="mobile-header">
-          <div className="mobile-header-top">
-            <div className="mobile-brand">
-              <img
-                src={BrampLogo}
-                alt="Bramp"
-                className="mobile-logo"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none'
-                }}
-              />
-              <h1 className="mobile-brand-text">Bramp</h1>
-            </div>
+    <div className="mobile-page">
+      <header className="mobile-header">
+        <div className="mobile-header-top">
+          <div className="mobile-brand">
+            <img
+              src={BrampLogo}
+              alt="Bramp"
+              className="mobile-logo"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none'
+              }}
+            />
+            <h1 className="mobile-brand-text">Bramp</h1>
+          </div>
 
-            <div className="mobile-nav-buttons">
-              {!auth ? (
-                <>
-                  <div className="mobile-auth-buttons">
-                    <button className="mobile-auth-btn" onClick={() => setShowSignIn(true)}>
-                      Sell
-                    </button>
-                    <button
-                      className="mobile-auth-btn mobile-auth-btn-secondary"
-                      onClick={() => setShowSignUp(true)}
-                    >
-                      Sign Up
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <button
-                    className="btn mobile-sell-btn mobile-sell-btn--no-border"
-                    onClick={handleSellClick}
-                    aria-label="Sell Crypto"
-                  >
+          <div className="mobile-nav-buttons">
+            {!auth ? (
+              <>
+                <div className="mobile-auth-buttons">
+                  <button className="mobile-auth-btn" onClick={() => setShowSignIn(true)}>
                     Sell
                   </button>
                   <button
-                    className="btn mobile-sell-btn"
-                    onClick={handleGameClick}
-                    style={{ marginLeft: '8px', border: '2px solid var(--accent)' }}
-                    aria-label="Game"
+                    className="mobile-auth-btn mobile-auth-btn-secondary"
+                    onClick={() => setShowSignUp(true)}
                   >
-                    Game
+                    Sign Up
                   </button>
-                  <button
-                    className="mobile-menu-btn"
-                    onClick={() => setShowMenu(!showMenu)}
-                    aria-label="Menu"
+                </div>
+              </>
+            ) : (
+              <>
+                <button
+                  className="btn mobile-sell-btn mobile-sell-btn--no-border"
+                  onClick={handleSellClick}
+                  aria-label="Sell Crypto"
+                >
+                  Sell
+                </button>
+                <button
+                  className="btn mobile-sell-btn"
+                  onClick={handleGameClick}
+                  style={{ marginLeft: '8px', border: '2px solid var(--accent)' }}
+                  aria-label="Game"
+                >
+                  Game
+                </button>
+                <button
+                  className="mobile-menu-btn"
+                  onClick={() => setShowMenu(!showMenu)}
+                  aria-label="Menu"
+                >
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
                   >
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <line x1="3" y1="12" x2="21" y2="12"></line>
-                      <line x1="3" y1="6" x2="21" y2="6"></line>
-                      <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
-                  </button>
-                </>
-              )}
-            </div>
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                  </svg>
+                </button>
+              </>
+            )}
           </div>
+        </div>
 
-          {tickerText && (
-            <div className="mobile-ticker-wrap" style={{ display: 'block', visibility: 'visible' }}>
-              <div className="mobile-ticker">
-                {tickerText}  •  {tickerText}
-              </div>
-            </div>
-          )}
-        </header>
-
-        {showMenu && auth && (
-          <div className="mobile-menu-overlay" onClick={() => setShowMenu(false)}>
-            <div className="mobile-menu" onClick={(e) => e.stopPropagation()}>
-              <button className="mobile-menu-item" onClick={handleKycClick}>
-                KYC
-              </button>
-              <button className="mobile-menu-item primary" onClick={handleSellClick}>
-                Sell Crypto
-              </button>
-              <button className="mobile-menu-item" onClick={signOut}>
-                Sign Out
-              </button>
-              <div className="mobile-menu-divider"></div>
-              <a
-                className="mobile-menu-item"
-                href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                AML/CFT Policy
-              </a>
-              <a
-                className="mobile-menu-item"
-                href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Privacy Policy
-              </a>
-              <a
-                className="mobile-menu-item"
-                href="/terms"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Terms of Service
-              </a>
+        {tickerText && (
+          <div className="mobile-ticker-wrap" style={{ display: 'block', visibility: 'visible' }}>
+            <div className="mobile-ticker">
+              {tickerText}  •  {tickerText}
             </div>
           </div>
         )}
+      </header>
 
-        {renderMainContent()}
+      {showMenu && auth && (
+        <div className="mobile-menu-overlay" onClick={() => setShowMenu(false)}>
+          <div className="mobile-menu" onClick={(e) => e.stopPropagation()}>
+            <button className="mobile-menu-item" onClick={handleKycClick}>
+              KYC
+            </button>
+            <button className="mobile-menu-item primary" onClick={handleSellClick}>
+              Sell Crypto
+            </button>
+            <button className="mobile-menu-item" onClick={signOut}>
+              Sign Out
+            </button>
+            <div className="mobile-menu-divider"></div>
+            <a
+              className="mobile-menu-item"
+              href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              AML/CFT Policy
+            </a>
+            <a
+              className="mobile-menu-item"
+              href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Privacy Policy
+            </a>
+            <a
+              className="mobile-menu-item"
+              href="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Terms of Service
+            </a>
+          </div>
+        </div>
+      )}
 
-        <MobileSell
-          open={showSell}
-          onClose={() => setShowSell(false)}
-          onChatEcho={echoFromModalToChat}
-          onStartInteraction={() => setShowCenteredInput(false)}
-        />
+      {renderMainContent()}
 
-        {!auth && showCenteredInput && (
-          <footer className="mobile-footer">
-            <div className="mobile-footer-links-bottom">
-              <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
-              <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
-              <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
-              <a href="https://www.youtube.com/@Chatbramp" target="_blank" rel="noopener noreferrer">YouTube</a>
-              <a href="https://x.com/Chatbramp" target="_blank" rel="noopener noreferrer">Twitter</a>
-              <a href="https://medium.com/@chatbramp" target="_blank" rel="noopener noreferrer">Medium</a>
-            </div>
-          </footer>
-        )}
-      </div>
-    </>
+      <MobileSell
+        open={showSell}
+        onClose={() => setShowSell(false)}
+        onChatEcho={echoFromModalToChat}
+        onStartInteraction={() => setShowCenteredInput(false)}
+      />
+
+      {!auth && showCenteredInput && (
+        <footer className="mobile-footer">
+          <div className="mobile-footer-links-bottom">
+            <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
+            <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
+            <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
+            <a href="https://www.youtube.com/@Chatbramp" target="_blank" rel="noopener noreferrer">YouTube</a>
+            <a href="https://x.com/Chatbramp" target="_blank" rel="noopener noreferrer">Twitter</a>
+            <a href="https://medium.com/@chatbramp" target="_blank" rel="noopener noreferrer">Medium</a>
+          </div>
+        </footer>
+      )}
+    </div>
   );
 }

@@ -7,7 +7,6 @@ import { tokenStore } from './lib/secureStore'
 import { authFetch, getAuthState, setupAutoLogoutTimer, clearAuth } from './lib/tokenManager'
 import { useInactivityTimer } from './lib/useInactivityTimer'
 import SellModal from './sell'
-import WallpaperSlideshow from './WallpaperSlideshow'
 import SpaceGame from './game'
 import MobileGame from './MobileGame';
 import MobileVoiceChat from './MobileVoiceChat';
@@ -592,7 +591,6 @@ export default function App() {
   if (showGame) {
     return (
       <div className="page" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
-        <WallpaperSlideshow />
         <MobileGame onClose={() => setShowGame(false)} />
       </div>
     );
@@ -600,23 +598,21 @@ export default function App() {
 
   if (showVoiceChat) {
     return (
-      <>
-        <WallpaperSlideshow />
-        <MobileVoiceChat
-          isMobile={false}
-          onClose={() => setShowVoiceChat(false)}
-          onMessage={(text) => {
-            // Echo voice assistant response to chat
-            if (text) {
-              echoFromModalToChat(text);
-            }
-          }}
-          onSellIntent={() => {
-            // Open sell modal when sell intent detected in voice chat
-            setShowVoiceChat(false);
-            setShowSell(true);
-          }}
-        />
+      <MobileVoiceChat
+        isMobile={false}
+        onClose={() => setShowVoiceChat(false)}
+        onMessage={(text) => {
+          // Echo voice assistant response to chat
+          if (text) {
+            echoFromModalToChat(text);
+          }
+        }}
+        onSellIntent={() => {
+          // Open sell modal when sell intent detected in voice chat
+          setShowVoiceChat(false);
+          setShowSell(true);
+        }}
+      />
       </>
     );
   }
@@ -624,7 +620,6 @@ export default function App() {
   if (showSell) {
     return (
       <div className="page" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
-        <WallpaperSlideshow />
         <SellModal
           open={showSell}
           onClose={() => setShowSell(false)}
@@ -638,7 +633,6 @@ export default function App() {
   if (showSignIn) {
     return (
       <div className="page" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
-        <WallpaperSlideshow />
         <SignIn
           onCancel={() => { setShowSignIn(false); setOpenSellAfterAuth(false) }}
           onSuccess={(res) => {
@@ -658,7 +652,6 @@ export default function App() {
   if (showSignUp) {
     return (
       <div className="page" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
-        <WallpaperSlideshow />
         <SignUp
           onCancel={() => setShowSignUp(false)}
           onSuccess={(res: SignUpResult) => {
@@ -988,7 +981,6 @@ export default function App() {
         `}
       </style>
       <div className="page">
-        <WallpaperSlideshow />
         <header ref={headerRef} className="header">
           <div className="brand">
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

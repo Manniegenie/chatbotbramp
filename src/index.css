@@ -15,7 +15,6 @@
   --composer-h: 64px;
   --max-chat-width: 860px;
 
-  /* Wallpaper slideshow handled by React component */
 }
 
 /* Reset / touch */
@@ -84,7 +83,7 @@ a:hover { opacity: .92; }
   display: flex;
   flex-direction: column;
   overflow: hidden; /* critical: prevent body scroll, only .messages scrolls */
-  background: transparent; /* wallpaper handled by WallpaperSlideshow component */
+  background: transparent;
 }
 
 /* FIXED image layer tied to the viewport (stays static) */
@@ -93,7 +92,6 @@ a:hover { opacity: .92; }
   position: fixed;      /* key: fixed so it doesn't move with .page content */
   inset: 0;             /* covers the full viewport */
   pointer-events: none;
-  /* Background handled by WallpaperSlideshow component */
   z-index: 0;           /* sits behind all UI */
   transform: translateZ(0);
   /* slight smoothing for large images */

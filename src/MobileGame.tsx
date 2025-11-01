@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import './MobileApp.css';
 import './MobileGame.css';
-import WallpaperSlideshow from './WallpaperSlideshow';
 import asteroidImg from './assets/asteroid.png';
 import spaceshipImg from './assets/spaceship.png';
 import { authFetch } from './lib/tokenManager';

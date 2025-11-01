@@ -63,7 +63,6 @@ body {
   touch-action: pan-y;
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
-  /* Background handled by WallpaperSlideshow component */
   /* Full screen PWA support */
   height: 100vh;
   height: 100dvh; /* Dynamic viewport height for mobile browsers */
@@ -85,14 +84,6 @@ body {
   /* Remove safe area padding to allow background to fill entire screen */
 }
 
-/* Ensure wallpaper covers full screen including status bar */
-.wallpaper-background {
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  height: 100dvh;
-}
 
 button {
   font-family: inherit;
@@ -120,7 +111,6 @@ a {
   flex-direction: column;
   overflow: hidden;
   position: relative;
-  /* Allow wallpaper to extend beyond page container */
   isolation: isolate;
 }
 
