@@ -874,7 +874,8 @@ export default function App() {
           .header-logo {
             width: 32px;
             height: 32px;
-            object-fit: contain;
+            border-radius: 8px;
+            object-fit: cover;
           }
           
           .brand-text {
@@ -906,8 +907,8 @@ export default function App() {
           }
           
           .desktop-app-logo {
-            width: 72px;
-            height: 72px;
+            width: 94px;
+            height: 94px;
             margin: 0 auto 12px;
             display: block;
             animation: fadeIn 0.5s ease-in-out;
@@ -980,7 +981,6 @@ export default function App() {
                   e.currentTarget.style.display = 'none'
                 }}
               />
-              <h1 className="brand-text">Bramp</h1>
             </div>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div className="ticker-wrap" aria-live="polite" aria-atomic="true">
