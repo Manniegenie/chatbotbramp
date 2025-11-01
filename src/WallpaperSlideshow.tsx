@@ -11,11 +11,11 @@ const WallpaperSlideshow: React.FC<WallpaperSlideshowProps> = ({ className = '' 
       <style>{`
         .wallpaper-background {
           position: fixed;
-          top: -100px;
+          top: 0;
           left: 0;
           width: 100vw;
-          height: calc(100vh + 200px);
-          height: calc(100dvh + 200px);
+          height: 100vh;
+          height: 100dvh;
           z-index: -10;
           background-image: url(${wallpaper1});
           background-size: cover;
