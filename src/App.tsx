@@ -1000,7 +1000,7 @@ export default function App() {
 
           {!auth ? (
             <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn" onClick={() => setShowSignIn(true)} style={{ color: '#007337', border: '1px solid white' }}>Sell</button>
+              <button className="btn" onClick={() => setShowSignIn(true)}>Sell</button>
               <button
                 className="btn"
                 style={{ background: 'transparent', color: 'var(--txt)', border: '1px solid #007337' }}
@@ -1011,7 +1011,7 @@ export default function App() {
             </div>
           ) : (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <button className="btn" onClick={handleSellClick} style={{ color: '#007337', border: '1px solid white' }}>
+              <button className="btn" onClick={handleSellClick} style={{ color: '#fff' }}>
                 Sell
               </button>
               <button className="btn" onClick={handleKycClick} style={{ opacity: 0.6, cursor: 'not-allowed' }}>
