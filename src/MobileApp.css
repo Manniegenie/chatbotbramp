@@ -82,10 +82,7 @@ body {
 .mobile-page {
   min-height: 100vh;
   min-height: 100dvh;
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
+  /* Remove safe area padding to allow background to fill entire screen */
 }
 
 /* Ensure wallpaper covers full screen including status bar */
