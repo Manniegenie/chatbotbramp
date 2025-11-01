@@ -988,13 +988,6 @@ export default function MobileApp() {
           </div>
         </div>
 
-        {tickerText && (
-          <div className="mobile-ticker-wrap" style={{ display: 'block', visibility: 'visible' }}>
-            <div className="mobile-ticker">
-              {tickerText}  •  {tickerText}
-            </div>
-          </div>
-        )}
       </header>
 
       {showMenu && auth && (
