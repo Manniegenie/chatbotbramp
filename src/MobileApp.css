@@ -54,7 +54,7 @@ body,
 body {
   margin: 0;
   padding: 0;
-  background: transparent;
+  background: var(--bg);
   color: var(--txt);
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, 'Segoe UI', 'Roboto', 'Helvetica Neue',
     'Arial', sans-serif;
