@@ -407,7 +407,7 @@ export default function MobileApp() {
       const symbolParam = TICKER_SYMBOLS.join(',')
       const url = `${API_BASE}/prices/prices?symbols=${encodeURIComponent(
         symbolParam
-      )}&original=true&changes=true&limit=9`
+      )}&changes=true&limit=9`
       const resp = await authFetch(url, { method: 'GET', signal })
       if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${resp.statusText}`)
 
@@ -416,14 +416,12 @@ export default function MobileApp() {
         throw new Error('Invalid prices response')
       }
 
-      const { originalPrices = {}, prices = {}, hourlyChanges = {} } = payload.data
-      // Use originalPrices for ticker (market prices), fallback to markdown prices if original not available
-      const displayPrices = Object.keys(originalPrices).length > 0 ? originalPrices : prices
+      const { prices = {}, hourlyChanges = {} } = payload.data
 
       const items = TICKER_SYMBOLS.filter(
-        (s) => s === 'NGNB' || typeof displayPrices[s] === 'number'
+        (s) => s === 'NGNB' || typeof prices[s] === 'number'
       ).map((s) => {
-        const priceVal = displayPrices[s]
+        const priceVal = prices[s]
         const changeObj = hourlyChanges?.[s]
         const changePct = changeObj?.hourlyChange ?? changeObj?.percentageChange ?? null
 
