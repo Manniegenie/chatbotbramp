@@ -67,7 +67,7 @@ body{ margin:0; background:transparent; color:var(--txt); font-family: -apple-sy
 .ticker-wrap::after {
   right: 0;
 }
-.btn{ appearance:none; color:#fff; border:1px solid rgba(255, 255, 255, 0.15); padding:10px 14px; border-radius:10px; font-weight:600; text-decoration:none; cursor:pointer }
+.btn{ appearance:none; color:#fff; border:1px solid rgba(255, 255, 255, 0.15); padding:10px 14px; border-radius:20px; font-weight:600; text-decoration:none; cursor:pointer; background:transparent }
 .btn[disabled]{ opacity:.6; cursor:not-allowed }
 
 .chat{ max-width:860px; margin:0 auto; padding:20px; flex:1; width:100%; display:flex; flex-direction:column }
