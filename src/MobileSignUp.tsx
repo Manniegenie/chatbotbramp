@@ -613,7 +613,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
       left: 0,
       width: '100vw',
       height: '100vh',
-      background: 'rgba(0, 0, 0, 0.5)',
+      background: 'transparent',
       zIndex: 1000,
       display: 'grid',
       placeItems: 'start center',

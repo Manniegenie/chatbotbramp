@@ -120,6 +120,7 @@ a {
   content: '';
   position: fixed;
   inset: 0;
+  will-change: auto;
   background: 
     /* Large bright stars */
     radial-gradient(2px 2px at 15% 20%, rgba(255,255,255,0.9), transparent),
@@ -235,6 +236,7 @@ a {
   content: '';
   position: fixed;
   inset: 0;
+  will-change: background-position;
   background: 
     radial-gradient(1px 1px at 8% 22%, rgba(255,255,255,0.6), transparent),
     radial-gradient(1px 1px at 22% 52%, rgba(255,255,255,0.6), transparent),
