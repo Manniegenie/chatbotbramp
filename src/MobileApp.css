@@ -438,7 +438,7 @@ a {
 .mobile-ticker {
   display: inline-block;
   white-space: nowrap;
-  font-size: 11px;
+  font-size: 5px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.7);
   line-height: 32px;

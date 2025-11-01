@@ -812,7 +812,7 @@ export default function App() {
             padding-left: 100%;
             box-sizing: content-box;
             font-weight: 600;
-            font-size: 11px;
+            font-size: 5px;
             color: rgba(255, 255, 255, 0.7);
             transform: translateZ(0);
             -webkit-transform: translateZ(0);
@@ -847,7 +847,7 @@ export default function App() {
           }
 
           @media (max-width: 640px) {
-            .ticker { font-size: 10px; }
+            .ticker { font-size: 5px; }
             .tag { display:block; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
           }
 

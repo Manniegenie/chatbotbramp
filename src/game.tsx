@@ -96,13 +96,13 @@ export default function WhackAMole({ onClose }: { onClose?: () => void }) {
   }, []);
 
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#111', zIndex: 99999 }}>
+    <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'transparent', zIndex: 99999 }}>
       {onClose && (
         <button onClick={onClose} style={{ position: 'absolute', top: 18, right: 18, zIndex: 20, background: '#f33', color: '#fff', fontSize: 18, border: 'none', padding: '8px 18px', fontWeight: 'bold', borderRadius: 10 }}>
           ✕ Close
         </button>
       )}
-      <svg width={width} height={height} style={{ position: 'absolute', top: 0, left: 0, background: '#233' }}>
+      <svg width={width} height={height} style={{ position: 'absolute', top: 0, left: 0, background: 'transparent' }}>
         {/* Score UI */}
         <text x="28" y="54" fontSize="32" fill="#fff" fontWeight="bold" style={{ textShadow: '0 0 6px rgba(0,0,0,0.8)' }}>
           Score: {score}
@@ -142,7 +142,6 @@ export default function WhackAMole({ onClose }: { onClose?: () => void }) {
         {/* Overlays */}
         {gameState !== 'playing' && (
           <g>
-            <rect x="0" y="0" width={width} height={height} fill="#000" opacity="0.75" />
             {gameState === 'menu' && (
               <g>
                 <text x={width / 2} y={height / 2 - 120} fontSize="58" fill="#18f96e" fontWeight="bold" textAnchor="middle">
