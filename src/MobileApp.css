@@ -122,14 +122,37 @@ a {
   position: relative;
 }
 
+/* Animated starfield background */
 .mobile-page::before {
-  /* Removed dark overlay to allow wallpaper to show through fully */
   content: '';
   position: fixed;
   inset: 0;
-  background: transparent;
+  background: 
+    radial-gradient(2px 2px at 20% 30%, white, transparent),
+    radial-gradient(2px 2px at 60% 70%, white, transparent),
+    radial-gradient(1px 1px at 50% 50%, white, transparent),
+    radial-gradient(1px 1px at 80% 10%, white, transparent),
+    radial-gradient(2px 2px at 90% 40%, white, transparent),
+    radial-gradient(1px 1px at 33% 60%, white, transparent),
+    radial-gradient(1px 1px at 55% 80%, white, transparent),
+    radial-gradient(2px 2px at 10% 80%, white, transparent),
+    radial-gradient(1px 1px at 70% 20%, white, transparent),
+    radial-gradient(2px 2px at 40% 50%, white, transparent);
+  background-size: 200% 200%;
+  background-position: 0 0;
   z-index: -1;
   pointer-events: none;
+  animation: starMove 20s linear infinite;
+  opacity: 0.6;
+}
+
+@keyframes starMove {
+  from {
+    background-position: 0% 0%;
+  }
+  to {
+    background-position: 100% 100%;
+  }
 }
 
 @supports (-webkit-touch-callout: none) {
