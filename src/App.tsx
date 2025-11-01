@@ -11,7 +11,7 @@ import SpaceGame from './game'
 import MobileGame from './MobileGame';
 import MobileVoiceChat from './MobileVoiceChat';
 // Import logo from assets
-import BrampLogo from './assets/logo.png'
+import BrampLogo from './assets/logo.jpeg'
 import micIcon from './assets/mic.png'
 import AstronautIcon from './assets/astronaut.png'
 
@@ -1000,7 +1000,7 @@ export default function App() {
 
           {!auth ? (
             <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn" onClick={() => setShowSignIn(true)} style={{ color: '#007337' }}>Sell</button>
+              <button className="btn" onClick={() => setShowSignIn(true)} style={{ color: '#007337', border: '1px solid white' }}>Sell</button>
               <button
                 className="btn"
                 style={{ background: 'transparent', color: 'var(--txt)', border: '1px solid #007337' }}
@@ -1011,7 +1011,7 @@ export default function App() {
             </div>
           ) : (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <button className="btn" onClick={handleSellClick} style={{ color: '#007337' }}>
+              <button className="btn" onClick={handleSellClick} style={{ color: '#007337', border: '1px solid white' }}>
                 Sell
               </button>
               <button className="btn" onClick={handleKycClick} style={{ opacity: 0.6, cursor: 'not-allowed' }}>

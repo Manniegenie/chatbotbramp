@@ -9,7 +9,7 @@ import MobileSignUp, { SignUpResult } from './MobileSignUp'
 import MobileSell from './MobileSell'
 import MobileGame from './MobileGame';
 import MobileVoiceChat from './MobileVoiceChat';
-import BrampLogo from './assets/logo.png'
+import BrampLogo from './assets/logo.jpeg'
 import micIcon from './assets/mic.png'
 import AstronautIcon from './assets/astronaut.png'
 import './MobileApp.css'
