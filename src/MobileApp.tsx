@@ -1079,7 +1079,7 @@ export default function MobileApp() {
         onStartInteraction={() => setShowCenteredInput(false)}
       />
 
-      {!auth && (
+      {!auth && showCenteredInput && (
         <footer className="mobile-footer">
           <div className="mobile-footer-links-bottom">
             <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
