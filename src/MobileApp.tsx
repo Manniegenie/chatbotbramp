@@ -11,9 +11,7 @@ import MobileGame from './MobileGame';
 import MobileVoiceChat from './MobileVoiceChat';
 import BrampLogo from './assets/logo.png'
 import micIcon from './assets/mic.png'
-import SolanaIcon from './assets/solana.png'
-import TetherIcon from './assets/tether.png'
-import CryptocurrencyIcon from './assets/cryptocurrency.png'
+import AstronautIcon from './assets/astronaut.png'
 import './MobileApp.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
@@ -269,21 +267,12 @@ export default function MobileApp() {
   const inputRef = useRef<HTMLInputElement>(null)
   const [tickerText, setTickerText] = useState<string>('')
 
-  const icons = [SolanaIcon, TetherIcon, CryptocurrencyIcon]
-  const [currentIconIndex, setCurrentIconIndex] = useState(0)
 
   // Debug ticker
   useEffect(() => {
     console.log('Mobile ticker text:', tickerText)
   }, [tickerText])
 
-  // Cycle through icons
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIconIndex((prev) => (prev + 1) % icons.length)
-    }, 3000)
-    return () => clearInterval(interval)
-  }, [icons.length])
 
   // Handle automatic sell modal opening
   useEffect(() => {
@@ -713,24 +702,11 @@ export default function MobileApp() {
                 Secure Crypto to NGN Exchange
               </h2>
               <div style={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <AnimatePresence mode="wait">
-                  <motion.img
-                    key={currentIconIndex}
-                    src={icons[currentIconIndex]}
-                    alt="Chat Bramp AI"
-                    className="mobile-app-logo"
-                    initial={{ opacity: 0, scale: 0.8, rotateY: -90 }}
-                    animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-                    exit={{ opacity: 0, scale: 0.8, rotateY: 90 }}
-                    transition={{
-                      duration: 0.6,
-                      ease: "easeInOut",
-                      type: "spring",
-                      stiffness: 100,
-                      damping: 15
-                    }}
-                  />
-                </AnimatePresence>
+                <img
+                  src={AstronautIcon}
+                  alt="Chat Bramp AI"
+                  className="mobile-app-logo"
+                />
               </div>
               <div style={{ position: 'relative', width: '100%' }}>
                 <input

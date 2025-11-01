@@ -13,9 +13,7 @@ import MobileVoiceChat from './MobileVoiceChat';
 // Import logo from assets
 import BrampLogo from './assets/logo.png'
 import micIcon from './assets/mic.png'
-import SolanaIcon from './assets/solana.png'
-import TetherIcon from './assets/tether.png'
-import CryptocurrencyIcon from './assets/cryptocurrency.png'
+import AstronautIcon from './assets/astronaut.png'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -291,8 +289,6 @@ export default function App() {
   const endRef = useRef<HTMLDivElement>(null)
   const messagesRef = useRef<HTMLDivElement>(null)
 
-  const icons = [SolanaIcon, TetherIcon, CryptocurrencyIcon]
-  const [currentIconIndex, setCurrentIconIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Parse **text** to <strong>text</strong>
@@ -421,13 +417,6 @@ export default function App() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Cycle through icons
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIconIndex((prev) => (prev + 1) % icons.length)
-    }, 3000)
-    return () => clearInterval(interval)
-  }, [icons.length])
 
   // Handle scrollbar auto-hide on messages container
   useEffect(() => {
@@ -812,7 +801,7 @@ export default function App() {
             padding-left: 100%;
             box-sizing: content-box;
             font-weight: 600;
-            font-size: 5px;
+            font-size: 9px;
             color: #007337;
             transform: translateZ(0);
             -webkit-transform: translateZ(0);
@@ -847,7 +836,7 @@ export default function App() {
           }
 
           @media (max-width: 640px) {
-            .ticker { font-size: 5px; }
+            .ticker { font-size: 9px; }
             .tag { display:block; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
           }
 
@@ -891,7 +880,7 @@ export default function App() {
           .brand-text {
             font-size: 18px;
             font-weight: 600;
-            color: var(--txt);
+            color: #007337;
           }
           
           @keyframes fadeIn {
@@ -1182,24 +1171,11 @@ export default function App() {
                     Secure Crypto to NGN Exchange
                   </h2>
                   <div style={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <AnimatePresence mode="wait">
-                      <motion.img
-                        key={currentIconIndex}
-                        src={icons[currentIconIndex]}
-                        alt="Chat Bramp AI"
-                        className="desktop-app-logo"
-                        initial={{ opacity: 0, scale: 0.8, rotateY: -90 }}
-                        animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-                        exit={{ opacity: 0, scale: 0.8, rotateY: 90 }}
-                        transition={{
-                          duration: 0.6,
-                          ease: "easeInOut",
-                          type: "spring",
-                          stiffness: 100,
-                          damping: 15
-                        }}
-                      />
-                    </AnimatePresence>
+                    <img
+                      src={AstronautIcon}
+                      alt="Chat Bramp AI"
+                      className="desktop-app-logo"
+                    />
                   </div>
                   <div style={{ position: 'relative', width: '100%' }}>
                     <input

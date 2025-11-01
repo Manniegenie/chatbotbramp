@@ -323,7 +323,7 @@ a {
 .mobile-brand-text {
   font-size: 18px;
   font-weight: 700;
-  color: var(--txt);
+  color: #007337;
   letter-spacing: -0.02em;
   white-space: nowrap;
   overflow: hidden;
@@ -438,7 +438,7 @@ a {
 .mobile-ticker {
   display: inline-block;
   white-space: nowrap;
-  font-size: 5px;
+  font-size: 9px;
   font-weight: 600;
   color: #007337;
   line-height: 32px;
