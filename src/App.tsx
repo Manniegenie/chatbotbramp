@@ -613,7 +613,6 @@ export default function App() {
           setShowSell(true);
         }}
       />
-      </>
     );
   }
 
