@@ -86,33 +86,7 @@ a:hover { opacity: .92; }
   background: transparent;
 }
 
-/* FIXED image layer tied to the viewport (stays static) */
-.page::before {
-  content: "";
-  position: fixed;      /* key: fixed so it doesn't move with .page content */
-  inset: 0;             /* covers the full viewport */
-  pointer-events: none;
-  z-index: 0;           /* sits behind all UI */
-  transform: translateZ(0);
-  /* slight smoothing for large images */
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-}
-
-/* Overlay stays above the image but below UI to preserve contrast */
-.page::after {
-  content: "";
-  position: fixed;      /* match ::before so overlay stays aligned */
-  inset: 0;
-  background: linear-gradient(180deg,
-    rgba(11,11,16,0.3),
-    rgba(11,11,16,0.5)
-  );
-  z-index: 1;
-  pointer-events: none;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-}
+/* Starfield background handled by MobileApp.css */
 
 /* Ensure app content sits above image & overlay */
 .page > * {
