@@ -123,10 +123,11 @@ a {
 }
 
 .mobile-page::before {
+  /* Removed dark overlay to allow wallpaper to show through fully */
   content: '';
   position: fixed;
   inset: 0;
-  background: rgba(11, 11, 16, 0.3);
+  background: transparent;
   z-index: -1;
   pointer-events: none;
 }
