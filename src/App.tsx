@@ -982,20 +982,6 @@ export default function App() {
                 }}
               />
             </div>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div className="ticker-wrap" aria-live="polite" aria-atomic="true">
-                <div
-                  className={`ticker ${tickerText.length < 40 ? 'idle' : ''}`}
-                  key={tickerText}
-                  title={tickerText}
-                  style={{
-                    animationDuration: tickerText.length < 80 ? '14s' : `${Math.min(Math.max(tickerText.length / 6, 18), 36)}s`
-                  }}
-                >
-                  {tickerText ? `${tickerText}  ${tickerText}` : ''}
-                </div>
-              </div>
-            </div>
           </div>
 
           {!auth ? (
@@ -1331,6 +1317,20 @@ export default function App() {
               <a href="https://x.com/Chatbramp" target="_blank" rel="noopener noreferrer">Twitter</a>
               <a href="https://medium.com/@chatbramp" target="_blank" rel="noopener noreferrer">Medium</a>
             </div>
+            {tickerText && (
+              <div className="ticker-wrap" style={{ width: '100%', marginTop: '8px' }} aria-live="polite" aria-atomic="true">
+                <div
+                  className={`ticker ${tickerText.length < 40 ? 'idle' : ''}`}
+                  key={tickerText}
+                  title={tickerText}
+                  style={{
+                    animationDuration: tickerText.length < 80 ? '14s' : `${Math.min(Math.max(tickerText.length / 6, 18), 36)}s`
+                  }}
+                >
+                  {tickerText ? `${tickerText}  ${tickerText}` : ''}
+                </div>
+              </div>
+            )}
           </footer>
         )}
       </div>
