@@ -480,12 +480,12 @@ a {
 .mobile-ticker {
   display: inline-block;
   white-space: nowrap;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  color: #007337;
+  color: rgba(255, 255, 255, 0.7);
   line-height: 32px;
-  animation: mobileTickerMarquee 40s linear infinite;
-  -webkit-animation: mobileTickerMarquee 40s linear infinite;
+  animation: mobileTickerMarquee 50s linear infinite;
+  -webkit-animation: mobileTickerMarquee 50s linear infinite;
   animation-delay: 0s;
   -webkit-animation-delay: 0s;
 }

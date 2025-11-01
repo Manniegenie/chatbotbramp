@@ -808,12 +808,12 @@ export default function App() {
             display: inline-block;
             white-space: nowrap;
             will-change: transform;
-            animation: tickerScroll 18s linear infinite;
+            animation: tickerScroll 35s linear infinite;
             padding-left: 100%;
             box-sizing: content-box;
             font-weight: 600;
-            font-size: 13px;
-            color: var(--accent); /* use green accent for ticker text */
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
             transform: translateZ(0);
             -webkit-transform: translateZ(0);
           }
@@ -847,7 +847,7 @@ export default function App() {
           }
 
           @media (max-width: 640px) {
-            .ticker { font-size: 12px; }
+            .ticker { font-size: 10px; }
             .tag { display:block; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
           }
 
