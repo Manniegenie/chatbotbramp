@@ -11,9 +11,12 @@ import MobileGame from './MobileGame';
 import MobileVoiceChat from './MobileVoiceChat';
 import BrampLogo from './assets/logo.jpeg'
 import micIcon from './assets/mic.png'
-import AstronautIcon from './assets/astronaut.png'
-import InsuranceIcon from './assets/insurance.png'
-import BullMarketIcon from './assets/bull-market.png'
+import TetherIcon from './assets/tether.png'
+import SolanaIcon from './assets/solana.png'
+import TronIcon from './assets/tron.png'
+import BitcoinIcon from './assets/bicoin.png'
+import XrpIcon from './assets/xrp.png'
+import ShibaIcon from './assets/shiba-inu.png'
 import './MobileApp.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
@@ -269,7 +272,7 @@ export default function MobileApp() {
   const inputRef = useRef<HTMLInputElement>(null)
   const [tickerText, setTickerText] = useState<string>('')
 
-  const icons = [AstronautIcon, InsuranceIcon, BullMarketIcon]
+  const icons = [TetherIcon, SolanaIcon, TronIcon, BitcoinIcon, XrpIcon, ShibaIcon]
   const [currentIconIndex, setCurrentIconIndex] = useState(0)
 
   // Debug ticker
