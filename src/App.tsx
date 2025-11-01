@@ -813,7 +813,7 @@ export default function App() {
             box-sizing: content-box;
             font-weight: 600;
             font-size: 5px;
-            color: rgba(255, 255, 255, 0.7);
+            color: #007337;
             transform: translateZ(0);
             -webkit-transform: translateZ(0);
           }

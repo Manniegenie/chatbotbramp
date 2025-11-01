@@ -440,7 +440,7 @@ a {
   white-space: nowrap;
   font-size: 5px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.7);
+  color: #007337;
   line-height: 32px;
   animation: mobileTickerMarquee 50s linear infinite;
   -webkit-animation: mobileTickerMarquee 50s linear infinite;
