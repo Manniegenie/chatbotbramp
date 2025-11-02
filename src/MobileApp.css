@@ -355,9 +355,9 @@ a {
     radial-gradient(1px 1px at 83.3% 49%, rgba(0,115,55,0.5), transparent), radial-gradient(1px 1px at 86.9% 54%, rgba(255,255,255,0.4), transparent),
     radial-gradient(1px 1px at 90.5% 59%, rgba(255,220,0,0.5), transparent), radial-gradient(1px 1px at 94.1% 64%, rgba(0,115,55,0.4), transparent),
     radial-gradient(1px 1px at 97.7% 69%, rgba(255,255,255,0.5), transparent),
-    /* Sharp-edged star in far corner and dark wormhole top right */
-    radial-gradient(farthest-side at 95% 5%, rgba(255,255,255,1) 40%, transparent 50%),
-    radial-gradient(100px 100px at 92% 8%, rgba(0,0,0,0.8), transparent),
+    /* Large star below input field and wormhole top right */
+    radial-gradient(20px 20px at 50% 46%, rgba(255,255,255,1), transparent),
+    radial-gradient(100px 100px at 92% 8%, rgba(0,115,55,0.5), transparent),
     /* Deep space nebulae and cosmic clouds for depth */
     radial-gradient(400px 400px at 20% 30%, rgba(255,255,255,0.02), transparent),
     radial-gradient(350px 350px at 80% 70%, rgba(200,200,200,0.015), transparent),
