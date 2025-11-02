@@ -307,7 +307,7 @@ a {
     radial-gradient(1px 1px at 77% 19%, rgba(255,220,0,0.7), transparent),
     radial-gradient(1px 1px at 85% 57%, rgba(0,115,55,0.6), transparent),
     radial-gradient(1px 1px at 94% 83%, rgba(255,255,255,0.7), transparent),
-    /* 150 additional stars for cosmic depth */
+    /* 200 additional stars for cosmic depth */
     radial-gradient(1px 1px at 2.5% 3%, rgba(255,220,0,0.5), transparent), radial-gradient(1px 1px at 5.3% 8%, rgba(0,115,55,0.4), transparent),
     radial-gradient(1px 1px at 8.1% 13%, rgba(255,255,255,0.5), transparent), radial-gradient(1px 1px at 10.9% 18%, rgba(255,220,0,0.4), transparent),
     radial-gradient(1px 1px at 13.7% 23%, rgba(0,115,55,0.5), transparent), radial-gradient(1px 1px at 16.5% 28%, rgba(255,255,255,0.4), transparent),
@@ -355,8 +355,6 @@ a {
     radial-gradient(1px 1px at 83.3% 49%, rgba(0,115,55,0.5), transparent), radial-gradient(1px 1px at 86.9% 54%, rgba(255,255,255,0.4), transparent),
     radial-gradient(1px 1px at 90.5% 59%, rgba(255,220,0,0.5), transparent), radial-gradient(1px 1px at 94.1% 64%, rgba(0,115,55,0.4), transparent),
     radial-gradient(1px 1px at 97.7% 69%, rgba(255,255,255,0.5), transparent),
-    /* Wormhole top right */
-    radial-gradient(100px 100px at 92% 8%, rgba(0,115,55,0.5), transparent),
     /* Deep space nebulae and cosmic clouds for depth */
     radial-gradient(400px 400px at 20% 30%, rgba(255,255,255,0.02), transparent),
     radial-gradient(350px 350px at 80% 70%, rgba(200,200,200,0.015), transparent),
