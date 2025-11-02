@@ -1,7 +1,7 @@
 /* ========= Global Theme & Font ========= */
 :root {
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", Arial, "Apple Color Emoji", "Segoe UI Emoji";
-  --bg: #0b0b10;
+  --bg: #000000;
   --card: #12121a;
   --muted: #ffffffcc;
   --accent: #007337;

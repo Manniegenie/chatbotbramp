@@ -1,4 +1,4 @@
-:root{ --bg:#0b0b10; --card:#12121a; --muted:#9aa3af; --accent:#7c3aed; --border:#1f2330; --txt:#e5e7eb }
+:root{ --bg:#000000; --card:#12121a; --muted:#9aa3af; --accent:#7c3aed; --border:#1f2330; --txt:#e5e7eb }
 *{ box-sizing:border-box }
 html,body,#root{ height:100% }
 body{ margin:0; background:transparent; color:var(--txt); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, "Segoe UI", Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji" }
