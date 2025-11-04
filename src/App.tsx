@@ -945,17 +945,29 @@ export default function App() {
             caret-color: var(--accent);
             box-sizing: border-box;
             min-height: 72px;
-            background: rgba(18, 18, 26, 0.4);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border);
+            background: rgba(18, 18, 26, 0.2);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: none;
             color: var(--txt);
             outline: none;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37),
+                        inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+          }
+          
+          .input-centered-desktop:focus {
+            background: rgba(18, 18, 26, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 1px rgba(255, 255, 255, 0.15);
           }
           
           .send-btn-inline-desktop {
             width: 52px;
             height: 52px;
-            background: var(--accent);
+            background: rgba(18, 18, 26, 0.2);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -964,6 +976,21 @@ export default function App() {
             cursor: pointer;
             padding: 0;
             flex-shrink: 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37),
+                        inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            color: var(--txt);
+          }
+          
+          .send-btn-inline-desktop:hover:not(:disabled) {
+            background: rgba(18, 18, 26, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 1px rgba(255, 255, 255, 0.15);
+          }
+          
+          .send-btn-inline-desktop:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
           }
           
           .send-btn-inline-desktop svg {
