@@ -760,12 +760,12 @@ export default function MobileApp() {
                 >
                   {loading ? (
                     <div className="mobile-spinner" />
-                  ) : (
+                  ) : input.trim() ? (
                     <img
                       src={RocketImg}
                       alt="Send"
                     />
-                  )}
+                  ) : null}
                 </button>
               </div>
             </div>
@@ -811,12 +811,12 @@ export default function MobileApp() {
                 >
                   {loading ? (
                     <div className="mobile-spinner" />
-                  ) : (
+                  ) : input.trim() ? (
                     <img
                       src={RocketImg}
                       alt="Send"
                     />
-                  )}
+                  ) : null}
                 </button>
                 <button
                   type="button"

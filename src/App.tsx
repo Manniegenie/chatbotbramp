@@ -1281,12 +1281,12 @@ export default function App() {
                     >
                       {loading ? (
                         <div className="spinner-desktop" />
-                      ) : (
+                      ) : input.trim() ? (
                         <img
                           src={RocketImg}
                           alt="Send"
                         />
-                      )}
+                      ) : null}
                     </button>
                   </div>
                 </div>
