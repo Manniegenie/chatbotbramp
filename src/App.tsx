@@ -972,9 +972,9 @@ export default function App() {
           .send-btn-inline-desktop {
             width: 52px;
             height: 52px;
-            background: rgba(18, 18, 26, 0.2);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            background: transparent;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -983,20 +983,18 @@ export default function App() {
             cursor: pointer;
             padding: 0;
             flex-shrink: 0;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37),
-                        inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            box-shadow: none;
             transition: all 0.3s ease;
             color: rgba(155, 163, 175, 0.8);
           }
           
           .send-btn-inline-desktop:hover:not(:disabled) {
-            background: rgba(18, 18, 26, 0.3);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
-                        inset 0 1px 1px rgba(255, 255, 255, 0.15);
+            background: transparent;
+            box-shadow: none;
           }
           
-          .send-btn-inline-desktop:not(:disabled) {
-            color: #007337;
+          .send-btn-inline-desktop:not(:disabled) img {
+            filter: brightness(1.2) saturate(1.5) hue-rotate(120deg);
           }
           
           .send-btn-inline-desktop:disabled {
@@ -1005,9 +1003,12 @@ export default function App() {
             color: rgba(155, 163, 175, 0.8);
           }
           
-          .send-btn-inline-desktop svg {
-            width: 24px;
-            height: 24px;
+          .send-btn-inline-desktop img {
+            width: 52px;
+            height: 52px;
+            object-fit: contain;
+            transition: filter 0.3s ease;
+            filter: brightness(0.8) saturate(0.5);
           }
           
           .spinner-desktop {
@@ -1273,7 +1274,6 @@ export default function App() {
                         <img
                           src={GodImg}
                           alt="Send"
-                          style={{ width: '20px', height: '20px', objectFit: 'contain' }}
                         />
                       )}
                     </button>
@@ -1410,11 +1410,6 @@ export default function App() {
           src={AstronautImg}
           alt="Astronaut"
           className="astronaut-bg"
-        />
-        <img
-          src={GodImg}
-          alt="God"
-          className="god-bg"
         />
       </div>
 

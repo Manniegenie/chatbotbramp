@@ -1144,15 +1144,16 @@ a {
   min-height: 48px;
   border-radius: 50%;
   border: none;
-  background: var(--accent);
+  background: transparent;
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px rgba(0, 115, 55, 0.3);
+  box-shadow: none;
   flex-shrink: 0;
+  padding: 0;
 }
 
 .mobile-send-btn:active:not(:disabled) {
@@ -1160,14 +1161,23 @@ a {
 }
 
 .mobile-send-btn:disabled {
-  background: var(--border);
+  background: transparent;
   opacity: 0.5;
   box-shadow: none;
   cursor: not-allowed;
 }
 
-.mobile-send-btn svg {
+.mobile-send-btn img {
   flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  transition: filter 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: brightness(0.8) saturate(0.5);
+}
+
+.mobile-send-btn:not(:disabled) img {
+  filter: brightness(1.2) saturate(1.5) hue-rotate(120deg);
 }
 
 .mobile-spinner {
@@ -1547,9 +1557,9 @@ a:focus-visible,
 .mobile-send-inline {
   width: 36px;
   height: 36px;
-  background: rgba(18, 18, 26, 0.2);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1558,26 +1568,32 @@ a:focus-visible,
   cursor: pointer;
   padding: 0;
   flex-shrink: 0;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37),
-              inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  box-shadow: none;
   transition: all 0.3s ease;
   color: rgba(155, 163, 175, 0.8);
 }
 
 .mobile-send-inline:hover:not(:disabled) {
-  background: rgba(18, 18, 26, 0.3);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
-              inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  background: transparent;
+  box-shadow: none;
 }
 
-.mobile-send-inline:not(:disabled) {
-  color: #007337;
+.mobile-send-inline:not(:disabled) img {
+  filter: brightness(1.2) saturate(1.5) hue-rotate(120deg);
 }
 
 .mobile-send-inline:disabled {
   opacity: 1;
   cursor: not-allowed;
   color: rgba(155, 163, 175, 0.8);
+}
+
+.mobile-send-inline img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  transition: filter 0.3s ease;
+  filter: brightness(0.8) saturate(0.5);
 }
 
 .mobile-footer-links-bottom {

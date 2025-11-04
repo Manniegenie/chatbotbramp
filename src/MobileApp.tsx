@@ -759,7 +759,6 @@ export default function MobileApp() {
                     <img
                       src={GodImg}
                       alt="Send"
-                      style={{ width: '20px', height: '20px', objectFit: 'contain' }}
                     />
                   )}
                 </button>
@@ -811,7 +810,6 @@ export default function MobileApp() {
                     <img
                       src={GodImg}
                       alt="Send"
-                      style={{ width: '20px', height: '20px', objectFit: 'contain' }}
                     />
                   )}
                 </button>
@@ -1069,11 +1067,6 @@ export default function MobileApp() {
         src={AstronautImg}
         alt="Astronaut"
         className="astronaut-bg"
-      />
-      <img
-        src={GodImg}
-        alt="God"
-        className="god-bg"
       />
     </div>
   );
