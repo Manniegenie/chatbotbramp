@@ -922,8 +922,8 @@ export default function App() {
           }
           
           .desktop-app-logo {
-            width: 94px;
-            height: 94px;
+            width: 92px;
+            height: 92px;
             margin: 0 auto 12px;
             display: block;
             animation: fadeIn 0.5s ease-in-out;
