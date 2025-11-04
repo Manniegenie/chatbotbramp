@@ -20,6 +20,7 @@ import BitcoinIcon from './assets/bicoin.png'
 import XrpIcon from './assets/xrp.png'
 import ShibaIcon from './assets/shiba-inu.png'
 import AstronautImg from './assets/astronaut.png'
+import GodImg from './assets/god.png'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -1028,6 +1029,18 @@ export default function App() {
             pointer-events: none;
             opacity: 0.8;
           }
+          
+          .god-bg {
+            position: fixed;
+            bottom: calc(50% + 40px);
+            right: 0;
+            width: 40px;
+            height: auto;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.8;
+            transform: rotate(80deg);
+          }
         `}
       </style>
       <div className="page">
@@ -1404,6 +1417,11 @@ export default function App() {
           src={AstronautImg}
           alt="Astronaut"
           className="astronaut-bg"
+        />
+        <img
+          src={GodImg}
+          alt="God"
+          className="god-bg"
         />
       </div>
 

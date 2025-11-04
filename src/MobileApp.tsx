@@ -18,6 +18,7 @@ import BitcoinIcon from './assets/bicoin.png'
 import XrpIcon from './assets/xrp.png'
 import ShibaIcon from './assets/shiba-inu.png'
 import AstronautImg from './assets/astronaut.png'
+import GodImg from './assets/god.png'
 import './MobileApp.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
@@ -1084,6 +1085,11 @@ export default function MobileApp() {
         src={AstronautImg}
         alt="Astronaut"
         className="astronaut-bg"
+      />
+      <img
+        src={GodImg}
+        alt="God"
+        className="god-bg"
       />
     </div>
   );
