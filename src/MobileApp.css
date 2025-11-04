@@ -1621,7 +1621,7 @@ a:focus-visible,
   z-index: 1;
   pointer-events: none;
   opacity: 0.8;
-  transform: rotate(80deg);
+  transform: rotate(120deg);
 }
 
 
