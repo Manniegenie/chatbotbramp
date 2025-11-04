@@ -17,7 +17,6 @@ import TronIcon from './assets/tron.png'
 import BitcoinIcon from './assets/bicoin.png'
 import XrpIcon from './assets/xrp.png'
 import ShibaIcon from './assets/shiba-inu.png'
-import AstronautImg from './assets/astronaut.png'
 import RocketImg from './assets/rocket.png'
 import './MobileApp.css'
 
@@ -738,11 +737,6 @@ export default function MobileApp() {
                 </AnimatePresence>
               </div>
               <div style={{ display: 'flex', gap: '8px', width: '100%', alignItems: 'center', position: 'relative' }}>
-                <img
-                  src={AstronautImg}
-                  alt="Astronaut"
-                  className={`astronaut-input ${input.trim() ? 'astronaut-active' : ''}`}
-                />
                 <input
                   ref={inputRef}
                   className="mobile-input mobile-input-centered"

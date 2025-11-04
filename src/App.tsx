@@ -19,7 +19,6 @@ import TronIcon from './assets/tron.png'
 import BitcoinIcon from './assets/bicoin.png'
 import XrpIcon from './assets/xrp.png'
 import ShibaIcon from './assets/shiba-inu.png'
-import AstronautImg from './assets/astronaut.png'
 import RocketImg from './assets/rocket.png'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
@@ -943,7 +942,7 @@ export default function App() {
           .input-centered-desktop {
             width: 100%;
             border-radius: 40px;
-            padding: 28px 28px 28px 66px;
+            padding: 28px;
             font-size: 18px;
             caret-color: var(--accent);
             box-sizing: border-box;
@@ -1025,23 +1024,6 @@ export default function App() {
             border-top: 2px solid #DADADA;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-          }
-          
-          .astronaut-bg {
-            position: fixed;
-            bottom: calc(50% - 60px);
-            left: 20px;
-            width: 20px;
-            height: auto;
-            z-index: 1;
-            pointer-events: none;
-            opacity: 0.8;
-            filter: drop-shadow(0 0 3px rgba(0, 255, 65, 0.15));
-            transition: filter 0.3s ease;
-          }
-          
-          .astronaut-input-desktop.astronaut-active {
-            filter: brightness(0) saturate(100%) invert(48%) sepia(100%) saturate(1000%) hue-rotate(120deg) brightness(0.67) drop-shadow(0 0 3px rgba(0, 170, 85, 0.3));
           }
           
           .god-bg {
@@ -1264,11 +1246,6 @@ export default function App() {
                     </AnimatePresence>
                   </div>
                   <div style={{ display: 'flex', gap: '8px', width: '100%', alignItems: 'center', position: 'relative' }}>
-                    <img
-                      src={AstronautImg}
-                      alt="Astronaut"
-                      className={`astronaut-input-desktop ${input.trim() ? 'astronaut-active' : ''}`}
-                    />
                     <input
                       ref={inputRef}
                       className="input-centered-desktop"
