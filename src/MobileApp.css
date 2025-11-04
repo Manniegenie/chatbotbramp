@@ -1014,7 +1014,7 @@ a {
 }
 
 .mobile-bubble-content {
-  background: transparent;
+  background: rgba(155, 163, 175, 0.15);
   border: none;
   border-radius: 16px;
   padding: 12px 16px;
@@ -1024,7 +1024,7 @@ a {
   overflow-wrap: break-word;
   hyphens: auto;
   box-shadow: none;
-  color: rgba(255, 255, 255, 0.7);
+  color: white;
 }
 
 .mobile-bubble.assistant .mobile-bubble-content {
@@ -1036,7 +1036,7 @@ a {
 .mobile-bubble .mobile-bubble-content strong { font-weight: bold; }
 
 .mobile-bubble.user .mobile-bubble-content {
-  background: transparent;
+  background: rgba(155, 163, 175, 0.15);
   border: none;
 }
 
