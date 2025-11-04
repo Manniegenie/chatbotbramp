@@ -1591,7 +1591,7 @@ a:focus-visible,
 
 .mobile-send-inline:not(:disabled) {
   color: #007337;
-  border-color: transparent;
+  border-color: white;
 }
 
 .mobile-send-inline:disabled {
