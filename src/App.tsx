@@ -1022,7 +1022,7 @@ export default function App() {
             position: fixed;
             bottom: calc(50% - 30px);
             left: 20px;
-            width: 40px;
+            width: 20px;
             height: auto;
             z-index: 1;
             pointer-events: none;
