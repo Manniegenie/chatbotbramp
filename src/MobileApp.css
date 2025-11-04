@@ -1143,7 +1143,7 @@ a {
   min-width: 48px;
   min-height: 48px;
   border-radius: 50%;
-  border: 2px solid white;
+  border: 2px solid transparent;
   background: transparent;
   color: white;
   display: flex;
@@ -1575,7 +1575,7 @@ a:focus-visible,
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid white;
+  border: 2px solid transparent;
   cursor: pointer;
   padding: 0;
   flex-shrink: 0;

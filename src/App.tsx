@@ -979,7 +979,7 @@ export default function App() {
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 2px solid white;
+            border: 2px solid transparent;
             cursor: pointer;
             padding: 0;
             flex-shrink: 0;
