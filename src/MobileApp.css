@@ -1118,8 +1118,8 @@ a {
 }
 
 .mobile-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(0, 115, 55, 0.1);
+  border-color: var(--border);
+  box-shadow: none;
 }
 
 .mobile-input::placeholder {
@@ -1180,7 +1180,7 @@ a {
 }
 
 .mobile-send-btn:not(:disabled) img[alt="Send"] {
-  filter: brightness(0) saturate(100%) invert(15%) sepia(100%) saturate(1000%) hue-rotate(120deg) brightness(0.45);
+  filter: brightness(0) saturate(100%) invert(48%) sepia(100%) saturate(1000%) hue-rotate(120deg) brightness(0.67);
 }
 
 .mobile-send-btn img[alt="Mic"] {
@@ -1607,7 +1607,7 @@ a:focus-visible,
 }
 
 .mobile-send-inline:not(:disabled) img[alt="Send"] {
-  filter: brightness(0) saturate(100%) invert(15%) sepia(100%) saturate(1000%) hue-rotate(120deg) brightness(0.45);
+  filter: brightness(0) saturate(100%) invert(48%) sepia(100%) saturate(1000%) hue-rotate(120deg) brightness(0.67);
 }
 
 .mobile-footer-links-bottom {
