@@ -741,7 +741,7 @@ export default function MobileApp() {
                 <img
                   src={AstronautImg}
                   alt="Astronaut"
-                  className="astronaut-input"
+                  className={`astronaut-input ${input.trim() ? 'astronaut-active' : ''}`}
                 />
                 <input
                   ref={inputRef}

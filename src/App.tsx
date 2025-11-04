@@ -1037,6 +1037,11 @@ export default function App() {
             pointer-events: none;
             opacity: 0.8;
             filter: drop-shadow(0 0 3px rgba(0, 255, 65, 0.15));
+            transition: filter 0.3s ease;
+          }
+          
+          .astronaut-input-desktop.astronaut-active {
+            filter: brightness(0) saturate(100%) invert(48%) sepia(100%) saturate(1000%) hue-rotate(120deg) brightness(0.67) drop-shadow(0 0 3px rgba(0, 170, 85, 0.3));
           }
           
           .god-bg {
@@ -1262,7 +1267,7 @@ export default function App() {
                     <img
                       src={AstronautImg}
                       alt="Astronaut"
-                      className="astronaut-input-desktop"
+                      className={`astronaut-input-desktop ${input.trim() ? 'astronaut-active' : ''}`}
                     />
                     <input
                       ref={inputRef}
