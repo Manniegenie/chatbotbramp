@@ -726,6 +726,7 @@ export default function App() {
             left: 0;
             right: 0;
             bottom: 0;
+            background: transparent;
           }
 
           /* Enable scrolling on messages container */
@@ -1019,7 +1020,7 @@ export default function App() {
           
           .astronaut-bg {
             position: fixed;
-            bottom: calc(50% - 10px);
+            bottom: calc(50% - 30px);
             left: 20px;
             width: 40px;
             height: auto;

@@ -3,7 +3,7 @@
 html,body,#root{ height:100% }
 body{ margin:0; background:transparent; color:var(--txt); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, "Segoe UI", Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji" }
 
-.page{ min-height:100%; display:flex; flex-direction:column }
+.page{ min-height:100%; display:flex; flex-direction:column; background:transparent }
 .header{ position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:none; background:transparent }
 .brand{ display:flex; gap:12px; align-items:center; min-width:0; flex:1 }
 .logo{ width:36px; height:36px; border-radius:10px; background:var(--accent); display:grid; place-items:center; box-shadow:0 8px 24px rgba(124,58,237,.35) }

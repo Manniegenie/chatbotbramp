@@ -112,6 +112,7 @@ a {
   overflow: hidden;
   position: relative;
   isolation: isolate;
+  background: transparent;
 }
 
 /* Starfield background - shared by all pages and modals */
@@ -571,7 +572,6 @@ a {
   background-size: 100% 100%;
   background-position: 0 0;
   background-repeat: no-repeat;
-  position: relative;
   z-index: -1;
   pointer-events: none;
   opacity: 1;
@@ -1711,7 +1711,7 @@ a:focus-visible,
 
 .astronaut-bg {
   position: fixed;
-  bottom: calc(50% - 10px);
+  bottom: calc(50% - 30px);
   left: 20px;
   width: 40px;
   height: auto;
