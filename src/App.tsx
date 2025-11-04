@@ -1011,11 +1011,11 @@ export default function App() {
           }
           
           .send-btn-inline-desktop:disabled img {
-            filter: none;
+            filter: brightness(0) saturate(100%) invert(85%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(70%);
           }
           
           .send-btn-inline-desktop:not(:disabled) img[alt="Send"] {
-            filter: brightness(0) saturate(100%) invert(48%) sepia(100%) saturate(1000%) hue-rotate(120deg) brightness(0.67);
+            filter: brightness(0) saturate(100%) invert(15%) sepia(100%) saturate(1000%) hue-rotate(120deg) brightness(0.45);
           }
           
           .spinner-desktop {
