@@ -20,7 +20,7 @@ import BitcoinIcon from './assets/bicoin.png'
 import XrpIcon from './assets/xrp.png'
 import ShibaIcon from './assets/shiba-inu.png'
 import AstronautImg from './assets/astronaut.png'
-import GodImg from './assets/god.png'
+import RocketImg from './assets/rocket.png'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -979,7 +979,7 @@ export default function App() {
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 2px solid transparent;
+            border: none;
             cursor: pointer;
             padding: 0;
             flex-shrink: 0;
@@ -995,7 +995,6 @@ export default function App() {
           
           .send-btn-inline-desktop:not(:disabled) {
             color: #007337;
-            border-color: #007337;
           }
           
           .send-btn-inline-desktop:disabled {
@@ -1012,11 +1011,11 @@ export default function App() {
           }
           
           .send-btn-inline-desktop:disabled img {
-            filter: brightness(0) saturate(100%) invert(85%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(85%);
+            filter: none;
           }
           
           .send-btn-inline-desktop:not(:disabled) img[alt="Send"] {
-            filter: brightness(0) saturate(100%) invert(85%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(85%);
+            filter: brightness(0) saturate(100%) invert(48%) sepia(100%) saturate(1000%) hue-rotate(120deg) brightness(0.67);
           }
           
           .spinner-desktop {
@@ -1049,7 +1048,6 @@ export default function App() {
             z-index: 1;
             pointer-events: none;
             opacity: 0.8;
-            transform: rotate(-720deg);
           }
         `}
       </style>
@@ -1285,7 +1283,7 @@ export default function App() {
                         <div className="spinner-desktop" />
                       ) : (
                         <img
-                          src={GodImg}
+                          src={RocketImg}
                           alt="Send"
                         />
                       )}
