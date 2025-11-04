@@ -1004,8 +1004,8 @@ export default function App() {
           }
           
           .send-btn-inline-desktop img {
-            width: 52px;
-            height: 52px;
+            width: 32px;
+            height: 32px;
             object-fit: contain;
             transition: filter 0.3s ease;
           }
