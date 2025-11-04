@@ -1028,6 +1028,7 @@ export default function App() {
             z-index: 1;
             pointer-events: none;
             opacity: 0.8;
+            filter: drop-shadow(0 0 3px rgba(0, 255, 65, 0.15));
           }
           
           .god-bg {

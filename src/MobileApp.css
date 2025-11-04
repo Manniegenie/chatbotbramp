@@ -1489,8 +1489,8 @@ a:focus-visible,
 }
 
 .mobile-app-logo {
-  width: 75px;
-  height: 75px;
+  width: 60px;
+  height: 60px;
   margin: 0 auto 12px;
   display: block;
   animation: fadeIn 0.5s ease-in-out;
@@ -1610,6 +1610,7 @@ a:focus-visible,
   z-index: 1;
   pointer-events: none;
   opacity: 0.8;
+  filter: drop-shadow(0 0 3px rgba(0, 255, 65, 0.15));
 }
 
 .god-bg {
