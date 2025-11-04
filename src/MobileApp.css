@@ -457,9 +457,9 @@ a {
     radial-gradient(1px 1px at 35.5% 60%, rgba(255,220,0,0.5), transparent),
     radial-gradient(1px 1px at 37.9% 95%, rgba(0,115,55,0.6), transparent),
     /* Deep space nebulae and cosmic clouds for depth */
-    radial-gradient(400px 400px at 20% 30%, rgba(255,255,255,0.02), transparent),
-    radial-gradient(350px 350px at 80% 70%, rgba(200,200,200,0.015), transparent),
-    radial-gradient(300px 300px at 50% 50%, rgba(255,255,255,0.02), transparent);
+    radial-gradient(400px 400px at 20% 30%, rgba(255,255,255,0.008), transparent),
+    radial-gradient(350px 350px at 80% 70%, rgba(200,200,200,0.006), transparent),
+    radial-gradient(300px 300px at 50% 50%, rgba(255,255,255,0.008), transparent);
   background-size: 100% 100%;
   background-position: 0 0;
   background-repeat: no-repeat;
