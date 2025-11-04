@@ -943,7 +943,7 @@ export default function App() {
           .input-centered-desktop {
             width: 100%;
             border-radius: 40px;
-            padding: 28px 28px 28px 56px;
+            padding: 28px 28px 28px 66px;
             font-size: 18px;
             caret-color: var(--accent);
             box-sizing: border-box;
