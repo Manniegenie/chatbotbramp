@@ -951,7 +951,7 @@ export default function App() {
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             border: none;
-            color: rgba(255, 255, 255, 0.85);
+            color: rgba(155, 163, 175, 0.8);
             outline: none;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37),
                         inset 0 1px 1px rgba(255, 255, 255, 0.1);
@@ -959,7 +959,7 @@ export default function App() {
           }
           
           .input-centered-desktop::placeholder {
-            color: white;
+            color: rgba(155, 163, 175, 0.8);
           }
           
           .input-centered-desktop:focus {
@@ -985,7 +985,7 @@ export default function App() {
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37),
                         inset 0 1px 1px rgba(255, 255, 255, 0.1);
             transition: all 0.3s ease;
-            color: white;
+            color: rgba(155, 163, 175, 0.8);
           }
           
           .send-btn-inline-desktop:hover:not(:disabled) {
@@ -1001,7 +1001,7 @@ export default function App() {
           .send-btn-inline-desktop:disabled {
             opacity: 1;
             cursor: not-allowed;
-            color: white;
+            color: rgba(155, 163, 175, 0.8);
           }
           
           .send-btn-inline-desktop svg {
