@@ -737,7 +737,12 @@ export default function MobileApp() {
                   />
                 </AnimatePresence>
               </div>
-              <div style={{ display: 'flex', gap: '8px', width: '100%', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '8px', width: '100%', alignItems: 'center', position: 'relative' }}>
+                <img
+                  src={AstronautImg}
+                  alt="Astronaut"
+                  className="astronaut-input"
+                />
                 <input
                   ref={inputRef}
                   className="mobile-input mobile-input-centered"
@@ -1063,11 +1068,6 @@ export default function MobileApp() {
           </div>
         </footer>
       )}
-      <img
-        src={AstronautImg}
-        alt="Astronaut"
-        className="astronaut-bg"
-      />
     </div>
   );
 }

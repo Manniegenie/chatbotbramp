@@ -943,7 +943,7 @@ export default function App() {
           .input-centered-desktop {
             width: 100%;
             border-radius: 40px;
-            padding: 28px;
+            padding: 28px 28px 28px 56px;
             font-size: 18px;
             caret-color: var(--accent);
             box-sizing: border-box;
@@ -1011,7 +1011,7 @@ export default function App() {
           }
           
           .send-btn-inline-desktop:not(:disabled) img[alt="Send"] {
-            filter: brightness(1.3) saturate(2) hue-rotate(110deg) drop-shadow(0 0 4px rgba(0, 255, 65, 0.4));
+            filter: brightness(0) saturate(100%) invert(27%) sepia(100%) saturate(1000%) hue-rotate(120deg) brightness(1.2);
           }
           
           .spinner-desktop {
@@ -1255,7 +1255,12 @@ export default function App() {
                       />
                     </AnimatePresence>
                   </div>
-                  <div style={{ display: 'flex', gap: '8px', width: '100%', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: '8px', width: '100%', alignItems: 'center', position: 'relative' }}>
+                    <img
+                      src={AstronautImg}
+                      alt="Astronaut"
+                      className="astronaut-input-desktop"
+                    />
                     <input
                       ref={inputRef}
                       className="input-centered-desktop"
@@ -1409,11 +1414,6 @@ export default function App() {
             </div>
           </footer>
         )}
-        <img
-          src={AstronautImg}
-          alt="Astronaut"
-          className="astronaut-bg"
-        />
       </div>
 
     </>
