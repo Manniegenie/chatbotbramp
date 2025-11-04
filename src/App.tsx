@@ -866,7 +866,7 @@ export default function App() {
             justify-content: center;
             gap: 12px;
             flex-wrap: wrap;
-            color: rgba(255, 255, 255, 0.7);
+            color: #DADADA;
           }
 
           .footer-links {
@@ -879,13 +879,13 @@ export default function App() {
 
           .footer a {
             font-size: 13px;
-            color: rgba(255, 255, 255, 0.6);
+            color: #DADADA;
             text-decoration: none;
             padding: 6px 0;
           }
           .footer a:hover {
             text-decoration: underline;
-            color: rgba(255, 255, 255, 0.9);
+            color: #DADADA;
           }
           
           .header-logo {
@@ -1013,7 +1013,7 @@ export default function App() {
             width: 20px;
             height: 20px;
             border: 2px solid transparent;
-            border-top: 2px solid white;
+            border-top: 2px solid #DADADA;
             border-radius: 50%;
             animation: spin 1s linear infinite;
           }
@@ -1058,13 +1058,13 @@ export default function App() {
             </div>
           ) : (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <button className="btn" onClick={handleSellClick} style={{ color: '#fff' }}>
+              <button className="btn" onClick={handleSellClick} style={{ color: '#DADADA' }}>
                 Sell
               </button>
               <button className="btn" onClick={handleKycClick} style={{ opacity: 0.6, cursor: 'not-allowed' }}>
                 KYC
               </button>
-              <button className="btn" onClick={handleGameClick} style={{ color: '#fff', border: '2px solid var(--accent)' }}>
+              <button className="btn" onClick={handleGameClick} style={{ color: '#DADADA', border: '2px solid var(--accent)' }}>
                 Game
               </button>
               <button className="btn" onClick={signOut}>
@@ -1304,7 +1304,7 @@ export default function App() {
                       justifyContent: 'center',
                       padding: '0',
                       background: loading || !input.trim() ? 'transparent' : 'var(--accent)',
-                      color: 'white',
+                      color: '#DADADA',
                       border: loading || !input.trim() ? 'none' : 'none',
                       cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
                       transition: 'all 0.2s ease',
@@ -1329,7 +1329,7 @@ export default function App() {
                         width: '16px',
                         height: '16px',
                         border: '2px solid transparent',
-                        borderTop: '2px solid white',
+                        borderTop: '2px solid #DADADA',
                         borderRadius: '50%',
                         animation: 'spin 1s linear infinite'
                       }} />
@@ -1339,7 +1339,7 @@ export default function App() {
                         height="18"
                         viewBox="0 0 24 24"
                         fill="none"
-                        stroke="white"
+                        stroke="#DADADA"
                         strokeWidth="2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
