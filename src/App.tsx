@@ -993,10 +993,6 @@ export default function App() {
             box-shadow: none;
           }
           
-          .send-btn-inline-desktop:not(:disabled) img {
-            filter: brightness(1.2) saturate(1.5) hue-rotate(120deg);
-          }
-          
           .send-btn-inline-desktop:disabled {
             opacity: 1;
             cursor: not-allowed;
@@ -1008,7 +1004,14 @@ export default function App() {
             height: 52px;
             object-fit: contain;
             transition: filter 0.3s ease;
+          }
+          
+          .send-btn-inline-desktop:disabled img {
             filter: brightness(0.8) saturate(0.5);
+          }
+          
+          .send-btn-inline-desktop:not(:disabled) img[alt="Send"] {
+            filter: brightness(1.3) saturate(2) hue-rotate(110deg) drop-shadow(0 0 4px rgba(0, 255, 65, 0.4));
           }
           
           .spinner-desktop {
