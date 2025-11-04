@@ -205,13 +205,14 @@ a:hover { opacity: .92; }
 .bubble.user .role { color: var(--muted); }
 .bubble.assistant .role { color: var(--accent); font-weight: 700; }
 
-.bubble .text { white-space: pre-wrap; word-wrap: break-word; }
+.bubble .text { white-space: pre-wrap; word-wrap: break-word; color: rgba(255, 255, 255, 0.7); }
 .bubble .text strong { font-weight: bold; }
 .bubble.assistant .text { 
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", Arial, "Apple Color Emoji", "Segoe UI Emoji"; 
   font-size: 14px;
   text-align: left;
   line-height: 1.4;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 /* CTA buttons inside messages */

@@ -19,6 +19,7 @@ import TronIcon from './assets/tron.png'
 import BitcoinIcon from './assets/bicoin.png'
 import XrpIcon from './assets/xrp.png'
 import ShibaIcon from './assets/shiba-inu.png'
+import AstronautImg from './assets/astronaut.png'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -1010,6 +1011,17 @@ export default function App() {
             border-radius: 50%;
             animation: spin 1s linear infinite;
           }
+          
+          .astronaut-bg {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 60px;
+            height: auto;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.8;
+          }
         `}
       </style>
       <div className="page">
@@ -1382,6 +1394,11 @@ export default function App() {
             </div>
           </footer>
         )}
+        <img
+          src={AstronautImg}
+          alt="Astronaut"
+          className="astronaut-bg"
+        />
       </div>
 
     </>

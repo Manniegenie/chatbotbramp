@@ -365,13 +365,14 @@ a {
     100% 100%,
     100% 100%,
     100% 100%,
-    30px auto;
+    60px auto;
   background-position: 
     0 0,
     0 0,
     0 0,
     5% 85%;
-  background-repeat: no-repeat;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
+  position: relative;
   z-index: -1;
   pointer-events: none;
   opacity: 1;
@@ -411,6 +412,8 @@ a {
     background-position: 100% 100%;
   }
 }
+
+
 
 @supports (-webkit-touch-callout: none) {
   .mobile-page {
@@ -822,6 +825,7 @@ a {
   overflow-wrap: break-word;
   hyphens: auto;
   box-shadow: none;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .mobile-bubble.assistant .mobile-bubble-content {
@@ -1499,6 +1503,17 @@ a:focus-visible,
 .mobile-footer-links-bottom a:hover {
   color: rgba(255, 255, 255, 0.9);
   text-decoration: underline;
+}
+
+.astronaut-bg {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  width: 60px;
+  height: auto;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.8;
 }
 
 
