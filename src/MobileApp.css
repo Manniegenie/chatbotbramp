@@ -1143,7 +1143,7 @@ a {
   min-width: 48px;
   min-height: 48px;
   border-radius: 50%;
-  border: 2px solid transparent;
+  border: 2px solid white;
   background: transparent;
   color: white;
   display: flex;
@@ -1180,7 +1180,7 @@ a {
 }
 
 .mobile-send-btn:not(:disabled) {
-  border-color: white;
+  border-color: transparent;
 }
 
 .mobile-send-btn:not(:disabled) img[alt="Send"] {
@@ -1575,7 +1575,7 @@ a:focus-visible,
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid transparent;
+  border: 2px solid white;
   cursor: pointer;
   padding: 0;
   flex-shrink: 0;
@@ -1591,7 +1591,7 @@ a:focus-visible,
 
 .mobile-send-inline:not(:disabled) {
   color: #007337;
-  border-color: white;
+  border-color: transparent;
 }
 
 .mobile-send-inline:disabled {

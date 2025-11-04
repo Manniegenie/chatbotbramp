@@ -979,7 +979,7 @@ export default function App() {
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 2px solid transparent;
+            border: 2px solid white;
             cursor: pointer;
             padding: 0;
             flex-shrink: 0;
@@ -995,7 +995,7 @@ export default function App() {
           
           .send-btn-inline-desktop:not(:disabled) {
             color: #007337;
-            border-color: white;
+            border-color: transparent;
           }
           
           .send-btn-inline-desktop:disabled {
