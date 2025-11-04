@@ -738,6 +738,9 @@ export default function App() {
             -webkit-overflow-scrolling: touch;
             scrollbar-width: thin;
             scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
           }
 
           /* Hide scrollbar by default, show on hover/scroll */
@@ -951,7 +954,7 @@ export default function App() {
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             border: none;
-            color: rgba(155, 163, 175, 0.8);
+            color: #DADADA;
             outline: none;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37),
                         inset 0 1px 1px rgba(255, 255, 255, 0.1);
@@ -959,7 +962,7 @@ export default function App() {
           }
           
           .input-centered-desktop::placeholder {
-            color: rgba(155, 163, 175, 0.8);
+            color: #DADADA;
           }
           
           .input-centered-desktop:focus {
@@ -1020,7 +1023,7 @@ export default function App() {
           
           .astronaut-bg {
             position: fixed;
-            bottom: calc(50% - 30px);
+            bottom: calc(50% - 60px);
             left: 20px;
             width: 20px;
             height: auto;

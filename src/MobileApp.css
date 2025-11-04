@@ -970,6 +970,9 @@ a {
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
   overscroll-behavior: contain;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .mobile-messages::-webkit-scrollbar {
@@ -1638,12 +1641,12 @@ a:focus-visible,
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37),
               inset 0 1px 1px rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
-  color: rgba(155, 163, 175, 0.8);
+  color: #DADADA;
   outline: none;
 }
 
 .mobile-input-centered::placeholder {
-  color: rgba(155, 163, 175, 0.8);
+  color: #DADADA;
 }
 
 .mobile-input-centered:focus {
@@ -1711,7 +1714,7 @@ a:focus-visible,
 
 .astronaut-bg {
   position: fixed;
-  bottom: calc(50% - 30px);
+  bottom: calc(50% - 60px);
   left: 20px;
   width: 20px;
   height: auto;
