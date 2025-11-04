@@ -949,11 +949,15 @@ export default function App() {
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             border: none;
-            color: var(--txt);
+            color: rgba(255, 255, 255, 0.85);
             outline: none;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37),
                         inset 0 1px 1px rgba(255, 255, 255, 0.1);
             transition: all 0.3s ease;
+          }
+          
+          .input-centered-desktop::placeholder {
+            color: rgba(255, 255, 255, 0.5);
           }
           
           .input-centered-desktop:focus {
@@ -979,7 +983,7 @@ export default function App() {
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37),
                         inset 0 1px 1px rgba(255, 255, 255, 0.1);
             transition: all 0.3s ease;
-            color: var(--txt);
+            color: rgba(255, 255, 255, 0.85);
           }
           
           .send-btn-inline-desktop:hover:not(:disabled) {
