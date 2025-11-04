@@ -123,6 +123,7 @@ a {
   inset: 0;
   will-change: auto;
   background-color: #000000;
+  box-shadow: inset 0 0 0 9999px rgba(0, 0, 0, 0.3);
   background-image: 
     /* Large bright stars */
     radial-gradient(2px 2px at 15% 20%, rgba(255,255,255,0.95), transparent),
@@ -1130,7 +1131,7 @@ a {
 }
 
 .mobile-send-btn:not(:disabled) img[alt="Send"] {
-  filter: brightness(0) saturate(100%) invert(22%) sepia(100%) saturate(7404%) hue-rotate(143deg) brightness(0.45);
+  filter: brightness(0) saturate(100%) invert(48%) sepia(100%) saturate(1000%) hue-rotate(120deg) brightness(0.67);
 }
 
 .mobile-send-btn img[alt="Mic"] {
@@ -1557,7 +1558,7 @@ a:focus-visible,
 }
 
 .mobile-send-inline:not(:disabled) img[alt="Send"] {
-  filter: brightness(0) saturate(100%) invert(22%) sepia(100%) saturate(7404%) hue-rotate(143deg) brightness(0.45);
+  filter: brightness(0) saturate(100%) invert(48%) sepia(100%) saturate(1000%) hue-rotate(120deg) brightness(0.67);
 }
 
 .mobile-footer-links-bottom {
