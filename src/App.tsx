@@ -1039,7 +1039,7 @@ export default function App() {
             z-index: 1;
             pointer-events: none;
             opacity: 0.8;
-            transform: rotate(-240deg);
+            transform: rotate(-480deg);
           }
         `}
       </style>
