@@ -979,7 +979,7 @@ export default function App() {
             display: flex;
             align-items: center;
             justify-content: center;
-            border: none;
+            border: 2px solid transparent;
             cursor: pointer;
             padding: 0;
             flex-shrink: 0;
@@ -995,6 +995,7 @@ export default function App() {
           
           .send-btn-inline-desktop:not(:disabled) {
             color: #007337;
+            border-color: white;
           }
           
           .send-btn-inline-desktop:disabled {
@@ -1011,11 +1012,11 @@ export default function App() {
           }
           
           .send-btn-inline-desktop:disabled img {
-            filter: brightness(0.8) saturate(0.5);
+            filter: brightness(0) saturate(100%) invert(86%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(105%);
           }
           
           .send-btn-inline-desktop:not(:disabled) img[alt="Send"] {
-            filter: brightness(0) saturate(100%) invert(27%) sepia(100%) saturate(1000%) hue-rotate(120deg) brightness(0.7);
+            filter: brightness(0) saturate(100%) invert(15%) sepia(100%) saturate(1200%) hue-rotate(120deg) brightness(0.45);
           }
           
           .spinner-desktop {
