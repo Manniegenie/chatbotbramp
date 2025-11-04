@@ -874,12 +874,12 @@ a {
   font-size: 14px;
   text-align: left;
   line-height: 1.4;
-  background: rgba(155, 163, 175, 0.2);
+  background: rgba(155, 163, 175, 0.1);
 }
 .mobile-bubble .mobile-bubble-content strong { font-weight: bold; }
 
 .mobile-bubble.user .mobile-bubble-content {
-  background: rgba(0, 255, 65, 0.2);
+  background: rgba(0, 255, 65, 0.1);
   border: none;
 }
 
