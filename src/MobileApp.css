@@ -358,20 +358,10 @@ a {
     /* Deep space nebulae and cosmic clouds for depth */
     radial-gradient(400px 400px at 20% 30%, rgba(255,255,255,0.02), transparent),
     radial-gradient(350px 350px at 80% 70%, rgba(200,200,200,0.015), transparent),
-    radial-gradient(300px 300px at 50% 50%, rgba(255,255,255,0.02), transparent),
-    /* Astronaut image - bottom left */
-    url('../assets/astronaut.png');
-  background-size: 
-    100% 100%,
-    100% 100%,
-    100% 100%,
-    60px auto;
-  background-position: 
-    0 0,
-    0 0,
-    0 0,
-    5% 85%;
-  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
+    radial-gradient(300px 300px at 50% 50%, rgba(255,255,255,0.02), transparent);
+  background-size: 100% 100%;
+  background-position: 0 0;
+  background-repeat: no-repeat;
   position: relative;
   z-index: -1;
   pointer-events: none;
@@ -1444,7 +1434,7 @@ a:focus-visible,
 }
 
 .mobile-input-centered::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  color: white;
 }
 
 .mobile-input-centered:focus {
@@ -1470,7 +1460,7 @@ a:focus-visible,
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37),
               inset 0 1px 1px rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
-  color: rgba(255, 255, 255, 0.85);
+  color: white;
 }
 
 .mobile-send-inline:hover:not(:disabled) {
@@ -1479,9 +1469,14 @@ a:focus-visible,
               inset 0 1px 1px rgba(255, 255, 255, 0.15);
 }
 
+.mobile-send-inline:not(:disabled) {
+  color: #007337;
+}
+
 .mobile-send-inline:disabled {
-  opacity: 0.3;
+  opacity: 1;
   cursor: not-allowed;
+  color: white;
 }
 
 .mobile-footer-links-bottom {
@@ -1507,9 +1502,9 @@ a:focus-visible,
 
 .astronaut-bg {
   position: fixed;
-  bottom: 20px;
+  bottom: 50%;
   left: 20px;
-  width: 60px;
+  width: 40px;
   height: auto;
   z-index: 1;
   pointer-events: none;
