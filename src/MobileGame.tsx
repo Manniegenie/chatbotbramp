@@ -3,7 +3,7 @@ import './MobileApp.css';
 import './MobileGame.css';
 import asteroidImg from './assets/asteroid.png';
 import { authFetch } from './lib/tokenManager';
-import AstronautImg from './assets/astronout.png';
+import AstronautImg from './assets/astronaut.png';
 
 const GRID_ROWS = 3;
 const GRID_COLS = 4;
