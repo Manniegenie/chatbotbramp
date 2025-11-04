@@ -1119,8 +1119,8 @@ a {
 
 .mobile-send-btn img {
   flex-shrink: 0;
-  width: 43px;
-  height: 43px;
+  width: 24px;
+  height: 24px;
   object-fit: contain;
   transition: filter 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -1546,8 +1546,8 @@ a:focus-visible,
 }
 
 .mobile-send-inline img {
-  width: 31px;
-  height: 31px;
+  width: 24px;
+  height: 24px;
   object-fit: contain;
   transition: filter 0.3s ease;
 }
