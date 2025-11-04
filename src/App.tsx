@@ -1019,7 +1019,7 @@ export default function App() {
           
           .astronaut-bg {
             position: fixed;
-            bottom: 50%;
+            bottom: calc(50% - 10px);
             left: 20px;
             width: 40px;
             height: auto;
