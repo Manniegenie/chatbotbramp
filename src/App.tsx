@@ -1014,7 +1014,7 @@ export default function App() {
           }
           
           .send-btn-inline-desktop:not(:disabled) img[alt="Send"] {
-            filter: brightness(0) saturate(100%) invert(48%) sepia(100%) saturate(1000%) hue-rotate(120deg) brightness(0.67);
+            filter: brightness(0) saturate(100%) invert(22%) sepia(100%) saturate(7404%) hue-rotate(143deg) brightness(0.45);
           }
           
           .spinner-desktop {
