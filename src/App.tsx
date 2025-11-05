@@ -20,6 +20,7 @@ import BitcoinIcon from './assets/bicoin.png'
 import XrpIcon from './assets/xrp.png'
 import ShibaIcon from './assets/shiba-inu.png'
 import RocketImg from './assets/rocket.png'
+import Rocket1Img from './assets/rocket-1.png'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -1014,7 +1015,7 @@ export default function App() {
           }
           
           .send-btn-inline-desktop:not(:disabled) img[alt="Send"] {
-            filter: brightness(0) saturate(100%) invert(22%) sepia(100%) saturate(7404%) hue-rotate(143deg) brightness(0.45);
+            filter: none;
           }
           
           .spinner-desktop {
@@ -1265,7 +1266,7 @@ export default function App() {
                         <div className="spinner-desktop" />
                       ) : (
                         <img
-                          src={RocketImg}
+                          src={input.trim() ? Rocket1Img : RocketImg}
                           alt="Send"
                         />
                       )}

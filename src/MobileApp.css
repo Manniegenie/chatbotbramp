@@ -1201,7 +1201,7 @@ a {
 }
 
 .mobile-send-btn:not(:disabled) img[alt="Send"] {
-  filter: brightness(0) saturate(100%) invert(22%) sepia(100%) saturate(7404%) hue-rotate(143deg) brightness(0.45);
+  filter: none;
 }
 
 .mobile-send-btn img[alt="Mic"] {
@@ -1628,7 +1628,7 @@ a:focus-visible,
 }
 
 .mobile-send-inline:not(:disabled) img[alt="Send"] {
-  filter: brightness(0) saturate(100%) invert(22%) sepia(100%) saturate(7404%) hue-rotate(143deg) brightness(0.45);
+  filter: none;
 }
 
 .mobile-footer-links-bottom {
