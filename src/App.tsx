@@ -951,7 +951,7 @@ export default function App() {
             background: rgba(18, 18, 26, 0.2);
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: none;
+            border: 1px solid transparent;
             color: #DADADA;
             outline: none;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37),
@@ -965,6 +965,7 @@ export default function App() {
           
           .input-centered-desktop:focus {
             background: rgba(18, 18, 26, 0.3);
+            border: 1px solid #007337;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
                         inset 0 1px 1px rgba(255, 255, 255, 0.15);
           }

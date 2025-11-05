@@ -1564,7 +1564,7 @@ a:focus-visible,
   background: rgba(18, 18, 26, 0.2);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: none;
+  border: 1px solid transparent;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37),
               inset 0 1px 1px rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
@@ -1578,6 +1578,7 @@ a:focus-visible,
 
 .mobile-input-centered:focus {
   background: rgba(18, 18, 26, 0.3);
+  border: 1px solid #007337;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
               inset 0 1px 1px rgba(255, 255, 255, 0.15);
 }
