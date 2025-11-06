@@ -8,10 +8,10 @@
       "has": [
         {
           "type": "host",
-          "value": "chatbramp.com"
+          "value": "www.chatbramp.com"
         }
       ],
-      "destination": "https://www.chatbramp.com/$1",
+      "destination": "https://chatbramp.com/$1",
       "permanent": true
     },
     {
@@ -19,7 +19,7 @@
       "has": [
         {
           "type": "host",
-          "value": "www.chatbramp.com"
+          "value": "chatbramp.com"
         },
         {
           "type": "header",
@@ -27,7 +27,7 @@
           "value": "http"
         }
       ],
-      "destination": "https://www.chatbramp.com/$1",
+      "destination": "https://chatbramp.com/$1",
       "permanent": true
     }
   ],

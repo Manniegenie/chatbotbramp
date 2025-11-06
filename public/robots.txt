@@ -4,6 +4,6 @@ Allow: /
 # Disallow build artifacts
 Disallow: /assets/
 
-Sitemap: https://www.chatbramp.com/sitemap.xml
+Sitemap: https://chatbramp.com/sitemap.xml
 
 

@@ -1032,11 +1032,11 @@ export default function MobileApp() {
             </a>
             <a
               className="mobile-menu-item"
-              href="/terms"
+              href="https://www.instagram.com/chatbramp/"
               target="_blank"
               rel="noopener noreferrer"
             >
-              Terms of Service
+              Instagram
             </a>
           </div>
         </div>
@@ -1056,7 +1056,7 @@ export default function MobileApp() {
           <div className="mobile-footer-links-bottom">
             <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
             <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
-            <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>
+            <a href="https://www.instagram.com/chatbramp/" target="_blank" rel="noopener noreferrer">Instagram</a>
             <a href="https://www.youtube.com/@Chatbramp" target="_blank" rel="noopener noreferrer">YouTube</a>
             <a href="https://x.com/Chatbramp" target="_blank" rel="noopener noreferrer">Twitter</a>
             <a href="https://medium.com/@chatbramp" target="_blank" rel="noopener noreferrer">Medium</a>
