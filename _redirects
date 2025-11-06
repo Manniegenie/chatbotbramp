@@ -1,5 +1,2 @@
-# Redirects handled by Vercel (vercel.json)
-# This file is kept for reference but redirects are managed in vercel.json
-
-# Handle trailing slash consistently (SPA fallback)
+# No redirects - SPA fallback only
 /* /index.html 200
