@@ -19,8 +19,7 @@ import TronIcon from './assets/tron.png'
 import BitcoinIcon from './assets/bicoin.png'
 import XrpIcon from './assets/xrp.png'
 import ShibaIcon from './assets/shiba-inu.png'
-import RocketImg from './assets/rocket.png'
-import Rocket1Img from './assets/rocket-1.png'
+import AstronautImg from './assets/astronaut.png'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -1004,19 +1003,23 @@ export default function App() {
             color: rgba(155, 163, 175, 0.8);
           }
           
-          .send-btn-inline-desktop img {
+          .send-btn-inline-desktop .send-icon {
             width: 24px;
             height: 24px;
             object-fit: contain;
-            transition: filter 0.3s ease;
+            transition: filter 0.3s ease, opacity 0.3s ease;
+            filter: brightness(0) saturate(100%) invert(80%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(80%);
+            opacity: 0.85;
           }
           
-          .send-btn-inline-desktop:disabled img {
+          .send-btn-inline-desktop .send-icon.send-icon--active {
+            filter: brightness(0) saturate(100%) invert(33%) sepia(82%) saturate(627%) hue-rotate(106deg) brightness(93%) contrast(88%);
+            opacity: 1;
+          }
+          
+          .send-btn-inline-desktop:disabled .send-icon {
             filter: brightness(0) saturate(100%) invert(85%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(70%);
-          }
-          
-          .send-btn-inline-desktop:not(:disabled) img[alt="Send"] {
-            filter: none;
+            opacity: 0.5;
           }
           
           .spinner-desktop {
@@ -1267,8 +1270,9 @@ export default function App() {
                         <div className="spinner-desktop" />
                       ) : (
                         <img
-                          src={input.trim() ? Rocket1Img : RocketImg}
+                          src={AstronautImg}
                           alt="Send"
+                          className={`send-icon ${input.trim() ? 'send-icon--active' : ''}`}
                         />
                       )}
                     </button>

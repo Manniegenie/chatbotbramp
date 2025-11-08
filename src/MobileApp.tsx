@@ -17,8 +17,7 @@ import TronIcon from './assets/tron.png'
 import BitcoinIcon from './assets/bicoin.png'
 import XrpIcon from './assets/xrp.png'
 import ShibaIcon from './assets/shiba-inu.png'
-import RocketImg from './assets/rocket.png'
-import Rocket1Img from './assets/rocket-1.png'
+import AstronautImg from './assets/astronaut.png'
 import './MobileApp.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
@@ -757,8 +756,9 @@ export default function MobileApp() {
                     <div className="mobile-spinner" />
                   ) : (
                     <img
-                      src={input.trim() ? Rocket1Img : RocketImg}
+                      src={AstronautImg}
                       alt="Send"
+                      className={`send-icon ${input.trim() ? 'send-icon--active' : ''}`}
                     />
                   )}
                 </button>
@@ -808,8 +808,9 @@ export default function MobileApp() {
                     <div className="mobile-spinner" />
                   ) : (
                     <img
-                      src={input.trim() ? Rocket1Img : RocketImg}
+                      src={AstronautImg}
                       alt="Send"
+                      className={`send-icon ${input.trim() ? 'send-icon--active' : ''}`}
                     />
                   )}
                 </button>
