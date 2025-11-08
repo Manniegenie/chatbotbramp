@@ -1017,8 +1017,8 @@ export default function App() {
           }
           
           .send-btn-inline-desktop:disabled .send-icon {
-            filter: brightness(0) saturate(100%) invert(85%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(70%);
-            opacity: 0.5;
+            filter: none;
+            opacity: 0.6;
           }
           
           .spinner-desktop {
