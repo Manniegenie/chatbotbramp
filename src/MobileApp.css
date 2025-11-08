@@ -1244,8 +1244,8 @@ a {
 
 .mobile-send-btn .send-icon {
   flex-shrink: 0;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
   transition: filter 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   filter: none;
@@ -1675,8 +1675,8 @@ a:focus-visible,
 }
 
 .mobile-send-inline .send-icon {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
   filter: none;
   opacity: 1;

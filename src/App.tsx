@@ -1004,8 +1004,8 @@ export default function App() {
           }
           
           .send-btn-inline-desktop .send-icon {
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             object-fit: contain;
             transition: filter 0.3s ease, opacity 0.3s ease;
             filter: none;
