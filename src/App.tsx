@@ -1008,8 +1008,8 @@ export default function App() {
             height: 24px;
             object-fit: contain;
             transition: filter 0.3s ease, opacity 0.3s ease;
-            filter: brightness(0) saturate(100%) invert(80%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(80%);
-            opacity: 0.85;
+            filter: none;
+            opacity: 1;
           }
           
           .send-btn-inline-desktop .send-icon.send-icon--active {

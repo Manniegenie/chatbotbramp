@@ -1245,8 +1245,8 @@ a {
   height: 24px;
   object-fit: contain;
   transition: filter 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  filter: brightness(0) saturate(100%) invert(80%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(80%);
-  opacity: 0.85;
+  filter: none;
+  opacity: 1;
 }
 
 .mobile-send-btn .send-icon.send-icon--active {
@@ -1676,6 +1676,8 @@ a:focus-visible,
   width: 24px;
   height: 24px;
   object-fit: contain;
+  filter: none;
+  opacity: 1;
 }
 
 .mobile-footer-links-bottom {
