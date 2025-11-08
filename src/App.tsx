@@ -1013,7 +1013,6 @@ export default function App() {
           }
           
           .send-btn-inline-desktop .send-icon.send-icon--active {
-            filter: brightness(0) saturate(100%) invert(33%) sepia(82%) saturate(627%) hue-rotate(106deg) brightness(93%) contrast(88%);
             opacity: 1;
           }
           
@@ -1071,13 +1070,13 @@ export default function App() {
             </div>
           ) : (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <button className="btn" onClick={handleSellClick} style={{ color: '#DADADA' }}>
+              <button className="btn" onClick={handleSellClick}>
                 Sell
               </button>
               <button className="btn" onClick={handleKycClick} style={{ opacity: 0.6, cursor: 'not-allowed' }}>
                 KYC
               </button>
-              <button className="btn" onClick={handleGameClick} style={{ color: '#DADADA', border: '2px solid var(--accent)' }}>
+              <button className="btn" onClick={handleGameClick}>
                 Game
               </button>
               <button className="btn" onClick={signOut}>

@@ -683,27 +683,30 @@ a {
 }
 
 .mobile-sell-btn {
-  padding: 10px 14px;
+  padding: 8px 16px;
   border-radius: 10px;
   font-size: 14px;
-  font-weight: 700;
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
+  font-weight: 600;
   border: 1px solid rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(15px);
+  background: transparent;
+  color: #fff;
+  min-height: 36px;
   cursor: pointer;
-  transition: box-shadow .18s ease, transform .08s ease, opacity .2s ease, background .2s ease, border-color .2s ease;
+  transition: transform 0.08s ease, box-shadow 0.18s ease, border-color 0.2s ease, opacity 0.2s ease;
 }
-.mobile-sell-btn:hover { box-shadow: 0 0 0 4px rgba(0,115,55,.12); transform: translateY(-1px); }
-.mobile-sell-btn:active { transform: translateY(1px); }
-.mobile-sell-btn:focus-visible { outline: none; box-shadow: 0 0 0 4px rgba(0,115,55,.25); }
 
-.mobile-sell-btn.mobile-sell-btn--no-border {
-  border: none;
+.mobile-sell-btn:hover {
+  box-shadow: 0 0 0 3px rgba(0, 115, 55, 0.18);
+  transform: translateY(-1px);
 }
 
 .mobile-sell-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.96);
+}
+
+.mobile-sell-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 115, 55, 0.25);
 }
 
 .mobile-menu-btn {
@@ -1250,7 +1253,6 @@ a {
 }
 
 .mobile-send-btn .send-icon.send-icon--active {
-  filter: brightness(0) saturate(100%) invert(33%) sepia(82%) saturate(627%) hue-rotate(106deg) brightness(93%) contrast(88%);
   opacity: 1;
 }
 

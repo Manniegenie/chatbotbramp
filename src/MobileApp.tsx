@@ -963,7 +963,7 @@ export default function MobileApp() {
             ) : (
               <>
                 <button
-                  className="btn mobile-sell-btn mobile-sell-btn--no-border"
+                  className="btn mobile-sell-btn"
                   onClick={handleSellClick}
                   aria-label="Sell Crypto"
                 >
