@@ -10,8 +10,7 @@ body{ margin:0; background:transparent; color:var(--txt); font-family: -apple-sy
   position:fixed;
   inset:0;
   z-index:-2;
-  will-change:opacity;
-  background-image: url('./assets/wallpaper1-optimized.jpg');
+  background-image: url('https://res.cloudinary.com/diqa4lkys/image/upload/v1762881864/wallpaper1_vcnomb.jpg');
   background-size:cover;
   background-position:center;
   background-repeat:no-repeat;
@@ -25,19 +24,7 @@ body{ margin:0; background:transparent; color:var(--txt); font-family: -apple-sy
 }
 
 .page::after {
-  content:'';
-  position:fixed;
-  inset:0;
-  z-index:-1;
-  pointer-events:none;
-  background:transparent;
-  opacity:0;
-  transition:background .3s ease, opacity .3s ease;
-}
-
-.page.page--overlay::after {
-  background:rgba(0,0,0,0.45);
-  opacity:1;
+  content:none;
 }
 
 .header{ position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:none; background:transparent }

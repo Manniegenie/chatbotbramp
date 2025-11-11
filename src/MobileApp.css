@@ -122,26 +122,16 @@ a {
   position: fixed;
   inset: 0;
   z-index: -2;
-  will-change: opacity;
-  background-image: url('./assets/wallpaper1-optimized.jpg');
+  background-image: url('https://res.cloudinary.com/diqa4lkys/image/upload/v1762881864/wallpaper1_vcnomb.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: scroll;
-  image-rendering: auto;
-  filter: none;
 }
 
 .mobile-page::after,
 .page::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background: transparent;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  content: none;
 }
 
 .mobile-page.mobile-page--overlay::after,
