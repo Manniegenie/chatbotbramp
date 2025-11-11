@@ -299,6 +299,9 @@ export default function App() {
   const [currentIconIndex, setCurrentIconIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  const overlayActive = showSignIn || showSignUp || showSell || showVoiceChat
+  const pageClassName = overlayActive ? 'page page--overlay' : 'page'
+
   // Parse **text** to <strong>text</strong>
   function parseBoldText(text: string): string {
     return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -595,7 +598,7 @@ export default function App() {
 
   if (showGame) {
     return (
-      <div className="page" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+      <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
         <MobileGame onClose={() => setShowGame(false)} />
       </div>
     );
@@ -623,7 +626,7 @@ export default function App() {
 
   if (showSell) {
     return (
-      <div className="page" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+      <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
         <SellModal
           open={showSell}
           onClose={() => setShowSell(false)}
@@ -636,7 +639,7 @@ export default function App() {
 
   if (showSignIn) {
     return (
-      <div className="page" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+      <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
         <SignIn
           onCancel={() => { setShowSignIn(false); setOpenSellAfterAuth(false) }}
           onSuccess={(res) => {
@@ -655,7 +658,7 @@ export default function App() {
 
   if (showSignUp) {
     return (
-      <div className="page" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+      <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
         <SignUp
           onCancel={() => setShowSignUp(false)}
           onSuccess={(res: SignUpResult) => {
@@ -1010,6 +1013,7 @@ export default function App() {
             transition: filter 0.3s ease, opacity 0.3s ease;
             filter: none;
             opacity: 1;
+            image-rendering: auto;
           }
           
           .send-btn-inline-desktop .send-icon.send-icon--active {
@@ -1042,7 +1046,7 @@ export default function App() {
           }
         `}
       </style>
-      <div className="page">
+      <div className={pageClassName}>
         <header ref={headerRef} className="header">
           <div className="brand">
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

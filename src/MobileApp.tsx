@@ -276,6 +276,9 @@ export default function MobileApp() {
   const icons = [TetherIcon, SolanaIcon, TronIcon, BitcoinIcon, XrpIcon, ShibaIcon]
   const [currentIconIndex, setCurrentIconIndex] = useState(0)
 
+  const overlayActive = showSignIn || showSignUp || showSell || showVoiceChat || showMenu
+  const pageClassName = overlayActive ? 'mobile-page mobile-page--overlay' : 'mobile-page'
+
   // Debug ticker
   useEffect(() => {
     console.log('Mobile ticker text:', tickerText)
@@ -843,7 +846,7 @@ export default function MobileApp() {
 
   if (showGame) {
     return (
-      <div className="mobile-page" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+      <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
         <MobileGame onClose={() => setShowGame(false)} />
       </div>
     );
@@ -851,7 +854,7 @@ export default function MobileApp() {
 
   if (showVoiceChat) {
     return (
-      <div className="mobile-page" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+      <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
         <MobileVoiceChat
           onClose={() => setShowVoiceChat(false)}
           onMessage={(text) => {
@@ -872,7 +875,7 @@ export default function MobileApp() {
 
   if (showSell) {
     return (
-      <div className="mobile-page" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+      <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
         <MobileSell
           open={showSell}
           onClose={() => setShowSell(false)}
@@ -885,7 +888,7 @@ export default function MobileApp() {
 
   if (showSignIn) {
     return (
-      <div className="mobile-page" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+      <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
         <MobileSignIn
           onCancel={() => {
             setShowSignIn(false);
@@ -912,7 +915,7 @@ export default function MobileApp() {
 
   if (showSignUp) {
     return (
-      <div className="mobile-page" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+      <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
         <MobileSignUp
           onCancel={() => setShowSignUp(false)}
           onSuccess={(_res: SignUpResult) => {
@@ -931,7 +934,7 @@ export default function MobileApp() {
 
   // Normal (non-game) mobile app UI
   return (
-    <div className="mobile-page">
+    <div className={pageClassName}>
       <header className="mobile-header">
         <div className="mobile-header-top">
           <div className="mobile-brand">
