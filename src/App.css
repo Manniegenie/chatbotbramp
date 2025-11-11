@@ -11,10 +11,11 @@ body{ margin:0; background:transparent; color:var(--txt); font-family: -apple-sy
   inset:0;
   z-index:-2;
   will-change:opacity;
-  background-image: linear-gradient(180deg, rgba(12, 16, 22, 0.55), rgba(12, 16, 22, 0.65)), url('./assets/wallpaper1.jpg');
+  background-image: url('./assets/wallpaper1.jpg');
   background-size:cover;
   background-position:center;
   background-repeat:no-repeat;
+  background-attachment:fixed;
 }
 
 .page::after {
@@ -23,14 +24,13 @@ body{ margin:0; background:transparent; color:var(--txt); font-family: -apple-sy
   inset:0;
   z-index:-1;
   pointer-events:none;
-  background:rgba(0,0,0,0);
-  opacity:0;
-  transition:opacity .3s ease;
+  background:rgba(7,10,14,0.32);
+  opacity:1;
+  transition:background .3s ease;
 }
 
 .page.page--overlay::after {
-  background: rgba(6, 9, 12, 0.35);
-  opacity: 1;
+  background:rgba(6,9,12,0.55);
 }
 
 .header{ position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:none; background:transparent }
