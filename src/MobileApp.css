@@ -571,13 +571,16 @@ a {
   font-size: 14px;
   text-align: left;
   line-height: 1.4;
-  background: rgba(155, 163, 175, 0.1);
+  background: rgba(15, 19, 26, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 .mobile-bubble .mobile-bubble-content strong { font-weight: bold; }
 
 .mobile-bubble.user .mobile-bubble-content {
-  background: rgba(0, 255, 65, 0.1);
-  border: none;
+  background: rgba(15, 19, 26, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
 .mobile-bubble-content p {
