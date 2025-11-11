@@ -276,7 +276,7 @@ export default function MobileApp() {
   const icons = [TetherIcon, SolanaIcon, TronIcon, BitcoinIcon, XrpIcon, ShibaIcon]
   const [currentIconIndex, setCurrentIconIndex] = useState(0)
 
-  const overlayActive = showSignIn || showSignUp || showSell || showVoiceChat || showMenu
+  const overlayActive = showSignIn || showSignUp || showSell || showVoiceChat || showMenu || !showCenteredInput
   const pageClassName = overlayActive ? 'mobile-page mobile-page--overlay' : 'mobile-page'
 
   // Debug ticker

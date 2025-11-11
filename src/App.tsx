@@ -299,7 +299,7 @@ export default function App() {
   const [currentIconIndex, setCurrentIconIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const overlayActive = showSignIn || showSignUp || showSell || showVoiceChat
+  const overlayActive = showSignIn || showSignUp || showSell || showVoiceChat || !showCenteredInput
   const pageClassName = overlayActive ? 'page page--overlay' : 'page'
 
   // Parse **text** to <strong>text</strong>
