@@ -123,11 +123,13 @@ a {
   inset: 0;
   z-index: -2;
   will-change: opacity;
-  background-image: url('./assets/wallpaper1.jpg');
+  background-image: url('./assets/wallpaper1-optimized.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-attachment: fixed;
+  background-attachment: scroll;
+  image-rendering: auto;
+  filter: none;
 }
 
 .mobile-page::after,
