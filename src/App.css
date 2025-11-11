@@ -93,7 +93,7 @@ body{ margin:0; background:transparent; color:var(--txt); font-family: -apple-sy
 .btn{ appearance:none; color:#DADADA; border:1px solid rgba(255, 255, 255, 0.15); padding:10px 14px; border-radius:20px; font-weight:600; text-decoration:none; cursor:pointer; background:transparent }
 .btn[disabled]{ opacity:.6; cursor:not-allowed }
 
-.chat{ max-width:860px; margin:0 auto; padding:20px; flex:1; width:100%; display:flex; flex-direction:column; background:rgba(6,10,16,0.6); backdrop-filter:blur(12px); border-radius:18px; box-shadow:0 12px 48px rgba(0,0,0,0.35); }
+.chat{ max-width:860px; margin:0 auto; padding:20px; flex:1; width:100%; display:flex; flex-direction:column; }
 .messages{ display:flex; flex-direction:column; gap:12px; padding:8px 0; overflow:auto }
 .bubble{ background:rgba(15,19,26,0.55); border:1px solid rgba(255,255,255,0.08); padding:12px 14px; border-radius:14px; max-width:80%; box-shadow:0 12px 30px rgba(0,0,0,0.28); }
 .bubble.user{ align-self:flex-end; background:rgba(15,19,26,0.55); border-color:rgba(255,255,255,0.08); }
