@@ -17,7 +17,7 @@ import TronIcon from './assets/tron.png'
 import BitcoinIcon from './assets/bicoin.png'
 import XrpIcon from './assets/xrp.png'
 import ShibaIcon from './assets/shiba-inu.png'
-import AstronautImg from './assets/astronaut.png'
+import SendIcon from './assets/send.png'
 import './MobileApp.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
@@ -59,6 +59,23 @@ function getTimeBasedGreeting(): string {
   else if (hour < 18) return 'Good afternoon'
   else return 'Good evening'
 }
+
+const createSendIconStyle = (active: boolean, disabled: boolean): React.CSSProperties => ({
+  width: 28,
+  height: 28,
+  display: 'inline-block',
+  backgroundColor: active ? '#007337' : 'rgba(255, 255, 255, 0.7)',
+  maskImage: `url(${SendIcon})`,
+  WebkitMaskImage: `url(${SendIcon})`,
+  maskRepeat: 'no-repeat',
+  WebkitMaskRepeat: 'no-repeat',
+  maskPosition: 'center',
+  WebkitMaskPosition: 'center',
+  maskSize: 'contain',
+  WebkitMaskSize: 'contain',
+  transition: 'background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+  opacity: disabled ? 0.6 : 1,
+})
 
 // Token management functions are now imported from tokenManager.ts
 
@@ -758,10 +775,10 @@ export default function MobileApp() {
                   {loading ? (
                     <div className="mobile-spinner" />
                   ) : (
-                    <img
-                      src={AstronautImg}
-                      alt="Send"
+                    <span
                       className={`send-icon ${input.trim() ? 'send-icon--active' : ''}`}
+                      aria-hidden="true"
+                      style={createSendIconStyle(Boolean(input.trim()), loading || !input.trim())}
                     />
                   )}
                 </button>
@@ -810,10 +827,10 @@ export default function MobileApp() {
                   {loading ? (
                     <div className="mobile-spinner" />
                   ) : (
-                    <img
-                      src={AstronautImg}
-                      alt="Send"
+                    <span
                       className={`send-icon ${input.trim() ? 'send-icon--active' : ''}`}
+                      aria-hidden="true"
+                      style={createSendIconStyle(Boolean(input.trim()), loading || !input.trim())}
                     />
                   )}
                 </button>

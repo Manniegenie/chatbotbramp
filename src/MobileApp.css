@@ -9,6 +9,7 @@
   --card: #12121a;
   --muted: #9aa3af;
   --accent: #007337;
+  --accent-rgb: 0, 115, 55;
   --border: #1f2330;
   --txt: #e5e7eb;
   --shadow: rgba(0, 0, 0, 0.3);
@@ -193,7 +194,7 @@ a {
 .mobile-brand-text {
   font-size: 18px;
   font-weight: 700;
-  color: #007337;
+  color: var(--accent);
   letter-spacing: -0.02em;
   white-space: nowrap;
   overflow: hidden;
@@ -223,7 +224,7 @@ a {
 
 .mobile-auth-btn-secondary {
   color: white;
-  border: 1px solid #007337;
+  border: 1px solid var(--accent);
 }
 
 .mobile-auth-btn:active {
@@ -275,7 +276,7 @@ a {
   border-radius: 12px;
   border: none;
   background: var(--card);
-  color: #007337;
+  color: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -313,7 +314,7 @@ a {
   white-space: nowrap;
   font-size: 9px;
   font-weight: 600;
-  color: #007337;
+  color: var(--accent);
   line-height: 32px;
   animation: mobileTickerMarquee 50s linear infinite;
   -webkit-animation: mobileTickerMarquee 50s linear infinite;
@@ -758,7 +759,7 @@ a {
 }
 
 .mobile-input:focus {
-  border-color: #007337;
+  border-color: var(--accent);
   box-shadow: none;
 }
 
@@ -809,22 +810,8 @@ a {
 
 .mobile-send-btn .send-icon {
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
-  transition: filter 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  filter: none;
-  opacity: 1;
-  image-rendering: auto;
-}
-
-.mobile-send-btn .send-icon.send-icon--active {
-  opacity: 1;
-}
-
-.mobile-send-btn:disabled .send-icon {
-  filter: none;
-  opacity: 0.65;
+  display: inline-block;
+  transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .mobile-send-btn img[alt="Mic"] {
@@ -1201,7 +1188,7 @@ a:focus-visible,
 
 .mobile-input-centered:focus {
   background: rgba(18, 18, 26, 0.3);
-  border: 1px solid #007337;
+  border: 1px solid var(--accent);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
               inset 0 1px 1px rgba(255, 255, 255, 0.15);
 }
@@ -1231,7 +1218,7 @@ a:focus-visible,
 }
 
 .mobile-send-inline:not(:disabled) {
-  color: #007337;
+  color: var(--accent);
 }
 
 .mobile-send-inline:disabled {
@@ -1241,11 +1228,8 @@ a:focus-visible,
 }
 
 .mobile-send-inline .send-icon {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
-  filter: none;
-  opacity: 1;
+  display: inline-block;
+  transition: background-color 0.3s ease, opacity 0.3s ease;
 }
 
 .mobile-footer-links-bottom {

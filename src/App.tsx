@@ -19,7 +19,7 @@ import TronIcon from './assets/tron.png'
 import BitcoinIcon from './assets/bicoin.png'
 import XrpIcon from './assets/xrp.png'
 import ShibaIcon from './assets/shiba-inu.png'
-import AstronautImg from './assets/astronaut.png'
+import SendIcon from './assets/send.png'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -66,6 +66,23 @@ function getTimeBasedGreeting(): string {
     return 'Good evening'
   }
 }
+
+const createSendIconStyle = (active: boolean, disabled: boolean): React.CSSProperties => ({
+  width: 28,
+  height: 28,
+  display: 'inline-block',
+  backgroundColor: active ? '#007337' : 'rgba(155, 163, 175, 0.8)',
+  maskImage: `url(${SendIcon})`,
+  WebkitMaskImage: `url(${SendIcon})`,
+  maskRepeat: 'no-repeat',
+  WebkitMaskRepeat: 'no-repeat',
+  maskPosition: 'center',
+  WebkitMaskPosition: 'center',
+  maskSize: 'contain',
+  WebkitMaskSize: 'contain',
+  transition: 'background-color 0.3s ease, opacity 0.3s ease',
+  opacity: disabled ? 0.6 : 1,
+})
 
 // Token management functions are now imported from tokenManager.ts
 
@@ -822,7 +839,7 @@ export default function App() {
             box-sizing: content-box;
             font-weight: 600;
             font-size: 9px;
-            color: #007337;
+            color: var(--accent);
             transform: translateZ(0);
             -webkit-transform: translateZ(0);
           }
@@ -901,7 +918,7 @@ export default function App() {
           .brand-text {
             font-size: 18px;
             font-weight: 600;
-            color: #007337;
+            color: var(--accent);
           }
           
           @keyframes fadeIn {
@@ -967,7 +984,7 @@ export default function App() {
           
           .input-centered-desktop:focus {
             background: rgba(18, 18, 26, 0.3);
-            border: 1px solid #007337;
+            border: 1px solid var(--accent);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
                         inset 0 1px 1px rgba(255, 255, 255, 0.15);
           }
@@ -997,7 +1014,7 @@ export default function App() {
           }
           
           .send-btn-inline-desktop:not(:disabled) {
-            color: #007337;
+            color: var(--accent);
           }
           
           .send-btn-inline-desktop:disabled {
@@ -1007,22 +1024,8 @@ export default function App() {
           }
           
           .send-btn-inline-desktop .send-icon {
-            width: 28px;
-            height: 28px;
-            object-fit: contain;
-            transition: filter 0.3s ease, opacity 0.3s ease;
-            filter: none;
-            opacity: 1;
-            image-rendering: auto;
-          }
-          
-          .send-btn-inline-desktop .send-icon.send-icon--active {
-            opacity: 1;
-          }
-          
-          .send-btn-inline-desktop:disabled .send-icon {
-            filter: none;
-            opacity: 0.6;
+            display: inline-block;
+            transition: background-color 0.3s ease, opacity 0.3s ease;
           }
           
           .spinner-desktop {
@@ -1066,7 +1069,7 @@ export default function App() {
               <button className="btn" onClick={() => setShowSignIn(true)}>Sell</button>
               <button
                 className="btn"
-                style={{ background: 'transparent', color: 'var(--txt)', border: '1px solid #007337' }}
+                style={{ background: 'transparent', color: 'var(--txt)', border: '1px solid var(--accent)' }}
                 onClick={() => setShowSignUp(true)}
               >
                 Sign Up
@@ -1272,10 +1275,10 @@ export default function App() {
                       {loading ? (
                         <div className="spinner-desktop" />
                       ) : (
-                        <img
-                          src={AstronautImg}
-                          alt="Send"
+                        <span
                           className={`send-icon ${input.trim() ? 'send-icon--active' : ''}`}
+                          aria-hidden="true"
+                          style={createSendIconStyle(Boolean(input.trim()), loading || !input.trim())}
                         />
                       )}
                     </button>
@@ -1342,19 +1345,11 @@ export default function App() {
                         animation: 'spin 1s linear infinite'
                       }} />
                     ) : (
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#DADADA"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <line x1="22" y1="2" x2="11" y2="13" />
-                        <polygon points="22,2 15,22 11,13 2,9" />
-                      </svg>
+                      <span
+                        className={`send-icon ${input.trim() ? 'send-icon--active' : ''}`}
+                        aria-hidden="true"
+                        style={createSendIconStyle(Boolean(input.trim()), loading || !input.trim())}
+                      />
                     )}
                   </button>
                   <button
