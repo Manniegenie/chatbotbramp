@@ -132,7 +132,12 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
             formData.append('bankFile', bankFile)
             formData.append('cryptoFile', cryptoFile)
 
-            const headers = getHeaders()
+            const { access } = tokenStore.getTokens()
+            // Build headers object - don't set Content-Type for FormData (browser handles it)
+            const headers: Record<string, string> = {}
+            if (access) {
+                headers['Authorization'] = `Bearer ${access}`
+            }
 
             const response = await fetch(`${API_BASE}/financial-analysis/submit`, {
                 method: 'POST',
