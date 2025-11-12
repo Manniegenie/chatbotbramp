@@ -19,115 +19,110 @@ function getHeaders() {
     return h
 }
 
-function LoadingSpinner() {
-    return (
-        <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '16px',
-            padding: '40px 20px'
-        }}>
-            <div style={{
-                width: '48px',
-                height: '48px',
-                border: '4px solid rgba(255, 255, 255, 0.1)',
-                borderTop: '4px solid var(--accent)',
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite'
-            }} />
-            <p style={{
-                color: 'var(--txt)',
-                fontSize: '16px',
-                textAlign: 'center',
-                margin: 0
-            }}>
-                Processing your statement...
-            </p>
-            <p style={{
-                color: 'var(--muted)',
-                fontSize: '14px',
-                textAlign: 'center',
-                margin: 0
-            }}>
-                This may take a few moments
-            </p>
-            <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
-        </div>
-    )
-}
-
 export default function FinancialAnalysisModal({ open, onClose }: FinancialAnalysisModalProps) {
-    const [uploading, setUploading] = useState(false)
-    const [uploadType, setUploadType] = useState<'bank' | 'crypto' | null>(null)
+    const [bankFile, setBankFile] = useState<File | null>(null)
+    const [cryptoFile, setCryptoFile] = useState<File | null>(null)
+    const [processing, setProcessing] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [result, setResult] = useState<any>(null)
+    const [processingStep, setProcessingStep] = useState<string>('')
     const bankFileRef = useRef<HTMLInputElement>(null)
     const cryptoFileRef = useRef<HTMLInputElement>(null)
 
-    const handleFileSelect = async (file: File | null, type: 'bank' | 'crypto') => {
-        if (!file) return
+    const handleBankFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            setBankFile(file)
+            setError(null)
+        }
+    }
 
-        setUploading(true)
-        setUploadType(type)
+    const handleCryptoFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            setCryptoFile(file)
+            setError(null)
+        }
+    }
+
+    const processStatements = async () => {
+        if (!bankFile || !cryptoFile) {
+            setError('Please upload both bank and crypto statements')
+            return
+        }
+
+        setProcessing(true)
         setError(null)
         setResult(null)
+        setProcessingStep('Processing bank statement...')
 
         try {
-            const formData = new FormData()
-            formData.append('file', file)
-            formData.append('statementType', type)
+            // Process bank statement first
+            const bankFormData = new FormData()
+            bankFormData.append('file', bankFile)
+            bankFormData.append('statementType', 'bank')
 
             const headers = getHeaders()
-            const response = await fetch(`${API_BASE}/financial-analysis/process`, {
+            let bankResponse = await fetch(`${API_BASE}/financial-analysis/process`, {
                 method: 'POST',
                 headers,
-                body: formData,
+                body: bankFormData,
             })
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-                throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
+            if (!bankResponse.ok) {
+                const errorData = await bankResponse.json().catch(() => ({ error: 'Unknown error' }))
+                throw new Error(`Bank statement error: ${errorData.error || `HTTP ${bankResponse.status}`}`)
             }
 
-            const data = await response.json()
-            if (data.success && data.data) {
-                setResult(data.data)
-            } else {
-                throw new Error(data.error || 'Failed to process statement')
+            const bankData = await bankResponse.json()
+            if (!bankData.success) {
+                throw new Error(bankData.error || 'Failed to process bank statement')
             }
+
+            setProcessingStep('Processing crypto statement...')
+
+            // Process crypto statement
+            const cryptoFormData = new FormData()
+            cryptoFormData.append('file', cryptoFile)
+            cryptoFormData.append('statementType', 'crypto')
+
+            let cryptoResponse = await fetch(`${API_BASE}/financial-analysis/process`, {
+                method: 'POST',
+                headers,
+                body: cryptoFormData,
+            })
+
+            if (!cryptoResponse.ok) {
+                const errorData = await cryptoResponse.json().catch(() => ({ error: 'Unknown error' }))
+                throw new Error(`Crypto statement error: ${errorData.error || `HTTP ${cryptoResponse.status}`}`)
+            }
+
+            const cryptoData = await cryptoResponse.json()
+            if (!cryptoData.success) {
+                throw new Error(cryptoData.error || 'Failed to process crypto statement')
+            }
+
+            // Both processed successfully
+            setResult({
+                bank: bankData.data,
+                crypto: cryptoData.data,
+            })
+            setProcessingStep('')
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'An error occurred while processing your statement')
+            setError(err instanceof Error ? err.message : 'An error occurred while processing your statements')
+            setProcessingStep('')
         } finally {
-            setUploading(false)
-        }
-    }
-
-    const handleBankUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (file) {
-            handleFileSelect(file, 'bank')
-        }
-    }
-
-    const handleCryptoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (file) {
-            handleFileSelect(file, 'crypto')
+            setProcessing(false)
         }
     }
 
     const handleReset = () => {
-        setUploading(false)
-        setUploadType(null)
+        setProcessing(false)
         setError(null)
         setResult(null)
+        setBankFile(null)
+        setCryptoFile(null)
+        setProcessingStep('')
         if (bankFileRef.current) bankFileRef.current.value = ''
         if (cryptoFileRef.current) cryptoFileRef.current.value = ''
     }
@@ -210,8 +205,46 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                         </button>
                     </div>
 
-                    {uploading ? (
-                        <LoadingSpinner />
+                    {processing ? (
+                        <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '16px',
+                            padding: '40px 20px'
+                        }}>
+                            <div style={{
+                                width: '48px',
+                                height: '48px',
+                                border: '4px solid rgba(255, 255, 255, 0.1)',
+                                borderTop: '4px solid var(--accent)',
+                                borderRadius: '50%',
+                                animation: 'spin 1s linear infinite'
+                            }} />
+                            <p style={{
+                                color: 'var(--txt)',
+                                fontSize: '16px',
+                                textAlign: 'center',
+                                margin: 0
+                            }}>
+                                {processingStep || 'Processing your statements...'}
+                            </p>
+                            <p style={{
+                                color: 'var(--muted)',
+                                fontSize: '14px',
+                                textAlign: 'center',
+                                margin: 0
+                            }}>
+                                This may take a few moments
+                            </p>
+                            <style>{`
+                                @keyframes spin {
+                                    0% { transform: rotate(0deg); }
+                                    100% { transform: rotate(360deg); }
+                                }
+                            `}</style>
+                        </div>
                     ) : result ? (
                         <div style={{
                             display: 'flex',
@@ -237,7 +270,7 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                                     fontSize: '14px',
                                     lineHeight: '1.5'
                                 }}>
-                                    Your statement has been processed successfully. The detailed report has been saved.
+                                    Both statements have been processed successfully. The detailed reports have been saved.
                                 </p>
                             </div>
                             <button
@@ -302,7 +335,7 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                                 fontSize: '14px',
                                 textAlign: 'center'
                             }}>
-                                Upload your financial statement for analysis. We support PDF, DOCX, DOC, TXT, HTML, PNG, and JPEG formats.
+                                Upload both your bank and crypto statements for analysis. We support PDF, DOCX, DOC, TXT, HTML, PNG, and JPEG formats.
                             </p>
 
                             <div style={{
@@ -338,8 +371,9 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                                         ref={bankFileRef}
                                         type="file"
                                         accept=".pdf,.docx,.doc,.txt,.html,.png,.jpg,.jpeg"
-                                        onChange={handleBankUpload}
+                                        onChange={handleBankFileSelect}
                                         style={{ display: 'none' }}
+                                        disabled={processing}
                                     />
                                     <img
                                         src={uploadIcon}
@@ -347,7 +381,7 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                                         style={{
                                             width: '48px',
                                             height: '48px',
-                                            opacity: 0.8
+                                            opacity: bankFile ? 1 : 0.8
                                         }}
                                     />
                                     <div style={{
@@ -363,12 +397,22 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                                         }}>
                                             Bank Statement
                                         </span>
-                                        <span style={{
-                                            color: 'var(--muted)',
-                                            fontSize: '12px'
-                                        }}>
-                                            Click to upload
-                                        </span>
+                                        {bankFile ? (
+                                            <span style={{
+                                                color: 'var(--accent)',
+                                                fontSize: '12px',
+                                                fontWeight: 500
+                                            }}>
+                                                ✓ {bankFile.name.length > 20 ? bankFile.name.substring(0, 20) + '...' : bankFile.name}
+                                            </span>
+                                        ) : (
+                                            <span style={{
+                                                color: 'var(--muted)',
+                                                fontSize: '12px'
+                                            }}>
+                                                Click to upload
+                                            </span>
+                                        )}
                                     </div>
                                 </label>
 
@@ -400,8 +444,9 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                                         ref={cryptoFileRef}
                                         type="file"
                                         accept=".pdf,.docx,.doc,.txt,.html,.png,.jpg,.jpeg"
-                                        onChange={handleCryptoUpload}
+                                        onChange={handleCryptoFileSelect}
                                         style={{ display: 'none' }}
+                                        disabled={processing}
                                     />
                                     <img
                                         src={uploadIcon}
@@ -409,7 +454,7 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                                         style={{
                                             width: '48px',
                                             height: '48px',
-                                            opacity: 0.8
+                                            opacity: cryptoFile ? 1 : 0.8
                                         }}
                                     />
                                     <div style={{
@@ -425,15 +470,56 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                                         }}>
                                             Crypto Statement
                                         </span>
-                                        <span style={{
-                                            color: 'var(--muted)',
-                                            fontSize: '12px'
-                                        }}>
-                                            Click to upload
-                                        </span>
+                                        {cryptoFile ? (
+                                            <span style={{
+                                                color: 'var(--accent)',
+                                                fontSize: '12px',
+                                                fontWeight: 500
+                                            }}>
+                                                ✓ {cryptoFile.name.length > 20 ? cryptoFile.name.substring(0, 20) + '...' : cryptoFile.name}
+                                            </span>
+                                        ) : (
+                                            <span style={{
+                                                color: 'var(--muted)',
+                                                fontSize: '12px'
+                                            }}>
+                                                Click to upload
+                                            </span>
+                                        )}
                                     </div>
                                 </label>
                             </div>
+
+                            {bankFile && cryptoFile && !processing && (
+                                <button
+                                    onClick={processStatements}
+                                    className="btn"
+                                    style={{
+                                        width: '100%',
+                                        marginTop: '8px',
+                                        padding: '16px',
+                                        fontSize: '16px',
+                                        fontWeight: 600
+                                    }}
+                                >
+                                    Process Both Statements
+                                </button>
+                            )}
+
+                            {(!bankFile || !cryptoFile) && (
+                                <p style={{
+                                    margin: '16px 0 0 0',
+                                    color: 'var(--muted)',
+                                    fontSize: '12px',
+                                    textAlign: 'center'
+                                }}>
+                                    {!bankFile && !cryptoFile
+                                        ? 'Please upload both statements to continue'
+                                        : !bankFile
+                                            ? 'Please upload bank statement'
+                                            : 'Please upload crypto statement'}
+                                </p>
+                            )}
                         </div>
                     )}
                 </motion.div>
