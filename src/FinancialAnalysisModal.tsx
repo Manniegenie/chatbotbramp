@@ -26,14 +26,22 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
     const [error, setError] = useState<string | null>(null)
     const [result, setResult] = useState<any>(null)
     const [processingStep, setProcessingStep] = useState<string>('')
+    const [jobId, setJobId] = useState<string | null>(null)
+    const [jobStatus, setJobStatus] = useState<any>(null)
     const bankFileRef = useRef<HTMLInputElement>(null)
     const cryptoFileRef = useRef<HTMLInputElement>(null)
+    const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
     const handleBankFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (file) {
             setBankFile(file)
             setError(null)
+            // Ensure processing doesn't start automatically
+            if (processing) {
+                e.preventDefault()
+                return
+            }
         }
     }
 
@@ -42,6 +50,67 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
         if (file) {
             setCryptoFile(file)
             setError(null)
+            // Ensure processing doesn't start automatically
+            if (processing) {
+                e.preventDefault()
+                return
+            }
+        }
+    }
+
+    // Poll for job status
+    const pollJobStatus = async (id: string) => {
+        try {
+            const headers = getHeaders()
+            const response = await fetch(`${API_BASE}/financial-analysis/job/${id}`, {
+                method: 'GET',
+                headers,
+            })
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch job status: ${response.status}`)
+            }
+
+            const data = await response.json()
+            if (!data.success) {
+                throw new Error(data.error || 'Failed to fetch job status')
+            }
+
+            setJobStatus(data.data)
+
+            // Update processing step
+            const bankStatus = data.data.bankStatement?.status || 'pending'
+            const cryptoStatus = data.data.cryptoStatement?.status || 'pending'
+
+            if (bankStatus === 'processing' || cryptoStatus === 'processing') {
+                setProcessingStep('Extracting data from statements...')
+            } else if (bankStatus === 'completed' && cryptoStatus === 'completed') {
+                setProcessingStep('Performing reconciliation analysis...')
+            }
+
+            // If job is complete, stop polling and show results
+            if (data.data.status === 'completed') {
+                if (pollIntervalRef.current) {
+                    clearInterval(pollIntervalRef.current)
+                    pollIntervalRef.current = null
+                }
+                setProcessing(false)
+                setResult({
+                    jobId: id,
+                    report: data.data.report,
+                    status: 'completed'
+                })
+            } else if (data.data.status === 'failed') {
+                if (pollIntervalRef.current) {
+                    clearInterval(pollIntervalRef.current)
+                    pollIntervalRef.current = null
+                }
+                setProcessing(false)
+                setError(data.data.error || 'Processing failed. Please try again.')
+            }
+        } catch (err) {
+            console.error('Error polling job status:', err)
+            // Don't stop polling on transient errors
         }
     }
 
@@ -54,78 +123,92 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
         setProcessing(true)
         setError(null)
         setResult(null)
-        setProcessingStep('Processing bank statement...')
+        setJobStatus(null)
+        setProcessingStep('Submitting statements for processing...')
 
         try {
-            // Process bank statement first
-            const bankFormData = new FormData()
-            bankFormData.append('file', bankFile)
-            bankFormData.append('statementType', 'bank')
+            // Submit both files together for async processing
+            const formData = new FormData()
+            formData.append('bankFile', bankFile)
+            formData.append('cryptoFile', cryptoFile)
 
             const headers = getHeaders()
-            let bankResponse = await fetch(`${API_BASE}/financial-analysis/process`, {
+
+            const response = await fetch(`${API_BASE}/financial-analysis/submit`, {
                 method: 'POST',
                 headers,
-                body: bankFormData,
+                body: formData,
             })
 
-            if (!bankResponse.ok) {
-                const errorData = await bankResponse.json().catch(() => ({ error: 'Unknown error' }))
-                throw new Error(`Bank statement error: ${errorData.error || `HTTP ${bankResponse.status}`}`)
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+                throw new Error(errorData.error || `HTTP ${response.status}`)
             }
 
-            const bankData = await bankResponse.json()
-            if (!bankData.success) {
-                throw new Error(bankData.error || 'Failed to process bank statement')
+            const data = await response.json()
+            if (!data.success) {
+                throw new Error(data.error || 'Failed to submit statements')
             }
 
-            setProcessingStep('Processing crypto statement...')
+            // Job submitted successfully - start polling
+            const submittedJobId = data.jobId
+            setJobId(submittedJobId)
+            setProcessingStep('Processing statements... This may take a few minutes.')
 
-            // Process crypto statement
-            const cryptoFormData = new FormData()
-            cryptoFormData.append('file', cryptoFile)
-            cryptoFormData.append('statementType', 'crypto')
+            // Start polling every 3 seconds
+            pollIntervalRef.current = setInterval(() => {
+                pollJobStatus(submittedJobId)
+            }, 3000)
 
-            let cryptoResponse = await fetch(`${API_BASE}/financial-analysis/process`, {
-                method: 'POST',
-                headers,
-                body: cryptoFormData,
-            })
-
-            if (!cryptoResponse.ok) {
-                const errorData = await cryptoResponse.json().catch(() => ({ error: 'Unknown error' }))
-                throw new Error(`Crypto statement error: ${errorData.error || `HTTP ${cryptoResponse.status}`}`)
-            }
-
-            const cryptoData = await cryptoResponse.json()
-            if (!cryptoData.success) {
-                throw new Error(cryptoData.error || 'Failed to process crypto statement')
-            }
-
-            // Both processed successfully
-            setResult({
-                bank: bankData.data,
-                crypto: cryptoData.data,
-            })
-            setProcessingStep('')
+            // Initial poll
+            pollJobStatus(submittedJobId)
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'An error occurred while processing your statements')
+            if (err instanceof Error) {
+                if (err.name === 'AbortError') {
+                    setError('Request timed out. The processing is taking longer than expected. Please try again.')
+                } else if (err.message.includes('fetch')) {
+                    setError('Network error: Unable to connect to the server. Please check your connection and try again.')
+                } else {
+                    setError(err.message)
+                }
+            } else {
+                setError('An error occurred while processing your statements')
+            }
             setProcessingStep('')
-        } finally {
             setProcessing(false)
         }
     }
 
     const handleReset = () => {
+        // Clear polling interval
+        if (pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current)
+            pollIntervalRef.current = null
+        }
         setProcessing(false)
         setError(null)
         setResult(null)
+        setJobId(null)
+        setJobStatus(null)
         setBankFile(null)
         setCryptoFile(null)
         setProcessingStep('')
         if (bankFileRef.current) bankFileRef.current.value = ''
         if (cryptoFileRef.current) cryptoFileRef.current.value = ''
     }
+
+    // Cleanup on unmount or close
+    React.useEffect(() => {
+        if (!open && pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current)
+            pollIntervalRef.current = null
+        }
+        return () => {
+            if (pollIntervalRef.current) {
+                clearInterval(pollIntervalRef.current)
+            }
+        }
+    }, [open])
 
     if (!open) return null
 
@@ -141,8 +224,8 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.75)',
-                    backdropFilter: 'blur(8px)',
+                    backgroundColor: 'transparent', // Let page--overlay handle the tint
+                    backdropFilter: 'none',
                     zIndex: 1000,
                     display: 'flex',
                     alignItems: 'center',
@@ -245,7 +328,7 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                                 }
                             `}</style>
                         </div>
-                    ) : result ? (
+                    ) : result && result.status === 'completed' ? (
                         <div style={{
                             display: 'flex',
                             flexDirection: 'column',
@@ -264,14 +347,56 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                                 }}>
                                     Analysis Complete
                                 </h3>
-                                <p style={{
-                                    margin: 0,
-                                    color: 'var(--txt)',
-                                    fontSize: '14px',
-                                    lineHeight: '1.5'
-                                }}>
-                                    Both statements have been processed successfully. The detailed reports have been saved.
-                                </p>
+                                {result.report?.combined ? (
+                                    <div style={{
+                                        marginTop: '16px',
+                                        padding: '16px',
+                                        backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                                        borderRadius: '8px',
+                                        maxHeight: '400px',
+                                        overflowY: 'auto'
+                                    }}>
+                                        <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', color: 'var(--txt)' }}>
+                                            Executive Summary
+                                        </h4>
+                                        {result.report.combined.executiveSummary && (
+                                            <div style={{ marginBottom: '16px' }}>
+                                                <p style={{ margin: '4px 0', fontSize: '14px', color: 'var(--muted)' }}>
+                                                    <strong>Status:</strong> {result.report.combined.executiveSummary.overallReconciliationStatus || 'N/A'}
+                                                </p>
+                                                <p style={{ margin: '4px 0', fontSize: '14px', color: 'var(--muted)' }}>
+                                                    <strong>Discrepancies:</strong> {result.report.combined.executiveSummary.totalDiscrepancies || 0}
+                                                </p>
+                                                {result.report.combined.executiveSummary.missingFundsAmount > 0 && (
+                                                    <p style={{ margin: '4px 0', fontSize: '14px', color: '#dc2626' }}>
+                                                        <strong>Missing Funds:</strong> {result.report.combined.executiveSummary.missingFundsAmount} {result.report.combined.executiveSummary.missingFundsCurrency || 'NGN'}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
+                                        {result.report.combined.auditReport?.keyFindings && (
+                                            <div style={{ marginTop: '16px' }}>
+                                                <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--txt)' }}>
+                                                    Key Findings
+                                                </h4>
+                                                <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: 'var(--muted)' }}>
+                                                    {result.report.combined.auditReport.keyFindings.slice(0, 5).map((finding: string, idx: number) => (
+                                                        <li key={idx} style={{ marginBottom: '4px' }}>{finding}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <p style={{
+                                        margin: 0,
+                                        color: 'var(--txt)',
+                                        fontSize: '14px',
+                                        lineHeight: '1.5'
+                                    }}>
+                                        Your financial analysis has been completed successfully. The detailed report has been saved.
+                                    </p>
+                                )}
                             </div>
                             <button
                                 onClick={handleReset}
