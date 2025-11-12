@@ -30,7 +30,7 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
     const [jobStatus, setJobStatus] = useState<any>(null)
     const bankFileRef = useRef<HTMLInputElement>(null)
     const cryptoFileRef = useRef<HTMLInputElement>(null)
-    const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
+    const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
     const handleBankFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
