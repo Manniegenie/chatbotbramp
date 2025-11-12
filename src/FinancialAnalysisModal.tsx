@@ -22,7 +22,9 @@ function getHeaders() {
 export default function FinancialAnalysisModal({ open, onClose }: FinancialAnalysisModalProps) {
     const [bankFile, setBankFile] = useState<File | null>(null)
     const [cryptoFile, setCryptoFile] = useState<File | null>(null)
-    const [processing, setProcessing] = useState(false)
+    const [uploading, setUploading] = useState(false)
+    const [extracting, setExtracting] = useState(false)
+    const [analyzing, setAnalyzing] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [result, setResult] = useState<any>(null)
     const [processingStep, setProcessingStep] = useState<string>('')
@@ -78,23 +80,39 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
 
             setJobStatus(data.data)
 
-            // Update processing step
+            // Update processing step based on status
             const bankStatus = data.data.bankStatement?.status || 'pending'
             const cryptoStatus = data.data.cryptoStatement?.status || 'pending'
+            const extractionStatus = data.data.extractionStatus || 'pending'
+            const analysisStatus = data.data.analysisStatus || 'pending'
 
-            if (bankStatus === 'processing' || cryptoStatus === 'processing') {
-                setProcessingStep('Extracting data from statements...')
-            } else if (bankStatus === 'completed' && cryptoStatus === 'completed') {
-                setProcessingStep('Performing reconciliation analysis...')
+            if (extractionStatus === 'processing') {
+                setExtracting(true)
+                setAnalyzing(false)
+                if (bankStatus === 'processing') {
+                    setProcessingStep('Extracting bank statement...')
+                } else if (cryptoStatus === 'processing') {
+                    setProcessingStep('Extracting crypto statement...')
+                } else {
+                    setProcessingStep('Extracting data from statements...')
+                }
+            } else if (extractionStatus === 'completed' && analysisStatus === 'processing') {
+                setExtracting(false)
+                setAnalyzing(true)
+                setProcessingStep('Analyzing with GPT...')
+            } else if (extractionStatus === 'completed' && analysisStatus === 'completed') {
+                setExtracting(false)
+                setAnalyzing(false)
             }
 
             // If job is complete, stop polling and show results
-            if (data.data.status === 'completed') {
+            if (data.data.status === 'completed' && analysisStatus === 'completed') {
                 if (pollIntervalRef.current) {
                     clearInterval(pollIntervalRef.current)
                     pollIntervalRef.current = null
                 }
-                setProcessing(false)
+                setExtracting(false)
+                setAnalyzing(false)
                 setResult({
                     jobId: id,
                     report: data.data.report,
@@ -105,7 +123,8 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                     clearInterval(pollIntervalRef.current)
                     pollIntervalRef.current = null
                 }
-                setProcessing(false)
+                setExtracting(false)
+                setAnalyzing(false)
                 setError(data.data.error || 'Processing failed. Please try again.')
             }
         } catch (err) {
@@ -114,26 +133,24 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
         }
     }
 
-    const processStatements = async () => {
+    // Upload files
+    const uploadFiles = async () => {
         if (!bankFile || !cryptoFile) {
             setError('Please upload both bank and crypto statements')
             return
         }
 
-        setProcessing(true)
+        setUploading(true)
         setError(null)
         setResult(null)
         setJobStatus(null)
-        setProcessingStep('Submitting statements for processing...')
 
         try {
-            // Submit both files together for async processing
             const formData = new FormData()
             formData.append('bankFile', bankFile)
             formData.append('cryptoFile', cryptoFile)
 
             const { access } = tokenStore.getTokens()
-            // Build headers object - don't set Content-Type for FormData (browser handles it)
             const headers: Record<string, string> = {}
             if (access) {
                 headers['Authorization'] = `Bearer ${access}`
@@ -152,35 +169,121 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
 
             const data = await response.json()
             if (!data.success) {
-                throw new Error(data.error || 'Failed to submit statements')
+                throw new Error(data.error || 'Failed to upload statements')
             }
 
-            // Job submitted successfully - start polling
-            const submittedJobId = data.jobId
-            setJobId(submittedJobId)
-            setProcessingStep('Processing statements... This may take a few minutes.')
+            setJobId(data.jobId)
+            setUploading(false)
 
-            // Start polling every 3 seconds
+            // Fetch initial job status
+            pollJobStatus(data.jobId)
+        } catch (err) {
+            if (err instanceof Error) {
+                setError(err.message)
+            } else {
+                setError('An error occurred while uploading your statements')
+            }
+            setUploading(false)
+        }
+    }
+
+    // Extract statements
+    const extractStatements = async () => {
+        if (!jobId) {
+            setError('No job ID found. Please upload files first.')
+            return
+        }
+
+        setExtracting(true)
+        setError(null)
+        setProcessingStep('Starting extraction...')
+
+        try {
+            const headers = getHeaders()
+            headers.set('Content-Type', 'application/json')
+
+            const response = await fetch(`${API_BASE}/financial-analysis/extract`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ jobId }),
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+                throw new Error(errorData.error || `HTTP ${response.status}`)
+            }
+
+            const data = await response.json()
+            if (!data.success) {
+                throw new Error(data.error || 'Failed to start extraction')
+            }
+
+            // Start polling for extraction status
             pollIntervalRef.current = setInterval(() => {
-                pollJobStatus(submittedJobId)
+                pollJobStatus(jobId)
             }, 3000)
 
             // Initial poll
-            pollJobStatus(submittedJobId)
+            pollJobStatus(jobId)
         } catch (err) {
             if (err instanceof Error) {
-                if (err.name === 'AbortError') {
-                    setError('Request timed out. The processing is taking longer than expected. Please try again.')
-                } else if (err.message.includes('fetch')) {
-                    setError('Network error: Unable to connect to the server. Please check your connection and try again.')
-                } else {
-                    setError(err.message)
-                }
+                setError(err.message)
             } else {
-                setError('An error occurred while processing your statements')
+                setError('An error occurred while starting extraction')
             }
+            setExtracting(false)
             setProcessingStep('')
-            setProcessing(false)
+        }
+    }
+
+    // Analyze statements
+    const analyzeStatements = async () => {
+        if (!jobId) {
+            setError('No job ID found.')
+            return
+        }
+
+        setAnalyzing(true)
+        setError(null)
+        setProcessingStep('Starting analysis...')
+
+        try {
+            const headers = getHeaders()
+            headers.set('Content-Type', 'application/json')
+
+            const response = await fetch(`${API_BASE}/financial-analysis/analyze`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ jobId }),
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+                throw new Error(errorData.error || `HTTP ${response.status}`)
+            }
+
+            const data = await response.json()
+            if (!data.success) {
+                throw new Error(data.error || 'Failed to start analysis')
+            }
+
+            // Continue polling for analysis status
+            if (!pollIntervalRef.current) {
+                pollIntervalRef.current = setInterval(() => {
+                    pollJobStatus(jobId)
+                }, 3000)
+            }
+
+            // Initial poll
+            pollJobStatus(jobId)
+        } catch (err) {
+            if (err instanceof Error) {
+                setError(err.message)
+            } else {
+                setError('An error occurred while starting analysis')
+            }
+            setAnalyzing(false)
+            setProcessingStep('')
         }
     }
 
@@ -190,7 +293,9 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
             clearInterval(pollIntervalRef.current)
             pollIntervalRef.current = null
         }
-        setProcessing(false)
+        setUploading(false)
+        setExtracting(false)
+        setAnalyzing(false)
         setError(null)
         setResult(null)
         setJobId(null)
@@ -293,7 +398,7 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                         </button>
                     </div>
 
-                    {processing ? (
+                    {(uploading || extracting || analyzing) ? (
                         <div style={{
                             display: 'flex',
                             flexDirection: 'column',
@@ -620,9 +725,9 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                                 </label>
                             </div>
 
-                            {bankFile && cryptoFile && !processing && (
+                            {!jobId && bankFile && cryptoFile && !uploading && (
                                 <button
-                                    onClick={processStatements}
+                                    onClick={uploadFiles}
                                     className="btn"
                                     style={{
                                         width: '100%',
@@ -631,9 +736,62 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                                         fontSize: '16px',
                                         fontWeight: 600
                                     }}
+                                    disabled={uploading}
                                 >
-                                    Process Both Statements
+                                    {uploading ? 'Uploading...' : 'Upload Statements'}
                                 </button>
+                            )}
+
+                            {jobId && (
+                                <>
+                                    {(!jobStatus || jobStatus.extractionStatus === 'pending') && !extracting && !uploading && (
+                                        <button
+                                            onClick={extractStatements}
+                                            className="btn"
+                                            style={{
+                                                width: '100%',
+                                                marginTop: '8px',
+                                                padding: '16px',
+                                                fontSize: '16px',
+                                                fontWeight: 600
+                                            }}
+                                            disabled={extracting}
+                                        >
+                                            Extract Statements
+                                        </button>
+                                    )}
+
+                                    {jobStatus && jobStatus.extractionStatus === 'completed' && jobStatus.analysisStatus === 'pending' && !analyzing && (
+                                        <button
+                                            onClick={analyzeStatements}
+                                            className="btn"
+                                            style={{
+                                                width: '100%',
+                                                marginTop: '8px',
+                                                padding: '16px',
+                                                fontSize: '16px',
+                                                fontWeight: 600
+                                            }}
+                                            disabled={analyzing}
+                                        >
+                                            Process & Analyze
+                                        </button>
+                                    )}
+
+                                    {jobStatus && jobStatus.extractionStatus === 'completed' && (
+                                        <div style={{
+                                            marginTop: '16px',
+                                            padding: '12px',
+                                            backgroundColor: 'rgba(0, 115, 55, 0.1)',
+                                            borderRadius: '8px',
+                                            border: '1px solid rgba(0, 115, 55, 0.3)'
+                                        }}>
+                                            <p style={{ margin: 0, fontSize: '14px', color: 'var(--accent)' }}>
+                                                ✓ Extraction complete: Bank ({jobStatus.bankStatement?.status}) | Crypto ({jobStatus.cryptoStatement?.status})
+                                            </p>
+                                        </div>
+                                    )}
+                                </>
                             )}
 
                             {(!bankFile || !cryptoFile) && (
