@@ -40,7 +40,7 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
             setBankFile(file)
             setError(null)
             // Ensure processing doesn't start automatically
-            if (processing) {
+            if (uploading || extracting || analyzing) {
                 e.preventDefault()
                 return
             }
@@ -53,7 +53,7 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
             setCryptoFile(file)
             setError(null)
             // Ensure processing doesn't start automatically
-            if (processing) {
+            if (uploading || extracting || analyzing) {
                 e.preventDefault()
                 return
             }
@@ -608,7 +608,7 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                                         accept=".pdf,.docx,.doc,.txt,.html,.png,.jpg,.jpeg"
                                         onChange={handleBankFileSelect}
                                         style={{ display: 'none' }}
-                                        disabled={processing}
+                                        disabled={uploading || extracting || analyzing}
                                     />
                                     <img
                                         src={uploadIcon}
@@ -681,7 +681,7 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                                         accept=".pdf,.docx,.doc,.txt,.html,.png,.jpg,.jpeg"
                                         onChange={handleCryptoFileSelect}
                                         style={{ display: 'none' }}
-                                        disabled={processing}
+                                        disabled={uploading || extracting || analyzing}
                                     />
                                     <img
                                         src={uploadIcon}
