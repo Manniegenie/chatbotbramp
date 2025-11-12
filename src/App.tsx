@@ -10,6 +10,7 @@ import SellModal from './sell'
 import SpaceGame from './game'
 import MobileGame from './MobileGame';
 import MobileVoiceChat from './MobileVoiceChat';
+import FinancialAnalysisModal from './FinancialAnalysisModal';
 // Import logo from assets
 import BrampLogo from './assets/logo.jpeg'
 import micIcon from './assets/mic.png'
@@ -298,6 +299,7 @@ export default function App() {
   const [showVoiceChat, setShowVoiceChat] = useState(false)
   const [shouldOpenSell, setShouldOpenSell] = useState(false)
   const [showGame, setShowGame] = useState(false)
+  const [showFinancialAnalysis, setShowFinancialAnalysis] = useState(false)
 
   const [auth, setAuth] = useState<SignInResult | null>(() => {
     const authState = getAuthState()
@@ -316,7 +318,7 @@ export default function App() {
   const [currentIconIndex, setCurrentIconIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const overlayActive = showSignIn || showSignUp || showSell || showVoiceChat
+  const overlayActive = showSignIn || showSignUp || showSell || showVoiceChat || showFinancialAnalysis
   const pageClassName = overlayActive ? 'page page--overlay' : 'page'
 
   // Parse **text** to <strong>text</strong>
@@ -1086,6 +1088,9 @@ export default function App() {
               <button className="btn" onClick={handleGameClick}>
                 Game
               </button>
+              <button className="btn" onClick={() => setShowFinancialAnalysis(true)}>
+                Tools
+              </button>
               <button className="btn" onClick={signOut}>
                 Sign out
               </button>
@@ -1389,6 +1394,7 @@ export default function App() {
         )}
 
         <SellModal open={showSell} onClose={() => setShowSell(false)} onChatEcho={echoFromModalToChat} onStartInteraction={() => setShowCenteredInput(false)} />
+        <FinancialAnalysisModal open={showFinancialAnalysis} onClose={() => setShowFinancialAnalysis(false)} />
 
         {showCenteredInput && (
           <footer className="footer">
