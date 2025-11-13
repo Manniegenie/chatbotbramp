@@ -78,6 +78,14 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                 throw new Error(data.error || 'Failed to fetch job status')
             }
 
+            console.log(`[Poll ${id}] Received job status:`, {
+                status: data.data.status,
+                extractionStatus: data.data.extractionStatus,
+                analysisStatus: data.data.analysisStatus,
+                hasReport: !!data.data.report,
+                reportKeys: data.data.report ? Object.keys(data.data.report) : []
+            })
+
             setJobStatus(data.data)
 
             // Update processing step based on status
@@ -86,6 +94,7 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
             const extractionStatus = data.data.extractionStatus || 'pending'
             const analysisStatus = data.data.analysisStatus || 'pending'
 
+            // Update loading states
             if (extractionStatus === 'processing') {
                 setExtracting(true)
                 setAnalyzing(false)
@@ -101,31 +110,69 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                 setAnalyzing(true)
                 setProcessingStep('Analyzing with GPT...')
             } else if (extractionStatus === 'completed' && analysisStatus === 'completed') {
+                // Both extraction and analysis are complete
                 setExtracting(false)
                 setAnalyzing(false)
+                setProcessingStep('Analysis complete!')
             }
 
-            // If job is complete, stop polling and show results
-            if (data.data.status === 'completed' && analysisStatus === 'completed') {
+            // Check if job is complete (check both status and report availability)
+            const isComplete = data.data.status === 'completed' && analysisStatus === 'completed' && data.data.report;
+
+            if (isComplete) {
+                console.log('✅ Job completed! Report received:', {
+                    hasReport: !!data.data.report,
+                    hasCombined: !!data.data.report?.combined,
+                    reportKeys: data.data.report ? Object.keys(data.data.report) : []
+                })
+
                 if (pollIntervalRef.current) {
                     clearInterval(pollIntervalRef.current)
                     pollIntervalRef.current = null
                 }
+
+                // Clear all loading states
                 setExtracting(false)
                 setAnalyzing(false)
-                setResult({
+                setUploading(false)
+                setProcessingStep('')
+
+                // Set result - this should trigger the UI to show the report
+                const reportData = {
                     jobId: id,
                     report: data.data.report,
-                    status: 'completed'
+                    status: 'completed' as const
+                }
+                console.log('Setting result:', {
+                    hasReport: !!reportData.report,
+                    hasCombined: !!reportData.report?.combined,
+                    reportStructure: reportData.report ? JSON.stringify(Object.keys(reportData.report), null, 2) : 'null'
                 })
+                setResult(reportData)
+
+                // Don't clear jobStatus - keep it for reference but result takes priority
             } else if (data.data.status === 'failed') {
+                console.error('❌ Job failed:', data.data.error)
                 if (pollIntervalRef.current) {
                     clearInterval(pollIntervalRef.current)
                     pollIntervalRef.current = null
                 }
                 setExtracting(false)
                 setAnalyzing(false)
+                setUploading(false)
+                setProcessingStep('')
                 setError(data.data.error || 'Processing failed. Please try again.')
+            } else {
+                // Debug: Log current status for ongoing jobs
+                if (data.data.status !== 'completed' || !data.data.report) {
+                    console.log('📊 Job in progress:', {
+                        status: data.data.status,
+                        extractionStatus,
+                        analysisStatus,
+                        hasReport: !!data.data.report,
+                        jobId: id
+                    })
+                }
             }
         } catch (err) {
             console.error('Error polling job status:', err)
@@ -174,8 +221,15 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
 
             setJobId(data.jobId)
             setUploading(false)
+            setExtracting(true) // Start extraction automatically
+            setProcessingStep('Extraction started automatically...')
 
-            // Fetch initial job status
+            // Start polling for job status (every 5 seconds to avoid rate limits)
+            pollIntervalRef.current = setInterval(() => {
+                pollJobStatus(data.jobId)
+            }, 5000)
+
+            // Initial poll
             pollJobStatus(data.jobId)
         } catch (err) {
             if (err instanceof Error) {
@@ -218,10 +272,10 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                 throw new Error(data.error || 'Failed to start extraction')
             }
 
-            // Start polling for extraction status
+            // Start polling for extraction status (every 5 seconds to avoid rate limits)
             pollIntervalRef.current = setInterval(() => {
                 pollJobStatus(jobId)
-            }, 3000)
+            }, 5000)
 
             // Initial poll
             pollJobStatus(jobId)
@@ -267,11 +321,11 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                 throw new Error(data.error || 'Failed to start analysis')
             }
 
-            // Continue polling for analysis status
+            // Continue polling for analysis status (every 5 seconds to avoid rate limits)
             if (!pollIntervalRef.current) {
                 pollIntervalRef.current = setInterval(() => {
                     pollJobStatus(jobId)
-                }, 3000)
+                }, 5000)
             }
 
             // Initial poll
@@ -306,6 +360,47 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
         if (bankFileRef.current) bankFileRef.current.value = ''
         if (cryptoFileRef.current) cryptoFileRef.current.value = ''
     }
+
+    // Debug: Log current state
+    React.useEffect(() => {
+        if (result) {
+            console.log('🎯 Result state:', {
+                status: result.status,
+                hasReport: !!result.report,
+                hasCombined: !!result.report?.combined,
+                reportKeys: result.report ? Object.keys(result.report) : []
+            })
+        }
+        if (jobStatus) {
+            console.log('📊 Job status:', {
+                status: jobStatus.status,
+                extractionStatus: jobStatus.extractionStatus,
+                analysisStatus: jobStatus.analysisStatus,
+                hasReport: !!jobStatus.report,
+                hasCombined: !!jobStatus.report?.combined
+            })
+
+            // Auto-set result if job is complete and report exists, but result isn't set yet
+            if (jobStatus.status === 'completed' && jobStatus.analysisStatus === 'completed' && jobStatus.report && !result) {
+                console.log('🔄 Auto-setting result from jobStatus...')
+                setResult({
+                    jobId: jobId || jobStatus.jobId,
+                    report: jobStatus.report,
+                    status: 'completed'
+                })
+                setExtracting(false)
+                setAnalyzing(false)
+                setUploading(false)
+                setProcessingStep('')
+
+                // Stop polling
+                if (pollIntervalRef.current) {
+                    clearInterval(pollIntervalRef.current)
+                    pollIntervalRef.current = null
+                }
+            }
+        }
+    }, [result, jobStatus, jobId])
 
     // Cleanup on unmount or close
     React.useEffect(() => {
@@ -398,7 +493,335 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                         </button>
                     </div>
 
-                    {(uploading || extracting || analyzing) ? (
+                    {/* Show result FIRST if available - priority over loading states */}
+                    {((result && result.status === 'completed' && result.report) || (jobStatus && jobStatus.status === 'completed' && jobStatus.analysisStatus === 'completed' && jobStatus.report)) ? (
+                        (() => {
+                            // Use result if available, otherwise use jobStatus
+                            const displayReport = result?.report || jobStatus?.report;
+                            const displayJobId = result?.jobId || jobStatus?.jobId || jobId;
+
+                            console.log('🖼️ Rendering report:', {
+                                hasResult: !!result,
+                                hasJobStatus: !!jobStatus,
+                                hasReport: !!displayReport,
+                                hasCombined: !!displayReport?.combined,
+                                reportType: displayReport ? typeof displayReport : 'null'
+                            });
+
+                            if (!displayReport) {
+                                return (
+                                    <div style={{
+                                        padding: '16px',
+                                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                                        borderRadius: '8px',
+                                        border: '1px solid rgba(255, 193, 7, 0.3)'
+                                    }}>
+                                        <p style={{ margin: 0, color: '#ffc107', fontSize: '14px' }}>
+                                            Report is being processed. Please wait...
+                                        </p>
+                                    </div>
+                                );
+                            }
+
+                            if (!displayReport.combined) {
+                                return (
+                                    <div style={{
+                                        padding: '16px',
+                                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                                        borderRadius: '8px',
+                                        border: '1px solid rgba(255, 193, 7, 0.3)'
+                                    }}>
+                                        <p style={{ margin: 0, color: '#ffc107', fontSize: '14px' }}>
+                                            Report structure incomplete. Available keys: {displayReport ? Object.keys(displayReport).join(', ') : 'none'}
+                                        </p>
+                                        <pre style={{ marginTop: '12px', fontSize: '12px', color: 'var(--muted)', overflow: 'auto', maxHeight: '400px' }}>
+                                            {JSON.stringify(displayReport, null, 2)}
+                                        </pre>
+                                    </div>
+                                );
+                            }
+
+                            return (
+                                <div style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '16px'
+                                }}>
+                                    <div style={{
+                                        padding: '16px',
+                                        backgroundColor: 'rgba(0, 115, 55, 0.1)',
+                                        borderRadius: '8px',
+                                        border: '1px solid rgba(0, 115, 55, 0.3)'
+                                    }}>
+                                        <h3 style={{
+                                            margin: '0 0 12px 0',
+                                            fontSize: '18px',
+                                            color: 'var(--accent)'
+                                        }}>
+                                            Analysis Complete
+                                        </h3>
+                                        {displayReport.combined ? (
+                                            <div style={{
+                                                marginTop: '16px',
+                                                padding: '16px',
+                                                backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                                                borderRadius: '8px',
+                                                maxHeight: '600px',
+                                                overflowY: 'auto'
+                                            }}>
+                                                {/* Executive Summary */}
+                                                {displayReport.combined.executiveSummary && (
+                                                    <div style={{ marginBottom: '20px' }}>
+                                                        <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', color: 'var(--txt)', fontWeight: 600 }}>
+                                                            Executive Summary
+                                                        </h4>
+                                                        <div style={{ marginBottom: '12px' }}>
+                                                            <p style={{ margin: '4px 0', fontSize: '14px', color: 'var(--muted)' }}>
+                                                                <strong style={{ color: 'var(--txt)' }}>Status:</strong> {displayReport.combined.executiveSummary.overallReconciliationStatus || 'N/A'}
+                                                            </p>
+                                                            <p style={{ margin: '4px 0', fontSize: '14px', color: 'var(--muted)' }}>
+                                                                <strong style={{ color: 'var(--txt)' }}>Discrepancies:</strong> {displayReport.combined.executiveSummary.totalDiscrepancies || 0}
+                                                            </p>
+                                                            {displayReport.combined.executiveSummary.missingFundsAmount > 0 && (
+                                                                <p style={{ margin: '4px 0', fontSize: '14px', color: '#dc2626', fontWeight: 500 }}>
+                                                                    <strong>Missing Funds:</strong> {displayReport.combined.executiveSummary.missingFundsAmount} {displayReport.combined.executiveSummary.missingFundsCurrency || 'NGN'}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Reconciliation */}
+                                                {displayReport.combined.reconciliation && (
+                                                    <div style={{ marginBottom: '20px' }}>
+                                                        <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', color: 'var(--txt)', fontWeight: 600 }}>
+                                                            Reconciliation
+                                                        </h4>
+                                                        <div style={{
+                                                            padding: '12px',
+                                                            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                                                            borderRadius: '6px',
+                                                            fontSize: '14px',
+                                                            color: 'var(--txt)'
+                                                        }}>
+                                                            <p style={{ margin: '4px 0', fontSize: '14px', color: 'var(--muted)' }}>
+                                                                <strong style={{ color: 'var(--txt)' }}>Matched Transactions:</strong> {displayReport.combined.reconciliation.matchedTransactions || 0}
+                                                            </p>
+                                                            <p style={{ margin: '4px 0', fontSize: '14px', color: 'var(--muted)' }}>
+                                                                <strong style={{ color: 'var(--txt)' }}>Reconciliation Rate:</strong> {displayReport.combined.reconciliation.reconciliationRate || 0}%
+                                                            </p>
+                                                            {displayReport.combined.reconciliation.discrepancies && displayReport.combined.reconciliation.discrepancies.length > 0 && (
+                                                                <div style={{ marginTop: '12px' }}>
+                                                                    <h5 style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--txt)', fontWeight: 500 }}>
+                                                                        Discrepancies ({displayReport.combined.reconciliation.discrepancies.length})
+                                                                    </h5>
+                                                                    <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: 'var(--muted)', lineHeight: '1.6' }}>
+                                                                        {displayReport.combined.reconciliation.discrepancies.slice(0, 5).map((disc: any, idx: number) => (
+                                                                            <li key={idx} style={{ marginBottom: '6px' }}>
+                                                                                <strong>{disc.type}:</strong> {disc.description} ({disc.amount} {disc.currency})
+                                                                            </li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Missing Funds */}
+                                                {displayReport.combined.missingFunds && displayReport.combined.missingFunds.totalMissing > 0 && (
+                                                    <div style={{ marginBottom: '20px' }}>
+                                                        <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', color: '#dc2626', fontWeight: 600 }}>
+                                                            Missing Funds
+                                                        </h4>
+                                                        <div style={{
+                                                            padding: '12px',
+                                                            backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                                                            borderRadius: '6px',
+                                                            fontSize: '14px',
+                                                            color: '#dc2626'
+                                                        }}>
+                                                            <p style={{ margin: '4px 0', fontSize: '14px', fontWeight: 500 }}>
+                                                                <strong>Total Missing:</strong> {displayReport.combined.missingFunds.totalMissing} {displayReport.combined.missingFunds.currency || 'NGN'}
+                                                            </p>
+                                                            {displayReport.combined.missingFunds.recommendations && (
+                                                                <div style={{ marginTop: '12px' }}>
+                                                                    <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', lineHeight: '1.6' }}>
+                                                                        {Array.isArray(displayReport.combined.missingFunds.recommendations)
+                                                                            ? displayReport.combined.missingFunds.recommendations.map((rec: string, idx: number) => (
+                                                                                <li key={idx} style={{ marginBottom: '6px' }}>{rec}</li>
+                                                                            ))
+                                                                            : <li>{String(displayReport.combined.missingFunds.recommendations)}</li>
+                                                                        }
+                                                                    </ul>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Financial Analysis */}
+                                                {displayReport.combined.financialAnalysis && (
+                                                    <div style={{ marginBottom: '20px' }}>
+                                                        <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', color: 'var(--txt)', fontWeight: 600 }}>
+                                                            Financial Analysis
+                                                        </h4>
+                                                        <div style={{
+                                                            padding: '12px',
+                                                            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                                                            borderRadius: '6px',
+                                                            fontSize: '14px',
+                                                            color: 'var(--txt)'
+                                                        }}>
+                                                            {displayReport.combined.financialAnalysis.profitLoss && (
+                                                                <div style={{ marginBottom: '12px' }}>
+                                                                    <h5 style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--txt)', fontWeight: 500 }}>
+                                                                        Profit/Loss
+                                                                    </h5>
+                                                                    <p style={{ margin: '4px 0', fontSize: '14px', color: 'var(--muted)' }}>
+                                                                        <strong style={{ color: 'var(--txt)' }}>Net P/L:</strong> {displayReport.combined.financialAnalysis.profitLoss.netProfitLoss || 0} {displayReport.combined.financialAnalysis.profitLoss.currency || 'USD'}
+                                                                    </p>
+                                                                    {displayReport.combined.financialAnalysis.profitLoss.ngnEquivalent && (
+                                                                        <p style={{ margin: '4px 0', fontSize: '14px', color: 'var(--muted)' }}>
+                                                                            <strong style={{ color: 'var(--txt)' }}>NGN Equivalent:</strong> {displayReport.combined.financialAnalysis.profitLoss.ngnEquivalent} NGN
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Compliance */}
+                                                {displayReport.combined.compliance && (
+                                                    <div style={{ marginBottom: '20px' }}>
+                                                        <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', color: 'var(--txt)', fontWeight: 600 }}>
+                                                            Compliance
+                                                        </h4>
+                                                        <div style={{
+                                                            padding: '12px',
+                                                            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                                                            borderRadius: '6px',
+                                                            fontSize: '14px',
+                                                            color: 'var(--txt)'
+                                                        }}>
+                                                            <p style={{ margin: '4px 0', fontSize: '14px', color: 'var(--muted)' }}>
+                                                                <strong style={{ color: 'var(--txt)' }}>Status:</strong> {displayReport.combined.compliance.complianceStatus || 'N/A'}
+                                                            </p>
+                                                            {displayReport.combined.compliance.taxObligations && displayReport.combined.compliance.taxObligations.length > 0 && (
+                                                                <div style={{ marginTop: '12px' }}>
+                                                                    <h5 style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--txt)', fontWeight: 500 }}>
+                                                                        Tax Obligations
+                                                                    </h5>
+                                                                    <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: 'var(--muted)', lineHeight: '1.6' }}>
+                                                                        {displayReport.combined.compliance.taxObligations.map((obligation: string, idx: number) => (
+                                                                            <li key={idx} style={{ marginBottom: '6px' }}>{obligation}</li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Risk Assessment */}
+                                                {displayReport.combined.riskAssessment && (
+                                                    <div style={{ marginBottom: '20px' }}>
+                                                        <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', color: 'var(--txt)', fontWeight: 600 }}>
+                                                            Risk Assessment
+                                                        </h4>
+                                                        <div style={{
+                                                            padding: '12px',
+                                                            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                                                            borderRadius: '6px',
+                                                            fontSize: '14px',
+                                                            color: 'var(--txt)'
+                                                        }}>
+                                                            <p style={{ margin: '4px 0', fontSize: '14px', color: 'var(--muted)' }}>
+                                                                <strong style={{ color: 'var(--txt)' }}>Overall Risk Level:</strong> {displayReport.combined.riskAssessment.overallRiskLevel || 'N/A'}
+                                                            </p>
+                                                            {displayReport.combined.riskAssessment.suspiciousTransactions && displayReport.combined.riskAssessment.suspiciousTransactions.length > 0 && (
+                                                                <div style={{ marginTop: '12px' }}>
+                                                                    <h5 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#dc2626', fontWeight: 500 }}>
+                                                                        Suspicious Transactions ({displayReport.combined.riskAssessment.suspiciousTransactions.length})
+                                                                    </h5>
+                                                                    <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: 'var(--muted)', lineHeight: '1.6' }}>
+                                                                        {displayReport.combined.riskAssessment.suspiciousTransactions.slice(0, 3).map((tx: any, idx: number) => (
+                                                                            <li key={idx} style={{ marginBottom: '6px' }}>
+                                                                                <strong>{tx.type}:</strong> {tx.description} ({tx.amount} - {tx.riskLevel})
+                                                                            </li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Audit Report */}
+                                                {displayReport.combined.auditReport && (
+                                                    <div style={{ marginBottom: '20px' }}>
+                                                        <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', color: 'var(--txt)', fontWeight: 600 }}>
+                                                            Audit Report
+                                                        </h4>
+                                                        {displayReport.combined.auditReport.keyFindings && (
+                                                            <div style={{ marginBottom: '12px' }}>
+                                                                <h5 style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--txt)', fontWeight: 500 }}>
+                                                                    Key Findings
+                                                                </h5>
+                                                                <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: 'var(--muted)', lineHeight: '1.6' }}>
+                                                                    {Array.isArray(displayReport.combined.auditReport.keyFindings)
+                                                                        ? displayReport.combined.auditReport.keyFindings.map((finding: string, idx: number) => (
+                                                                            <li key={idx} style={{ marginBottom: '6px' }}>{finding}</li>
+                                                                        ))
+                                                                        : <li>{String(displayReport.combined.auditReport.keyFindings)}</li>
+                                                                    }
+                                                                </ul>
+                                                            </div>
+                                                        )}
+                                                        {displayReport.combined.auditReport.recommendations && (
+                                                            <div style={{ marginTop: '12px' }}>
+                                                                <h5 style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--txt)', fontWeight: 500 }}>
+                                                                    Recommendations
+                                                                </h5>
+                                                                <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: 'var(--muted)', lineHeight: '1.6' }}>
+                                                                    {Array.isArray(displayReport.combined.auditReport.recommendations)
+                                                                        ? displayReport.combined.auditReport.recommendations.map((rec: string, idx: number) => (
+                                                                            <li key={idx} style={{ marginBottom: '6px' }}>{rec}</li>
+                                                                        ))
+                                                                        : <li>{String(displayReport.combined.auditReport.recommendations)}</li>
+                                                                    }
+                                                                </ul>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <p style={{
+                                                margin: 0,
+                                                color: 'var(--txt)',
+                                                fontSize: '14px',
+                                                lineHeight: '1.5'
+                                            }}>
+                                                Your financial analysis has been completed successfully. Report data is being processed.
+                                            </p>
+                                        )}
+                                    </div>
+                                    <button
+                                        onClick={handleReset}
+                                        className="btn"
+                                        style={{
+                                            width: '100%',
+                                            marginTop: '8px'
+                                        }}
+                                    >
+                                        Upload Another Statement
+                                    </button>
+                                </div>
+                            );
+                        })()
+                    ) : (uploading || extracting || analyzing) ? (
                         <div style={{
                             display: 'flex',
                             flexDirection: 'column',
@@ -438,7 +861,7 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                                 }
                             `}</style>
                         </div>
-                    ) : result && result.status === 'completed' ? (
+                    ) : error ? (
                         <div style={{
                             display: 'flex',
                             flexDirection: 'column',
@@ -463,37 +886,267 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                                         padding: '16px',
                                         backgroundColor: 'rgba(0, 0, 0, 0.2)',
                                         borderRadius: '8px',
-                                        maxHeight: '400px',
+                                        maxHeight: '600px',
                                         overflowY: 'auto'
                                     }}>
-                                        <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', color: 'var(--txt)' }}>
-                                            Executive Summary
-                                        </h4>
+                                        {/* Executive Summary */}
                                         {result.report.combined.executiveSummary && (
-                                            <div style={{ marginBottom: '16px' }}>
-                                                <p style={{ margin: '4px 0', fontSize: '14px', color: 'var(--muted)' }}>
-                                                    <strong>Status:</strong> {result.report.combined.executiveSummary.overallReconciliationStatus || 'N/A'}
-                                                </p>
-                                                <p style={{ margin: '4px 0', fontSize: '14px', color: 'var(--muted)' }}>
-                                                    <strong>Discrepancies:</strong> {result.report.combined.executiveSummary.totalDiscrepancies || 0}
-                                                </p>
-                                                {result.report.combined.executiveSummary.missingFundsAmount > 0 && (
-                                                    <p style={{ margin: '4px 0', fontSize: '14px', color: '#dc2626' }}>
-                                                        <strong>Missing Funds:</strong> {result.report.combined.executiveSummary.missingFundsAmount} {result.report.combined.executiveSummary.missingFundsCurrency || 'NGN'}
+                                            <div style={{ marginBottom: '20px' }}>
+                                                <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', color: 'var(--txt)', fontWeight: 600 }}>
+                                                    Executive Summary
+                                                </h4>
+                                                <div style={{ marginBottom: '12px' }}>
+                                                    <p style={{ margin: '4px 0', fontSize: '14px', color: 'var(--muted)' }}>
+                                                        <strong style={{ color: 'var(--txt)' }}>Status:</strong> {result.report.combined.executiveSummary.overallReconciliationStatus || 'N/A'}
                                                     </p>
+                                                    <p style={{ margin: '4px 0', fontSize: '14px', color: 'var(--muted)' }}>
+                                                        <strong style={{ color: 'var(--txt)' }}>Discrepancies:</strong> {result.report.combined.executiveSummary.totalDiscrepancies || 0}
+                                                    </p>
+                                                    {result.report.combined.executiveSummary.missingFundsAmount > 0 && (
+                                                        <p style={{ margin: '4px 0', fontSize: '14px', color: '#dc2626', fontWeight: 500 }}>
+                                                            <strong>Missing Funds:</strong> {result.report.combined.executiveSummary.missingFundsAmount} {result.report.combined.executiveSummary.missingFundsCurrency || 'NGN'}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Analysis Report */}
+                                        {result.report.combined.analysisReport && (
+                                            <div style={{ marginBottom: '20px' }}>
+                                                <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', color: 'var(--txt)', fontWeight: 600 }}>
+                                                    Analysis Report
+                                                </h4>
+                                                {typeof result.report.combined.analysisReport === 'string' ? (
+                                                    <div style={{
+                                                        padding: '12px',
+                                                        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                                                        borderRadius: '6px',
+                                                        fontSize: '14px',
+                                                        color: 'var(--txt)',
+                                                        lineHeight: '1.6',
+                                                        whiteSpace: 'pre-wrap'
+                                                    }}>
+                                                        {result.report.combined.analysisReport}
+                                                    </div>
+                                                ) : (
+                                                    <div style={{
+                                                        padding: '12px',
+                                                        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                                                        borderRadius: '6px',
+                                                        fontSize: '14px',
+                                                        color: 'var(--txt)',
+                                                        lineHeight: '1.6'
+                                                    }}>
+                                                        {JSON.stringify(result.report.combined.analysisReport, null, 2)}
+                                                    </div>
                                                 )}
                                             </div>
                                         )}
-                                        {result.report.combined.auditReport?.keyFindings && (
-                                            <div style={{ marginTop: '16px' }}>
-                                                <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--txt)' }}>
-                                                    Key Findings
+
+                                        {/* Audit Report */}
+                                        {result.report.combined.auditReport && (
+                                            <div style={{ marginBottom: '20px' }}>
+                                                <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', color: 'var(--txt)', fontWeight: 600 }}>
+                                                    Audit Report
                                                 </h4>
-                                                <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: 'var(--muted)' }}>
-                                                    {result.report.combined.auditReport.keyFindings.slice(0, 5).map((finding: string, idx: number) => (
-                                                        <li key={idx} style={{ marginBottom: '4px' }}>{finding}</li>
-                                                    ))}
-                                                </ul>
+                                                {result.report.combined.auditReport.keyFindings && (
+                                                    <div style={{ marginBottom: '12px' }}>
+                                                        <h5 style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--txt)', fontWeight: 500 }}>
+                                                            Key Findings
+                                                        </h5>
+                                                        <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: 'var(--muted)', lineHeight: '1.6' }}>
+                                                            {Array.isArray(result.report.combined.auditReport.keyFindings)
+                                                                ? result.report.combined.auditReport.keyFindings.map((finding: string, idx: number) => (
+                                                                    <li key={idx} style={{ marginBottom: '6px' }}>{finding}</li>
+                                                                ))
+                                                                : <li>{String(result.report.combined.auditReport.keyFindings)}</li>
+                                                            }
+                                                        </ul>
+                                                    </div>
+                                                )}
+                                                {result.report.combined.auditReport.recommendations && (
+                                                    <div style={{ marginTop: '12px' }}>
+                                                        <h5 style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--txt)', fontWeight: 500 }}>
+                                                            Recommendations
+                                                        </h5>
+                                                        <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: 'var(--muted)', lineHeight: '1.6' }}>
+                                                            {Array.isArray(result.report.combined.auditReport.recommendations)
+                                                                ? result.report.combined.auditReport.recommendations.map((rec: string, idx: number) => (
+                                                                    <li key={idx} style={{ marginBottom: '6px' }}>{rec}</li>
+                                                                ))
+                                                                : <li>{String(result.report.combined.auditReport.recommendations)}</li>
+                                                            }
+                                                        </ul>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Reconciliation */}
+                                        {result.report.combined.reconciliation && (
+                                            <div style={{ marginBottom: '20px' }}>
+                                                <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', color: 'var(--txt)', fontWeight: 600 }}>
+                                                    Reconciliation
+                                                </h4>
+                                                <div style={{
+                                                    padding: '12px',
+                                                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                                                    borderRadius: '6px',
+                                                    fontSize: '14px',
+                                                    color: 'var(--txt)'
+                                                }}>
+                                                    <p style={{ margin: '4px 0', fontSize: '14px', color: 'var(--muted)' }}>
+                                                        <strong style={{ color: 'var(--txt)' }}>Matched Transactions:</strong> {result.report.combined.reconciliation.matchedTransactions || 0}
+                                                    </p>
+                                                    <p style={{ margin: '4px 0', fontSize: '14px', color: 'var(--muted)' }}>
+                                                        <strong style={{ color: 'var(--txt)' }}>Reconciliation Rate:</strong> {result.report.combined.reconciliation.reconciliationRate || 0}%
+                                                    </p>
+                                                    {result.report.combined.reconciliation.discrepancies && result.report.combined.reconciliation.discrepancies.length > 0 && (
+                                                        <div style={{ marginTop: '12px' }}>
+                                                            <h5 style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--txt)', fontWeight: 500 }}>
+                                                                Discrepancies ({result.report.combined.reconciliation.discrepancies.length})
+                                                            </h5>
+                                                            <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: 'var(--muted)', lineHeight: '1.6' }}>
+                                                                {result.report.combined.reconciliation.discrepancies.slice(0, 5).map((disc: any, idx: number) => (
+                                                                    <li key={idx} style={{ marginBottom: '6px' }}>
+                                                                        <strong>{disc.type}:</strong> {disc.description} ({disc.amount} {disc.currency})
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Missing Funds */}
+                                        {result.report.combined.missingFunds && result.report.combined.missingFunds.totalMissing > 0 && (
+                                            <div style={{ marginBottom: '20px' }}>
+                                                <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', color: '#dc2626', fontWeight: 600 }}>
+                                                    Missing Funds
+                                                </h4>
+                                                <div style={{
+                                                    padding: '12px',
+                                                    backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                                                    borderRadius: '6px',
+                                                    fontSize: '14px',
+                                                    color: '#dc2626'
+                                                }}>
+                                                    <p style={{ margin: '4px 0', fontSize: '14px', fontWeight: 500 }}>
+                                                        <strong>Total Missing:</strong> {result.report.combined.missingFunds.totalMissing} {result.report.combined.missingFunds.currency || 'NGN'}
+                                                    </p>
+                                                    {result.report.combined.missingFunds.recommendations && (
+                                                        <div style={{ marginTop: '12px' }}>
+                                                            <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', lineHeight: '1.6' }}>
+                                                                {Array.isArray(result.report.combined.missingFunds.recommendations)
+                                                                    ? result.report.combined.missingFunds.recommendations.map((rec: string, idx: number) => (
+                                                                        <li key={idx} style={{ marginBottom: '6px' }}>{rec}</li>
+                                                                    ))
+                                                                    : <li>{String(result.report.combined.missingFunds.recommendations)}</li>
+                                                                }
+                                                            </ul>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Financial Analysis */}
+                                        {result.report.combined.financialAnalysis && (
+                                            <div style={{ marginBottom: '20px' }}>
+                                                <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', color: 'var(--txt)', fontWeight: 600 }}>
+                                                    Financial Analysis
+                                                </h4>
+                                                <div style={{
+                                                    padding: '12px',
+                                                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                                                    borderRadius: '6px',
+                                                    fontSize: '14px',
+                                                    color: 'var(--txt)'
+                                                }}>
+                                                    {result.report.combined.financialAnalysis.profitLoss && (
+                                                        <div style={{ marginBottom: '12px' }}>
+                                                            <h5 style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--txt)', fontWeight: 500 }}>
+                                                                Profit/Loss
+                                                            </h5>
+                                                            <p style={{ margin: '4px 0', fontSize: '14px', color: 'var(--muted)' }}>
+                                                                <strong style={{ color: 'var(--txt)' }}>Net P/L:</strong> {result.report.combined.financialAnalysis.profitLoss.netProfitLoss || 0} {result.report.combined.financialAnalysis.profitLoss.currency || 'USD'}
+                                                            </p>
+                                                            {result.report.combined.financialAnalysis.profitLoss.ngnEquivalent && (
+                                                                <p style={{ margin: '4px 0', fontSize: '14px', color: 'var(--muted)' }}>
+                                                                    <strong style={{ color: 'var(--txt)' }}>NGN Equivalent:</strong> {result.report.combined.financialAnalysis.profitLoss.ngnEquivalent} NGN
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Compliance */}
+                                        {result.report.combined.compliance && (
+                                            <div style={{ marginBottom: '20px' }}>
+                                                <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', color: 'var(--txt)', fontWeight: 600 }}>
+                                                    Compliance
+                                                </h4>
+                                                <div style={{
+                                                    padding: '12px',
+                                                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                                                    borderRadius: '6px',
+                                                    fontSize: '14px',
+                                                    color: 'var(--txt)'
+                                                }}>
+                                                    <p style={{ margin: '4px 0', fontSize: '14px', color: 'var(--muted)' }}>
+                                                        <strong style={{ color: 'var(--txt)' }}>Status:</strong> {result.report.combined.compliance.complianceStatus || 'N/A'}
+                                                    </p>
+                                                    {result.report.combined.compliance.taxObligations && result.report.combined.compliance.taxObligations.length > 0 && (
+                                                        <div style={{ marginTop: '12px' }}>
+                                                            <h5 style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--txt)', fontWeight: 500 }}>
+                                                                Tax Obligations
+                                                            </h5>
+                                                            <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: 'var(--muted)', lineHeight: '1.6' }}>
+                                                                {result.report.combined.compliance.taxObligations.map((obligation: string, idx: number) => (
+                                                                    <li key={idx} style={{ marginBottom: '6px' }}>{obligation}</li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Risk Assessment */}
+                                        {result.report.combined.riskAssessment && (
+                                            <div style={{ marginBottom: '20px' }}>
+                                                <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', color: 'var(--txt)', fontWeight: 600 }}>
+                                                    Risk Assessment
+                                                </h4>
+                                                <div style={{
+                                                    padding: '12px',
+                                                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                                                    borderRadius: '6px',
+                                                    fontSize: '14px',
+                                                    color: 'var(--txt)'
+                                                }}>
+                                                    <p style={{ margin: '4px 0', fontSize: '14px', color: 'var(--muted)' }}>
+                                                        <strong style={{ color: 'var(--txt)' }}>Overall Risk Level:</strong> {result.report.combined.riskAssessment.overallRiskLevel || 'N/A'}
+                                                    </p>
+                                                    {result.report.combined.riskAssessment.suspiciousTransactions && result.report.combined.riskAssessment.suspiciousTransactions.length > 0 && (
+                                                        <div style={{ marginTop: '12px' }}>
+                                                            <h5 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#dc2626', fontWeight: 500 }}>
+                                                                Suspicious Transactions ({result.report.combined.riskAssessment.suspiciousTransactions.length})
+                                                            </h5>
+                                                            <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: 'var(--muted)', lineHeight: '1.6' }}>
+                                                                {result.report.combined.riskAssessment.suspiciousTransactions.slice(0, 3).map((tx: any, idx: number) => (
+                                                                    <li key={idx} style={{ marginBottom: '6px' }}>
+                                                                        <strong>{tx.type}:</strong> {tx.description} ({tx.amount} - {tx.riskLevel})
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
@@ -504,7 +1157,7 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                                         fontSize: '14px',
                                         lineHeight: '1.5'
                                     }}>
-                                        Your financial analysis has been completed successfully. The detailed report has been saved.
+                                        Your financial analysis has been completed successfully. Report data is being processed.
                                     </p>
                                 )}
                             </div>
@@ -568,10 +1221,29 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                                 margin: 0,
                                 color: 'var(--muted)',
                                 fontSize: '14px',
-                                textAlign: 'center'
+                                textAlign: 'center',
+                                marginBottom: '12px'
                             }}>
                                 Upload both your bank and crypto statements for analysis. We support PDF, DOCX, DOC, TXT, HTML, PNG, and JPEG formats.
                             </p>
+
+                            <div style={{
+                                padding: '12px',
+                                backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                                borderRadius: '8px',
+                                border: '1px solid rgba(255, 193, 7, 0.3)',
+                                marginBottom: '16px'
+                            }}>
+                                <p style={{
+                                    margin: 0,
+                                    color: '#ffc107',
+                                    fontSize: '13px',
+                                    textAlign: 'center',
+                                    fontWeight: 500
+                                }}>
+                                    ⚠️ Important: Only statements covering 1 month or less are allowed. Maximum file size: 200KB per file.
+                                </p>
+                            </div>
 
                             <div style={{
                                 display: 'grid',
@@ -742,56 +1414,23 @@ export default function FinancialAnalysisModal({ open, onClose }: FinancialAnaly
                                 </button>
                             )}
 
-                            {jobId && (
-                                <>
-                                    {(!jobStatus || jobStatus.extractionStatus === 'pending') && !extracting && !uploading && (
-                                        <button
-                                            onClick={extractStatements}
-                                            className="btn"
-                                            style={{
-                                                width: '100%',
-                                                marginTop: '8px',
-                                                padding: '16px',
-                                                fontSize: '16px',
-                                                fontWeight: 600
-                                            }}
-                                            disabled={extracting}
-                                        >
-                                            Extract Statements
-                                        </button>
-                                    )}
-
-                                    {jobStatus && jobStatus.extractionStatus === 'completed' && jobStatus.analysisStatus === 'pending' && !analyzing && (
-                                        <button
-                                            onClick={analyzeStatements}
-                                            className="btn"
-                                            style={{
-                                                width: '100%',
-                                                marginTop: '8px',
-                                                padding: '16px',
-                                                fontSize: '16px',
-                                                fontWeight: 600
-                                            }}
-                                            disabled={analyzing}
-                                        >
-                                            Process & Analyze
-                                        </button>
-                                    )}
-
-                                    {jobStatus && jobStatus.extractionStatus === 'completed' && (
-                                        <div style={{
-                                            marginTop: '16px',
-                                            padding: '12px',
-                                            backgroundColor: 'rgba(0, 115, 55, 0.1)',
-                                            borderRadius: '8px',
-                                            border: '1px solid rgba(0, 115, 55, 0.3)'
-                                        }}>
-                                            <p style={{ margin: 0, fontSize: '14px', color: 'var(--accent)' }}>
-                                                ✓ Extraction complete: Bank ({jobStatus.bankStatement?.status}) | Crypto ({jobStatus.cryptoStatement?.status})
-                                            </p>
-                                        </div>
-                                    )}
-                                </>
+                            {jobId && jobStatus && !result && !error && (
+                                <div style={{
+                                    marginTop: '16px',
+                                    padding: '12px',
+                                    backgroundColor: 'rgba(0, 115, 55, 0.1)',
+                                    borderRadius: '8px',
+                                    border: '1px solid rgba(0, 115, 55, 0.3)'
+                                }}>
+                                    <p style={{ margin: 0, fontSize: '14px', color: 'var(--accent)' }}>
+                                        {jobStatus.extractionStatus === 'completed' && jobStatus.analysisStatus === 'processing'
+                                            ? '✓ Extraction complete. Analysis in progress...'
+                                            : jobStatus.extractionStatus === 'processing'
+                                                ? '⏳ Extraction in progress...'
+                                                : '⏳ Processing...'
+                                        }
+                                    </p>
+                                </div>
                             )}
 
                             {(!bankFile || !cryptoFile) && (

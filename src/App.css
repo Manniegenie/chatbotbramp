@@ -95,12 +95,13 @@ body{ margin:0; background:transparent; color:var(--txt); font-family: -apple-sy
 
 .chat{ max-width:860px; margin:0 auto; padding:20px; flex:1; width:100%; display:flex; flex-direction:column; background:rgba(0,0,0,0.45); border-radius:18px; border:1px solid rgba(255,255,255,0.08); box-shadow:0 24px 60px rgba(0,0,0,0.4); }
 .messages{ display:flex; flex-direction:column; gap:12px; padding:8px 0; overflow:auto }
-.bubble{ background:rgba(15,19,26,0.55); border:1px solid rgba(255,255,255,0.08); padding:12px 14px; border-radius:14px; max-width:80%; box-shadow:0 12px 30px rgba(0,0,0,0.28); }
-.bubble.user{ align-self:flex-end; background:rgba(15,19,26,0.55); border-color:rgba(255,255,255,0.08); }
-.bubble .role{ font-size:11px; color:var(--muted); margin-bottom:6px }
-.bubble .text{ white-space:pre-wrap; line-height:1.5; color:#DADADA }
+.bubble{ background:rgba(15,19,26,0.95); border:1.5px solid rgba(255,255,255,0.2); padding:14px 16px; border-radius:14px; max-width:80%; box-shadow:0 6px 20px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2); }
+.bubble.user{ align-self:flex-end; background:rgba(0,115,55,0.35); border-color:rgba(0,115,55,0.5); box-shadow:0 6px 20px rgba(0,115,55,0.3), 0 2px 8px rgba(0,0,0,0.2); }
+.bubble .role{ font-size:11px; color:rgba(255,255,255,0.85); margin-bottom:6px }
+.bubble .text{ white-space:pre-wrap; line-height:1.5; color:rgba(255,255,255,0.92) }
 .bubble.assistant .text{ font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, "Segoe UI", Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji"; font-size: 14px; text-align: left; }
 .bubble .text a{ color:var(--accent); text-decoration:underline; word-break:break-word }
+.bubble .text strong{ color:rgba(255,255,255,1); font-weight:bold }
 .typing{ color:var(--muted); font-size:13px; padding:6px 2px }
 
 .composer{ margin-top:auto; display:flex; gap:10px; padding-top:10px; border-top:1px solid var(--border) }
