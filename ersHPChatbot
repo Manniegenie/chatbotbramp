@@ -1,0 +1,11 @@
+[33mcommit ff58dcaec0431ee764cf49d5b78e42d590b5e769[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: Chibuike Nwogbo <manuelwurld@gmail.com>
+Date:   Thu Nov 13 15:54:11 2025 +0100
+
+    300303
+
+ src/App.css                    |   9 [32m+[m[31m-[m
+ src/FinancialAnalysisModal.tsx | 811 [32m++++++++++++++++++++++++++++++++++++[m[31m-----[m
+ src/MobileApp.css              |  20 [32m+[m[31m-[m
+ src/index.css                  |  30 [32m+[m[31m-[m
+ 4 files changed, 757 insertions(+), 113 deletions(-)

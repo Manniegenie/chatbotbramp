@@ -95,7 +95,8 @@ body{ margin:0; background:transparent; color:var(--txt); font-family: -apple-sy
 
 .chat{ max-width:860px; margin:0 auto; padding:20px; flex:1; width:100%; display:flex; flex-direction:column; background:rgba(0,0,0,0.45); border-radius:18px; border:1px solid rgba(255,255,255,0.08); box-shadow:0 24px 60px rgba(0,0,0,0.4); }
 .messages{ display:flex; flex-direction:column; gap:12px; padding:8px 0; overflow:auto }
-.bubble{ background:rgba(15,19,26,0.95); border:1.5px solid rgba(255,255,255,0.2); padding:14px 16px; border-radius:14px; max-width:80%; box-shadow:0 6px 20px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2); }
+.bubble{ background:rgba(15,19,26,0.6); border:0.5px solid rgba(255,255,255,0.1); padding:14px 16px; border-radius:14px; max-width:80%; box-shadow:none; }
+.bubble.assistant{ background:rgba(15,19,26,0.6); border:0.5px solid rgba(255,255,255,0.1); box-shadow:none; }
 .bubble.user{ align-self:flex-end; background:rgba(0,115,55,0.35); border-color:rgba(0,115,55,0.5); box-shadow:0 6px 20px rgba(0,115,55,0.3), 0 2px 8px rgba(0,0,0,0.2); }
 .bubble .role{ font-size:11px; color:rgba(255,255,255,0.85); margin-bottom:6px }
 .bubble .text{ white-space:pre-wrap; line-height:1.5; color:rgba(255,255,255,0.92) }
