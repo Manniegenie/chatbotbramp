@@ -369,14 +369,6 @@ button, .hint { -webkit-tap-highlight-color: transparent; }
   animation: preloaderSpin 1s linear infinite;
   box-shadow: 0 0 24px rgba(0, 255, 173, 0.35);
 }
-.preloader__text {
-  font-size: 15px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  opacity: 0.85;
-  color: #dfe9ff;
-}
-
 @keyframes preloaderSpin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }

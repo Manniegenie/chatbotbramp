@@ -41,7 +41,6 @@ export default function Preloader() {
             </div>
             <div className="preloader__content">
                 <div className="preloader__spinner" />
-                <p className="preloader__text">Preparing Bramp experience...</p>
             </div>
         </div>
     )
