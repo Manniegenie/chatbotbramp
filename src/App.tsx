@@ -21,6 +21,7 @@ import BitcoinIcon from './assets/bicoin.png'
 import XrpIcon from './assets/xrp.png'
 import ShibaIcon from './assets/shiba-inu.png'
 import SendIcon from './assets/send.png'
+import Preloader from './Preloader'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -287,6 +288,7 @@ function ThreeDotLoader() {
 
 export default function App() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [showPreloader, setShowPreloader] = useState(true)
 
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -320,6 +322,9 @@ export default function App() {
 
   const overlayActive = showSignIn || showSignUp || showSell || showVoiceChat || showFinancialAnalysis
   const pageClassName = overlayActive ? 'page page--overlay' : 'page'
+  const pageOverlayStyle: React.CSSProperties | undefined = showPreloader
+    ? { opacity: 0, pointerEvents: 'none' }
+    : undefined
 
   // Parse **text** to <strong>text</strong>
   function parseBoldText(text: string): string {
@@ -330,6 +335,11 @@ export default function App() {
   const [tickerText, setTickerText] = useState<string>('')
   // keep a loading flag internally but DO NOT display loading text in UI
   const [tickerLoading, setTickerLoading] = useState<boolean>(false)
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setShowPreloader(false), 3000)
+    return () => window.clearTimeout(timer)
+  }, [])
 
 
   // Clean URL on load (background operation)
@@ -712,6 +722,7 @@ export default function App() {
 
   return (
     <>
+      {showPreloader && <Preloader />}
       <style>
         {`
           /* Fix iOS viewport issues */
@@ -1051,7 +1062,7 @@ export default function App() {
           }
         `}
       </style>
-      <div className={pageClassName}>
+      <div className={pageClassName} style={pageOverlayStyle}>
         <header ref={headerRef} className="header">
           <div className="brand">
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
