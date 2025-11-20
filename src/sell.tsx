@@ -211,21 +211,25 @@ const overlayStyle: React.CSSProperties = {
   overflow: 'hidden',
   touchAction: 'none'
 }
-const sheetStyle: React.CSSProperties = {
-  maxWidth: '600px',
-  width: '100%',
-  maxHeight: '90vh',
-  marginTop: '2vh',
-  marginLeft: 'auto',
-  marginRight: 'auto',
-  background: 'transparent',
-  border: '1px solid transparent',
-  borderRadius: '16px',
-  padding: '32px',
-  boxShadow: 'none',
-  overflow: 'hidden',
-  display: 'flex',
-  flexDirection: 'column'
+// Responsive sheet style - wider on desktop
+const getSheetStyle = (): React.CSSProperties => {
+  const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768
+  return {
+    maxWidth: isDesktop ? '610px' : '600px',
+    width: '100%',
+    maxHeight: '90vh',
+    marginTop: '2vh',
+    marginLeft: 'auto',
+    marginRight: 'auto',
+    background: 'transparent',
+    border: '1px solid transparent',
+    borderRadius: '16px',
+    padding: '32px',
+    boxShadow: 'none',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column'
+  }
 }
 const headerStyle: React.CSSProperties = { marginBottom: '16px', flexShrink: 0 }
 const titleRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6 }
@@ -527,7 +531,7 @@ export default function SellModal({ open, onClose, onChatEcho, onStartInteractio
 
   return createPortal(
     <div style={overlayStyle} role="dialog" aria-modal="true" aria-labelledby="sell-title" onClick={onClose}>
-      <div style={sheetStyle} onClick={(e) => e.stopPropagation()}>
+      <div style={getSheetStyle()} onClick={(e) => e.stopPropagation()}>
         {/* Loading Overlay */}
         {(initLoading || payLoading || accountNameLoading || banksLoading) && (
           <div style={{
