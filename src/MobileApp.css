@@ -945,6 +945,11 @@ a {
   animation: gradient-border 3s ease infinite;
 }
 
+/* Override for centered input to ensure gradient shows */
+.mobile-input.mobile-input-centered::before {
+  z-index: -1;
+}
+
 .mobile-input:focus {
   box-shadow: none;
 }
@@ -1393,7 +1398,7 @@ a:focus-visible,
   width: 100%;
 }
 
-.mobile-input-centered {
+.mobile-input.mobile-input-centered {
   width: 100%;
   border-radius: 32px;
   padding: 24px;
@@ -1401,19 +1406,18 @@ a:focus-visible,
   caret-color: var(--accent);
   box-sizing: border-box;
   min-height: 64px;
-  background: rgba(18, 18, 26, 0.2);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: transparent;
   border: none;
   box-shadow: none;
   transition: all 0.3s ease;
   color: #ffffff;
   outline: none;
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
-.mobile-input-centered::before {
+/* Gradient border - bottom layer */
+.mobile-input.mobile-input-centered::before {
   content: '';
   position: absolute;
   inset: -1px;
@@ -1434,31 +1438,36 @@ a:focus-visible,
   animation: gradient-border 3s ease infinite;
 }
 
-.mobile-input-centered::after {
+/* Backdrop filter and shadows - middle layer */
+.mobile-input.mobile-input-centered::after {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: 32px;
+  background: rgba(18, 18, 26, 0.2);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37),
               inset 0 1px 1px rgba(255, 255, 255, 0.1);
   pointer-events: none;
-  z-index: -1;
+  z-index: 1;
 }
 
-.mobile-input-centered::placeholder {
+.mobile-input.mobile-input-centered::placeholder {
   color: #ffffff;
 }
 
-.mobile-input-centered:focus {
-  background: rgba(18, 18, 26, 0.3);
+.mobile-input.mobile-input-centered:focus {
+  background: transparent;
 }
 
-.mobile-input-centered:focus::after {
+.mobile-input.mobile-input-centered:focus::after {
+  background: rgba(18, 18, 26, 0.3);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
               inset 0 1px 1px rgba(255, 255, 255, 0.15);
 }
 
-.mobile-input-centered:focus::before {
+.mobile-input.mobile-input-centered:focus::before {
   animation: gradient-border 3s ease infinite;
 }
 
