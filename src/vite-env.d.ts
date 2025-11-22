@@ -5,6 +5,11 @@ declare module '*.JPG' {
     export default src
 }
 
+declare module '*.JPG?url' {
+    const src: string
+    export default src
+}
+
 // Speech Recognition API types
 interface SpeechRecognition extends EventTarget {
     continuous: boolean;
