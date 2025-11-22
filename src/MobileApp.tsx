@@ -297,6 +297,14 @@ export default function MobileApp() {
   const [loading, setLoading] = useState(false)
   const [showCenteredInput, setShowCenteredInput] = useState(true)
   const [showSignIn, setShowSignIn] = useState(false)
+
+  // Set wallpaper image on html element so it's available to body
+  useEffect(() => {
+    document.documentElement.style.setProperty('--wallpaper-image', `url(${wallpaper2})`)
+    return () => {
+      document.documentElement.style.removeProperty('--wallpaper-image')
+    }
+  }, [])
   const [showSignUp, setShowSignUp] = useState(false)
   const [showSell, setShowSell] = useState(false)
   const [showMenu, setShowMenu] = useState(false)

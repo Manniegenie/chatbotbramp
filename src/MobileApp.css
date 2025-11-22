@@ -44,6 +44,10 @@ html {
   padding: 0;
   overflow: hidden;
   background-color: #575d5b;
+  /* Ensure html extends to full viewport including safe areas */
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
 }
 
 body,
@@ -60,7 +64,13 @@ body,
 body {
   margin: 0;
   padding: 0;
-  background: #575d5b;
+  background-color: #575d5b;
+  background-image: var(--wallpaper-image, url('./assets/wallpaper2.jpg'));
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  /* NO background-attachment property - causes issues on mobile */
+  background-attachment: scroll;
   color: var(--txt);
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, 'Segoe UI', 'Roboto', 'Helvetica Neue',
     'Arial', sans-serif;
@@ -71,8 +81,15 @@ body {
   -webkit-tap-highlight-color: transparent;
   height: 100%;
   height: 100dvh;
+  height: -webkit-fill-available;
   width: 100vw;
   overflow: hidden;
+  /* Extend into safe areas - ensure full coverage */
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  /* Ensure body covers entire viewport including safe areas */
+  position: relative;
 }
 
 button {
@@ -112,31 +129,10 @@ a {
   left: 0 !important;
 }
 
-/* Wallpaper background - shared by all pages and modals */
+/* Wallpaper background - now on body element instead of pseudo-element */
 .mobile-page::before,
 .page::before {
-  content: '';
-  position: fixed;
-  /* Extend into safe areas to cover notches */
-  top: calc(-1 * env(safe-area-inset-top, 0px));
-  left: calc(-1 * env(safe-area-inset-left, 0px));
-  right: calc(-1 * env(safe-area-inset-right, 0px));
-  bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
-  width: calc(100vw + env(safe-area-inset-left, 0px) + env(safe-area-inset-right, 0px));
-  height: calc(100dvh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px));
-  margin: 0;
-  padding: 0;
-  z-index: -2;
-  background-color: #575d5b;
-  background-image: var(--wallpaper-image, url('./assets/wallpaper2.jpg'));
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
-  /* Removed background-attachment: fixed - doesn't work properly on mobile */
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
+  content: none; /* Background is now on body element */
 }
 
 .mobile-page::after,
