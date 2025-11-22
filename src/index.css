@@ -30,7 +30,7 @@ html { text-size-adjust: 100%; -webkit-text-size-adjust: 100%; }
 }
 
 body {
-  background: #1a1a1f; /* Dark gray background behind wallpaper */
+  background: transparent; /* Wallpaper is the background */
   color: var(--txt);
   font-family: var(--font-sans);
   font-optical-sizing: auto;

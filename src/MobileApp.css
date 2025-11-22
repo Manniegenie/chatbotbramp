@@ -55,7 +55,7 @@ body,
 body {
   margin: 0;
   padding: 0;
-  background: #1a1a1f; /* Dark gray background behind wallpaper */
+  background: transparent; /* Wallpaper is the background */
   color: var(--txt);
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, 'Segoe UI', 'Roboto', 'Helvetica Neue',
     'Arial', sans-serif;
@@ -134,8 +134,8 @@ a {
   margin: 0;
   padding: 0;
   z-index: -2;
-  background-color: #1a1a1f; /* Dark gray fallback behind wallpaper */
   background-image: var(--wallpaper-image, url('./assets/wallpaper1.jpg'));
+  background-color: transparent; /* Wallpaper is the background */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -896,7 +896,6 @@ a {
   background: linear-gradient(0deg, rgba(0, 0, 0, 0.85) 70%, transparent);
   border-top: 1px solid var(--border);
   z-index: 10;
-}
   flex-shrink: 0;
 }
 
