@@ -1118,16 +1118,17 @@ export default function MobileApp() {
             <stop offset="0%" stopColor="#A80077" />
             <stop offset="100%" stopColor="#66FF00" />
           </linearGradient>
-          <linearGradient id="sign-in-gradient-animated" x1="0%" y1="0%" x2="100%" y2="100%" gradientUnits="userSpaceOnUse">
+          <linearGradient id="sign-in-gradient-animated" x1="0%" y1="0%" x2="100%" y2="100%" spreadMethod="repeat">
             <stop offset="0%" stopColor="#A80077">
               <animate attributeName="stop-color" values="#A80077;#66FF00;#A80077" dur="3s" repeatCount="indefinite" />
             </stop>
-            <stop offset="50%" stopColor="#66FF00">
+            <stop offset="100%" stopColor="#66FF00">
               <animate attributeName="stop-color" values="#66FF00;#A80077;#66FF00" dur="3s" repeatCount="indefinite" />
             </stop>
-            <stop offset="100%" stopColor="#A80077">
-              <animate attributeName="stop-color" values="#A80077;#66FF00;#A80077" dur="3s" repeatCount="indefinite" />
-            </stop>
+            <animate attributeName="x1" values="0%;100%;0%" dur="3s" repeatCount="indefinite" />
+            <animate attributeName="y1" values="0%;100%;0%" dur="3s" repeatCount="indefinite" />
+            <animate attributeName="x2" values="100%;0%;100%" dur="3s" repeatCount="indefinite" />
+            <animate attributeName="y2" values="100%;0%;100%" dur="3s" repeatCount="indefinite" />
           </linearGradient>
         </defs>
       </svg>
@@ -1157,7 +1158,7 @@ export default function MobileApp() {
                   <div className="mobile-auth-buttons">
                     <button className="mobile-auth-btn mobile-sign-in-btn" onClick={() => setShowSignIn(true)}>
                       <span>Login</span>
-                      <Unlock className="login-icon" stroke="url(#sign-in-gradient-animated)" />
+                      <Unlock className="login-icon" stroke="url(#sign-in-gradient)" />
                     </button>
                     <button
                       className="mobile-auth-btn mobile-auth-btn-secondary mobile-create-account-btn"
