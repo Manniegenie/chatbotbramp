@@ -254,7 +254,7 @@ a {
 
 .mobile-sign-in-btn svg,
 .mobile-sign-in-btn .login-icon {
-  stroke: url(#sign-in-gradient);
+  stroke: #007337;
   fill: none;
   flex-shrink: 0;
   width: 1.3em;

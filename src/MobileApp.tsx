@@ -1158,7 +1158,7 @@ export default function MobileApp() {
                   <div className="mobile-auth-buttons">
                     <button className="mobile-auth-btn mobile-sign-in-btn" onClick={() => setShowSignIn(true)}>
                       <span>Login</span>
-                      <Unlock className="login-icon" stroke="url(#sign-in-gradient)" />
+                      <Unlock className="login-icon" stroke="#007337" />
                     </button>
                     <button
                       className="mobile-auth-btn mobile-auth-btn-secondary mobile-create-account-btn"
