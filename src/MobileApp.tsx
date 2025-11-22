@@ -21,6 +21,7 @@ import ShibaIcon from './assets/shiba-inu.png'
 import SendIcon from './assets/send.png'
 import wallpaper1 from './assets/wallpaper1.jpg'
 import Preloader from './Preloader'
+import { LogIn } from 'lucide-react'
 import './MobileApp.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
@@ -1081,6 +1082,14 @@ export default function MobileApp() {
   return (
     <>
       {showPreloader && <Preloader />}
+      <svg width="0" height="0" style={{ position: 'absolute' }}>
+        <defs>
+          <linearGradient id="sign-in-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#A80077" />
+            <stop offset="100%" stopColor="#66FF00" />
+          </linearGradient>
+        </defs>
+      </svg>
       <div
         className={pageClassName}
         style={{
@@ -1105,8 +1114,9 @@ export default function MobileApp() {
               {!auth ? (
                 <>
                   <div className="mobile-auth-buttons">
-                    <button className="mobile-auth-btn" onClick={() => setShowSignIn(true)}>
-                      Sign In
+                    <button className="mobile-auth-btn mobile-sign-in-btn" onClick={() => setShowSignIn(true)}>
+                      <LogIn className="sign-in-icon" size={16} />
+                      <span>Sign In</span>
                     </button>
                     <button
                       className="mobile-auth-btn mobile-auth-btn-secondary mobile-create-account-btn"

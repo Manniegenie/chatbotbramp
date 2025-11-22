@@ -220,6 +220,19 @@ a {
   background: transparent;
   color: white;
   min-height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mobile-sign-in-btn svg {
+  stroke: url(#sign-in-gradient);
+  fill: none;
+  flex-shrink: 0;
+}
+
+.mobile-sign-in-btn span {
+  flex-shrink: 0;
 }
 
 .mobile-auth-btn-secondary {
@@ -240,7 +253,8 @@ a {
   inset: 0;
   border-radius: 10px;
   padding: 1px;
-  background: linear-gradient(135deg, #A80077, #66FF00);
+  background: linear-gradient(135deg, #A80077, #66FF00, #A80077);
+  background-size: 200% 200%;
   -webkit-mask: 
     linear-gradient(#fff 0 0) content-box, 
     linear-gradient(#fff 0 0);
@@ -251,6 +265,19 @@ a {
   mask-composite: exclude;
   pointer-events: none;
   z-index: -1;
+  animation: gradient-border 3s ease infinite;
+}
+
+@keyframes gradient-border {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .mobile-auth-btn:active {
