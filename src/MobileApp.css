@@ -45,17 +45,27 @@ html {
   }
 }
 
-html,
-body,
-#root {
-  height: 100%;
-  height: 100vh;
+html {
   height: 100dvh;
   overflow: hidden;
   margin: 0 !important;
   padding: 0 !important;
-  width: 100%;
-  width: 100vw;
+  width: 100vw !important;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+body,
+#root {
+  height: 100dvh;
+  overflow: hidden;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100vw !important;
+  position: relative;
 }
 
 body {
@@ -70,10 +80,8 @@ body {
   touch-action: pan-y;
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
-  /* Full screen PWA support */
-  height: 100vh;
-  height: 100dvh; /* Dynamic viewport height for mobile browsers */
-  height: 100%;
+  /* Full screen PWA support - use dynamic viewport height */
+  height: 100dvh;
   overflow: hidden;
   /* Ensure no safe area padding prevents wallpaper from reaching edges */
   padding-top: 0 !important;
@@ -117,11 +125,8 @@ a {
    ============================================ */
 
 .mobile-page {
-  width: 100%;
-  width: 100vw;
-  height: 100vh;
-  height: 100dvh;
-  height: 100%;
+  width: 100vw !important;
+  height: 100dvh !important;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -130,6 +135,8 @@ a {
   background: transparent;
   margin: 0 !important;
   padding: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
 }
 
 /* Starfield background - shared by all pages and modals */
@@ -137,15 +144,13 @@ a {
 .page::before {
   content: '';
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100vw;
-  width: 100%;
-  height: 100vh;
-  height: 100dvh;
-  height: 100%;
+  /* Extend into notch areas on iOS using negative margins */
+  top: calc(-1 * env(safe-area-inset-top, 0px)) !important;
+  left: calc(-1 * env(safe-area-inset-left, 0px)) !important;
+  right: calc(-1 * env(safe-area-inset-right, 0px)) !important;
+  bottom: calc(-1 * env(safe-area-inset-bottom, 0px)) !important;
+  width: calc(100vw + env(safe-area-inset-left, 0px) + env(safe-area-inset-right, 0px)) !important;
+  height: calc(100dvh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px)) !important;
   margin: 0 !important;
   padding: 0 !important;
   z-index: -2;
@@ -157,6 +162,8 @@ a {
   background-attachment: fixed;
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .mobile-page::after,
