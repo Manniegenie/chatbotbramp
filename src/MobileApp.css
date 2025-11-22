@@ -253,6 +253,8 @@ a {
 
 .mobile-sign-in-btn {
   gap: 4px !important; /* Reduce gap between text and icon */
+  background: #04080B4D !important; /* Same background as Sign Up */
+  border: none !important;
 }
 
 .mobile-sign-in-btn svg {
