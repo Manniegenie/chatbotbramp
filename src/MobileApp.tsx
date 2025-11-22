@@ -985,20 +985,21 @@ export default function MobileApp() {
     )
   }
 
-  // Background div component - used by all views
-  const BackgroundDiv = () => (
+  // Background div - memoized to prevent blinking
+  const backgroundDiv = React.useMemo(() => (
     <div
+      key="wallpaper-bg"
       className={`mobile-wallpaper-bg ${messages.length > 0 ? 'mobile-wallpaper-bg--chat-active' : ''}`}
       style={{
         backgroundImage: `url(${wallpaper2})`
       }}
     />
-  );
+  ), [messages.length]);
 
   if (showGame) {
     return (
       <>
-        <BackgroundDiv />
+        {backgroundDiv}
         <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
           <MobileGame onClose={() => setShowGame(false)} />
         </div>
@@ -1009,7 +1010,7 @@ export default function MobileApp() {
   if (showLiskWallet) {
     return (
       <>
-        <BackgroundDiv />
+        {backgroundDiv}
         <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
           <MobileLiskWallet onClose={() => setShowLiskWallet(false)} />
         </div>
@@ -1020,7 +1021,7 @@ export default function MobileApp() {
   if (showVoiceChat) {
     return (
       <>
-        <BackgroundDiv />
+        {backgroundDiv}
         <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
           <MobileVoiceChat
             onClose={() => setShowVoiceChat(false)}
@@ -1044,7 +1045,7 @@ export default function MobileApp() {
   if (showSell) {
     return (
       <>
-        <BackgroundDiv />
+        {backgroundDiv}
         <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
           <MobileSell
             open={showSell}
@@ -1060,7 +1061,7 @@ export default function MobileApp() {
   if (showSignIn) {
     return (
       <>
-        <BackgroundDiv />
+        {backgroundDiv}
         <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
           <MobileSignIn
             onCancel={() => {
@@ -1090,7 +1091,7 @@ export default function MobileApp() {
   if (showSignUp) {
     return (
       <>
-        <BackgroundDiv />
+        {backgroundDiv}
         <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
           <MobileSignUp
             onCancel={() => setShowSignUp(false)}
@@ -1121,7 +1122,7 @@ export default function MobileApp() {
           </linearGradient>
         </defs>
       </svg>
-      <BackgroundDiv />
+      {backgroundDiv}
       <div
         className={`${pageClassName} ${messages.length > 0 ? 'mobile-page--chat-active' : ''}`}
         style={pageOverlayStyle}

@@ -43,11 +43,6 @@ html {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
   background-color: #575d5b;
 }
 
@@ -77,20 +72,7 @@ body {
   height: 100dvh;
   width: 100vw;
   overflow: hidden;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
 }
-
-/* Full screen PWA - extend into status bar areas */
-.mobile-page {
-  min-height: 100vh;
-  min-height: 100dvh;
-  /* Remove safe area padding to allow background to fill entire screen */
-}
-
 
 button {
   font-family: inherit;
@@ -113,6 +95,8 @@ a {
 .mobile-page {
   width: 100vw !important;
   height: 100dvh !important;
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -127,26 +111,24 @@ a {
 
 /* Fixed wallpaper background div - covers entire screen */
 .mobile-wallpaper-bg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100vw;
-  height: 100vh;
-  height: 100dvh;
-  margin: 0;
-  padding: 0;
-  z-index: -10;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  z-index: -10 !important;
   background-color: #575d5b;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: scroll; /* iOS doesn't support fixed well */
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
+  will-change: transform;
   pointer-events: none;
 }
 
