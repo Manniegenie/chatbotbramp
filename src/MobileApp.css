@@ -1415,27 +1415,27 @@ a:focus-visible,
   z-index: 0;
 }
 
-/* Animated gradient border using mask technique */
+/* Animated gradient border - same approach as sign up button */
 .mobile-input.mobile-input-centered::before,
 .mobile-input-centered::before {
   content: '';
   position: absolute;
-  inset: -3px;
-  border-radius: 35px;
-  padding: 3px;
+  inset: 0;
+  border-radius: 32px;
+  padding: 1px;
   background: linear-gradient(135deg, #A80077, #66FF00, #A80077);
   background-size: 200% 200%;
   -webkit-mask: 
     linear-gradient(#fff 0 0) content-box, 
     linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
+  -webkit-mask-composite: destination-out;
   mask: 
     linear-gradient(#fff 0 0) content-box, 
     linear-gradient(#fff 0 0);
   mask-composite: exclude;
+  pointer-events: none;
   z-index: -1;
   animation: gradient-border 3s ease infinite;
-  pointer-events: none;
 }
 
 .mobile-send-inline {
