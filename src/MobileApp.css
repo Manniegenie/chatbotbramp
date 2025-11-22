@@ -146,20 +146,8 @@ a {
 
 /* Dark overlay for chat when messages exist */
 .mobile-page--chat-active::after {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100vw;
-  height: 100vh;
-  height: 100dvh;
-  margin: 0;
-  padding: 0;
-  z-index: -1;
-  background: rgba(0, 0, 0, 0.75); /* Dark overlay for readability */
-  pointer-events: none;
+  content: none;
+  display: none;
 }
 
 
@@ -1335,12 +1323,13 @@ a:focus-visible,
 
 .mobile-centered-input {
   position: absolute;
-  top: 35%;
+  bottom: 0;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   width: calc(100% - 32px);
   max-width: 384px;
   z-index: 10;
+  padding-bottom: 20px;
 }
 
 .mobile-app-logo {
