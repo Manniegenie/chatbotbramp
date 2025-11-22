@@ -7,7 +7,7 @@
   --accent: #007337;
   --accent-rgb: 0, 115, 55;
   --border: #1f2330;
-  --txt: #ffffff;
+  --txt: #f8fafc;
   --shadow: 0 8px 24px rgba(0,0,0,.35);
   --glow: 0 0 0 4px rgba(0,115,55,.35);
   --sa-top: env(safe-area-inset-top, 0px);

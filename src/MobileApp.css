@@ -11,7 +11,7 @@
   --accent: #007337;
   --accent-rgb: 0, 115, 55;
   --border: #1f2330;
-  --txt: #e5e7eb;
+  --txt: #f8fafc;
   --shadow: rgba(0, 0, 0, 0.3);
   --gradient-start: rgba(11, 11, 16, 0.98);
   --gradient-end: rgba(11, 11, 16, 0.95);
@@ -68,6 +68,9 @@ body {
   height: 100vh;
   height: 100dvh; /* Dynamic viewport height for mobile browsers */
   overflow: hidden;
+  /* Ensure no safe area padding prevents wallpaper from reaching edges */
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
 }
 
 @supports (-webkit-touch-callout: none) {
@@ -121,7 +124,15 @@ a {
 .page::before {
   content: '';
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
   z-index: -2;
   background-image: var(--wallpaper-image, url('./assets/wallpaper1.jpg'));
   background-size: cover;
