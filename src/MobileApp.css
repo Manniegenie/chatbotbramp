@@ -1406,23 +1406,15 @@ a:focus-visible,
   border-radius: 32px;
   padding: 24px;
   font-size: 16px;
-  caret-color: var(--accent);
   box-sizing: border-box;
   min-height: 64px;
-  background: rgba(18, 18, 26, 0.2);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: none;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37),
-              inset 0 1px 1px rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
-  color: #ffffff;
   outline: none;
   position: relative;
-  z-index: 0;
+  background: transparent;
 }
 
-/* Animated gradient border layer - MUST be visible */
+/* Animated gradient border */
 .mobile-input.mobile-input-centered::before,
 .mobile-input-centered::before {
   content: '';
@@ -1430,8 +1422,8 @@ a:focus-visible,
   inset: -1px;
   border-radius: 32px;
   padding: 1px;
-  background: linear-gradient(135deg, #A80077, #66FF00, #A80077) !important;
-  background-size: 200% 200% !important;
+  background: linear-gradient(135deg, #A80077, #66FF00, #A80077);
+  background-size: 200% 200%;
   -webkit-mask: 
     linear-gradient(#fff 0 0) content-box, 
     linear-gradient(#fff 0 0);
@@ -1441,24 +1433,8 @@ a:focus-visible,
     linear-gradient(#fff 0 0);
   mask-composite: exclude;
   pointer-events: none;
-  z-index: 10 !important;
-  animation: gradient-border 3s ease infinite !important;
-}
-
-.mobile-input-centered::placeholder {
-  color: #ffffff;
-}
-
-.mobile-input-centered:focus {
-  background: rgba(18, 18, 26, 0.3);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
-              inset 0 1px 1px rgba(255, 255, 255, 0.15);
-}
-
-.mobile-input.mobile-input-centered:focus::before,
-.mobile-input-centered:focus::before {
-  animation: gradient-border 3s ease infinite !important;
-  z-index: 10 !important;
+  z-index: -1;
+  animation: gradient-border 3s ease infinite;
 }
 
 .mobile-send-inline {
