@@ -30,7 +30,7 @@ html { text-size-adjust: 100%; -webkit-text-size-adjust: 100%; }
 }
 
 body {
-  background: var(--bg);
+  background: #1a1a1f; /* Dark gray background behind wallpaper */
   color: var(--txt);
   font-family: var(--font-sans);
   font-optical-sizing: auto;
@@ -176,6 +176,7 @@ a:hover { opacity: .92; }
   gap: 14px;
   padding: 10px 14px;
   overflow-y: auto;
+  background: #000000; /* Black background for readability */
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   flex: 1 1 auto;
@@ -251,7 +252,7 @@ a:hover { opacity: .92; }
   gap: 10px;
   padding: 10px 14px calc(10px + var(--sa-bottom));
   border-top: none;
-  background: linear-gradient(180deg, rgba(11,11,16,0), rgba(11,11,16,.92));
+  background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.92));
   backdrop-filter: saturate(120%) blur(6px);
   -webkit-backdrop-filter: saturate(120%) blur(6px);
 }

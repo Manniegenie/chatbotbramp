@@ -1,7 +1,7 @@
 :root{ --bg:#000000; --card:#12121a; --muted:#9aa3af; --accent:#007337; --accent-rgb:0,115,55; --border:#1f2330; --txt:#f8fafc }
 *{ box-sizing:border-box }
 html,body,#root{ height:100% }
-body{ margin:0; background:transparent; color:var(--txt); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, "Segoe UI", Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji" }
+body{ margin:0; background:#1a1a1f; color:var(--txt); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, "Segoe UI", Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji" }
 
 .page{ min-height:100%; display:flex; flex-direction:column; background:transparent; position:relative; overflow:hidden; isolation:isolate }
 
@@ -18,6 +18,7 @@ body{ margin:0; background:transparent; color:var(--txt); font-family: -apple-sy
   margin: 0;
   padding: 0;
   z-index:-2;
+  background-color: #1a1a1f; /* Dark gray fallback behind wallpaper */
   background-image: url('./assets/wallpaper1.jpg');
   background-size:cover;
   background-position:center;
@@ -102,7 +103,7 @@ body{ margin:0; background:transparent; color:var(--txt); font-family: -apple-sy
 .btn[disabled]{ opacity:.6; cursor:not-allowed }
 
 .chat{ max-width:860px; margin:0 auto; padding:20px; flex:1; width:100%; display:flex; flex-direction:column; background:rgba(0,0,0,0.45); border-radius:18px; border:1px solid rgba(255,255,255,0.08); box-shadow:0 24px 60px rgba(0,0,0,0.4); }
-.messages{ display:flex; flex-direction:column; gap:12px; padding:8px 0; overflow:auto }
+.messages{ display:flex; flex-direction:column; gap:12px; padding:8px 0; overflow:auto; background:#000000 }
 .bubble{ background:rgba(15,19,26,0.6); border:0.5px solid rgba(255,255,255,0.1); padding:14px 16px; border-radius:14px; max-width:80%; box-shadow:none; }
 .bubble.assistant{ background:rgba(15,19,26,0.6); border:0.5px solid rgba(255,255,255,0.1); box-shadow:none; }
 .bubble.user{ align-self:flex-end; background:rgba(0,115,55,0.35); border-color:rgba(0,115,55,0.5); box-shadow:0 6px 20px rgba(0,115,55,0.3), 0 2px 8px rgba(0,0,0,0.2); }
