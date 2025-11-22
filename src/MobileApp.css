@@ -55,7 +55,7 @@ body,
 body {
   margin: 0;
   padding: 0;
-  background: #64748b; /* Dark fallback background behind wallpaper */
+  background: #575d5b; /* Dark fallback background behind wallpaper */
   color: var(--txt);
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, 'Segoe UI', 'Roboto', 'Helvetica Neue',
     'Arial', sans-serif;
@@ -134,7 +134,7 @@ a {
   margin: 0;
   padding: 0;
   z-index: -2;
-  background-color: #64748b; /* Dark fallback behind wallpaper */
+  background-color: #575d5b; /* Dark fallback behind wallpaper */
   background-image: var(--wallpaper-image, url('./assets/wallpaper1.jpg'));
   background-size: cover;
   background-position: center;
@@ -191,10 +191,10 @@ a {
   border-bottom: none;
   padding-top: max(12px, var(--safe-top));
   flex-shrink: 0;
-  background: #000000; /* Black background for header */
+  background: transparent; /* Let wallpaper show through */
 }
 
-/* Black background for top safe area */
+/* Wallpaper background for top safe area */
 .mobile-header::before {
   content: '';
   position: absolute;
@@ -202,7 +202,10 @@ a {
   left: 0;
   right: 0;
   height: var(--safe-top);
-  background: #000000; /* Black for top safe area */
+  background-image: var(--wallpaper-image, url('./assets/wallpaper1.jpg'));
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   z-index: -1;
 }
 
@@ -213,7 +216,7 @@ a {
   padding: 12px 16px;
   gap: 12px;
   min-height: 56px;
-  background: #000000; /* Black background for navigation area */
+  background: transparent; /* Let wallpaper show through */
 }
 
 .mobile-brand {

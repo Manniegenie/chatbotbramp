@@ -30,7 +30,7 @@ html { text-size-adjust: 100%; -webkit-text-size-adjust: 100%; }
 }
 
 body {
-  background: #64748b; /* Dark fallback background behind wallpaper */
+  background: #575d5b; /* Dark fallback background behind wallpaper */
   color: var(--txt);
   font-family: var(--font-sans);
   font-optical-sizing: auto;
@@ -118,10 +118,10 @@ a:hover { opacity: .92; }
   padding: calc(10px + var(--sa-top)) 16px 10px;
   min-height: calc(var(--appbar-h) + var(--sa-top));
   border-bottom: none;
-  background: #000000; /* Black background for header */
+  background: transparent; /* Let wallpaper show through */
 }
 
-/* Black background for top safe area */
+/* Wallpaper background for top safe area */
 .header::before {
   content: '';
   position: absolute;
@@ -129,7 +129,10 @@ a:hover { opacity: .92; }
   left: 0;
   right: 0;
   height: var(--sa-top);
-  background: #000000; /* Black for top safe area */
+  background-image: var(--wallpaper-image, url('./assets/wallpaper1.jpg'));
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   z-index: -1;
 }
   gap: 12px;
