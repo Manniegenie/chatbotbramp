@@ -54,7 +54,7 @@ body{ margin:0; background:transparent; color:var(--txt); font-family: -apple-sy
   content:none;
 }
 
-.header{ position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:none; background:transparent }
+.header{ position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:none; background:#1a1a1f }
 .brand{ display:flex; gap:12px; align-items:center; min-width:0; flex:1 }
 .logo{ width:36px; height:36px; border-radius:10px; background:var(--accent); display:grid; place-items:center; box-shadow:0 8px 24px rgba(0,115,55,.35) }
 .tag{ margin:0; color:var(--muted); font-size:12px }
