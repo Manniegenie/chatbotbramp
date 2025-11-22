@@ -315,11 +315,28 @@ a:hover { opacity: .92; }
   padding: 18px 14px calc(14px + var(--sa-bottom));
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.7); font-size: 14px; 
-  background: rgba(18, 18, 26, 0.1);
-  backdrop-filter: blur(15px);
+  background: transparent;
 }
 .footer a { color: var(--muted); text-decoration: none; }
 .footer a:hover { color: var(--accent); }
+
+.footer a.footer-privacy-link {
+  background: linear-gradient(135deg, #A80077, #66FF00);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  font-weight: 600;
+}
+
+.footer a.footer-privacy-link:hover {
+  background: linear-gradient(135deg, #A80077, #66FF00);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  text-decoration: underline;
+}
 
 /* Pause marquee animation on hover for readability */
 .ticker-wrap:hover .ticker { animation-play-state: paused; }

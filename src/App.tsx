@@ -901,6 +901,7 @@ export default function App() {
             gap: 12px;
             flex-wrap: wrap;
             color: #DADADA;
+            background: transparent;
           }
 
           .footer-links {
@@ -1088,8 +1089,7 @@ export default function App() {
             <div style={{ display: 'flex', gap: 8 }}>
               <button className="btn" onClick={() => setShowSignIn(true)}>Sell</button>
               <button
-                className="btn"
-                style={{ background: 'transparent', color: 'var(--txt)', border: '1px solid var(--accent)' }}
+                className="btn btn-sign-up"
                 onClick={() => setShowSignUp(true)}
               >
                 Sign Up
@@ -1416,7 +1416,7 @@ export default function App() {
             <div className="footer-links">
               <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
               <a href="https://drive.google.com/file/d/1FjCZHHg0KoOq-6Sxx_gxGCDhLRUrFtw4/view?usp=sharing" target="_blank" rel="noopener noreferrer">Risk Disclaimer</a>
-              <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Privacy</a>
+              <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer" className="footer-privacy-link">Privacy</a>
               <a href="https://www.instagram.com/chatbramp/" target="_blank" rel="noopener noreferrer">Instagram</a>
               <a href="https://www.youtube.com/@Chatbramp" target="_blank" rel="noopener noreferrer">YouTube</a>
               <a href="https://x.com/Chatbramp" target="_blank" rel="noopener noreferrer">Twitter</a>

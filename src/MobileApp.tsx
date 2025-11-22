@@ -15,7 +15,7 @@ import micIcon from './assets/mic.png'
 import { Bitcoin, EthereumCircleFlat, Solana, Bnb, Usdt, Usdc, Exchange02, Send } from './components/CryptoIcons'
 import wallpaper2 from './assets/wallpaper2.jpg'
 import Preloader from './Preloader'
-import { LogIn } from 'lucide-react'
+import { LogIn, MessageCircleQuestionMark } from 'lucide-react'
 import './MobileApp.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
@@ -289,6 +289,7 @@ export default function MobileApp() {
   const [showGame, setShowGame] = useState(false)
   const [showVoiceChat, setShowVoiceChat] = useState(false)
   const [showLiskWallet, setShowLiskWallet] = useState(false)
+  const [showHints, setShowHints] = useState(false)
 
   const [auth, setAuth] = useState<SignInResult | null>(() => {
     const authState = getAuthState()
@@ -899,26 +900,28 @@ export default function MobileApp() {
           </div>
         ) : (
           <>
-            <div className="mobile-hints">
-              <button
-                className="mobile-hint"
-                onClick={() => handleHintClick('Sell 100 USDT to NGN')}
-              >
-                Sell USDT
-              </button>
-              <button
-                className="mobile-hint"
-                onClick={() => handleHintClick('Show my portfolio balance')}
-              >
-                Portfolio
-              </button>
-              <button
-                className="mobile-hint"
-                onClick={() => handleHintClick('Current NGN rates')}
-              >
-                NGN Rates
-              </button>
-            </div>
+            {showHints && (
+              <div className="mobile-hints">
+                <button
+                  className="mobile-hint"
+                  onClick={() => handleHintClick('Sell 100 USDT to NGN')}
+                >
+                  Sell USDT
+                </button>
+                <button
+                  className="mobile-hint"
+                  onClick={() => handleHintClick('Show my portfolio balance')}
+                >
+                  Portfolio
+                </button>
+                <button
+                  className="mobile-hint"
+                  onClick={() => handleHintClick('Current NGN rates')}
+                >
+                  NGN Rates
+                </button>
+              </div>
+            )}
 
             <form className="mobile-composer" onSubmit={sendMessage}>
               <input
@@ -930,6 +933,25 @@ export default function MobileApp() {
                 disabled={loading}
               />
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <button
+                  type="button"
+                  className="mobile-send-btn"
+                  onClick={() => setShowHints(!showHints)}
+                  disabled={loading}
+                  aria-label="Show hints"
+                  style={{
+                    background: 'transparent',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    padding: '8px',
+                    minWidth: '44px',
+                    height: '44px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <MessageCircleQuestionMark size={24} style={{ color: showHints ? '#007337' : 'rgba(255, 255, 255, 0.7)' }} />
+                </button>
                 <button
                   type="submit"
                   className="mobile-send-btn"
