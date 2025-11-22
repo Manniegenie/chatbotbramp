@@ -15,7 +15,7 @@ import micIcon from './assets/mic.png'
 import { Bitcoin, EthereumCircleFlat, Usdt, Usdc, Exchange02, Send } from './components/CryptoIcons'
 import wallpaper2 from './assets/wallpaper2.jpg'
 import Preloader from './Preloader'
-import { MessageCircleIcon, LockOpen } from 'lucide-react'
+import { MessageCircleIcon, Unlock } from 'lucide-react'
 import './MobileApp.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
@@ -1118,6 +1118,17 @@ export default function MobileApp() {
             <stop offset="0%" stopColor="#A80077" />
             <stop offset="100%" stopColor="#66FF00" />
           </linearGradient>
+          <linearGradient id="sign-in-gradient-animated" x1="0%" y1="0%" x2="100%" y2="100%" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#A80077">
+              <animate attributeName="stop-color" values="#A80077;#66FF00;#A80077" dur="3s" repeatCount="indefinite" />
+            </stop>
+            <stop offset="50%" stopColor="#66FF00">
+              <animate attributeName="stop-color" values="#66FF00;#A80077;#66FF00" dur="3s" repeatCount="indefinite" />
+            </stop>
+            <stop offset="100%" stopColor="#A80077">
+              <animate attributeName="stop-color" values="#A80077;#66FF00;#A80077" dur="3s" repeatCount="indefinite" />
+            </stop>
+          </linearGradient>
         </defs>
       </svg>
       <div
@@ -1146,7 +1157,7 @@ export default function MobileApp() {
                   <div className="mobile-auth-buttons">
                     <button className="mobile-auth-btn mobile-sign-in-btn" onClick={() => setShowSignIn(true)}>
                       <span>Login</span>
-                      <LockOpen className="login-icon" size={16} stroke="url(#sign-in-gradient)" />
+                      <Unlock className="login-icon" stroke="url(#sign-in-gradient-animated)" />
                     </button>
                     <button
                       className="mobile-auth-btn mobile-auth-btn-secondary mobile-create-account-btn"

@@ -245,7 +245,7 @@ a {
 }
 
 .mobile-sign-in-btn {
-  gap: 2px !important; /* Very close to text */
+  gap: 3px !important; /* Very close to text */
   background: transparent !important;
   border: none !important;
   display: flex;
@@ -254,14 +254,15 @@ a {
 
 .mobile-sign-in-btn svg,
 .mobile-sign-in-btn .login-icon {
-  stroke: url(#sign-in-gradient);
+  stroke: url(#sign-in-gradient-animated);
   fill: none;
   flex-shrink: 0;
   width: 1em;
   height: 1em;
-  margin-left: 2px;
+  margin-left: 0;
   display: inline-block;
   vertical-align: middle;
+  stroke-width: 2;
 }
 
 .mobile-sign-in-btn .sign-in-icon {
