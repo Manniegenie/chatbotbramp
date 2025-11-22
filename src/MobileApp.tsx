@@ -14,7 +14,7 @@ import BrampLogo from './assets/logo.jpeg'
 import micIcon from './assets/mic.png'
 import SendIcon from './assets/send.png'
 import { Bitcoin, EthereumCircleFlat, Solana, Bnb, Usdt, Usdc, Exchange02 } from './components/CryptoIcons'
-import wallpaper1 from './assets/wallpaper1.jpg'
+import wallpaper2 from './assets/wallpaper2.JPG'
 import Preloader from './Preloader'
 import { LogIn } from 'lucide-react'
 import './MobileApp.css'
@@ -1097,7 +1097,7 @@ export default function MobileApp() {
         className={`${pageClassName} ${messages.length > 0 ? 'mobile-page--chat-active' : ''}`}
         style={{
           ...pageOverlayStyle,
-          '--wallpaper-image': `url(${wallpaper1})`
+          '--wallpaper-image': `url(${wallpaper2})`
         } as React.CSSProperties}
       >
         <header className="mobile-header">

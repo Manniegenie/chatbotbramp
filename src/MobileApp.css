@@ -15,10 +15,10 @@
   --shadow: rgba(0, 0, 0, 0.3);
   --gradient-start: rgba(11, 11, 16, 0.98);
   --gradient-end: rgba(11, 11, 16, 0.95);
-  --safe-top: env(safe-area-inset-top);
-  --safe-bottom: env(safe-area-inset-bottom);
-  --safe-left: env(safe-area-inset-left);
-  --safe-right: env(safe-area-inset-right);
+  --safe-top: 0;
+  --safe-bottom: 0;
+  --safe-left: 0;
+  --safe-right: 0;
 }
 
 /* ============================================
@@ -150,7 +150,7 @@ a {
   padding: 0 !important;
   z-index: -2;
   background-color: #575d5b; /* Dark fallback behind wallpaper */
-  background-image: var(--wallpaper-image, url('./assets/wallpaper1.jpg'));
+  background-image: var(--wallpaper-image, url('./assets/wallpaper2.JPG'));
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -206,24 +206,9 @@ a {
   top: 0;
   z-index: 50;
   border-bottom: none;
-  padding-top: max(12px, var(--safe-top));
+  padding-top: 12px;
   flex-shrink: 0;
   background: transparent; /* Let wallpaper show through */
-}
-
-/* Wallpaper background for top safe area */
-.mobile-header::before {
-  content: '';
-  position: absolute;
-  top: calc(-1 * var(--safe-top));
-  left: 0;
-  right: 0;
-  height: var(--safe-top);
-  background-image: var(--wallpaper-image, url('./assets/wallpaper1.jpg'));
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  z-index: -1;
 }
 
 .mobile-header-top {
@@ -556,8 +541,8 @@ a {
   height: 100%;
   background: transparent;
   border-left: none;
-  padding-top: max(72px, calc(var(--safe-top) + 56px));
-  padding-bottom: max(16px, var(--safe-bottom));
+  padding-top: 72px;
+  padding-bottom: 16px;
   padding-left: 10px;
   padding-right: 10px;
   overflow-y: auto;
@@ -926,24 +911,13 @@ a {
   display: flex;
   gap: 8px;
   padding: 12px;
-  padding-bottom: max(32px, var(--safe-bottom));
+  padding-bottom: 32px;
   background: linear-gradient(0deg, rgba(0, 0, 0, 0.85) 70%, transparent);
   border-top: 1px solid var(--border);
   z-index: 10;
   flex-shrink: 0;
 }
 
-/* Black background for bottom safe area */
-.mobile-composer::after {
-  content: '';
-  position: absolute;
-  bottom: calc(-1 * var(--safe-bottom));
-  left: 0;
-  right: 0;
-  height: var(--safe-bottom);
-  background: #000000; /* Black for bottom safe area */
-  z-index: -1;
-}
 
 .mobile-input {
   flex: 1;
@@ -1045,7 +1019,7 @@ a {
 
 .mobile-footer {
   padding: 12px 16px;
-  padding-bottom: max(12px, var(--safe-bottom));
+  padding-bottom: 12px;
   background: rgba(18, 18, 26, 0.1);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   text-align: center;
@@ -1120,7 +1094,7 @@ a {
 
   .mobile-composer {
     padding: 12px 24px;
-    padding-bottom: max(12px, var(--safe-bottom));
+    padding-bottom: 12px;
   }
 
   .mobile-hints {
@@ -1156,7 +1130,7 @@ a {
 
   .mobile-composer {
     padding: 8px 12px;
-    padding-bottom: max(8px, var(--safe-bottom));
+    padding-bottom: 8px;
   }
 
   .mobile-bubble-content {
