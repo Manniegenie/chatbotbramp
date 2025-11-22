@@ -136,7 +136,7 @@ a {
   z-index: -2;
   background-color: #575d5b; /* Dark fallback behind wallpaper */
   background-image: var(--wallpaper-image, url('./assets/wallpaper1.jpg'));
-  background-size: 120%;
+  background-size: 100% 100%;
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: scroll;
@@ -203,7 +203,7 @@ a {
   right: 0;
   height: var(--safe-top);
   background-image: var(--wallpaper-image, url('./assets/wallpaper1.jpg'));
-  background-size: 120%;
+  background-size: 100% 100%;
   background-position: center;
   background-repeat: no-repeat;
   z-index: -1;
