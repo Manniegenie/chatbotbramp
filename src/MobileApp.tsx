@@ -876,7 +876,7 @@ export default function MobileApp() {
                     }}
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   >
-                    {React.createElement(icons[currentIconIndex].component, { size: 48 })}
+                    {React.createElement(icons[currentIconIndex].component, { size: 62 })}
                   </motion.div>
                 </AnimatePresence>
               </div>
