@@ -961,7 +961,7 @@ export default function MobileApp() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px 12px' }}>
               <button
                 type="button"
-                className="mobile-send-btn"
+                className="mobile-send-btn mobile-hint-toggle-btn"
                 onClick={() => setShowHints(!showHints)}
                 disabled={loading}
                 aria-label="Show hints"
@@ -976,7 +976,7 @@ export default function MobileApp() {
                   justifyContent: 'center'
                 }}
               >
-                <MessageCircleIcon size={24} style={{ color: showHints ? '#007337' : 'rgba(255, 255, 255, 0.7)' }} />
+                <MessageCircleIcon size={24} stroke={showHints ? 'url(#sign-in-gradient)' : 'rgba(255, 255, 255, 0.7)'} />
               </button>
             </div>
             {showHints && (

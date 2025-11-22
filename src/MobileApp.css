@@ -828,7 +828,7 @@ a {
   display: flex;
   gap: 8px;
   padding: 0 12px 12px;
-  margin-bottom: 80px;
+  margin-bottom: 0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -905,7 +905,7 @@ a {
 .mobile-input {
   flex: 1;
   background: transparent;
-  border: 1px solid #007337;
+  border: 1px solid transparent;
   border-radius: 32px;
   padding: 12px 18px;
   color: var(--txt);
@@ -919,11 +919,36 @@ a {
   box-shadow: none;
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
+  position: relative;
+}
+
+.mobile-input::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 32px;
+  padding: 1px;
+  background: linear-gradient(135deg, #A80077, #66FF00);
+  background-size: 200% 200%;
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: -1;
+  animation: gradient-border 3s ease infinite;
 }
 
 .mobile-input:focus {
-  border-color: #007337;
   box-shadow: none;
+}
+
+.mobile-input:focus::before {
+  animation: gradient-border 3s ease infinite;
 }
 
 .mobile-input::placeholder {
