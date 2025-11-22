@@ -55,7 +55,7 @@ body,
 body {
   margin: 0;
   padding: 0;
-  background: transparent; /* Wallpaper is the background */
+  background: #64748b; /* Dark fallback background behind wallpaper */
   color: var(--txt);
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, 'Segoe UI', 'Roboto', 'Helvetica Neue',
     'Arial', sans-serif;
@@ -134,8 +134,8 @@ a {
   margin: 0;
   padding: 0;
   z-index: -2;
+  background-color: #64748b; /* Dark fallback behind wallpaper */
   background-image: var(--wallpaper-image, url('./assets/wallpaper1.jpg'));
-  background-color: transparent; /* Wallpaper is the background */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
