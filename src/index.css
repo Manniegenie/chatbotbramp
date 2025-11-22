@@ -119,6 +119,7 @@ a:hover { opacity: .92; }
   min-height: calc(var(--appbar-h) + var(--sa-top));
   border-bottom: none;
   background: transparent; /* Let wallpaper show through */
+  gap: 12px;
 }
 
 /* Wallpaper background for top safe area */
@@ -134,8 +135,6 @@ a:hover { opacity: .92; }
   background-position: center;
   background-repeat: no-repeat;
   z-index: -1;
-}
-  gap: 12px;
 }
 
 /* Brand */
