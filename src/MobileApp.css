@@ -43,6 +43,7 @@ html {
   margin: 0;
   padding: 0;
   overflow: hidden;
+  background-color: transparent;
 }
 
 body,
@@ -71,6 +72,7 @@ body {
   height: 100dvh;
   width: 100vw;
   overflow: hidden;
+  background-color: transparent;
 }
 
 button {
@@ -115,13 +117,13 @@ a {
 .page::before {
   content: '';
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100vw;
-  height: 100vh;
-  height: 100dvh;
+  top: calc(-1 * env(safe-area-inset-top, 0px));
+  left: calc(-1 * env(safe-area-inset-left, 0px));
+  right: calc(-1 * env(safe-area-inset-right, 0px));
+  bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+  width: calc(100vw + env(safe-area-inset-left, 0px) + env(safe-area-inset-right, 0px));
+  height: calc(100vh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px));
+  height: calc(100dvh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px));
   margin: 0;
   padding: 0;
   z-index: -2;
