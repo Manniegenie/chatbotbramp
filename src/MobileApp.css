@@ -1411,33 +1411,30 @@ a:focus-visible,
   border: none;
   outline: none;
   position: relative;
-  background: transparent;
+  background: rgba(0, 0, 0, 0.3);
   z-index: 0;
 }
 
-/* Animated gradient border - outer layer */
+/* Animated gradient border using mask technique */
 .mobile-input.mobile-input-centered::before,
 .mobile-input-centered::before {
   content: '';
   position: absolute;
-  inset: -4px;
-  border-radius: 36px;
+  inset: -3px;
+  border-radius: 35px;
+  padding: 3px;
   background: linear-gradient(135deg, #A80077, #66FF00, #A80077);
   background-size: 200% 200%;
-  z-index: -2;
-  animation: gradient-border 3s ease infinite;
-  pointer-events: none;
-}
-
-/* Background layer - inner, inset to show border */
-.mobile-input.mobile-input-centered::after,
-.mobile-input-centered::after {
-  content: '';
-  position: absolute;
-  inset: 4px;
-  border-radius: 28px;
-  background: rgba(0, 0, 0, 0.3);
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
   z-index: -1;
+  animation: gradient-border 3s ease infinite;
   pointer-events: none;
 }
 
