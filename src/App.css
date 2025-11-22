@@ -117,7 +117,7 @@ body{ margin:0; background:#575d5b; color:var(--txt); font-family: -apple-system
 .ticker-wrap::after {
   right: 0;
 }
-.btn{ appearance:none; color:#DADADA; border:1px solid rgba(255, 255, 255, 0.15); padding:10px 14px; border-radius:20px; font-weight:600; text-decoration:none; cursor:pointer; background:transparent }
+.btn{ appearance:none; color:#ffffff; border:1px solid rgba(255, 255, 255, 0.15); padding:10px 14px; border-radius:20px; font-weight:600; text-decoration:none; cursor:pointer; background:transparent }
 .btn[disabled]{ opacity:.6; cursor:not-allowed }
 
 /* Sign Up button with gradient border animation */
@@ -177,7 +177,7 @@ body{ margin:0; background:#575d5b; color:var(--txt); font-family: -apple-system
 .typing{ color:var(--muted); font-size:13px; padding:6px 2px }
 
 .composer{ margin-top:auto; display:flex; gap:10px; padding-top:10px; border-top:1px solid var(--border) }
-.composer input{ flex:1; background:var(--card); border:1px solid var(--border); color:#DADADA; padding:12px 14px; border-radius:10px }
+.composer input{ flex:1; background:var(--card); border:1px solid var(--border); color:#ffffff; padding:12px 14px; border-radius:10px }
 
 .hints{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px }
 .hint{ font-size:12px; color:var(--muted); border:1px dashed var(--border); padding:6px 8px; border-radius:8px; cursor:pointer }

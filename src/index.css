@@ -3,11 +3,11 @@
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", Arial, "Apple Color Emoji", "Segoe UI Emoji";
   --bg: #000000;
   --card: #12121a;
-  --muted: #ffffffcc;
+  --muted: #ffffff;
   --accent: #007337;
   --accent-rgb: 0, 115, 55;
   --border: #1f2330;
-  --txt: #f8fafc;
+  --txt: #ffffff;
   --shadow: 0 8px 24px rgba(0,0,0,.35);
   --glow: 0 0 0 4px rgba(0,115,55,.35);
   --sa-top: env(safe-area-inset-top, 0px);
@@ -279,17 +279,17 @@ a:hover { opacity: .92; }
   border: 0.5px solid rgba(255, 255, 255, 0.1);
   box-shadow: none;
 }
-.bubble.user .role { color: rgba(255, 255, 255, 0.85); }
+.bubble.user .role { color: #ffffff; }
 .bubble.assistant .role { color: var(--accent); font-weight: 700; }
 
-.bubble .text { white-space: pre-wrap; word-wrap: break-word; color: rgba(255, 255, 255, 0.92); }
-.bubble .text strong { font-weight: bold; color: rgba(255, 255, 255, 1); }
+.bubble .text { white-space: pre-wrap; word-wrap: break-word; color: #ffffff; }
+.bubble .text strong { font-weight: bold; color: #ffffff; }
 .bubble.assistant .text { 
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", Arial, "Apple Color Emoji", "Segoe UI Emoji"; 
   font-size: 14px;
   text-align: left;
   line-height: 1.4;
-  color: rgba(255, 255, 255, 0.92);
+  color: #ffffff;
 }
 
 /* CTA buttons inside messages */
@@ -341,7 +341,7 @@ a:hover { opacity: .92; }
   font-size: 15px;
   line-height: 1.4;
 }
-.composer input::placeholder { color: #7b8391; }
+.composer input::placeholder { color: #ffffff; }
 .composer input:focus { border-color: #007337; box-shadow: none; }
 
 .composer .btn { height: 48px; padding: 0 14px; font-size: 15px; }
@@ -358,7 +358,7 @@ a:hover { opacity: .92; }
   display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
   padding: 18px 14px calc(14px + var(--sa-bottom));
   border-top: 1px solid rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.7); font-size: 14px; 
+  color: #ffffff; font-size: 14px; 
   background: transparent;
 }
 .footer a { color: var(--muted); text-decoration: none; }

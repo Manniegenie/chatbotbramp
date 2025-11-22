@@ -7,11 +7,11 @@
 :root {
   --bg: #000000;
   --card: #12121a;
-  --muted: #9aa3af;
+  --muted: #ffffff;
   --accent: #007337;
   --accent-rgb: 0, 115, 55;
   --border: #1f2330;
-  --txt: #f8fafc;
+  --txt: #ffffff;
   --shadow: rgba(0, 0, 0, 0.3);
   --gradient-start: rgba(11, 11, 16, 0.98);
   --gradient-end: rgba(11, 11, 16, 0.95);
@@ -593,7 +593,7 @@ a {
 }
 
 .mobile-menu-copyright {
-  color: rgba(255, 255, 255, 0.5);
+  color: #ffffff;
   font-size: 12px;
   text-align: right;
   padding: 8px 16px;
@@ -685,7 +685,7 @@ a {
   overflow-wrap: break-word;
   hyphens: auto;
   box-shadow: none;
-  color: rgba(255, 255, 255, 0.92);
+  color: #ffffff;
 }
 
 .mobile-bubble.assistant .mobile-bubble-content {
@@ -696,15 +696,15 @@ a {
   background: rgba(15, 19, 26, 0.6);
   border: 0.5px solid rgba(255, 255, 255, 0.1);
   box-shadow: none;
-  color: rgba(255, 255, 255, 0.92);
+  color: #ffffff;
 }
-.mobile-bubble .mobile-bubble-content strong { font-weight: bold; color: rgba(255, 255, 255, 1); }
+.mobile-bubble .mobile-bubble-content strong { font-weight: bold; color: #ffffff; }
 
 .mobile-bubble.user .mobile-bubble-content {
   background: rgba(0, 115, 55, 0.35);
   border: 1.5px solid rgba(0, 115, 55, 0.5);
   box-shadow: 0 6px 20px rgba(0, 115, 55, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
-  color: rgba(255, 255, 255, 0.92);
+  color: #ffffff;
 }
 
 .mobile-bubble-content p {
@@ -1051,7 +1051,7 @@ a {
 
 .mobile-footer-text {
   font-size: 9px;
-  color: rgba(255, 255, 255, 0.6);
+  color: #ffffff;
   line-height: 1.4;
 }
 
@@ -1408,12 +1408,12 @@ a:focus-visible,
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37),
               inset 0 1px 1px rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
-  color: #DADADA;
+  color: #ffffff;
   outline: none;
 }
 
 .mobile-input-centered::placeholder {
-  color: #DADADA;
+  color: #ffffff;
 }
 
 .mobile-input-centered:focus {
@@ -1439,7 +1439,7 @@ a:focus-visible,
   flex-shrink: 0;
   box-shadow: none;
   transition: all 0.3s ease;
-  color: rgba(155, 163, 175, 0.8);
+  color: #ffffff;
 }
 
 .mobile-send-inline:hover:not(:disabled) {
@@ -1454,7 +1454,7 @@ a:focus-visible,
 .mobile-send-inline:disabled {
   opacity: 1;
   cursor: not-allowed;
-  color: rgba(155, 163, 175, 0.8);
+  color: #ffffff;
 }
 
 .mobile-send-inline .send-icon {
@@ -1483,7 +1483,7 @@ a:focus-visible,
 
 .mobile-footer-links-bottom a {
   font-size: 8px;
-  color: rgba(255, 255, 255, 0.6);
+  color: #ffffff;
   text-decoration: none;
   padding: 4px 6px;
   transition: color 0.2s ease;
@@ -1492,7 +1492,7 @@ a:focus-visible,
 }
 
 .mobile-footer-links-bottom a:hover {
-  color: rgba(255, 255, 255, 0.9);
+  color: #ffffff;
   text-decoration: underline;
 }
 
