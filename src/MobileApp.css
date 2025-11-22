@@ -927,7 +927,7 @@ a {
 .mobile-input::before {
   content: '';
   position: absolute;
-  inset: 0;
+  inset: -1px;
   border-radius: 32px;
   padding: 1px;
   background: linear-gradient(135deg, #A80077, #66FF00, #A80077);
