@@ -9,6 +9,7 @@ import MobileSignUp, { SignUpResult } from './MobileSignUp'
 import MobileSell from './MobileSell'
 import MobileGame from './MobileGame';
 import MobileVoiceChat from './MobileVoiceChat';
+import MobileLiskWallet from './MobileLiskWallet';
 import BrampLogo from './assets/logo.jpeg'
 import micIcon from './assets/mic.png'
 import TetherIcon from './assets/tether.png'
@@ -277,6 +278,7 @@ export default function MobileApp() {
   const [shouldOpenSell, setShouldOpenSell] = useState(false)
   const [showGame, setShowGame] = useState(false)
   const [showVoiceChat, setShowVoiceChat] = useState(false)
+  const [showLiskWallet, setShowLiskWallet] = useState(false)
 
   const [auth, setAuth] = useState<SignInResult | null>(() => {
     const authState = getAuthState()
@@ -300,7 +302,7 @@ export default function MobileApp() {
     return () => window.clearTimeout(timer)
   }, [])
 
-  const overlayActive = showSignIn || showSignUp || showSell || showVoiceChat || showMenu
+  const overlayActive = showSignIn || showSignUp || showSell || showVoiceChat || showMenu || showLiskWallet
   const pageClassName = overlayActive ? 'mobile-page mobile-page--overlay' : 'mobile-page'
   const pageOverlayStyle: React.CSSProperties | undefined = showPreloader
     ? { opacity: 0, pointerEvents: 'none' }
@@ -603,6 +605,16 @@ export default function MobileApp() {
     setShowGame(true)
   }
 
+  function handleLiskWalletClick(event?: React.MouseEvent) {
+    event?.preventDefault()
+    setShowMenu(false)
+    if (!auth) {
+      setShowSignIn(true)
+      return
+    }
+    setShowLiskWallet(true)
+  }
+
   function echoFromModalToChat(text: string) {
     if (!text) return
     setMessages((prev) => [
@@ -879,6 +891,14 @@ export default function MobileApp() {
     );
   }
 
+  if (showLiskWallet) {
+    return (
+      <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+        <MobileLiskWallet onClose={() => setShowLiskWallet(false)} />
+      </div>
+    );
+  }
+
   if (showVoiceChat) {
     return (
       <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
@@ -1003,11 +1023,11 @@ export default function MobileApp() {
                   </button>
                   <button
                     className="btn mobile-sell-btn"
-                    onClick={handleGameClick}
-                    style={{ marginLeft: '8px', border: '2px solid var(--accent)' }}
-                    aria-label="Game"
+                    onClick={handleLiskWalletClick}
+                    style={{ marginLeft: '8px', border: '2px solid #18f96e', background: 'rgba(24, 249, 110, 0.1)' }}
+                    aria-label="Connect Wallet"
                   >
-                    Game
+                    Wallet
                   </button>
                   <button
                     className="mobile-menu-btn"
@@ -1042,6 +1062,12 @@ export default function MobileApp() {
               </button>
               <button className="mobile-menu-item primary" onClick={handleSellClick}>
                 Sell Crypto
+              </button>
+              <button className="mobile-menu-item" onClick={handleGameClick}>
+                Game
+              </button>
+              <button className="mobile-menu-item" onClick={handleLiskWalletClick}>
+                Connect Lisk Wallet
               </button>
               <button className="mobile-menu-item" onClick={signOut}>
                 Sign Out
