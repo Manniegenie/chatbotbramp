@@ -94,7 +94,7 @@ function getErrorMessage(e: unknown): string {
 async function sendChatMessage(
   message: string,
   history: ChatMessage[]
-): Promise<{ reply: string; cta?: CTA | null; metadata?: any }> {
+): Promise<{ reply: string; cta?: CTA | null; metadata?: any; browsing?: boolean }> {
   const response = await authFetch(`${API_BASE}/chatbot/chat`, {
     method: 'POST',
     body: JSON.stringify({
@@ -111,10 +111,39 @@ async function sendChatMessage(
   }
 
   const data = await response.json()
+
+  // If browsing is required, poll for results
+  if (data.browsing) {
+    return {
+      reply: data?.reply ?? 'Gathering information...',
+      cta: data.cta || null,
+      metadata: data.metadata,
+      browsing: true
+    }
+  }
+
   return {
     reply: data?.reply ?? 'Sorry, I could not process that.',
     cta: data.cta || null,
     metadata: data.metadata,
+  }
+}
+
+async function pollBrowsingResult(sessionId: string): Promise<{ reply: string; completed: boolean }> {
+  const response = await authFetch(`${API_BASE}/chatbot/chat/browsing/${sessionId}`, {
+    method: 'GET',
+    mode: 'cors',
+    cache: 'no-store',
+  })
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+  }
+
+  const data = await response.json()
+  return {
+    reply: data?.reply ?? 'Still processing...',
+    completed: data?.completed ?? false
   }
 }
 
@@ -530,8 +559,12 @@ export default function MobileApp() {
 
     setTimeout(() => inputRef.current?.focus(), 0)
 
+    let browsingData: { browsing?: boolean } | null = null
+    let pollInterval: NodeJS.Timeout | null = null
+
     try {
       const data = await sendChatMessage(trimmed, [...messages, userMsg])
+      browsingData = data
       const aiMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
@@ -545,8 +578,62 @@ export default function MobileApp() {
       if (hasSellIntent) {
         // Don't add the message to chat, just trigger modal opening
         setShouldOpenSell(true)
+        setLoading(false)
       } else {
         setMessages((prev) => [...prev, aiMsg])
+
+        // If browsing is required, poll for results
+        if (data.browsing) {
+          const sessionId = getSessionId()
+          const maxAttempts = 60 // Poll for up to 3 minutes (60 * 3 seconds)
+          let attempts = 0
+
+          pollInterval = setInterval(async () => {
+            attempts++
+            try {
+              const browsingResult = await pollBrowsingResult(sessionId)
+
+              if (browsingResult.completed) {
+                if (pollInterval) clearInterval(pollInterval)
+                // Replace the "this might take a while" message with the actual result
+                setMessages((prev) => {
+                  const updated = [...prev]
+                  const browsingMsgIndex = updated.findIndex(m => m.id === aiMsg.id)
+                  if (browsingMsgIndex !== -1) {
+                    updated[browsingMsgIndex] = {
+                      ...updated[browsingMsgIndex],
+                      text: browsingResult.reply
+                    }
+                  }
+                  return updated
+                })
+                setLoading(false)
+              } else if (attempts >= maxAttempts) {
+                if (pollInterval) clearInterval(pollInterval)
+                setMessages((prev) => {
+                  const updated = [...prev]
+                  const browsingMsgIndex = updated.findIndex(m => m.id === aiMsg.id)
+                  if (browsingMsgIndex !== -1) {
+                    updated[browsingMsgIndex] = {
+                      ...updated[browsingMsgIndex],
+                      text: 'Sorry, the request took too long. Please try again.'
+                    }
+                  }
+                  return updated
+                })
+                setLoading(false)
+              }
+            } catch (pollError) {
+              console.error('Polling browsing result failed:', pollError)
+              if (attempts >= maxAttempts) {
+                if (pollInterval) clearInterval(pollInterval)
+                setLoading(false)
+              }
+            }
+          }, 3000) // Poll every 3 seconds
+        } else {
+          setLoading(false)
+        }
       }
 
     } catch (error) {
@@ -558,8 +645,11 @@ export default function MobileApp() {
         ts: Date.now(),
       }
       setMessages((prev) => [...prev, errorMsg])
-    } finally {
       setLoading(false)
+    } finally {
+      if (!browsingData?.browsing) {
+        setLoading(false)
+      }
       setTimeout(() => inputRef.current?.focus(), 0)
     }
   }
