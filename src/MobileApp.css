@@ -37,24 +37,18 @@ html {
   -webkit-text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-@supports (-webkit-touch-callout: none) {
-  html {
-    height: -webkit-fill-available;
-  }
-}
-
-html {
-  min-height: calc(100% + env(safe-area-inset-top, 0px));
-  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  height: 100%;
   height: 100dvh;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
   overflow: hidden;
-  margin: 0 !important;
-  width: 100vw !important;
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-color: #575d5b;
-  /* Background extends behind the padding via ::before pseudo-element */
 }
 
 body,
@@ -68,9 +62,9 @@ body,
 }
 
 body {
-  margin: 0 !important;
-  padding: 0 !important;
-  background: #575d5b; /* Dark fallback background behind wallpaper */
+  margin: 0;
+  padding: 0;
+  background: #575d5b;
   color: var(--txt);
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, 'Segoe UI', 'Roboto', 'Helvetica Neue',
     'Arial', sans-serif;
@@ -79,22 +73,15 @@ body {
   touch-action: pan-y;
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
-  /* Full screen PWA support - use dynamic viewport height */
+  height: 100%;
   height: 100dvh;
+  width: 100vw;
   overflow: hidden;
-  /* Ensure no safe area padding prevents wallpaper from reaching edges */
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-}
-
-@supports (-webkit-touch-callout: none) {
-  body {
-    min-height: 100vh;
-    min-height: -webkit-fill-available;
-    background-attachment: scroll;
-  }
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 /* Full screen PWA - extend into status bar areas */
@@ -138,22 +125,22 @@ a {
   left: 0 !important;
 }
 
-/* Starfield background - shared by all pages and modals */
+/* Wallpaper background - NO CONSTRAINTS, covers entire screen */
 .mobile-page::before,
 .page::before {
   content: '';
   position: fixed;
-  /* Extend into safe areas - negative positioning to cover notches */
-  top: calc(-1 * env(safe-area-inset-top, 0px));
-  left: calc(-1 * env(safe-area-inset-left, 0px));
-  right: calc(-1 * env(safe-area-inset-right, 0px));
-  bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
-  width: calc(100vw + env(safe-area-inset-left, 0px) + env(safe-area-inset-right, 0px));
-  height: calc(100dvh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px));
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
   margin: 0;
   padding: 0;
   z-index: -2;
-  background-color: #575d5b; /* Dark fallback behind wallpaper */
+  background-color: #575d5b;
   background-image: var(--wallpaper-image, url('./assets/wallpaper2.jpg'));
   background-size: cover;
   background-position: center;
