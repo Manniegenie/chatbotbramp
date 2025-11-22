@@ -376,7 +376,7 @@ button, .hint { -webkit-tap-highlight-color: transparent; }
 .preloader {
   position: fixed;
   inset: 0;
-  background: radial-gradient(circle at 20% 20%, rgba(8, 15, 25, 0.95), #020308 70%);
+  background: #191919;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -389,6 +389,7 @@ button, .hint { -webkit-tap-highlight-color: transparent; }
   position: absolute;
   inset: 0;
   pointer-events: none;
+  display: none;
 }
 .preloader__star {
   position: absolute;
@@ -408,16 +409,47 @@ button, .hint { -webkit-tap-highlight-color: transparent; }
 .preloader__spinner {
   width: 64px;
   height: 64px;
-  border: 3px solid rgba(255, 255, 255, 0.2);
-  border-top-color: #00ffad;
   border-radius: 50%;
-  animation: preloaderSpin 1s linear infinite;
-  box-shadow: 0 0 24px rgba(0, 255, 173, 0.35);
+  position: relative;
+  background: #191919;
 }
+
+.preloader__spinner::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  padding: 4px;
+  background: linear-gradient(135deg, #A80077, #66FF00, #A80077);
+  background-size: 200% 200%;
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: preloaderSpin 1s linear infinite, preloaderGradient 3s ease infinite;
+}
+
 @keyframes preloaderSpin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+@keyframes preloaderGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 @keyframes preloaderStarTwinkle {
   0% { transform: scale(0.8); opacity: 0.4; }
   50% { transform: scale(1); opacity: 1; }
