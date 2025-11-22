@@ -251,6 +251,10 @@ a {
   gap: 6px;
 }
 
+.mobile-sign-in-btn {
+  gap: 4px !important; /* Reduce gap between text and icon */
+}
+
 .mobile-sign-in-btn svg {
   stroke: url(#sign-in-gradient);
   fill: none;
@@ -266,6 +270,11 @@ a {
 
 .mobile-sign-in-btn span {
   flex-shrink: 0;
+  background: linear-gradient(135deg, #A80077, #66FF00);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 
 .mobile-sell-btn-with-icon {
