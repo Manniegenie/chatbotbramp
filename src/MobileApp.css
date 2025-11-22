@@ -952,6 +952,12 @@ a {
   animation: gradient-border 3s ease infinite;
 }
 
+/* Override base input border for centered input */
+.mobile-input.mobile-input-centered::before {
+  inset: 0 !important;
+  z-index: -1 !important;
+}
+
 
 .mobile-input:focus {
   box-shadow: none;
@@ -1412,12 +1418,12 @@ a:focus-visible,
   outline: none;
   position: relative;
   background: rgba(0, 0, 0, 0.3);
-  z-index: 0;
+  z-index: 1;
+  isolation: isolate;
 }
 
 /* Animated gradient border - same approach as sign up button */
-.mobile-input.mobile-input-centered::before,
-.mobile-input-centered::before {
+.mobile-input.mobile-input-centered::before {
   content: '';
   position: absolute;
   inset: 0;
