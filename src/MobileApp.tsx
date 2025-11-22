@@ -12,10 +12,10 @@ import MobileVoiceChat from './MobileVoiceChat';
 import MobileLiskWallet from './MobileLiskWallet';
 import BrampLogo from './assets/logo.jpeg'
 import micIcon from './assets/mic.png'
-import { Bitcoin, EthereumCircleFlat, Solana, Bnb, Usdt, Usdc, Exchange02, Send } from './components/CryptoIcons'
+import { Bitcoin, EthereumCircleFlat, Usdt, Usdc, Exchange02, Send } from './components/CryptoIcons'
 import wallpaper2 from './assets/wallpaper2.jpg'
 import Preloader from './Preloader'
-import { LogIn, MessageCircleIcon } from 'lucide-react'
+import { MessageCircleIcon } from 'lucide-react'
 import './MobileApp.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
@@ -307,10 +307,8 @@ export default function MobileApp() {
 
   const icons = [
     { component: Usdt, name: 'USDT' },
-    { component: Solana, name: 'SOL' },
     { component: Bitcoin, name: 'BTC' },
     { component: EthereumCircleFlat, name: 'ETH' },
-    { component: Bnb, name: 'BNB' },
     { component: Usdc, name: 'USDC' }
   ]
   const [currentIconIndex, setCurrentIconIndex] = useState(0)
@@ -1148,7 +1146,6 @@ export default function MobileApp() {
                   <div className="mobile-auth-buttons">
                     <button className="mobile-auth-btn mobile-sign-in-btn" onClick={() => setShowSignIn(true)}>
                       <span>Login</span>
-                      <LogIn className="sign-in-icon" size={16} />
                     </button>
                     <button
                       className="mobile-auth-btn mobile-auth-btn-secondary mobile-create-account-btn"

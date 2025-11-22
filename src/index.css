@@ -328,10 +328,38 @@ a:hover { opacity: .92; }
   z-index: -1;
 }
 
+.composer-input-wrapper {
+  flex: 1;
+  position: relative;
+  z-index: 0;
+}
+
+.composer-input-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 12px;
+  padding: 1px;
+  background: linear-gradient(135deg, #A80077, #66FF00, #A80077);
+  background-size: 200% 200%;
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: -1;
+  animation: gradient-border 3s ease infinite;
+}
+
 .composer input {
   flex: 1;
+  width: 100%;
   background: var(--card);
-  border: 1px solid var(--border);
+  border: none;
   color: var(--txt);
   height: 48px;
   min-height: 48px;
@@ -341,8 +369,12 @@ a:hover { opacity: .92; }
   font-size: 15px;
   line-height: 1.4;
 }
+
 .composer input::placeholder { color: #ffffff; }
-.composer input:focus { border-color: #007337; box-shadow: none; }
+.composer input:focus { box-shadow: none; }
+.composer-input-wrapper:focus-within::before {
+  animation: gradient-border 3s ease infinite;
+}
 
 .composer .btn { height: 48px; padding: 0 14px; font-size: 15px; }
 

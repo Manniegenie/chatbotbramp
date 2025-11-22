@@ -1308,20 +1308,22 @@ export default function App() {
               </div>
             ) : (
               <form className="composer" onSubmit={sendMessage}>
-                <input
-                  ref={inputRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault()
-                      sendMessage(e)
-                    }
-                  }}
-                  placeholder={loading ? 'Please wait…' : 'Try: Sell 100 USDT to NGN'}
-                  autoFocus
-                  disabled={loading}
-                />
+                <div className="composer-input-wrapper">
+                  <input
+                    ref={inputRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault()
+                        sendMessage(e)
+                      }
+                    }}
+                    placeholder={loading ? 'Please wait…' : 'Try: Sell 100 USDT to NGN'}
+                    autoFocus
+                    disabled={loading}
+                  />
+                </div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <button
                     type="submit"
