@@ -442,64 +442,6 @@ export default function MobileApp() {
     return cleanup
   }, [])
 
-  // Handle keyboard open/close on mobile
-  useEffect(() => {
-    const handleResize = () => {
-      // Force viewport to maintain height when keyboard opens/closes
-      const viewportHeight = window.visualViewport?.height || window.innerHeight
-      const documentHeight = document.documentElement.clientHeight
-      
-      // If viewport shrinks significantly, keyboard is likely open
-      if (viewportHeight < documentHeight * 0.75) {
-        // Keyboard is open - maintain fixed height
-        document.documentElement.style.height = `${viewportHeight}px`
-        document.body.style.height = `${viewportHeight}px`
-      } else {
-        // Keyboard is closed - restore full height
-        document.documentElement.style.height = '100dvh'
-        document.body.style.height = '100dvh'
-      }
-    }
-
-    // Use visualViewport API if available (better for mobile)
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleResize)
-      window.visualViewport.addEventListener('scroll', () => {
-        // Prevent scrolling when keyboard is open
-        window.scrollTo(0, 0)
-      })
-    } else {
-      // Fallback for older browsers
-      window.addEventListener('resize', handleResize)
-    }
-
-    // Handle input blur to ensure viewport resets
-    const handleInputBlur = () => {
-      setTimeout(() => {
-        document.documentElement.style.height = '100dvh'
-        document.body.style.height = '100dvh'
-        window.scrollTo(0, 0)
-      }, 100)
-    }
-
-    const inputs = document.querySelectorAll('input, textarea')
-    inputs.forEach(input => {
-      input.addEventListener('blur', handleInputBlur)
-    })
-
-    return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleResize)
-        window.visualViewport.removeEventListener('scroll', () => {})
-      } else {
-        window.removeEventListener('resize', handleResize)
-      }
-      inputs.forEach(input => {
-        input.removeEventListener('blur', handleInputBlur)
-      })
-    }
-  }, [])
-
   // 45-minute inactivity timer
   useInactivityTimer({
     timeout: 45 * 60 * 1000, // 45 minutes
@@ -1010,14 +952,6 @@ export default function MobileApp() {
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={loading ? 'Please wait…' : 'Chat Bramp AI...'}
                 disabled={loading}
-                onBlur={() => {
-                  // Ensure viewport resets when keyboard closes
-                  setTimeout(() => {
-                    window.scrollTo(0, 0)
-                    document.documentElement.style.height = '100dvh'
-                    document.body.style.height = '100dvh'
-                  }, 100)
-                }}
               />
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <button
