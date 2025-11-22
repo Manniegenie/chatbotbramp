@@ -46,16 +46,23 @@ html {
 }
 
 html {
+  min-height: calc(100% + env(safe-area-inset-top, 0px));
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
   height: 100dvh;
   overflow: hidden;
   margin: 0 !important;
-  padding: 0 !important;
   width: 100vw !important;
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
+  background-attachment: fixed;
+  background-image: var(--wallpaper-image, url('./assets/wallpaper2.jpg'));
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-color: #575d5b;
 }
 
 body,
@@ -144,15 +151,14 @@ a {
 .page::before {
   content: '';
   position: fixed;
-  /* Extend into notch areas on iOS using negative margins */
-  top: calc(-1 * env(safe-area-inset-top, 0px)) !important;
-  left: calc(-1 * env(safe-area-inset-left, 0px)) !important;
-  right: calc(-1 * env(safe-area-inset-right, 0px)) !important;
-  bottom: calc(-1 * env(safe-area-inset-bottom, 0px)) !important;
-  width: calc(100vw + env(safe-area-inset-left, 0px) + env(safe-area-inset-right, 0px)) !important;
-  height: calc(100dvh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px)) !important;
-  margin: 0 !important;
-  padding: 0 !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
   z-index: -2;
   background-color: #575d5b; /* Dark fallback behind wallpaper */
   background-image: var(--wallpaper-image, url('./assets/wallpaper2.jpg'));
