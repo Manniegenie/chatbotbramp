@@ -1,5 +1,10 @@
 /// <reference types="vite/client" />
 
+declare module '*.JPG' {
+    const src: string
+    export default src
+}
+
 // Speech Recognition API types
 interface SpeechRecognition extends EventTarget {
     continuous: boolean;
