@@ -43,7 +43,7 @@ html {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background-color: transparent;
+  background-color: #191919;
 }
 
 body,
@@ -72,7 +72,8 @@ body {
   height: 100dvh;
   width: 100vw;
   overflow: hidden;
-  background-color: transparent;
+  background-color: #191919;
+  transition: height 0.3s ease-out;
 }
 
 button {
@@ -110,6 +111,7 @@ a {
   padding-bottom: 0 !important;
   top: 0 !important;
   left: 0 !important;
+  transition: height 0.3s ease-out;
 }
 
 /* Wallpaper background - shared by all pages and modals */
@@ -616,6 +618,7 @@ a {
   box-shadow: none;
   border-radius: 0;
   padding-bottom: 60px; /* Space for footer */
+  transition: padding-bottom 0.3s ease-out;
 }
 
 .mobile-messages {
@@ -827,6 +830,7 @@ a {
   display: flex;
   gap: 8px;
   padding: 0 12px 12px;
+  margin-bottom: 80px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -896,6 +900,7 @@ a {
   border-top: none;
   z-index: 10;
   flex-shrink: 0;
+  transition: bottom 0.3s ease-out, padding-bottom 0.3s ease-out;
 }
 
 
@@ -969,7 +974,7 @@ a {
 .mobile-send-btn .send-icon {
   flex-shrink: 0;
   display: inline-block;
-  transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .mobile-send-btn img[alt="Mic"] {
@@ -1427,7 +1432,7 @@ a:focus-visible,
 
 .mobile-send-inline .send-icon {
   display: inline-block;
-  transition: background-color 0.3s ease, opacity 0.3s ease;
+  transition: opacity 0.3s ease;
 }
 
 .mobile-footer-links-bottom {

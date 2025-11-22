@@ -12,8 +12,7 @@ import MobileVoiceChat from './MobileVoiceChat';
 import MobileLiskWallet from './MobileLiskWallet';
 import BrampLogo from './assets/logo.jpeg'
 import micIcon from './assets/mic.png'
-import SendIcon from './assets/send.png'
-import { Bitcoin, EthereumCircleFlat, Solana, Bnb, Usdt, Usdc, Exchange02 } from './components/CryptoIcons'
+import { Bitcoin, EthereumCircleFlat, Solana, Bnb, Usdt, Usdc, Exchange02, Send } from './components/CryptoIcons'
 import wallpaper2 from './assets/wallpaper2.jpg'
 import Preloader from './Preloader'
 import { LogIn } from 'lucide-react'
@@ -59,22 +58,6 @@ function getTimeBasedGreeting(): string {
   else return 'Good evening'
 }
 
-const createSendIconStyle = (active: boolean, disabled: boolean): React.CSSProperties => ({
-  width: 28,
-  height: 28,
-  display: 'inline-block',
-  backgroundColor: active ? '#007337' : 'rgba(255, 255, 255, 0.7)',
-  maskImage: `url(${SendIcon})`,
-  WebkitMaskImage: `url(${SendIcon})`,
-  maskRepeat: 'no-repeat',
-  WebkitMaskRepeat: 'no-repeat',
-  maskPosition: 'center',
-  WebkitMaskPosition: 'center',
-  maskSize: 'contain',
-  WebkitMaskSize: 'contain',
-  transition: 'background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-  opacity: disabled ? 0.6 : 1,
-})
 
 // Token management functions are now imported from tokenManager.ts
 
@@ -900,10 +883,14 @@ export default function MobileApp() {
                   {loading ? (
                     <div className="mobile-spinner" />
                   ) : (
-                    <span
-                      className={`send-icon ${input.trim() ? 'send-icon--active' : ''}`}
-                      aria-hidden="true"
-                      style={createSendIconStyle(Boolean(input.trim()), loading || !input.trim())}
+                    <Send
+                      size={28}
+                      active={Boolean(input.trim())}
+                      style={{
+                        opacity: loading || !input.trim() ? 0.6 : 1,
+                        transition: 'opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                        color: input.trim() ? undefined : 'rgba(255, 255, 255, 0.7)'
+                      }}
                     />
                   )}
                 </button>
@@ -952,10 +939,14 @@ export default function MobileApp() {
                   {loading ? (
                     <div className="mobile-spinner" />
                   ) : (
-                    <span
-                      className={`send-icon ${input.trim() ? 'send-icon--active' : ''}`}
-                      aria-hidden="true"
-                      style={createSendIconStyle(Boolean(input.trim()), loading || !input.trim())}
+                    <Send
+                      size={28}
+                      active={Boolean(input.trim())}
+                      style={{
+                        opacity: loading || !input.trim() ? 0.6 : 1,
+                        transition: 'opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                        color: input.trim() ? undefined : 'rgba(255, 255, 255, 0.7)'
+                      }}
                     />
                   )}
                 </button>

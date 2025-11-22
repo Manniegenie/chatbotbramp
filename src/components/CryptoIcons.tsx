@@ -155,3 +155,32 @@ export const Exchange02 = ({ size = 24, className = '', style, ...props }: IconP
         ></path>
     </svg>
 );
+
+export const Send = ({ size = 24, className = '', style, active = false, ...props }: IconProps & React.SVGProps<SVGSVGElement> & { active?: boolean }) => {
+    const gradientId = `send-gradient-${Math.random().toString(36).substr(2, 9)}`;
+    
+    return (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width={size}
+            height={size}
+            viewBox="0 0 24 24"
+            className={`send-icon ${className} ${active ? 'send-icon--active' : ''}`}
+            style={style}
+            {...props}
+        >
+            <defs>
+                <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#A80077" />
+                    <stop offset="100%" stopColor="#66FF00" />
+                </linearGradient>
+            </defs>
+            <path
+                fill="none"
+                stroke={active ? `url(#${gradientId})` : "currentColor"}
+                strokeWidth="2"
+                d="M22 3L2 11l18.5 8L22 3ZM10 20.5l3-4.5m2.5-6.5L9 14l.859 6.012c.078.546.216.537.306-.003L11 15l4.5-5.5Z"
+            />
+        </svg>
+    );
+};
