@@ -229,6 +229,13 @@ a {
   stroke: url(#sign-in-gradient);
   fill: none;
   flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.mobile-sign-in-btn .sign-in-icon {
+  stroke: url(#sign-in-gradient);
+  fill: none;
 }
 
 .mobile-sign-in-btn span {
