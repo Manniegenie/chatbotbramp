@@ -127,14 +127,12 @@ a {
   z-index: -2;
   background-color: transparent;
   background-image: var(--wallpaper-image, url('./assets/wallpaper2.jpg'));
-  background-size: cover;
-  background-position: center 40%;
+  background-size: 100% 100%;
+  background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
-  transform: translateZ(0) scale(1.3);
-  -webkit-transform: translateZ(0) scale(1.3);
-  transform-origin: center center;
-  -webkit-transform-origin: center center;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
@@ -146,8 +144,20 @@ a {
 
 /* Dark overlay for chat when messages exist */
 .mobile-page--chat-active::after {
-  content: none;
-  display: none;
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  z-index: -1;
+  background: rgba(0, 0, 0, 0.75); /* Dark overlay for readability */
+  pointer-events: none;
 }
 
 
@@ -1323,13 +1333,12 @@ a:focus-visible,
 
 .mobile-centered-input {
   position: absolute;
-  bottom: 0;
+  top: 35%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   width: calc(100% - 32px);
   max-width: 384px;
   z-index: 10;
-  padding-bottom: 20px;
 }
 
 .mobile-app-logo {
