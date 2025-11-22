@@ -1420,8 +1420,8 @@ a:focus-visible,
 .mobile-input-centered::before {
   content: '';
   position: absolute;
-  inset: -2px;
-  border-radius: 34px;
+  inset: -4px;
+  border-radius: 36px;
   background: linear-gradient(135deg, #A80077, #66FF00, #A80077);
   background-size: 200% 200%;
   z-index: -2;
@@ -1429,13 +1429,13 @@ a:focus-visible,
   pointer-events: none;
 }
 
-/* Background layer - inner, slightly inset to show border */
+/* Background layer - inner, inset to show border */
 .mobile-input.mobile-input-centered::after,
 .mobile-input-centered::after {
   content: '';
   position: absolute;
-  inset: 2px;
-  border-radius: 30px;
+  inset: 4px;
+  border-radius: 28px;
   background: rgba(0, 0, 0, 0.3);
   z-index: -1;
   pointer-events: none;
