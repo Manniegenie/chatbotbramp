@@ -117,13 +117,13 @@ a {
 .page::before {
   content: '';
   position: fixed;
-  top: 0;
+  top: -25%;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: -25%;
   width: 100vw;
-  height: 100vh;
-  height: 100dvh;
+  height: 150vh;
+  height: 150dvh;
   margin: 0;
   padding: 0;
   z-index: -2;
@@ -148,13 +148,13 @@ a {
 .mobile-page--chat-active::after {
   content: '';
   position: fixed;
-  top: 0;
+  top: -25%;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: -25%;
   width: 100vw;
-  height: 100vh;
-  height: 100dvh;
+  height: 150vh;
+  height: 150dvh;
   margin: 0;
   padding: 0;
   z-index: -1;
