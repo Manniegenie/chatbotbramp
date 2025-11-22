@@ -985,22 +985,11 @@ export default function MobileApp() {
     )
   }
 
-  // Background div - memoized to prevent blinking
-  const backgroundDiv = React.useMemo(() => (
-    <div
-      key="wallpaper-bg"
-      className={`mobile-wallpaper-bg ${messages.length > 0 ? 'mobile-wallpaper-bg--chat-active' : ''}`}
-      style={{
-        backgroundImage: `url(${wallpaper2})`
-      }}
-    />
-  ), [messages.length]);
 
   if (showGame) {
     return (
       <>
-        {backgroundDiv}
-        <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+        <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', '--wallpaper-image': `url(${wallpaper2})` } as React.CSSProperties}>
           <MobileGame onClose={() => setShowGame(false)} />
         </div>
       </>
@@ -1010,8 +999,7 @@ export default function MobileApp() {
   if (showLiskWallet) {
     return (
       <>
-        {backgroundDiv}
-        <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+        <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', '--wallpaper-image': `url(${wallpaper2})` } as React.CSSProperties}>
           <MobileLiskWallet onClose={() => setShowLiskWallet(false)} />
         </div>
       </>
@@ -1021,8 +1009,7 @@ export default function MobileApp() {
   if (showVoiceChat) {
     return (
       <>
-        {backgroundDiv}
-        <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+        <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', '--wallpaper-image': `url(${wallpaper2})` } as React.CSSProperties}>
           <MobileVoiceChat
             onClose={() => setShowVoiceChat(false)}
             onMessage={(text) => {
@@ -1045,8 +1032,7 @@ export default function MobileApp() {
   if (showSell) {
     return (
       <>
-        {backgroundDiv}
-        <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+        <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', '--wallpaper-image': `url(${wallpaper2})` } as React.CSSProperties}>
           <MobileSell
             open={showSell}
             onClose={() => setShowSell(false)}
@@ -1061,8 +1047,7 @@ export default function MobileApp() {
   if (showSignIn) {
     return (
       <>
-        {backgroundDiv}
-        <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+        <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', '--wallpaper-image': `url(${wallpaper2})` } as React.CSSProperties}>
           <MobileSignIn
             onCancel={() => {
               setShowSignIn(false);
@@ -1091,8 +1076,7 @@ export default function MobileApp() {
   if (showSignUp) {
     return (
       <>
-        {backgroundDiv}
-        <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+        <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', '--wallpaper-image': `url(${wallpaper2})` } as React.CSSProperties}>
           <MobileSignUp
             onCancel={() => setShowSignUp(false)}
             onSuccess={(_res: SignUpResult) => {
@@ -1122,10 +1106,12 @@ export default function MobileApp() {
           </linearGradient>
         </defs>
       </svg>
-      {backgroundDiv}
       <div
         className={`${pageClassName} ${messages.length > 0 ? 'mobile-page--chat-active' : ''}`}
-        style={pageOverlayStyle}
+        style={{
+          ...pageOverlayStyle,
+          '--wallpaper-image': `url(${wallpaper2})`
+        } as React.CSSProperties}
       >
         <header className="mobile-header">
           <div className="mobile-header-top">
