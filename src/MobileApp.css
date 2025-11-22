@@ -213,11 +213,11 @@ a {
   border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--accent);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
-  background: transparent;
+  background: #04080B4D;
   color: white;
   min-height: 36px;
 }
@@ -225,6 +225,7 @@ a {
 .mobile-auth-btn-secondary {
   color: white;
   border: 1px solid var(--accent);
+  background: #04080B4D;
 }
 
 .mobile-auth-btn:active {
@@ -246,8 +247,8 @@ a {
   border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: transparent;
+  border: 1px solid var(--accent);
+  background: #04080B4D;
   color: #fff;
   min-height: 36px;
   cursor: pointer;
@@ -421,8 +422,8 @@ a {
 .mobile-menu-item {
   width: 100%;
   padding: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--accent);
+  background: #04080B4D;
   color: #fff;
   text-align: left;
   font-size: 15px;
@@ -630,13 +631,13 @@ a {
 .mobile-cta-btn {
   padding: 6px 10px;
   border-radius: 6px;
-  background: var(--accent);
+  background: #04080B4D;
   color: white;
   font-size: 11px;
   font-weight: 600;
   text-align: center;
   text-decoration: none;
-  border: none;
+  border: 1px solid var(--accent);
   cursor: pointer;
   min-height: 28px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -710,8 +711,8 @@ a {
   flex-shrink: 0;
   padding: 10px 16px;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #04080B4D;
+  border: 1px solid var(--accent);
   color: #fff;
   font-size: 14px;
   cursor: pointer;

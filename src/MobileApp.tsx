@@ -560,7 +560,7 @@ export default function MobileApp() {
     setTimeout(() => inputRef.current?.focus(), 0)
 
     let browsingData: { browsing?: boolean } | null = null
-    let pollInterval: NodeJS.Timeout | null = null
+    let pollInterval: number | null = null
 
     try {
       const data = await sendChatMessage(trimmed, [...messages, userMsg])
