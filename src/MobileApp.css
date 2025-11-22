@@ -244,6 +244,20 @@ a {
   flex-shrink: 0;
 }
 
+.mobile-sell-btn-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mobile-sell-btn-with-icon .sell-icon {
+  stroke: url(#sign-in-gradient);
+  fill: none;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
 .mobile-auth-btn-secondary {
   color: white;
   border: 1px solid var(--accent);
@@ -799,8 +813,8 @@ a {
   flex-shrink: 0;
   padding: 10px 16px;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #04080B4D;
+  border: none;
   color: #fff;
   font-size: 14px;
   cursor: pointer;
@@ -810,6 +824,27 @@ a {
   display: flex;
   align-items: center;
   backdrop-filter: blur(12px);
+  position: relative;
+  z-index: 0;
+}
+
+.mobile-hint::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  padding: 1px;
+  background: linear-gradient(135deg, #A80077, #66FF00);
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: -1;
 }
 
 .mobile-hint:hover { box-shadow: 0 0 0 4px rgba(0,115,55,.12); transform: translateY(-1px); }

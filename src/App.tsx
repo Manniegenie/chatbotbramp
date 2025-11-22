@@ -13,13 +13,8 @@ import MobileVoiceChat from './MobileVoiceChat';
 // Import logo from assets
 import BrampLogo from './assets/logo.jpeg'
 import micIcon from './assets/mic.png'
-import TetherIcon from './assets/tether.png'
-import SolanaIcon from './assets/solana.png'
-import TronIcon from './assets/tron.png'
-import BitcoinIcon from './assets/bicoin.png'
-import XrpIcon from './assets/xrp.png'
-import ShibaIcon from './assets/shiba-inu.png'
 import SendIcon from './assets/send.png'
+import { Bitcoin, Ethereum, Solana, BnbFill, TetherUsdtFill, Usdc } from './components/CryptoIcons'
 import wallpaper1 from './assets/wallpaper1.jpg'
 import Preloader from './Preloader'
 
@@ -315,7 +310,14 @@ export default function App() {
   const endRef = useRef<HTMLDivElement>(null)
   const messagesRef = useRef<HTMLDivElement>(null)
 
-  const icons = [TetherIcon, SolanaIcon, TronIcon, BitcoinIcon, XrpIcon, ShibaIcon]
+  const icons = [
+    { component: TetherUsdtFill, name: 'USDT' },
+    { component: Solana, name: 'SOL' },
+    { component: Bitcoin, name: 'BTC' },
+    { component: Ethereum, name: 'ETH' },
+    { component: BnbFill, name: 'BNB' },
+    { component: Usdc, name: 'USDC' }
+  ]
   const [currentIconIndex, setCurrentIconIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -1256,10 +1258,8 @@ export default function App() {
                   </h2>
                   <div style={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <AnimatePresence mode="wait">
-                      <motion.img
+                      <motion.div
                         key={currentIconIndex}
-                        src={icons[currentIconIndex]}
-                        alt="Chat Bramp AI"
                         className="desktop-app-logo"
                         initial={{ opacity: 0, scale: 0.8, rotateY: -90 }}
                         animate={{ opacity: 1, scale: 1, rotateY: 0 }}
@@ -1271,7 +1271,10 @@ export default function App() {
                           stiffness: 100,
                           damping: 15
                         }}
-                      />
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      >
+                        {React.createElement(icons[currentIconIndex].component, { size: 48 })}
+                      </motion.div>
                     </AnimatePresence>
                   </div>
                   <div style={{ display: 'flex', gap: '8px', width: '100%', alignItems: 'center', position: 'relative' }}>
