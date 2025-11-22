@@ -118,10 +118,10 @@ a:hover { opacity: .92; }
   padding: calc(10px + var(--sa-top)) 16px 10px;
   min-height: calc(var(--appbar-h) + var(--sa-top));
   border-bottom: none;
-  background: #1a1a1f; /* Dark gray background for header */
+  background: #000000; /* Black background for header */
 }
 
-/* Dark gray background for top safe area */
+/* Black background for top safe area */
 .header::before {
   content: '';
   position: absolute;
@@ -129,7 +129,7 @@ a:hover { opacity: .92; }
   left: 0;
   right: 0;
   height: var(--sa-top);
-  background: #1a1a1f; /* Dark gray for top safe area */
+  background: #000000; /* Black for top safe area */
   z-index: -1;
 }
   gap: 12px;
@@ -270,7 +270,7 @@ a:hover { opacity: .92; }
   -webkit-backdrop-filter: saturate(120%) blur(6px);
 }
 
-/* Dark gray background for bottom safe area */
+/* Black background for bottom safe area */
 .composer::after {
   content: '';
   position: absolute;
@@ -278,7 +278,7 @@ a:hover { opacity: .92; }
   left: 0;
   right: 0;
   height: var(--sa-bottom);
-  background: #1a1a1f; /* Dark gray for bottom safe area */
+  background: #000000; /* Black for bottom safe area */
   z-index: -1;
 }
 

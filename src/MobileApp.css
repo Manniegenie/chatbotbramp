@@ -191,10 +191,10 @@ a {
   border-bottom: none;
   padding-top: max(12px, var(--safe-top));
   flex-shrink: 0;
-  background: #1a1a1f; /* Dark gray background for header */
+  background: #000000; /* Black background for header */
 }
 
-/* Dark gray background for top safe area */
+/* Black background for top safe area */
 .mobile-header::before {
   content: '';
   position: absolute;
@@ -202,7 +202,7 @@ a {
   left: 0;
   right: 0;
   height: var(--safe-top);
-  background: #1a1a1f; /* Dark gray for top safe area */
+  background: #000000; /* Black for top safe area */
   z-index: -1;
 }
 
@@ -213,7 +213,7 @@ a {
   padding: 12px 16px;
   gap: 12px;
   min-height: 56px;
-  background: #1a1a1f; /* Dark gray background for navigation area */
+  background: #000000; /* Black background for navigation area */
 }
 
 .mobile-brand {
@@ -913,7 +913,7 @@ a {
   flex-shrink: 0;
 }
 
-/* Dark gray background for bottom safe area */
+/* Black background for bottom safe area */
 .mobile-composer::after {
   content: '';
   position: absolute;
@@ -921,7 +921,7 @@ a {
   left: 0;
   right: 0;
   height: var(--safe-bottom);
-  background: #1a1a1f; /* Dark gray for bottom safe area */
+  background: #000000; /* Black for bottom safe area */
   z-index: -1;
 }
 
