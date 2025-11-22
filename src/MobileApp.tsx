@@ -1145,14 +1145,14 @@ export default function MobileApp() {
                 <>
                   <div className="mobile-auth-buttons">
                     <button className="mobile-auth-btn mobile-sign-in-btn" onClick={() => setShowSignIn(true)}>
-                      <span>Sign In</span>
+                      <span>Login</span>
                       <LogIn className="sign-in-icon" size={16} />
                     </button>
                     <button
                       className="mobile-auth-btn mobile-auth-btn-secondary mobile-create-account-btn"
                       onClick={() => setShowSignUp(true)}
                     >
-                      Create Account
+                      Sign Up
                     </button>
                   </div>
                 </>
