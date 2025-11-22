@@ -125,10 +125,8 @@ a {
   left: 0 !important;
 }
 
-/* Wallpaper background - NO CONSTRAINTS, covers entire screen */
-.mobile-page::before,
-.page::before {
-  content: '';
+/* Fixed wallpaper background div - covers entire screen */
+.mobile-wallpaper-bg {
   position: fixed;
   top: 0;
   left: 0;
@@ -139,40 +137,39 @@ a {
   height: 100dvh;
   margin: 0;
   padding: 0;
-  z-index: -2;
+  z-index: -10;
   background-color: #575d5b;
-  background-image: var(--wallpaper-image, url('./assets/wallpaper2.jpg'));
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-attachment: fixed;
+  background-attachment: scroll; /* iOS doesn't support fixed well */
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+  pointer-events: none;
+}
+
+/* Dark overlay for chat when messages exist - as ::before on background div */
+.mobile-wallpaper-bg--chat-active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  z-index: 1;
+  background: rgba(0, 0, 0, 0.75); /* Dark overlay for readability */
+  pointer-events: none;
 }
 
 .mobile-page::after,
 .page::after {
   content: none;
-}
-
-/* Dark overlay for chat when messages exist */
-.mobile-page--chat-active::after {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100vw;
-  height: 100vh;
-  height: 100dvh;
-  margin: 0;
-  padding: 0;
-  z-index: -1;
-  background: rgba(0, 0, 0, 0.75); /* Dark overlay for readability */
-  pointer-events: none;
 }
 
 

@@ -985,99 +985,127 @@ export default function MobileApp() {
     )
   }
 
+  // Background div component - used by all views
+  const BackgroundDiv = () => (
+    <div
+      className={`mobile-wallpaper-bg ${messages.length > 0 ? 'mobile-wallpaper-bg--chat-active' : ''}`}
+      style={{
+        backgroundImage: `url(${wallpaper2})`
+      }}
+    />
+  );
+
   if (showGame) {
     return (
-      <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
-        <MobileGame onClose={() => setShowGame(false)} />
-      </div>
+      <>
+        <BackgroundDiv />
+        <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+          <MobileGame onClose={() => setShowGame(false)} />
+        </div>
+      </>
     );
   }
 
   if (showLiskWallet) {
     return (
-      <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
-        <MobileLiskWallet onClose={() => setShowLiskWallet(false)} />
-      </div>
+      <>
+        <BackgroundDiv />
+        <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+          <MobileLiskWallet onClose={() => setShowLiskWallet(false)} />
+        </div>
+      </>
     );
   }
 
   if (showVoiceChat) {
     return (
-      <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
-        <MobileVoiceChat
-          onClose={() => setShowVoiceChat(false)}
-          onMessage={(text) => {
-            // Echo voice assistant response to chat
-            if (text) {
-              echoFromModalToChat(text);
-            }
-          }}
-          onSellIntent={() => {
-            // Open sell modal when sell intent detected in voice chat
-            setShowVoiceChat(false);
-            setShowSell(true);
-          }}
-        />
-      </div>
+      <>
+        <BackgroundDiv />
+        <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+          <MobileVoiceChat
+            onClose={() => setShowVoiceChat(false)}
+            onMessage={(text) => {
+              // Echo voice assistant response to chat
+              if (text) {
+                echoFromModalToChat(text);
+              }
+            }}
+            onSellIntent={() => {
+              // Open sell modal when sell intent detected in voice chat
+              setShowVoiceChat(false);
+              setShowSell(true);
+            }}
+          />
+        </div>
+      </>
     );
   }
 
   if (showSell) {
     return (
-      <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
-        <MobileSell
-          open={showSell}
-          onClose={() => setShowSell(false)}
-          onChatEcho={echoFromModalToChat}
-          onStartInteraction={() => setShowCenteredInput(false)}
-        />
-      </div>
+      <>
+        <BackgroundDiv />
+        <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+          <MobileSell
+            open={showSell}
+            onClose={() => setShowSell(false)}
+            onChatEcho={echoFromModalToChat}
+            onStartInteraction={() => setShowCenteredInput(false)}
+          />
+        </div>
+      </>
     );
   }
 
   if (showSignIn) {
     return (
-      <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
-        <MobileSignIn
-          onCancel={() => {
-            setShowSignIn(false);
-            setOpenSellAfterAuth(false);
-          }}
-          onSuccess={(res) => {
-            setAuth(res);
-            setShowSignIn(false);
-            setShowCenteredInput(false);
-            const greeting = getTimeBasedGreeting();
-            const name = res.user.username || (res.user as any).firstname || 'there';
-            setMessages([
-              { id: crypto.randomUUID(), role: 'assistant', text: `${greeting}, ${name}! How can I help you today?`, ts: Date.now() },
-            ]);
-            if (openSellAfterAuth) {
+      <>
+        <BackgroundDiv />
+        <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+          <MobileSignIn
+            onCancel={() => {
+              setShowSignIn(false);
               setOpenSellAfterAuth(false);
-              setShowSell(true);
-            }
-          }}
-        />
-      </div>
+            }}
+            onSuccess={(res) => {
+              setAuth(res);
+              setShowSignIn(false);
+              setShowCenteredInput(false);
+              const greeting = getTimeBasedGreeting();
+              const name = res.user.username || (res.user as any).firstname || 'there';
+              setMessages([
+                { id: crypto.randomUUID(), role: 'assistant', text: `${greeting}, ${name}! How can I help you today?`, ts: Date.now() },
+              ]);
+              if (openSellAfterAuth) {
+                setOpenSellAfterAuth(false);
+                setShowSell(true);
+              }
+            }}
+          />
+        </div>
+      </>
     );
   }
 
   if (showSignUp) {
     return (
-      <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
-        <MobileSignUp
-          onCancel={() => setShowSignUp(false)}
-          onSuccess={(_res: SignUpResult) => {
-            setShowSignUp(false);
-            setShowCenteredInput(false);
-            setMessages((prev) => [
-              ...prev,
-              { id: crypto.randomUUID(), role: 'assistant', text: 'Account created! Please verify your OTP to complete signup.', ts: Date.now() },
-            ]);
-            setShowSignIn(true);
-          }}
-        />
-      </div>
+      <>
+        <BackgroundDiv />
+        <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+          <MobileSignUp
+            onCancel={() => setShowSignUp(false)}
+            onSuccess={(_res: SignUpResult) => {
+              setShowSignUp(false);
+              setShowCenteredInput(false);
+              setMessages((prev) => [
+                ...prev,
+                { id: crypto.randomUUID(), role: 'assistant', text: 'Account created! Please verify your OTP to complete signup.', ts: Date.now() },
+              ]);
+              setShowSignIn(true);
+            }}
+          />
+        </div>
+      </>
     );
   }
 
@@ -1093,12 +1121,10 @@ export default function MobileApp() {
           </linearGradient>
         </defs>
       </svg>
+      <BackgroundDiv />
       <div
         className={`${pageClassName} ${messages.length > 0 ? 'mobile-page--chat-active' : ''}`}
-        style={{
-          ...pageOverlayStyle,
-          '--wallpaper-image': `url(${wallpaper2})`
-        } as React.CSSProperties}
+        style={pageOverlayStyle}
       >
         <header className="mobile-header">
           <div className="mobile-header-top">
