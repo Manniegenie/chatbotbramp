@@ -1469,6 +1469,24 @@ a:focus-visible,
   text-decoration: underline;
 }
 
+.mobile-footer-links-bottom a.footer-privacy-link {
+  background: linear-gradient(135deg, #A80077, #66FF00);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  font-weight: 600;
+}
+
+.mobile-footer-links-bottom a.footer-privacy-link:hover {
+  background: linear-gradient(135deg, #A80077, #66FF00);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  text-decoration: underline;
+}
+
 
 .god-bg {
   position: fixed;
