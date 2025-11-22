@@ -15,7 +15,7 @@ import micIcon from './assets/mic.png'
 import { Bitcoin, EthereumCircleFlat, Solana, Bnb, Usdt, Usdc, Exchange02, Send } from './components/CryptoIcons'
 import wallpaper2 from './assets/wallpaper2.jpg'
 import Preloader from './Preloader'
-import { LogIn, MessageCircleQuestionMark } from 'lucide-react'
+import { LogIn, MessageCircleIcon } from 'lucide-react'
 import './MobileApp.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
@@ -440,6 +440,64 @@ export default function MobileApp() {
     })
 
     return cleanup
+  }, [])
+
+  // Handle keyboard open/close on mobile
+  useEffect(() => {
+    const handleResize = () => {
+      // Force viewport to maintain height when keyboard opens/closes
+      const viewportHeight = window.visualViewport?.height || window.innerHeight
+      const documentHeight = document.documentElement.clientHeight
+      
+      // If viewport shrinks significantly, keyboard is likely open
+      if (viewportHeight < documentHeight * 0.75) {
+        // Keyboard is open - maintain fixed height
+        document.documentElement.style.height = `${viewportHeight}px`
+        document.body.style.height = `${viewportHeight}px`
+      } else {
+        // Keyboard is closed - restore full height
+        document.documentElement.style.height = '100dvh'
+        document.body.style.height = '100dvh'
+      }
+    }
+
+    // Use visualViewport API if available (better for mobile)
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleResize)
+      window.visualViewport.addEventListener('scroll', () => {
+        // Prevent scrolling when keyboard is open
+        window.scrollTo(0, 0)
+      })
+    } else {
+      // Fallback for older browsers
+      window.addEventListener('resize', handleResize)
+    }
+
+    // Handle input blur to ensure viewport resets
+    const handleInputBlur = () => {
+      setTimeout(() => {
+        document.documentElement.style.height = '100dvh'
+        document.body.style.height = '100dvh'
+        window.scrollTo(0, 0)
+      }, 100)
+    }
+
+    const inputs = document.querySelectorAll('input, textarea')
+    inputs.forEach(input => {
+      input.addEventListener('blur', handleInputBlur)
+    })
+
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleResize)
+        window.visualViewport.removeEventListener('scroll', () => {})
+      } else {
+        window.removeEventListener('resize', handleResize)
+      }
+      inputs.forEach(input => {
+        input.removeEventListener('blur', handleInputBlur)
+      })
+    }
   }, [])
 
   // 45-minute inactivity timer
@@ -931,6 +989,21 @@ export default function MobileApp() {
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={loading ? 'Please wait…' : 'Chat Bramp AI...'}
                 disabled={loading}
+                onFocus={(e) => {
+                  // Prevent page from scrolling when input is focused
+                  e.preventDefault()
+                  setTimeout(() => {
+                    e.target.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' })
+                  }, 300)
+                }}
+                onBlur={() => {
+                  // Ensure viewport resets when keyboard closes
+                  setTimeout(() => {
+                    window.scrollTo(0, 0)
+                    document.documentElement.style.height = '100dvh'
+                    document.body.style.height = '100dvh'
+                  }, 100)
+                }}
               />
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <button
@@ -950,7 +1023,7 @@ export default function MobileApp() {
                     justifyContent: 'center'
                   }}
                 >
-                  <MessageCircleQuestionMark size={24} style={{ color: showHints ? '#007337' : 'rgba(255, 255, 255, 0.7)' }} />
+                  <MessageCircleIcon size={24} style={{ color: showHints ? '#007337' : 'rgba(255, 255, 255, 0.7)' }} />
                 </button>
                 <button
                   type="submit"
