@@ -19,6 +19,7 @@ import BitcoinIcon from './assets/bicoin.png'
 import XrpIcon from './assets/xrp.png'
 import ShibaIcon from './assets/shiba-inu.png'
 import SendIcon from './assets/send.png'
+import wallpaper1 from './assets/wallpaper1.jpg'
 import Preloader from './Preloader'
 import './MobileApp.css'
 
@@ -1080,7 +1081,13 @@ export default function MobileApp() {
   return (
     <>
       {showPreloader && <Preloader />}
-      <div className={pageClassName} style={pageOverlayStyle}>
+      <div
+        className={pageClassName}
+        style={{
+          ...pageOverlayStyle,
+          '--wallpaper-image': `url(${wallpaper1})`
+        } as React.CSSProperties}
+      >
         <header className="mobile-header">
           <div className="mobile-header-top">
             <div className="mobile-brand">
@@ -1119,9 +1126,9 @@ export default function MobileApp() {
                     Sell
                   </button>
                   <button
-                    className="btn mobile-sell-btn"
+                    className="btn mobile-sell-btn mobile-wallet-btn"
                     onClick={handleLiskWalletClick}
-                    style={{ marginLeft: '8px', border: '1px solid var(--accent)', background: '#04080B4D' }}
+                    style={{ marginLeft: '8px' }}
                     aria-label="Connect Wallet"
                   >
                     Wallet

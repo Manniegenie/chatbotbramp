@@ -20,6 +20,7 @@ import BitcoinIcon from './assets/bicoin.png'
 import XrpIcon from './assets/xrp.png'
 import ShibaIcon from './assets/shiba-inu.png'
 import SendIcon from './assets/send.png'
+import wallpaper1 from './assets/wallpaper1.jpg'
 import Preloader from './Preloader'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
@@ -1060,7 +1061,13 @@ export default function App() {
           }
         `}
       </style>
-      <div className={pageClassName} style={pageOverlayStyle}>
+      <div
+        className={pageClassName}
+        style={{
+          ...pageOverlayStyle,
+          '--wallpaper-image': `url(${wallpaper1})`
+        } as React.CSSProperties}
+      >
         <header ref={headerRef} className="header">
           <div className="brand">
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

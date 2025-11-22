@@ -10,7 +10,7 @@ body{ margin:0; background:transparent; color:var(--txt); font-family: -apple-sy
   position:fixed;
   inset:0;
   z-index:-2;
-  background-image: url('https://res.cloudinary.com/diqa4lkys/image/upload/v1762881864/wallpaper1_vcnomb.jpg');
+  background-image: url('./assets/wallpaper1.jpg');
   background-size:cover;
   background-position:center;
   background-repeat:no-repeat;
