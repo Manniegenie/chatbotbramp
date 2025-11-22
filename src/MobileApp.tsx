@@ -1024,7 +1024,7 @@ export default function MobileApp() {
                   <button
                     className="btn mobile-sell-btn"
                     onClick={handleLiskWalletClick}
-                    style={{ marginLeft: '8px', border: '2px solid #18f96e', background: 'rgba(24, 249, 110, 0.1)' }}
+                    style={{ marginLeft: '8px' }}
                     aria-label="Connect Wallet"
                   >
                     Wallet
