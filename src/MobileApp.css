@@ -49,12 +49,18 @@ html,
 body,
 #root {
   height: 100%;
+  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100%;
+  width: 100vw;
 }
 
 body {
-  margin: 0;
-  padding: 0;
+  margin: 0 !important;
+  padding: 0 !important;
   background: #575d5b; /* Dark fallback background behind wallpaper */
   color: var(--txt);
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, 'Segoe UI', 'Roboto', 'Helvetica Neue',
@@ -67,10 +73,13 @@ body {
   /* Full screen PWA support */
   height: 100vh;
   height: 100dvh; /* Dynamic viewport height for mobile browsers */
+  height: 100%;
   overflow: hidden;
   /* Ensure no safe area padding prevents wallpaper from reaching edges */
   padding-top: 0 !important;
   padding-bottom: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
 @supports (-webkit-touch-callout: none) {
@@ -109,14 +118,18 @@ a {
 
 .mobile-page {
   width: 100%;
+  width: 100vw;
   height: 100vh;
   height: 100dvh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   position: relative;
   isolation: isolate;
   background: transparent;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* Starfield background - shared by all pages and modals */
@@ -129,17 +142,21 @@ a {
   right: 0;
   bottom: 0;
   width: 100vw;
+  width: 100%;
   height: 100vh;
   height: 100dvh;
-  margin: 0;
-  padding: 0;
+  height: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
   z-index: -2;
   background-color: #575d5b; /* Dark fallback behind wallpaper */
   background-image: var(--wallpaper-image, url('./assets/wallpaper1.jpg'));
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-attachment: scroll;
+  background-attachment: fixed;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
 .mobile-page::after,
