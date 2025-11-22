@@ -128,7 +128,7 @@ a {
   background-color: transparent;
   background-image: var(--wallpaper-image, url('./assets/wallpaper2.jpg'));
   background-size: cover;
-  background-position: center;
+  background-position: center 40%;
   background-repeat: no-repeat;
   background-attachment: fixed;
   transform: translateZ(0) scale(1.3);
