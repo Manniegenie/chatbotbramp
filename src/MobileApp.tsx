@@ -15,7 +15,7 @@ import micIcon from './assets/mic.png'
 import { Bitcoin, EthereumCircleFlat, Usdt, Usdc, Exchange02, Send } from './components/CryptoIcons'
 import wallpaper2 from './assets/wallpaper2.jpg'
 import Preloader from './Preloader'
-import { MessageCircleIcon } from 'lucide-react'
+import { MessageCircleIcon, LockOpen } from 'lucide-react'
 import './MobileApp.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
@@ -1146,6 +1146,7 @@ export default function MobileApp() {
                   <div className="mobile-auth-buttons">
                     <button className="mobile-auth-btn mobile-sign-in-btn" onClick={() => setShowSignIn(true)}>
                       <span>Login</span>
+                      <LockOpen className="login-icon" size={16} stroke="url(#sign-in-gradient)" />
                     </button>
                     <button
                       className="mobile-auth-btn mobile-auth-btn-secondary mobile-create-account-btn"

@@ -245,17 +245,23 @@ a {
 }
 
 .mobile-sign-in-btn {
-  gap: 4px !important; /* Reduce gap between text and icon */
+  gap: 2px !important; /* Very close to text */
   background: transparent !important;
   border: none !important;
+  display: flex;
+  align-items: center;
 }
 
-.mobile-sign-in-btn svg {
+.mobile-sign-in-btn svg,
+.mobile-sign-in-btn .login-icon {
   stroke: url(#sign-in-gradient);
   fill: none;
   flex-shrink: 0;
-  width: 16px;
-  height: 16px;
+  width: 1em;
+  height: 1em;
+  margin-left: 2px;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .mobile-sign-in-btn .sign-in-icon {
@@ -1415,15 +1421,16 @@ a:focus-visible,
   z-index: 0;
 }
 
-/* Animated gradient border layer */
+/* Animated gradient border layer - MUST be visible */
+.mobile-input.mobile-input-centered::before,
 .mobile-input-centered::before {
   content: '';
   position: absolute;
   inset: -1px;
   border-radius: 32px;
   padding: 1px;
-  background: linear-gradient(135deg, #A80077, #66FF00, #A80077);
-  background-size: 200% 200%;
+  background: linear-gradient(135deg, #A80077, #66FF00, #A80077) !important;
+  background-size: 200% 200% !important;
   -webkit-mask: 
     linear-gradient(#fff 0 0) content-box, 
     linear-gradient(#fff 0 0);
@@ -1433,8 +1440,8 @@ a:focus-visible,
     linear-gradient(#fff 0 0);
   mask-composite: exclude;
   pointer-events: none;
-  z-index: 1;
-  animation: gradient-border 3s ease infinite;
+  z-index: 10 !important;
+  animation: gradient-border 3s ease infinite !important;
 }
 
 .mobile-input-centered::placeholder {
@@ -1447,8 +1454,10 @@ a:focus-visible,
               inset 0 1px 1px rgba(255, 255, 255, 0.15);
 }
 
+.mobile-input.mobile-input-centered:focus::before,
 .mobile-input-centered:focus::before {
-  animation: gradient-border 3s ease infinite;
+  animation: gradient-border 3s ease infinite !important;
+  z-index: 10 !important;
 }
 
 .mobile-send-inline {
