@@ -958,6 +958,27 @@ export default function MobileApp() {
           </div>
         ) : (
           <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px 12px' }}>
+              <button
+                type="button"
+                className="mobile-send-btn"
+                onClick={() => setShowHints(!showHints)}
+                disabled={loading}
+                aria-label="Show hints"
+                style={{
+                  background: 'transparent',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  padding: '8px',
+                  minWidth: '44px',
+                  height: '44px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <MessageCircleIcon size={24} style={{ color: showHints ? '#007337' : 'rgba(255, 255, 255, 0.7)' }} />
+              </button>
+            </div>
             {showHints && (
               <div className="mobile-hints">
                 <button
@@ -989,13 +1010,6 @@ export default function MobileApp() {
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={loading ? 'Please wait…' : 'Chat Bramp AI...'}
                 disabled={loading}
-                onFocus={(e) => {
-                  // Prevent page from scrolling when input is focused
-                  e.preventDefault()
-                  setTimeout(() => {
-                    e.target.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' })
-                  }, 300)
-                }}
                 onBlur={() => {
                   // Ensure viewport resets when keyboard closes
                   setTimeout(() => {
@@ -1006,25 +1020,6 @@ export default function MobileApp() {
                 }}
               />
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <button
-                  type="button"
-                  className="mobile-send-btn"
-                  onClick={() => setShowHints(!showHints)}
-                  disabled={loading}
-                  aria-label="Show hints"
-                  style={{
-                    background: 'transparent',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    padding: '8px',
-                    minWidth: '44px',
-                    height: '44px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <MessageCircleIcon size={24} style={{ color: showHints ? '#007337' : 'rgba(255, 255, 255, 0.7)' }} />
-                </button>
                 <button
                   type="submit"
                   className="mobile-send-btn"
