@@ -247,7 +247,7 @@ a {
   border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
-  border: 1px solid var(--accent);
+  border: none;
   background: #04080B4D;
   color: #fff;
   min-height: 36px;
