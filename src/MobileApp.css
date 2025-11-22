@@ -945,10 +945,6 @@ a {
   animation: gradient-border 3s ease infinite;
 }
 
-/* Override for centered input to ensure gradient shows */
-.mobile-input.mobile-input-centered::before {
-  z-index: -1;
-}
 
 .mobile-input:focus {
   box-shadow: none;
@@ -1413,10 +1409,10 @@ a:focus-visible,
   color: #ffffff;
   outline: none;
   position: relative;
-  z-index: 2;
+  z-index: 1;
 }
 
-/* Gradient border - bottom layer */
+/* Animated gradient border - outermost layer */
 .mobile-input.mobile-input-centered::before {
   content: '';
   position: absolute;
@@ -1434,23 +1430,23 @@ a:focus-visible,
     linear-gradient(#fff 0 0);
   mask-composite: exclude;
   pointer-events: none;
-  z-index: 0;
+  z-index: -1;
   animation: gradient-border 3s ease infinite;
 }
 
-/* Backdrop filter and shadows - middle layer */
+/* Glassmorphism effect - inner layer */
 .mobile-input.mobile-input-centered::after {
   content: '';
   position: absolute;
-  inset: 0;
-  border-radius: 32px;
+  inset: 1px;
+  border-radius: 31px;
   background: rgba(18, 18, 26, 0.2);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37),
               inset 0 1px 1px rgba(255, 255, 255, 0.1);
   pointer-events: none;
-  z-index: 1;
+  z-index: 0;
 }
 
 .mobile-input.mobile-input-centered::placeholder {
