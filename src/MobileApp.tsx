@@ -434,6 +434,13 @@ export default function MobileApp() {
     }
   })
 
+  // Auto-scroll to bottom when messages or loading state changes
+  useEffect(() => {
+    if (endRef.current) {
+      endRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    }
+  }, [messages, loading])
+
 
   const TICKER_SYMBOLS = ['BTC', 'ETH', 'USDT', 'USDC', 'BNB', 'SOL', 'NGNB']
 
