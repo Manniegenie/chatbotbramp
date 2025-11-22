@@ -147,6 +147,24 @@ a {
   content: none;
 }
 
+/* Dark overlay for chat when messages exist */
+.mobile-page--chat-active::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  z-index: -1;
+  background: rgba(0, 0, 0, 0.75); /* Dark overlay for readability */
+  pointer-events: none;
+}
+
 
 button {
   font-family: inherit;
@@ -609,7 +627,7 @@ a {
   overflow-x: hidden;
   padding: 16px 12px 80px;
   display: flex;
-  background: #000000; /* Black background for readability */
+  background: transparent; /* Transparent, overlay handled by parent */
   flex-direction: column;
   gap: 12px;
   -webkit-overflow-scrolling: touch;
@@ -875,9 +893,10 @@ a {
   gap: 8px;
   padding: 12px;
   padding-bottom: max(32px, var(--safe-bottom));
-  background: linear-gradient(0deg, #000000 70%, transparent);
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.85) 70%, transparent);
   border-top: 1px solid var(--border);
   z-index: 10;
+}
   flex-shrink: 0;
 }
 

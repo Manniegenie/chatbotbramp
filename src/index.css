@@ -176,7 +176,7 @@ a:hover { opacity: .92; }
   gap: 14px;
   padding: 10px 14px;
   overflow-y: auto;
-  background: #000000; /* Black background for readability */
+  background: transparent; /* Transparent, overlay handled by parent */
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   flex: 1 1 auto;

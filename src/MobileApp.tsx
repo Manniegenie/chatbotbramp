@@ -1094,7 +1094,7 @@ export default function MobileApp() {
         </defs>
       </svg>
       <div
-        className={pageClassName}
+        className={`${pageClassName} ${messages.length > 0 ? 'mobile-page--chat-active' : ''}`}
         style={{
           ...pageOverlayStyle,
           '--wallpaper-image': `url(${wallpaper1})`
