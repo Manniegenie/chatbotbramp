@@ -14,7 +14,7 @@ import MobileVoiceChat from './MobileVoiceChat';
 import BrampLogo from './assets/logo.jpeg'
 import micIcon from './assets/mic.png'
 import SendIcon from './assets/send.png'
-import { Bitcoin, Ethereum, Solana, BnbFill, TetherUsdtFill, Usdc } from './components/CryptoIcons'
+import { Bitcoin, EthereumCircleFlat, Solana, Bnb, Usdt, Usdc } from './components/CryptoIcons'
 import wallpaper1 from './assets/wallpaper1.jpg'
 import Preloader from './Preloader'
 
@@ -311,11 +311,11 @@ export default function App() {
   const messagesRef = useRef<HTMLDivElement>(null)
 
   const icons = [
-    { component: TetherUsdtFill, name: 'USDT' },
+    { component: Usdt, name: 'USDT' },
     { component: Solana, name: 'SOL' },
     { component: Bitcoin, name: 'BTC' },
-    { component: Ethereum, name: 'ETH' },
-    { component: BnbFill, name: 'BNB' },
+    { component: EthereumCircleFlat, name: 'ETH' },
+    { component: Bnb, name: 'BNB' },
     { component: Usdc, name: 'USDC' }
   ]
   const [currentIconIndex, setCurrentIconIndex] = useState(0)
