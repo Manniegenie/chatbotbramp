@@ -871,7 +871,17 @@ export default function MobileApp() {
                   </motion.div>
                 </AnimatePresence>
               </div>
-              <div style={{ display: 'flex', gap: '8px', width: '100%', alignItems: 'center', position: 'relative' }}>
+              <form 
+                style={{ display: 'flex', gap: '8px', width: '100%', alignItems: 'center', position: 'relative' }}
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  if (!auth) {
+                    setShowSignIn(true)
+                    return
+                  }
+                  sendMessage(e)
+                }}
+              >
                 <input
                   ref={inputRef}
                   className="mobile-input mobile-input-centered"
@@ -883,13 +893,6 @@ export default function MobileApp() {
                       setShowSignIn(true)
                     }
                   }}
-                  onKeyDown={(e) => {
-                    // Check if user is signed in when they press Enter
-                    if (e.key === 'Enter' && !auth) {
-                      e.preventDefault()
-                      setShowSignIn(true)
-                    }
-                  }}
                   placeholder="Try: Sell 100 USDT to NGN"
                   disabled={loading}
                 />
@@ -898,7 +901,6 @@ export default function MobileApp() {
                   className="mobile-send-btn mobile-send-inline"
                   disabled={loading || !input.trim()}
                   aria-label="Send message"
-                  onClick={sendMessage}
                 >
                   {loading ? (
                     <div className="mobile-spinner" />
@@ -914,7 +916,7 @@ export default function MobileApp() {
                     />
                   )}
                 </button>
-              </div>
+              </form>
             </div>
           </div>
         ) : (
