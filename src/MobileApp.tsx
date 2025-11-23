@@ -1159,7 +1159,7 @@ export default function MobileApp() {
                 <>
                   <div className="mobile-auth-buttons">
                     <button className="mobile-auth-btn mobile-sign-in-btn" onClick={() => setShowSignIn(true)}>
-                      <span>Login</span>
+                      <span>Sign In</span>
                     </button>
                     {!hideSignUpButton && (
                       <button
