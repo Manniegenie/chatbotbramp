@@ -237,7 +237,10 @@ export default function MobileLiskWallet({ onClose }: { onClose?: () => void }) 
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`;
+        console.error('Verify endpoint error:', errorMessage, errorData);
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -247,10 +250,14 @@ export default function MobileLiskWallet({ onClose }: { onClose?: () => void }) 
         setWalletChain('solana');
         setConnectionMessage(null);
       } else {
-        throw new Error(data.error || 'Failed to verify connection');
+        const errorMsg = data.error || data.message || 'Failed to verify connection';
+        console.error('Verify failed:', errorMsg, data);
+        throw new Error(errorMsg);
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to verify wallet connection');
+      console.error('Verify error details:', err);
+      const errorMessage = err.message || 'Failed to verify wallet connection';
+      setError(errorMessage);
       setWalletState('error');
     }
   }
@@ -573,20 +580,21 @@ export default function MobileLiskWallet({ onClose }: { onClose?: () => void }) 
                 justifyContent: 'center',
                 padding: '16px 8px',
                 borderRadius: '12px',
-                background: selectedWallet === 'metamask' ? 'rgba(24, 249, 110, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                background: selectedWallet === 'metamask' ? 'rgba(24, 249, 110, 0.2)' : 'transparent',
                 border: selectedWallet === 'metamask' ? '2px solid #18f96e' : '1px solid rgba(255, 255, 255, 0.2)',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
-                minHeight: '100px'
+                height: '100px',
+                overflow: 'hidden'
               }}
               onMouseEnter={(e) => {
                 if (selectedWallet !== 'metamask') {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.background = 'transparent';
                 }
               }}
               onMouseLeave={(e) => {
                 if (selectedWallet !== 'metamask') {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.background = 'transparent';
                 }
               }}
             >
@@ -610,20 +618,21 @@ export default function MobileLiskWallet({ onClose }: { onClose?: () => void }) 
                 justifyContent: 'center',
                 padding: '16px 8px',
                 borderRadius: '12px',
-                background: selectedWallet === 'solflare' ? 'rgba(24, 249, 110, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                background: selectedWallet === 'solflare' ? 'rgba(24, 249, 110, 0.2)' : 'transparent',
                 border: selectedWallet === 'solflare' ? '2px solid #18f96e' : '1px solid rgba(255, 255, 255, 0.2)',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
-                minHeight: '100px'
+                height: '100px',
+                overflow: 'hidden'
               }}
               onMouseEnter={(e) => {
                 if (selectedWallet !== 'solflare') {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.background = 'transparent';
                 }
               }}
               onMouseLeave={(e) => {
                 if (selectedWallet !== 'solflare') {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.background = 'transparent';
                 }
               }}
             >
@@ -636,68 +645,70 @@ export default function MobileLiskWallet({ onClose }: { onClose?: () => void }) 
             </button>
 
             {/* Trust Wallet */}
-            <button
+          <button
               onClick={() => {
                 connectWithTrustWallet();
               }}
-              style={{
+            style={{
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
                 padding: '16px 8px',
                 borderRadius: '12px',
-                background: selectedWallet === 'trust' ? 'rgba(24, 249, 110, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                background: selectedWallet === 'trust' ? 'rgba(24, 249, 110, 0.2)' : 'transparent',
                 border: selectedWallet === 'trust' ? '2px solid #18f96e' : '1px solid rgba(255, 255, 255, 0.2)',
-                cursor: 'pointer',
+              cursor: 'pointer',
                 transition: 'all 0.2s',
-                minHeight: '100px'
+                height: '100px',
+                overflow: 'hidden'
               }}
               onMouseEnter={(e) => {
                 if (selectedWallet !== 'trust') {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.background = 'transparent';
                 }
               }}
               onMouseLeave={(e) => {
                 if (selectedWallet !== 'trust') {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.background = 'transparent';
                 }
               }}
             >
               <img 
                 src={TrustWalletIcon} 
                 alt="Trust Wallet" 
-                style={{ width: '48px', height: '48px', marginBottom: '8px', objectFit: 'contain' }}
+                style={{ width: '130px', height: '130px', marginBottom: '8px', objectFit: 'contain' }}
               />
               <span style={{ fontSize: '12px', fontWeight: '500' }}>Trust Wallet</span>
-            </button>
+          </button>
 
             {/* Phantom */}
-            <button
+          <button
               onClick={() => {
                 connectWithPhantom();
               }}
-              style={{
+            style={{
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
                 padding: '16px 8px',
                 borderRadius: '12px',
-                background: selectedWallet === 'phantom' ? 'rgba(24, 249, 110, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                background: selectedWallet === 'phantom' ? 'rgba(24, 249, 110, 0.2)' : 'transparent',
                 border: selectedWallet === 'phantom' ? '2px solid #18f96e' : '1px solid rgba(255, 255, 255, 0.2)',
-                cursor: 'pointer',
+              cursor: 'pointer',
                 transition: 'all 0.2s',
-                minHeight: '100px'
+                height: '100px',
+                overflow: 'hidden'
               }}
               onMouseEnter={(e) => {
                 if (selectedWallet !== 'phantom') {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.background = 'transparent';
                 }
               }}
               onMouseLeave={(e) => {
                 if (selectedWallet !== 'phantom') {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.background = 'transparent';
                 }
               }}
             >
@@ -707,32 +718,9 @@ export default function MobileLiskWallet({ onClose }: { onClose?: () => void }) 
                 style={{ width: '48px', height: '48px', marginBottom: '8px', objectFit: 'contain' }}
               />
               <span style={{ fontSize: '12px', fontWeight: '500' }}>Phantom</span>
-            </button>
+          </button>
           </div>
 
-          {/* Network Selection */}
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: '#fff', fontSize: '14px' }}>
-              Network:
-            </label>
-            <select
-              value={network}
-              onChange={(e) => setNetwork(e.target.value as 'mainnet' | 'testnet' | 'devnet')}
-              style={{
-                padding: '8px 12px',
-                borderRadius: '8px',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-                background: 'rgba(255, 255, 255, 0.1)',
-                color: '#fff',
-                width: '100%',
-                fontSize: '14px'
-              }}
-            >
-              <option value="mainnet">Mainnet</option>
-              <option value="testnet">Testnet</option>
-              <option value="devnet">Devnet</option>
-            </select>
-          </div>
         </div>
       )}
 
