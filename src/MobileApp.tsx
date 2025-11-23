@@ -10,7 +10,7 @@ import MobileSell from './MobileSell'
 import MobileGame from './MobileGame';
 import MobileVoiceChat from './MobileVoiceChat';
 import MobileLiskWallet from './MobileLiskWallet';
-import BrampLogo from './assets/logo.png'
+import BrampLogo from './assets/logo.jpeg'
 import micIcon from './assets/mic.png'
 import { Bitcoin, EthereumCircleFlat, Usdt, Usdc, Exchange02, Send } from './components/CryptoIcons'
 import wallpaper2 from './assets/wallpaper2.jpg'
@@ -53,9 +53,9 @@ function getSessionId(): string {
 
 function getTimeBasedGreeting(): string {
   const hour = new Date().getHours()
-  if (hour < 12) return 'Good morning'
-  else if (hour < 18) return 'Good afternoon'
-  else return 'Good evening'
+  if (hour < 12) return 'Good morning!🌻'
+  else if (hour < 18) return 'Good afternoon!🌞'
+  else return 'Good evening!🌙'
 }
 
 
@@ -529,12 +529,6 @@ export default function MobileApp() {
     const trimmed = input.trim()
     if (!trimmed || loading) return
 
-    // Check if user is signed in, if not show sign in modal
-    if (!auth) {
-      setShowSignIn(true)
-      return
-    }
-
     // Switch to bottom input after first message
     if (showCenteredInput) {
       setShowCenteredInput(false)
@@ -873,29 +867,18 @@ export default function MobileApp() {
               </div>
               <form 
                 style={{ display: 'flex', gap: '8px', width: '100%', alignItems: 'center', position: 'relative' }}
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  if (!auth) {
-                    setShowSignIn(true)
-                    return
-                  }
-                  sendMessage(e)
-                }}
+                onSubmit={sendMessage}
               >
-                <input
-                  ref={inputRef}
-                  className="mobile-input mobile-input-centered"
-                  value={input}
-                  onChange={(e) => {
-                    setInput(e.target.value)
-                    // Check if user is signed in when they start typing
-                    if (!auth && e.target.value.trim().length > 0) {
-                      setShowSignIn(true)
-                    }
-                  }}
-                  placeholder="Try: Sell 100 USDT to NGN"
-                  disabled={loading}
-                />
+                <div className="mobile-input-gradient-box">
+                  <input
+                    ref={inputRef}
+                    className="mobile-input mobile-input-centered"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Try: Sell 100 USDT to NGN"
+                    disabled={loading}
+                  />
+                </div>
                 <button
                   type="submit"
                   className="mobile-send-btn mobile-send-inline"
@@ -1179,12 +1162,18 @@ export default function MobileApp() {
               {!auth ? (
                 <>
                   <div className="mobile-auth-buttons">
+                    <button
+                      className="mobile-auth-btn mobile-login-btn"
+                      onClick={() => setShowSignIn(true)}
+                    >
+                      Login
+                    </button>
                     {!hideSignUpButton && (
                       <button
                         className="mobile-auth-btn mobile-create-account-btn"
                         onClick={() => setShowSignUp(true)}
                       >
-                        Create Account
+                        Get Started
                       </button>
                     )}
                   </div>

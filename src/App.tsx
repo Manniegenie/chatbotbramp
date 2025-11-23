@@ -14,7 +14,7 @@ import MobileVoiceChat from './MobileVoiceChat';
 import BrampLogo from './assets/logo.jpeg'
 import micIcon from './assets/mic.png'
 import SendIcon from './assets/send.png'
-import { Bitcoin, EthereumCircleFlat, Solana, Bnb, Usdt, Usdc } from './components/CryptoIcons'
+import { Bitcoin, EthereumCircleFlat, Usdt, Usdc } from './components/CryptoIcons'
 import wallpaper1 from './assets/wallpaper1.jpg'
 import Preloader from './Preloader'
 
@@ -312,10 +312,8 @@ export default function App() {
 
   const icons = [
     { component: Usdt, name: 'USDT' },
-    { component: Solana, name: 'SOL' },
     { component: Bitcoin, name: 'BTC' },
     { component: EthereumCircleFlat, name: 'ETH' },
-    { component: Bnb, name: 'BNB' },
     { component: Usdc, name: 'USDC' }
   ]
   const [currentIconIndex, setCurrentIconIndex] = useState(0)
@@ -813,6 +811,18 @@ export default function App() {
             100% { transform: rotate(360deg); }
           }
 
+          @keyframes gradient-border {
+            0% {
+              background-position: 0% 50%;
+            }
+            50% {
+              background-position: 100% 50%;
+            }
+            100% {
+              background-position: 0% 50%;
+            }
+          }
+
           /* Header sticky/pinned */
           .header {
             position: sticky;
@@ -982,26 +992,63 @@ export default function App() {
             caret-color: var(--accent);
             box-sizing: border-box;
             min-height: 72px;
-            background: rgba(18, 18, 26, 0.2);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            background: rgba(11, 11, 16, 0.2);
             border: 1px solid transparent;
-            color: #DADADA;
+            color: #ffffff;
             outline: none;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37),
-                        inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            box-shadow: none;
             transition: all 0.3s ease;
           }
           
           .input-centered-desktop::placeholder {
-            color: #DADADA;
+            color: rgba(255, 255, 255, 0.6);
           }
           
-          .input-centered-desktop:focus {
-            background: rgba(18, 18, 26, 0.3);
-            border: 1px solid var(--accent);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
-                        inset 0 1px 1px rgba(255, 255, 255, 0.15);
+          .input-gradient-box-desktop {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+            border-radius: 40px;
+            background: rgba(11, 11, 16, 0.2);
+            padding: 1px;
+            z-index: 0;
+          }
+
+          .input-gradient-box-desktop::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 40px;
+            padding: 1px;
+            background: linear-gradient(135deg, #A80077, #66FF00, #A80077);
+            background-size: 200% 200%;
+            -webkit-mask: 
+              linear-gradient(#fff 0 0) content-box, 
+              linear-gradient(#fff 0 0);
+            -webkit-mask-composite: destination-out;
+            mask: 
+              linear-gradient(#fff 0 0) content-box, 
+              linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            pointer-events: none;
+            z-index: -1;
+            animation: gradient-border 3s ease infinite;
+          }
+
+          .input-gradient-box-desktop .input-centered-desktop {
+            width: 100%;
+            border: none;
+            background: rgba(11, 11, 16, 0.2);
+            box-shadow: none;
+            position: relative;
+            z-index: 1;
+          }
+
+          .input-gradient-box-desktop .input-centered-desktop:focus {
+            background: rgba(11, 11, 16, 0.2);
+            border: none;
+            box-shadow: none;
           }
           
           .send-btn-inline-desktop {
@@ -1278,14 +1325,16 @@ export default function App() {
                     </AnimatePresence>
                   </div>
                   <div style={{ display: 'flex', gap: '8px', width: '100%', alignItems: 'center', position: 'relative' }}>
-                    <input
-                      ref={inputRef}
-                      className="input-centered-desktop"
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      placeholder="Try: Sell 100 USDT to NGN"
-                      disabled={loading}
-                    />
+                    <div className="input-gradient-box-desktop">
+                      <input
+                        ref={inputRef}
+                        className="input-centered-desktop"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder="Try: Sell 100 USDT to NGN"
+                        disabled={loading}
+                      />
+                    </div>
                     <button
                       type="submit"
                       className="send-btn-inline-desktop"

@@ -3,16 +3,25 @@ import SecureStorage from 'secure-web-storage'
 import CryptoJS from 'crypto-js'
 
 const SECRET = import.meta.env.VITE_SECURE_STORAGE_SECRET
+const isDevelopment = import.meta.env.DEV || import.meta.env.MODE === 'development'
 
-if (!SECRET || SECRET === 'dev-insecure-key') {
+// In development, use a default insecure key if not set
+const finalSecret = SECRET || (isDevelopment ? 'dev-insecure-key' : null)
+
+if (!finalSecret) {
+  throw new Error('VITE_SECURE_STORAGE_SECRET must be set')
+}
+
+// Only enforce secure secret in production
+if (!isDevelopment && finalSecret === 'dev-insecure-key') {
   throw new Error('VITE_SECURE_STORAGE_SECRET must be set to a secure value in production')
 }
 
 const secureStorage = new SecureStorage(localStorage, {
-  hash: (key: string) => CryptoJS.SHA256(key + SECRET).toString(),
-  encrypt: (data: string) => CryptoJS.AES.encrypt(data, SECRET).toString(),
+  hash: (key: string) => CryptoJS.SHA256(key + finalSecret).toString(),
+  encrypt: (data: string) => CryptoJS.AES.encrypt(data, finalSecret).toString(),
   decrypt: (data: string) => {
-    const bytes = CryptoJS.AES.decrypt(data, SECRET)
+    const bytes = CryptoJS.AES.decrypt(data, finalSecret)
     return bytes.toString(CryptoJS.enc.Utf8)
   },
 })
