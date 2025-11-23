@@ -177,7 +177,7 @@ export const Send = ({ size = 24, className = '', style, active = false, ...prop
             </defs>
             <path
                 fill="none"
-                stroke={active ? `url(#${gradientId})` : "currentColor"}
+                stroke={active ? "white" : "currentColor"}
                 strokeWidth="2"
                 d="M22 3L2 11l18.5 8L22 3ZM10 20.5l3-4.5m2.5-6.5L9 14l.859 6.012c.078.546.216.537.306-.003L11 15l4.5-5.5Z"
             />
