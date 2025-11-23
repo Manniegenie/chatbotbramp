@@ -479,12 +479,12 @@ export default function MobileLiskWallet({ onClose }: { onClose?: () => void }) 
       // Step 3: Request account access (frontend only - required for browser extension)
       let address: string;
       try {
-        const accounts = await ethereum.request({
-          method: 'eth_requestAccounts'
-        });
+      const accounts = await ethereum.request({
+        method: 'eth_requestAccounts'
+      });
 
-        if (!accounts || accounts.length === 0) {
-          throw new Error('No accounts found');
+      if (!accounts || accounts.length === 0) {
+        throw new Error('No accounts found');
         }
         address = accounts[0];
       } catch (connectErr: any) {
@@ -509,9 +509,9 @@ export default function MobileLiskWallet({ onClose }: { onClose?: () => void }) 
       let signature: string;
       try {
         signature = await ethereum.request({
-          method: 'personal_sign',
-          params: [connectionMessage, address]
-        });
+        method: 'personal_sign',
+        params: [connectionMessage, address]
+      });
       } catch (signErr: any) {
         if (signErr.code === 4001) {
           throw new Error('Signature request rejected by user');
