@@ -870,36 +870,44 @@ export default function MobileApp() {
                 style={{ display: 'flex', gap: '8px', width: '100%', alignItems: 'center', position: 'relative' }}
                 onSubmit={sendMessage}
               >
-                <div className="mobile-input-gradient-box">
+                <div className="mobile-input-gradient-box" style={{ position: 'relative', flex: 1, minWidth: 0 }}>
                   <input
                     ref={inputRef}
-                    className="mobile-input mobile-input-centered"
+                    className="mobile-input mobile-input-centered mobile-input-with-send"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Try: Sell 100 USDT to NGN"
                     disabled={loading}
+                    style={{ paddingRight: '56px', width: '100%' }}
                   />
+                  <button
+                    type="submit"
+                    className="mobile-send-btn mobile-send-btn-inside"
+                    disabled={loading || !input.trim()}
+                    aria-label="Send message"
+                    style={{
+                      position: 'absolute',
+                      right: '8px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      zIndex: 10
+                    }}
+                  >
+                    {loading ? (
+                      <div className="mobile-spinner" />
+                    ) : (
+                      <Send
+                        size={20}
+                        active={Boolean(input.trim())}
+                        style={{
+                          opacity: loading || !input.trim() ? 0.6 : 1,
+                          transition: 'opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                          color: input.trim() ? undefined : 'rgba(255, 255, 255, 0.7)'
+                        }}
+                      />
+                    )}
+                  </button>
                 </div>
-                <button
-                  type="submit"
-                  className="mobile-send-btn mobile-send-inline"
-                  disabled={loading || !input.trim()}
-                  aria-label="Send message"
-                >
-                  {loading ? (
-                    <div className="mobile-spinner" />
-                  ) : (
-                    <Send
-                      size={28}
-                      active={Boolean(input.trim())}
-                      style={{
-                        opacity: loading || !input.trim() ? 0.6 : 1,
-                        transition: 'opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                        color: input.trim() ? undefined : 'rgba(255, 255, 255, 0.7)'
-                      }}
-                    />
-                  )}
-                </button>
               </form>
             </div>
           </div>
@@ -950,26 +958,34 @@ export default function MobileApp() {
             )}
 
             <form className="mobile-composer" onSubmit={sendMessage}>
-              <input
-                ref={inputRef}
-                className="mobile-input"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={loading ? 'Please wait…' : 'Chat Bramp AI...'}
-                disabled={loading}
-              />
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+                <input
+                  ref={inputRef}
+                  className="mobile-input mobile-input-with-send"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder={loading ? 'Please wait…' : 'Chat Bramp AI...'}
+                  disabled={loading}
+                  style={{ paddingRight: '56px' }}
+                />
                 <button
                   type="submit"
-                  className="mobile-send-btn"
+                  className="mobile-send-btn mobile-send-btn-inside"
                   disabled={loading || !input.trim()}
                   aria-label="Send message"
+                  style={{
+                    position: 'absolute',
+                    right: '8px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    zIndex: 10
+                  }}
                 >
                   {loading ? (
                     <div className="mobile-spinner" />
                   ) : (
                     <Send
-                      size={28}
+                      size={20}
                       active={Boolean(input.trim())}
                       style={{
                         opacity: loading || !input.trim() ? 0.6 : 1,
@@ -979,6 +995,8 @@ export default function MobileApp() {
                     />
                   )}
                 </button>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <button
                   type="button"
                   className="mobile-send-btn"
@@ -1187,8 +1205,8 @@ export default function MobileApp() {
                     onClick={handleSellClick}
                     aria-label="Sell Crypto"
                   >
-                    <span>Sell</span>
                     <Exchange02 className="sell-icon" size={16} />
+                    <span>Sell</span>
                   </button>
                   <button
                     className="btn mobile-sell-btn mobile-wallet-btn"
@@ -1209,7 +1227,7 @@ export default function MobileApp() {
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
-                      strokeWidth="2"
+                      strokeWidth="1.5"
                     >
                       <line x1="3" y1="12" x2="21" y2="12"></line>
                       <line x1="3" y1="6" x2="21" y2="6"></line>

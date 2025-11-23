@@ -462,7 +462,7 @@ a {
   border-radius: 12px;
   border: none;
   background: var(--card);
-  color: var(--accent);
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -959,6 +959,10 @@ a {
   margin-top: auto;
 }
 
+.mobile-input-with-send {
+  position: relative;
+}
+
 
 .mobile-input {
   flex: 1;
@@ -1055,8 +1059,19 @@ a {
   padding: 0;
 }
 
+.mobile-send-btn-inside {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+}
+
 .mobile-send-btn:active:not(:disabled) {
   transform: scale(0.95);
+}
+
+.mobile-send-btn-inside:active:not(:disabled) {
+  transform: translateY(-50%) scale(0.95);
 }
 
 .mobile-send-btn:disabled {
@@ -1537,11 +1552,18 @@ a:focus-visible,
   position: relative;
   display: flex;
   align-items: center;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   border-radius: 32px;
   background: rgba(11, 11, 16, 0.2);
   padding: 1px;
   z-index: 0;
+}
+
+.mobile-input-gradient-box .mobile-input {
+  width: 100%;
+  flex: 1;
+  min-width: 0;
 }
 
 .mobile-input-gradient-box::before {
