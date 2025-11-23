@@ -10,7 +10,7 @@ import MobileSell from './MobileSell'
 import MobileGame from './MobileGame';
 import MobileVoiceChat from './MobileVoiceChat';
 import MobileLiskWallet from './MobileLiskWallet';
-import BrampLogo from './assets/logo.jpeg'
+import BrampLogo from './assets/logo.png'
 import micIcon from './assets/mic.png'
 import { Bitcoin, EthereumCircleFlat, Usdt, Usdc, Exchange02, Send } from './components/CryptoIcons'
 import wallpaper2 from './assets/wallpaper2.jpg'
