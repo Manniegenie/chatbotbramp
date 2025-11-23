@@ -529,6 +529,12 @@ export default function MobileApp() {
     const trimmed = input.trim()
     if (!trimmed || loading) return
 
+    // Check if user is signed in, if not show sign in modal
+    if (!auth) {
+      setShowSignIn(true)
+      return
+    }
+
     // Switch to bottom input after first message
     if (showCenteredInput) {
       setShowCenteredInput(false)
@@ -870,7 +876,20 @@ export default function MobileApp() {
                   ref={inputRef}
                   className="mobile-input mobile-input-centered"
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
+                  onChange={(e) => {
+                    setInput(e.target.value)
+                    // Check if user is signed in when they start typing
+                    if (!auth && e.target.value.trim().length > 0) {
+                      setShowSignIn(true)
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    // Check if user is signed in when they press Enter
+                    if (e.key === 'Enter' && !auth) {
+                      e.preventDefault()
+                      setShowSignIn(true)
+                    }
+                  }}
                   placeholder="Try: Sell 100 USDT to NGN"
                   disabled={loading}
                 />
@@ -1158,15 +1177,12 @@ export default function MobileApp() {
               {!auth ? (
                 <>
                   <div className="mobile-auth-buttons">
-                    <button className="mobile-auth-btn mobile-sign-in-btn" onClick={() => setShowSignIn(true)}>
-                      <span>Sign In</span>
-                    </button>
                     {!hideSignUpButton && (
                       <button
-                        className="mobile-auth-btn mobile-auth-btn-secondary mobile-create-account-btn"
+                        className="mobile-auth-btn mobile-create-account-btn"
                         onClick={() => setShowSignUp(true)}
                       >
-                        Sign Up
+                        Create Account
                       </button>
                     )}
                   </div>
