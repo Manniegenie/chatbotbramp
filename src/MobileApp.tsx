@@ -280,6 +280,7 @@ export default function MobileApp() {
   const [loading, setLoading] = useState(false)
   const [showCenteredInput, setShowCenteredInput] = useState(true)
   const [showSignIn, setShowSignIn] = useState(false)
+  const [hideSignUpButton, setHideSignUpButton] = useState(false)
 
   const [showSignUp, setShowSignUp] = useState(false)
   const [showSell, setShowSell] = useState(false)
@@ -531,6 +532,7 @@ export default function MobileApp() {
     // Switch to bottom input after first message
     if (showCenteredInput) {
       setShowCenteredInput(false)
+      setHideSignUpButton(true) // Hide sign up button once chat opens
     }
 
     const userMsg: ChatMessage = {
@@ -1159,12 +1161,14 @@ export default function MobileApp() {
                     <button className="mobile-auth-btn mobile-sign-in-btn" onClick={() => setShowSignIn(true)}>
                       <span>Login</span>
                     </button>
-                    <button
-                      className="mobile-auth-btn mobile-auth-btn-secondary mobile-create-account-btn"
-                      onClick={() => setShowSignUp(true)}
-                    >
-                      Sign Up
-                    </button>
+                    {!hideSignUpButton && (
+                      <button
+                        className="mobile-auth-btn mobile-auth-btn-secondary mobile-create-account-btn"
+                        onClick={() => setShowSignUp(true)}
+                      >
+                        Sign Up
+                      </button>
+                    )}
                   </div>
                 </>
               ) : (

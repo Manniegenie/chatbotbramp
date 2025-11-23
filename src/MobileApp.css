@@ -247,7 +247,6 @@ a {
 .mobile-sign-in-btn {
   gap: 3px !important; /* Very close to text */
   background: linear-gradient(135deg, rgba(168, 0, 119, 0.2), rgba(102, 255, 0, 0.2), rgba(168, 0, 119, 0.2));
-  background-size: 200% 200%;
   border: none !important;
   position: relative;
   z-index: 0;
@@ -257,7 +256,6 @@ a {
   padding-right: 16px;
   display: flex;
   align-items: center;
-  animation: gradient-border 3s ease infinite;
 }
 
 .mobile-sign-in-btn::before {
