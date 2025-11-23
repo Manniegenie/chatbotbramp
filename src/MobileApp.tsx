@@ -1234,7 +1234,7 @@ export default function MobileApp() {
                 Game
               </button>
               <button className="mobile-menu-item" onClick={handleLiskWalletClick}>
-                Connect Lisk Wallet
+                Connect Wallet
               </button>
               <button className="mobile-menu-item" onClick={signOut}>
                 Sign Out
