@@ -12,6 +12,7 @@ import MobileVoiceChat from './MobileVoiceChat';
 import MobileLiskWallet from './MobileLiskWallet';
 import BrampLogo from './assets/logo.jpeg'
 import micIcon from './assets/mic.png'
+import userIcon from './assets/user.png'
 import { Bitcoin, EthereumCircleFlat, Usdt, Usdc, Exchange02, Send } from './components/CryptoIcons'
 import wallpaper2 from './assets/wallpaper2.jpg'
 import Preloader from './Preloader'
@@ -1166,6 +1167,7 @@ export default function MobileApp() {
                       className="mobile-auth-btn mobile-login-btn"
                       onClick={() => setShowSignIn(true)}
                     >
+                      <img src={userIcon} alt="User" style={{ width: '16px', height: '16px' }} />
                       Login
                     </button>
                     {!hideSignUpButton && (
