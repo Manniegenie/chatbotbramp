@@ -1431,6 +1431,28 @@ a:focus-visible,
 }
 
 /* Animated gradient border - same approach as sign up button */
+.mobile-input-centered::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 32px;
+  padding: 1px;
+  background: linear-gradient(135deg, #A80077, #66FF00, #A80077);
+  background-size: 200% 200%;
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: -1;
+  animation: gradient-border 3s ease infinite;
+}
+
+/* Also apply to mobile-input with mobile-input-centered class */
 .mobile-input.mobile-input-centered::before {
   content: '';
   position: absolute;
