@@ -160,7 +160,20 @@ export default function MobileSignIn({
       overflow: 'hidden',
       touchAction: 'none'
     }}>
+      {/* Background container with notch fallback color at 50% opacity - covers full viewport behind modal */}
       <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        background: 'rgba(87, 93, 91, 0.5)', // #575d5b at 50% opacity
+        zIndex: 999.5, // Above the page overlay (999) but below modal content (1000)
+        pointerEvents: 'none'
+      }} />
+      <div style={{
+        position: 'relative',
+        zIndex: 1, // Above the background container
         maxWidth: '359px',
         width: '100%',
         maxHeight: '64.125vh',

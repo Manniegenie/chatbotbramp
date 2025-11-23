@@ -166,23 +166,29 @@ export default function MobileLiskWallet({ onClose }: { onClose?: () => void }) 
     }
   }
 
-  // Solana wallet connection functions
-  async function initiateSolanaConnection() {
+  // Solana wallet connection functions - All connections go through backend
+  async function initiateSolanaConnection(walletType: string) {
     try {
       setWalletState('connecting');
       setError(null);
 
       const solanaNetwork = network === 'testnet' ? 'testnet' : network === 'devnet' ? 'devnet' : 'mainnet';
+      
+      // Call backend to initiate connection and get message to sign
       const response = await authFetch(`${API_BASE}/solana/connect`, {
         method: 'POST',
-        body: JSON.stringify({ network: solanaNetwork }),
+        body: JSON.stringify({ 
+          network: solanaNetwork,
+          connectionMethod: walletType 
+        }),
         headers: {
           'Content-Type': 'application/json'
         }
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
@@ -249,46 +255,55 @@ export default function MobileLiskWallet({ onClose }: { onClose?: () => void }) 
     }
   }
 
-  // Connect with Phantom wallet
+  // Connect with Phantom wallet - All verification goes through backend
   async function connectWithPhantom() {
     try {
       setSelectedWallet('phantom');
       setWalletChain('solana');
+      setError(null);
       
+      // Step 1: Check if wallet is installed
       if (typeof window === 'undefined' || !(window as any).solana || !(window as any).solana.isPhantom) {
         throw new Error('Phantom wallet not detected. Please install Phantom wallet extension.');
       }
 
       const phantom = (window as any).solana;
 
-      // Connect to Phantom
-      const response = await phantom.connect();
-      if (!response.publicKey) {
-        throw new Error('Failed to connect to Phantom wallet');
+      // Step 2: Connect to Phantom wallet (frontend only - required for browser extension)
+      let address: string;
+      try {
+        const response = await phantom.connect();
+        address = response.publicKey.toString();
+      } catch (connectErr: any) {
+        if (connectErr.code === 4001) {
+          throw new Error('Connection rejected by user');
+        }
+        throw new Error('Failed to connect to Phantom wallet. Please try again.');
       }
 
-      const address = response.publicKey.toString();
-
-      // Get connection message
-      if (!connectionMessage) {
-        await initiateSolanaConnection();
-        // Wait a bit for state to update
-        await new Promise(resolve => setTimeout(resolve, 500));
+      // Step 3: Get connection message from backend
+      const message = await initiateSolanaConnection('phantom');
+      if (!message) {
+        throw new Error('Failed to get connection message from server');
       }
 
-      if (!connectionMessage) {
-        throw new Error('Failed to get connection message');
+      // Step 4: Request wallet to sign message (frontend only - required for browser extension)
+      const encodedMessage = new TextEncoder().encode(message);
+      let signedMessage: any;
+      try {
+        signedMessage = await phantom.signMessage(encodedMessage, 'utf8');
+      } catch (signErr: any) {
+        if (signErr.code === 4001) {
+          throw new Error('Signature request rejected by user');
+        }
+        throw new Error('Failed to sign message. Please try again.');
       }
-
-      // Sign message
-      const encodedMessage = new TextEncoder().encode(connectionMessage);
-      const signedMessage = await phantom.signMessage(encodedMessage, 'utf8');
       
-      if (!signedMessage.signature) {
-        throw new Error('Failed to sign message');
+      if (!signedMessage || !signedMessage.signature) {
+        throw new Error('Failed to get signature from wallet');
       }
 
-      // Verify connection
+      // Step 5: Send signature to backend for verification and storage
       await verifySolanaConnection(address, signedMessage.signature);
     } catch (err: any) {
       setError(err.message || 'Failed to connect with Phantom');
@@ -296,47 +311,58 @@ export default function MobileLiskWallet({ onClose }: { onClose?: () => void }) 
     }
   }
 
-  // Connect with Solflare wallet
+  // Connect with Solflare wallet - All verification goes through backend
   async function connectWithSolflare() {
     try {
       setSelectedWallet('solflare');
       setWalletChain('solana');
+      setError(null);
       
+      // Step 1: Check if wallet is installed
       if (typeof window === 'undefined' || !(window as any).solflare) {
         throw new Error('Solflare wallet not detected. Please install Solflare wallet extension.');
       }
 
       const solflare = (window as any).solflare;
 
-      // Connect to Solflare
-      await solflare.connect();
-      const publicKey = solflare.publicKey;
+      // Step 2: Connect to Solflare wallet (frontend only - required for browser extension)
+      let address: string;
+      try {
+        await solflare.connect();
+        if (!solflare.publicKey) {
+          throw new Error('No public key returned');
+        }
+        address = solflare.publicKey.toString();
+      } catch (connectErr: any) {
+        if (connectErr.code === 4001) {
+          throw new Error('Connection rejected by user');
+        }
+        throw new Error('Failed to connect to Solflare wallet. Please try again.');
+      }
+
+      // Step 3: Get connection message from backend
+      const message = await initiateSolanaConnection('solflare');
+      if (!message) {
+        throw new Error('Failed to get connection message from server');
+      }
+
+      // Step 4: Request wallet to sign message (frontend only - required for browser extension)
+      const encodedMessage = new TextEncoder().encode(message);
+      let signedMessage: any;
+      try {
+        signedMessage = await solflare.signMessage(encodedMessage, 'utf8');
+      } catch (signErr: any) {
+        if (signErr.code === 4001) {
+          throw new Error('Signature request rejected by user');
+        }
+        throw new Error('Failed to sign message. Please try again.');
+      }
       
-      if (!publicKey) {
-        throw new Error('Failed to connect to Solflare wallet');
+      if (!signedMessage || !signedMessage.signature) {
+        throw new Error('Failed to get signature from wallet');
       }
 
-      const address = publicKey.toString();
-
-      // Get connection message
-      if (!connectionMessage) {
-        await initiateSolanaConnection();
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-
-      if (!connectionMessage) {
-        throw new Error('Failed to get connection message');
-      }
-
-      // Sign message
-      const encodedMessage = new TextEncoder().encode(connectionMessage);
-      const signedMessage = await solflare.signMessage(encodedMessage, 'utf8');
-      
-      if (!signedMessage.signature) {
-        throw new Error('Failed to sign message');
-      }
-
-      // Verify connection
+      // Step 5: Send signature to backend for verification and storage
       await verifySolanaConnection(address, signedMessage.signature);
     } catch (err: any) {
       setError(err.message || 'Failed to connect with Solflare');
@@ -344,78 +370,90 @@ export default function MobileLiskWallet({ onClose }: { onClose?: () => void }) 
     }
   }
 
-  // Connect with Trust Wallet (Solana support)
+  // Connect with Trust Wallet - All verification goes through backend
   async function connectWithTrustWallet() {
     try {
       setSelectedWallet('trust');
       setWalletChain('solana');
+      setError(null);
       
-      // Trust Wallet Solana support
+      // Step 1: Check if wallet is installed
       if (typeof window === 'undefined' || !(window as any).trustwallet) {
         throw new Error('Trust Wallet not detected. Please install Trust Wallet extension.');
       }
 
       const trustWallet = (window as any).trustwallet;
 
-      // Connect to Trust Wallet
-      const accounts = await trustWallet.request({
-        method: 'solana_requestAccounts'
-      });
+      // Step 2: Connect to Trust Wallet (frontend only - required for browser extension)
+      let address: string;
+      try {
+        const accounts = await trustWallet.request({
+          method: 'solana_requestAccounts'
+        });
 
-      if (!accounts || accounts.length === 0) {
-        throw new Error('No accounts found');
-      }
-
-      const address = accounts[0];
-
-      // Get connection message
-      if (!connectionMessage) {
-        await initiateSolanaConnection();
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-
-      if (!connectionMessage) {
-        throw new Error('Failed to get connection message');
-      }
-
-      // Sign message
-      const encodedMessage = new TextEncoder().encode(connectionMessage);
-      const signature = await trustWallet.request({
-        method: 'solana_signMessage',
-        params: {
-          message: encodedMessage,
-          display: 'utf8'
+        if (!accounts || accounts.length === 0) {
+          throw new Error('No accounts found');
         }
-      });
+        address = accounts[0];
+      } catch (connectErr: any) {
+        if (connectErr.code === 4001) {
+          throw new Error('Connection rejected by user');
+        }
+        // Trust Wallet might not support Solana directly
+        throw new Error('Trust Wallet Solana support may not be available. Please use Phantom or Solflare for Solana wallets.');
+      }
+
+      // Step 3: Get connection message from backend
+      const message = await initiateSolanaConnection('trust');
+      if (!message) {
+        throw new Error('Failed to get connection message from server');
+      }
+
+      // Step 4: Request wallet to sign message (frontend only - required for browser extension)
+      const encodedMessage = new TextEncoder().encode(message);
+      let signature: any;
+      try {
+        signature = await trustWallet.request({
+          method: 'solana_signMessage',
+          params: {
+            message: encodedMessage,
+            display: 'utf8'
+          }
+        });
+      } catch (signErr: any) {
+        if (signErr.code === 4001) {
+          throw new Error('Signature request rejected by user');
+        }
+        throw new Error('Failed to sign message. Please try again.');
+      }
 
       if (!signature) {
-        throw new Error('Failed to sign message');
+        throw new Error('Failed to get signature from wallet');
       }
 
-      // Verify connection
+      // Step 5: Send signature to backend for verification and storage
       await verifySolanaConnection(address, signature);
     } catch (err: any) {
-      // If Trust Wallet Solana fails, try Ethereum
-      if (err.message.includes('not detected') || err.message.includes('No accounts')) {
-        // Fallback: Trust Wallet might support Ethereum
-        setError('Trust Wallet Solana support coming soon. Please use Phantom or Solflare for Solana.');
-      } else {
-        setError(err.message || 'Failed to connect with Trust Wallet');
-      }
+      setError(err.message || 'Failed to connect with Trust Wallet');
       setWalletState('error');
     }
   }
 
-  // Handle MetaMask connection (for Lisk via MetaMask)
+  // Handle MetaMask connection (for Lisk via MetaMask) - All verification goes through backend
   async function connectWithMetaMask() {
     try {
+      setSelectedWallet('metamask');
+      setWalletChain('lisk');
+      setError(null);
+      
+      // Step 1: Check if wallet is installed
       if (typeof window === 'undefined' || !(window as any).ethereum) {
         throw new Error('MetaMask not detected. Please install MetaMask and add the Lisk network.');
       }
       
       const ethereum = (window as any).ethereum;
 
-      // Add Lisk network to MetaMask if not already added
+      // Step 2: Add Lisk network to MetaMask if not already added (frontend only)
       try {
         await ethereum.request({
           method: 'wallet_addEthereumChain',
@@ -433,35 +471,55 @@ export default function MobileLiskWallet({ onClose }: { onClose?: () => void }) 
         });
       } catch (addError: any) {
         // Network might already be added, continue
-        if (!addError.message?.includes('already')) {
+        if (!addError.message?.includes('already') && addError.code !== 4902) {
           console.warn('Failed to add Lisk network:', addError);
         }
       }
 
-      // Request account access
-      const accounts = await ethereum.request({
-        method: 'eth_requestAccounts'
-      });
+      // Step 3: Request account access (frontend only - required for browser extension)
+      let address: string;
+      try {
+        const accounts = await ethereum.request({
+          method: 'eth_requestAccounts'
+        });
 
-      if (!accounts || accounts.length === 0) {
-        throw new Error('No accounts found');
+        if (!accounts || accounts.length === 0) {
+          throw new Error('No accounts found');
+        }
+        address = accounts[0];
+      } catch (connectErr: any) {
+        if (connectErr.code === 4001) {
+          throw new Error('Connection rejected by user');
+        }
+        throw new Error('Failed to connect to MetaMask. Please try again.');
       }
 
-      const address = accounts[0];
-
-      // Get connection message
+      // Step 4: Get connection message from backend
       if (!connectionMessage) {
         await initiateConnection();
-        return; // Will trigger signing on next step
+        // Wait for state update
+        await new Promise(resolve => setTimeout(resolve, 300));
       }
 
-      // Sign message
-      const signature = await ethereum.request({
-        method: 'personal_sign',
-        params: [connectionMessage, address]
-      });
+      if (!connectionMessage) {
+        throw new Error('Failed to get connection message from server');
+      }
 
-      // Verify connection
+      // Step 5: Request wallet to sign message (frontend only - required for browser extension)
+      let signature: string;
+      try {
+        signature = await ethereum.request({
+          method: 'personal_sign',
+          params: [connectionMessage, address]
+        });
+      } catch (signErr: any) {
+        if (signErr.code === 4001) {
+          throw new Error('Signature request rejected by user');
+        }
+        throw new Error('Failed to sign message. Please try again.');
+      }
+
+      // Step 6: Send signature to backend for verification and storage
       await verifyConnection(address, signature);
     } catch (err: any) {
       setError(err.message || 'Failed to connect with MetaMask');
