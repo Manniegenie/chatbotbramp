@@ -199,9 +199,9 @@ a {
 }
 
 .mobile-logo {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
   border-radius: 8px;
   object-fit: cover;
   flex-shrink: 0;
@@ -263,7 +263,7 @@ a {
   inset: 0;
   border-radius: 10px;
   padding: 1px;
-  background: linear-gradient(135deg, #A80077, #66FF00, #A80077);
+  background: linear-gradient(135deg, #66FF00, #A80077);
   background-size: 200% 200%;
   -webkit-mask: 
     linear-gradient(#fff 0 0) content-box, 
@@ -340,7 +340,7 @@ a {
 }
 
 .mobile-create-account-btn {
-  background: linear-gradient(135deg, rgba(168, 0, 119, 0.2), rgba(102, 255, 0, 0.2), rgba(168, 0, 119, 0.2));
+  background: transparent;
   border: none;
   position: relative;
   z-index: 0;
@@ -358,7 +358,7 @@ a {
   inset: 0;
   border-radius: 10px;
   padding: 1px;
-  background: linear-gradient(135deg, #A80077, #66FF00, #A80077);
+  background: linear-gradient(135deg, #66FF00, #A80077);
   background-size: 200% 200%;
   -webkit-mask: 
     linear-gradient(#fff 0 0) content-box, 
@@ -370,7 +370,6 @@ a {
   mask-composite: exclude;
   pointer-events: none;
   z-index: -1;
-  animation: gradient-border 3s ease infinite;
 }
 
 @keyframes gradient-border {
@@ -427,7 +426,7 @@ a {
 }
 
 .mobile-wallet-btn {
-  background: linear-gradient(135deg, rgba(168, 0, 119, 0.2), rgba(102, 255, 0, 0.2), rgba(168, 0, 119, 0.2));
+  background: transparent;
   border: none;
   position: relative;
   z-index: 0;
@@ -1666,24 +1665,28 @@ a:focus-visible,
   border-radius: 8px;
   text-decoration: none;
   font-weight: 600;
-  background-image: linear-gradient(135deg, #A80077, #66FF00);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
+  color: #ffffff;
+  z-index: 0;
 }
 
 .mobile-footer-links-bottom a.footer-privacy-link::before {
   content: '';
   position: absolute;
   inset: 0;
-  background-color: rgba(128, 128, 128, 0.2);
   border-radius: 8px;
+  padding: 1px;
+  background: linear-gradient(135deg, #66FF00, #A80077);
+  background-size: 200% 200%;
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
   z-index: -1;
-}
-
-.mobile-footer-links-bottom a.footer-privacy-link:hover::before {
-  background-color: rgba(128, 128, 128, 0.3);
 }
 
 .mobile-footer-links-bottom a.footer-privacy-link:hover {

@@ -911,7 +911,9 @@ export default function App() {
             gap: 12px;
             flex-wrap: wrap;
             color: #DADADA;
-            background: transparent;
+            background: rgba(87, 93, 91, 0.1);
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
           }
 
           .footer-links {
@@ -934,8 +936,8 @@ export default function App() {
           }
           
           .header-logo {
-            width: 32px;
-            height: 32px;
+            width: 24px;
+            height: 24px;
             border-radius: 8px;
             object-fit: cover;
           }
@@ -969,8 +971,8 @@ export default function App() {
           }
           
           .desktop-app-logo {
-            width: 99px;
-            height: 99px;
+            width: 75px;
+            height: 75px;
             margin: 0 auto 12px;
             display: block;
             animation: fadeIn 0.5s ease-in-out;
@@ -1013,6 +1015,8 @@ export default function App() {
             background: rgba(11, 11, 16, 0.2);
             padding: 1px;
             z-index: 0;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
           }
 
           .input-gradient-box-desktop::before {
@@ -1043,12 +1047,16 @@ export default function App() {
             box-shadow: none;
             position: relative;
             z-index: 1;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
           }
 
           .input-gradient-box-desktop .input-centered-desktop:focus {
             background: rgba(11, 11, 16, 0.2);
             border: none;
             box-shadow: none;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
           }
           
           .send-btn-inline-desktop {

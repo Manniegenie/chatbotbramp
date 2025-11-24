@@ -179,7 +179,7 @@ a:hover { opacity: .92; }
   inset: 0;
   border-radius: 10px;
   padding: 1px;
-  background: linear-gradient(135deg, #A80077, #66FF00, #A80077);
+  background: linear-gradient(135deg, #66FF00, #A80077);
   background-size: 200% 200%;
   -webkit-mask: 
     linear-gradient(#fff 0 0) content-box, 
@@ -332,13 +332,15 @@ a:hover { opacity: .92; }
   flex: 1;
   position: relative;
   z-index: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .composer-input-wrapper::before {
   content: '';
   position: absolute;
-  inset: -1px;
-  border-radius: 12px;
+  inset: 0;
+  border-radius: 32px;
   padding: 1px;
   background: linear-gradient(135deg, #A80077, #66FF00, #A80077);
   background-size: 200% 200%;
@@ -358,16 +360,18 @@ a:hover { opacity: .92; }
 .composer input {
   flex: 1;
   width: 100%;
-  background: var(--card);
+  background: rgba(11, 11, 16, 0.2);
   border: none;
   color: var(--txt);
   height: 48px;
   min-height: 48px;
-  padding: 0 14px;
-  border-radius: 12px;
+  padding: 12px 18px;
+  border-radius: 32px;
   outline: none;
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.4;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .composer input::placeholder { color: #ffffff; }
@@ -402,24 +406,28 @@ a:hover { opacity: .92; }
   border-radius: 8px;
   text-decoration: none;
   font-weight: 600;
-  background-image: linear-gradient(135deg, #A80077, #66FF00);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
+  color: #ffffff;
+  z-index: 0;
 }
 
 .footer a.footer-privacy-link::before {
   content: '';
   position: absolute;
   inset: 0;
-  background-color: rgba(128, 128, 128, 0.2);
   border-radius: 8px;
+  padding: 1px;
+  background: linear-gradient(135deg, #66FF00, #A80077);
+  background-size: 200% 200%;
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
   z-index: -1;
-}
-
-.footer a.footer-privacy-link:hover::before {
-  background-color: rgba(128, 128, 128, 0.3);
 }
 
 .footer a.footer-privacy-link:hover {

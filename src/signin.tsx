@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { tokenStore } from './lib/secureStore'
 import { normalizePhone } from './utils/phoneNormalization.test'
+import './mobile-auth.css'
 
 type ServerSuccess = {
   success: true
@@ -144,88 +145,79 @@ export default function SignIn({
   }
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100vw',
-      height: '100vh',
-      background: 'rgba(0, 0, 0, 0.5)',
-      zIndex: 1000,
-      display: 'grid',
-      placeItems: 'start center',
-      padding: '20px',
-      overflow: 'hidden',
-      touchAction: 'none'
-    }}>
+    <div className="mobile-auth-overlay">
+      {/* Background container with notch color at 50% opacity */}
       <div style={{
-        maxWidth: '480px',
-        width: '100%',
-        maxHeight: '80vh',
-        marginTop: '6vh',
-        marginLeft: 'auto',
-        marginRight: 'auto',
-        background: 'transparent',
-        border: '1px solid transparent',
-        borderRadius: '8px',
-        padding: '28px',
-        boxShadow: 'none',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
-        <div style={{ marginBottom: '16px', flexShrink: 0 }}>
-          <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 600, color: '#fff' }}>
-            Sign in
-          </h2>
-          <p style={{ marginTop: '6px', color: 'var(--muted)', fontSize: '0.85rem' }}>
-            Use your phone number and 6-digit PIN to continue.
-          </p>
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        background: 'rgba(87, 93, 91, 0.5)',
+        zIndex: 1000.5,
+        pointerEvents: 'none'
+      }} />
+      <div className="mobile-auth-container" style={{ position: 'relative', zIndex: 1001 }}>
+        <div className="mobile-auth-header">
+          <div>
+            <h2 className="mobile-auth-title">
+              Sign in
+            </h2>
+            <p className="mobile-auth-description">
+              Use your phone number and 6-digit PIN to continue.
+            </p>
+          </div>
         </div>
 
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <form onSubmit={submit}>
-            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Phone number</label>
-            <input
-              placeholder="08123456789"
-              value={phone}
-              onChange={(e) => handlePhoneChange(e.target.value)}
-              inputMode="numeric"
-              autoFocus
-              style={inputStyle}
-              className="no-zoom"
-              maxLength={11}
-              autoComplete="tel"
-            />
+        <div className="mobile-auth-body">
+          <form onSubmit={submit} className="mobile-auth-form">
+            <div className="mobile-auth-fields">
+              <div className="mobile-auth-input-wrap">
+                <label className="mobile-auth-label">Phone number</label>
+                <input
+                  placeholder="08123456789"
+                  value={phone}
+                  onChange={(e) => handlePhoneChange(e.target.value)}
+                  inputMode="numeric"
+                  autoFocus
+                  className="mobile-auth-input no-zoom"
+                  maxLength={11}
+                  autoComplete="tel"
+                />
+              </div>
 
-            <div style={{ height: 8 }} />
-
-            <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>PIN (6 digits)</label>
-            <input
-              placeholder="••••••"
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
-              type="password"
-              inputMode="numeric"
-              maxLength={6}
-              style={inputStyle}
-              className="no-zoom"
-              autoComplete="current-password"
-            />
+              <div className="mobile-auth-input-wrap">
+                <label className="mobile-auth-label">PIN (6 digits)</label>
+                <input
+                  placeholder="••••••"
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={6}
+                  className="mobile-auth-input no-zoom"
+                  autoComplete="current-password"
+                />
+              </div>
+            </div>
 
             {error && (
-              <div style={{ color: '#fda4af', marginTop: 8, fontSize: '0.8rem' }}>
+              <div className="mobile-auth-error">
                 ⚠️ {error}
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              <button className="btn" type="submit" disabled={loading}>
+            <div className="mobile-auth-button-row">
+              <button 
+                className="mobile-auth-button primary" 
+                type="submit" 
+                disabled={loading}
+              >
                 {loading ? 'Signing in…' : 'Sign in'}
               </button>
               <button
                 type="button"
-                className="btn btn-outline"
+                className="mobile-auth-button outline"
                 onClick={onCancel}
                 disabled={loading}
               >
@@ -234,25 +226,11 @@ export default function SignIn({
             </div>
           </form>
 
-          <p style={{ marginTop: 12, fontSize: '0.8rem', color: 'var(--muted)' }}>
+          <p className="mobile-auth-note">
             Too many failed attempts can temporarily lock your account.
           </p>
         </div>
       </div>
     </div>
   )
-}
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  background: 'var(--card)',
-  border: '1px solid var(--border)',
-  color: 'var(--txt)',
-  padding: '10px 12px',
-  borderRadius: 8,
-  outline: 'none',
-  fontSize: '16px !important',
-  WebkitTextSizeAdjust: '100%',
-  minHeight: '40px',
-  lineHeight: '1.35',
 }
