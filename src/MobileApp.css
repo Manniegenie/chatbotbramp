@@ -984,6 +984,18 @@ a {
   z-index: 1;
 }
 
+.mobile-input-shell {
+  flex: 1;
+  display: flex;
+  transform: scale(0.92);
+  transform-origin: center;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mobile-input-shell:focus-within {
+  transform: scale(1);
+}
+
 .mobile-input::before {
   content: '';
   position: absolute;
@@ -1457,6 +1469,11 @@ a:focus-visible,
   display: block;
   animation: fadeIn 0.5s ease-in-out;
   object-fit: contain;
+  position: relative;
+}
+
+.mobile-app-logo {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .mobile-greeting-text {

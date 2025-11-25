@@ -870,43 +870,45 @@ export default function MobileApp() {
                 style={{ display: 'flex', gap: '8px', width: '100%', alignItems: 'center', position: 'relative' }}
                 onSubmit={sendMessage}
               >
-                <div className="mobile-input-gradient-box" style={{ position: 'relative', flex: 1, minWidth: 0 }}>
-                  <input
-                    ref={inputRef}
-                    className="mobile-input mobile-input-centered mobile-input-with-send"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="Try: Sell 100 USDT to NGN"
-                    disabled={loading}
-                    style={{ paddingRight: '56px', width: '100%' }}
-                  />
-                  <button
-                    type="submit"
-                    className="mobile-send-btn mobile-send-btn-inside"
-                    disabled={loading || !input.trim()}
-                    aria-label="Send message"
-                    style={{
-                      position: 'absolute',
-                      right: '8px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      zIndex: 10
-                    }}
-                  >
-                    {loading ? (
-                      <div className="mobile-spinner" />
-                    ) : (
-                      <Send
-                        size={20}
-                        active={Boolean(input.trim())}
-                        style={{
-                          opacity: loading || !input.trim() ? 0.6 : 1,
-                          transition: 'opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                          color: input.trim() ? undefined : 'rgba(255, 255, 255, 0.7)'
-                        }}
-                      />
-                    )}
-                  </button>
+                <div className="mobile-input-shell">
+                  <div className="mobile-input-gradient-box" style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+                    <input
+                      ref={inputRef}
+                      className="mobile-input mobile-input-centered mobile-input-with-send"
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      placeholder="Try: Sell 100 USDT to NGN"
+                      disabled={loading}
+                      style={{ paddingRight: '56px', width: '100%' }}
+                    />
+                    <button
+                      type="submit"
+                      className="mobile-send-btn mobile-send-btn-inside"
+                      disabled={loading || !input.trim()}
+                      aria-label="Send message"
+                      style={{
+                        position: 'absolute',
+                        right: '8px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        zIndex: 10
+                      }}
+                    >
+                      {loading ? (
+                        <div className="mobile-spinner" />
+                      ) : (
+                        <Send
+                          size={20}
+                          active={Boolean(input.trim())}
+                          style={{
+                            opacity: loading || !input.trim() ? 0.6 : 1,
+                            transition: 'opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                            color: input.trim() ? undefined : 'rgba(255, 255, 255, 0.7)'
+                          }}
+                        />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </form>
             </div>

@@ -977,6 +977,11 @@ export default function App() {
             display: block;
             animation: fadeIn 0.5s ease-in-out;
             object-fit: contain;
+            position: relative;
+          }
+          
+          .desktop-app-logo {
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
           }
           
           .centered-form-desktop {
@@ -999,7 +1004,7 @@ export default function App() {
             color: #ffffff;
             outline: none;
             box-shadow: none;
-            transition: all 0.3s ease;
+            transition: background 0.3s ease;
           }
           
           .input-centered-desktop::placeholder {
@@ -1365,23 +1370,23 @@ export default function App() {
               </div>
             ) : (
               <form className="composer" onSubmit={sendMessage}>
-                <div className="composer-input-wrapper">
-                  <input
-                    ref={inputRef}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault()
-                        sendMessage(e)
-                      }
-                    }}
-                    placeholder={loading ? 'Please wait…' : 'Try: Sell 100 USDT to NGN'}
-                    autoFocus
-                    disabled={loading}
-                  />
-                </div>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <div className="composer-input-shell">
+                  <div className="composer-input-wrapper">
+                    <input
+                      ref={inputRef}
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault()
+                          sendMessage(e)
+                        }
+                      }}
+                      placeholder={loading ? 'Please wait…' : 'Try: Sell 100 USDT to NGN'}
+                      autoFocus
+                      disabled={loading}
+                    />
+                  </div>
                   <button
                     type="submit"
                     className="btn"
@@ -1432,6 +1437,8 @@ export default function App() {
                       />
                     )}
                   </button>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <button
                     type="button"
                     className="btn"
