@@ -1057,7 +1057,6 @@ export default function MobileApp() {
                       className="mobile-auth-btn mobile-login-btn"
                       onClick={() => setShowSignIn(true)}
                     >
-                      <img src={userIcon} alt="User" style={{ width: '16px', height: '16px' }} />
                       Login
                     </button>
                     {!hideSignUpButton && (

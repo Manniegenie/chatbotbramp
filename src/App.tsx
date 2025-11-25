@@ -14,9 +14,10 @@ import MobileVoiceChat from './MobileVoiceChat';
 import BrampLogo from './assets/logo.jpeg'
 import micIcon from './assets/mic.png'
 import SendIcon from './assets/send.png'
-import { Bitcoin, EthereumCircleFlat, Solana, Bnb, Usdt, Usdc } from './components/CryptoIcons'
+import { Bitcoin, EthereumCircleFlat, Usdt, Usdc } from './components/CryptoIcons'
 import wallpaper1 from './assets/wallpaper1.jpg'
 import Preloader from './Preloader'
+import { renderMessageText } from './utils/messageRenderer'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
@@ -118,120 +119,7 @@ async function sendChatMessage(
   }
 }
 
-/* ----------------------- Linkify + Markdown-lite helpers ----------------------- */
-
-const URL_REGEX = /https?:\/\/[^\s<>"')]+/gi
-const MD_LINK = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g
-
-function shortenUrlForDisplay(raw: string) {
-  try {
-    const u = new URL(raw)
-    const host = u.host.replace(/^www\./, '')
-    let path = u.pathname || ''
-    if (path.length > 20) {
-      const segs = path.split('/').filter(Boolean)
-      if (segs.length > 2) path = `/${segs[0]}/…/${segs[segs.length - 1]}`
-    }
-    let label = host + (path === '/' ? '' : path)
-    if (u.search || u.hash) label += '…'
-    return label.length > 48 ? label.slice(0, 45) + '…' : label
-  } catch {
-    return raw.length > 48 ? raw.slice(0, 45) + '…' : raw
-  }
-}
-
-function inlineRender(text: string, keyPrefix: string): React.ReactNode[] {
-  const nodes: React.ReactNode[] = []
-  let last = 0
-
-  // Handle **bold** text first
-  text.replace(/\*\*(.*?)\*\*/g, (match, content: string, offset: number) => {
-    if (offset > last) nodes.push(text.slice(last, offset))
-    nodes.push(
-      <strong key={`${keyPrefix}-bold-${offset}`}>
-        {content}
-      </strong>
-    )
-    last = offset + match.length
-    return match
-  })
-
-  if (last < text.length) {
-    const remainingText = text.slice(last)
-    let linkLast = 0
-    remainingText.replace(MD_LINK, (match, label: string, url: string, offset: number) => {
-      if (offset > linkLast) nodes.push(remainingText.slice(linkLast, offset))
-      nodes.push(
-        <a key={`${keyPrefix}-md-${offset}`} href={url} target="_blank" rel="noopener noreferrer">
-          {shortenUrlForDisplay(url)}
-        </a>
-      )
-      linkLast = offset + match.length
-      return match
-    })
-    if (linkLast < remainingText.length) nodes.push(remainingText.slice(linkLast))
-  }
-
-  const finalNodes: React.ReactNode[] = []
-  nodes.forEach((node, i) => {
-    if (typeof node !== 'string') { finalNodes.push(node); return }
-    let idx = 0
-    node.replace(URL_REGEX, (url: string, offset: number) => {
-      const trimmed = url.replace(/[),.;!?]+$/g, '')
-      const trailing = url.slice(trimmed.length)
-      if (offset > idx) finalNodes.push(node.slice(idx, offset))
-      finalNodes.push(
-        <a key={`${keyPrefix}-url-${i}-${offset}`} href={trimmed} target="_blank" rel="noopener noreferrer">
-          {shortenUrlForDisplay(trimmed)}
-        </a>
-      )
-      if (trailing) finalNodes.push(trailing)
-      idx = offset + url.length
-      return url
-    })
-    if (idx < node.length) finalNodes.push(node.slice(idx))
-  })
-
-  return finalNodes
-}
-
-function renderMessageText(text: string): React.ReactNode {
-  const paragraphs = text.split(/\r?\n\s*\r?\n/)
-  const rendered: React.ReactNode[] = []
-
-  paragraphs.forEach((para, pi) => {
-    const lines = para.split(/\r?\n/)
-    const isListBlock = lines.length > 1 && lines.every((l) => l.trim().startsWith('- '))
-    if (isListBlock) {
-      rendered.push(
-        <ul key={`ul-${pi}`} style={{ margin: '8px 0', paddingLeft: 18 }}>
-          {lines.map((l, li) => {
-            const item = l.replace(/^\s*-\s*/, '')
-            return (
-              <li key={`li-${pi}-${li}`} style={{ margin: '4px 0' }}>
-                {inlineRender(item, `li-${pi}-${li}`)}
-              </li>
-            )
-          })}
-        </ul>
-      )
-    } else {
-      const pieces = para.split(/\r?\n/)
-      rendered.push(
-        <p key={`p-${pi}`} style={{ margin: '8px 0' }}>
-          {pieces.map((line, li) => (
-            <React.Fragment key={`p-${pi}-line-${li}`}>
-              {inlineRender(line, `p-${pi}-line-${li}`)}
-              {li < pieces.length - 1 && <br />}
-            </React.Fragment>
-          ))}
-        </p>
-      )
-    }
-  })
-
-  return rendered
-}
+/* ----------------------- Message rendering handled by shared utility ----------------------- */
 
 // Three dot loading component
 function ThreeDotLoader() {
@@ -312,10 +200,8 @@ export default function App() {
 
   const icons = [
     { component: Usdt, name: 'USDT' },
-    { component: Solana, name: 'SOL' },
     { component: Bitcoin, name: 'BTC' },
     { component: EthereumCircleFlat, name: 'ETH' },
-    { component: Bnb, name: 'BNB' },
     { component: Usdc, name: 'USDC' }
   ]
   const [currentIconIndex, setCurrentIconIndex] = useState(0)
@@ -813,6 +699,18 @@ export default function App() {
             100% { transform: rotate(360deg); }
           }
 
+          @keyframes gradient-border {
+            0% {
+              background-position: 0% 50%;
+            }
+            50% {
+              background-position: 100% 50%;
+            }
+            100% {
+              background-position: 0% 50%;
+            }
+          }
+
           /* Header sticky/pinned */
           .header {
             position: sticky;
@@ -901,7 +799,9 @@ export default function App() {
             gap: 12px;
             flex-wrap: wrap;
             color: #DADADA;
-            background: transparent;
+            background: rgba(87, 93, 91, 0.1);
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
           }
 
           .footer-links {
@@ -924,8 +824,8 @@ export default function App() {
           }
           
           .header-logo {
-            width: 32px;
-            height: 32px;
+            width: 24px;
+            height: 24px;
             border-radius: 8px;
             object-fit: cover;
           }
@@ -959,12 +859,17 @@ export default function App() {
           }
           
           .desktop-app-logo {
-            width: 99px;
-            height: 99px;
+            width: 75px;
+            height: 75px;
             margin: 0 auto 12px;
             display: block;
             animation: fadeIn 0.5s ease-in-out;
             object-fit: contain;
+            position: relative;
+          }
+          
+          .desktop-app-logo {
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
           }
           
           .centered-form-desktop {
@@ -982,26 +887,69 @@ export default function App() {
             caret-color: var(--accent);
             box-sizing: border-box;
             min-height: 72px;
-            background: rgba(18, 18, 26, 0.2);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            background: rgba(11, 11, 16, 0.2);
             border: 1px solid transparent;
-            color: #DADADA;
+            color: #ffffff;
             outline: none;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37),
-                        inset 0 1px 1px rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
+            box-shadow: none;
+            transition: background 0.3s ease;
           }
           
           .input-centered-desktop::placeholder {
-            color: #DADADA;
+            color: rgba(255, 255, 255, 0.6);
           }
           
-          .input-centered-desktop:focus {
-            background: rgba(18, 18, 26, 0.3);
-            border: 1px solid var(--accent);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
-                        inset 0 1px 1px rgba(255, 255, 255, 0.15);
+          .input-gradient-box-desktop {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+            border-radius: 40px;
+            background: rgba(11, 11, 16, 0.2);
+            padding: 1px;
+            z-index: 0;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+          }
+
+          .input-gradient-box-desktop::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 40px;
+            padding: 1px;
+            background: linear-gradient(135deg, #A80077, #66FF00, #A80077);
+            background-size: 200% 200%;
+            -webkit-mask: 
+              linear-gradient(#fff 0 0) content-box, 
+              linear-gradient(#fff 0 0);
+            -webkit-mask-composite: destination-out;
+            mask: 
+              linear-gradient(#fff 0 0) content-box, 
+              linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            pointer-events: none;
+            z-index: -1;
+            animation: gradient-border 3s ease infinite;
+          }
+
+          .input-gradient-box-desktop .input-centered-desktop {
+            width: 100%;
+            border: none;
+            background: rgba(11, 11, 16, 0.2);
+            box-shadow: none;
+            position: relative;
+            z-index: 1;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+          }
+
+          .input-gradient-box-desktop .input-centered-desktop:focus {
+            background: rgba(11, 11, 16, 0.2);
+            border: none;
+            box-shadow: none;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
           }
           
           .send-btn-inline-desktop {
@@ -1278,14 +1226,16 @@ export default function App() {
                     </AnimatePresence>
                   </div>
                   <div style={{ display: 'flex', gap: '8px', width: '100%', alignItems: 'center', position: 'relative' }}>
-                    <input
-                      ref={inputRef}
-                      className="input-centered-desktop"
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      placeholder="Try: Sell 100 USDT to NGN"
-                      disabled={loading}
-                    />
+                    <div className="input-gradient-box-desktop">
+                      <input
+                        ref={inputRef}
+                        className="input-centered-desktop"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder="Try: Sell 100 USDT to NGN"
+                        disabled={loading}
+                      />
+                    </div>
                     <button
                       type="submit"
                       className="send-btn-inline-desktop"
@@ -1308,23 +1258,23 @@ export default function App() {
               </div>
             ) : (
               <form className="composer" onSubmit={sendMessage}>
-                <div className="composer-input-wrapper">
-                  <input
-                    ref={inputRef}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault()
-                        sendMessage(e)
-                      }
-                    }}
-                    placeholder={loading ? 'Please wait…' : 'Try: Sell 100 USDT to NGN'}
-                    autoFocus
-                    disabled={loading}
-                  />
-                </div>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <div className="composer-input-shell">
+                  <div className="composer-input-wrapper">
+                    <input
+                      ref={inputRef}
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault()
+                          sendMessage(e)
+                        }
+                      }}
+                      placeholder={loading ? 'Please wait…' : 'Try: Sell 100 USDT to NGN'}
+                      autoFocus
+                      disabled={loading}
+                    />
+                  </div>
                   <button
                     type="submit"
                     className="btn"
@@ -1375,6 +1325,8 @@ export default function App() {
                       />
                     )}
                   </button>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <button
                     type="button"
                     className="btn"
@@ -1403,11 +1355,13 @@ export default function App() {
               </form>
             )}
 
-            <div className="hints">
-              <span className="hint" onClick={() => handleHintClick('Sell 100 USDT to NGN')}>Sell 100 USDT to NGN</span>
-              <span className="hint" onClick={() => handleHintClick('Show my portfolio balance')}>Show my portfolio balance</span>
-              <span className="hint" onClick={() => handleHintClick('Current NGN rates')}>Current NGN rates</span>
-            </div>
+            {!showCenteredInput && (
+              <div className="hints">
+                <span className="hint" onClick={() => handleHintClick('Sell 100 USDT to NGN')}>Sell 100 USDT to NGN</span>
+                <span className="hint" onClick={() => handleHintClick('Show my portfolio balance')}>Show my portfolio balance</span>
+                <span className="hint" onClick={() => handleHintClick('Current NGN rates')}>Current NGN rates</span>
+              </div>
+            )}
           </main>
         )}
 
