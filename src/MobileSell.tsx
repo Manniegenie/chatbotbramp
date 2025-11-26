@@ -483,82 +483,105 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                 {/* Token and Network on same line */}
                 <div className="mobile-sell-row">
                   <label className="mobile-sell-input-wrap">
-                    <span className="mobile-sell-label">Token <span style={{ fontSize: '10px', opacity: 0.7 }}>▼</span></span>
-                    <select
-                      ref={firstInputRef as any}
-                      className="mobile-sell-input"
-                      value={token}
-                      onChange={e => {
-                        setToken(e.target.value as TokenSym)
-                        onStartInteraction?.()
-                      }}
-                    >
-                      {TOKENS.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
+                    <span className="mobile-sell-label">Token</span>
+                    <div className="mobile-sell-input-shell">
+                      <div className="mobile-sell-input-gradient">
+                        <select
+                          ref={firstInputRef as any}
+                          className="mobile-sell-input-field select"
+                          value={token}
+                          onChange={e => {
+                            setToken(e.target.value as TokenSym)
+                            onStartInteraction?.()
+                          }}
+                        >
+                          {TOKENS.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                        <span className="mobile-sell-dropdown-arrow">▼</span>
+                      </div>
+                    </div>
                   </label>
 
                   <label className="mobile-sell-input-wrap">
-                    <span className="mobile-sell-label">Network <span style={{ fontSize: '10px', opacity: 0.7 }}>▼</span></span>
-                    <select
-                      className="mobile-sell-input"
-                      value={network}
-                      onChange={e => {
-                        setNetwork(e.target.value)
-                        onStartInteraction?.()
-                      }}
-                    >
-                      {NETWORKS_BY_TOKEN[token].map(n => (
-                        <option key={n.code} value={n.code}>{n.label}</option>
-                      ))}
-                    </select>
+                    <span className="mobile-sell-label">Network</span>
+                    <div className="mobile-sell-input-shell">
+                      <div className="mobile-sell-input-gradient">
+                        <select
+                          className="mobile-sell-input-field select"
+                          value={network}
+                          onChange={e => {
+                            setNetwork(e.target.value)
+                            onStartInteraction?.()
+                          }}
+                        >
+                          {NETWORKS_BY_TOKEN[token].map(n => (
+                            <option key={n.code} value={n.code}>{n.label}</option>
+                          ))}
+                        </select>
+                        <span className="mobile-sell-dropdown-arrow">▼</span>
+                      </div>
+                    </div>
                   </label>
                 </div>
 
                 {/* Optional Currency and Amount */}
                 <div className="mobile-sell-row">
                   <label className="mobile-sell-input-wrap">
-                    <span className="mobile-sell-label">Currency <span style={{ fontSize: '10px', opacity: 0.7 }}>▼</span></span>
-                    <select
-                      className="mobile-sell-input"
-                      value={currency}
-                      onChange={e => setCurrency(e.target.value as 'TOKEN' | 'NGN')}
-                    >
-                      <option value="TOKEN">{token}</option>
-                      <option value="NGN">NGN</option>
-                    </select>
+                    <span className="mobile-sell-label">Currency</span>
+                    <div className="mobile-sell-input-shell">
+                      <div className="mobile-sell-input-gradient">
+                        <select
+                          className="mobile-sell-input-field select"
+                          value={currency}
+                          onChange={e => setCurrency(e.target.value as 'TOKEN' | 'NGN')}
+                        >
+                          <option value="TOKEN">{token}</option>
+                          <option value="NGN">NGN</option>
+                        </select>
+                        <span className="mobile-sell-dropdown-arrow">▼</span>
+                      </div>
+                    </div>
                   </label>
 
                   {currency === 'TOKEN' ? (
                     <label className="mobile-sell-input-wrap">
                       <span className="mobile-sell-label">Amount ({token})</span>
-                      <input
-                        className="mobile-sell-input"
-                        inputMode="decimal"
-                        placeholder={`e.g. 100`}
-                        value={amount}
-                        onChange={e => {
-                          setAmount(e.target.value)
-                          onStartInteraction?.()
-                        }}
-                      />
+                      <div className="mobile-sell-input-shell">
+                        <div className="mobile-sell-input-gradient">
+                          <input
+                            className="mobile-sell-input-field"
+                            inputMode="decimal"
+                            placeholder={`e.g. 100`}
+                            value={amount}
+                            onChange={e => {
+                              setAmount(e.target.value)
+                              onStartInteraction?.()
+                            }}
+                          />
+                        </div>
+                      </div>
                     </label>
                   ) : (
                     <label className="mobile-sell-input-wrap">
                       <span className="mobile-sell-label">Amount (NGN)</span>
-                      <input
-                        className="mobile-sell-input"
-                        inputMode="decimal"
-                        placeholder="e.g. 50,000"
-                        value={nairaAmount}
-                        onChange={e => {
-                          const cleanValue = e.target.value.replace(/[^\d.]/g, '')
-                          setNairaAmount(cleanValue)
-                        }}
-                        onBlur={e => {
-                          const num = parseFloat(e.target.value)
-                          if (!isNaN(num) && num > 0) setNairaAmount(num.toLocaleString('en-US'))
-                        }}
-                      />
+                      <div className="mobile-sell-input-shell">
+                        <div className="mobile-sell-input-gradient">
+                          <input
+                            className="mobile-sell-input-field"
+                            inputMode="decimal"
+                            placeholder="e.g. 50,000"
+                            value={nairaAmount}
+                            onChange={e => {
+                              const cleanValue = e.target.value.replace(/[^\d.]/g, '')
+                              setNairaAmount(cleanValue)
+                            }}
+                            onBlur={e => {
+                              const num = parseFloat(e.target.value)
+                              if (!isNaN(num) && num > 0) setNairaAmount(num.toLocaleString('en-US'))
+                            }}
+                          />
+                        </div>
+                      </div>
                     </label>
                   )}
                 </div>
@@ -812,56 +835,67 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                   <form id="payout-form" onSubmit={submitPayout} className="mobile-sell-form">
 
                     <label className="mobile-sell-input-wrap">
-                      <span className="mobile-sell-label">Bank <span style={{ fontSize: '10px', opacity: 0.7 }}>▼</span></span>
-                      <select
-                        ref={firstInputRef as any}
-                        className="mobile-sell-input"
-                        value={bankCode}
-                        disabled={banksLoading || bankOptions.length === 0}
-                        onChange={e => {
-                          const code = e.target.value
-                          const hit = bankOptions.find((b: BankOption) => b.code === code)
-                          if (hit) {
-                            setBankCode(hit.code)
-                            setBankName(hit.name)
-                          }
-                        }}
-                      >
-                        {bankOptions.length === 0 ? (
-                          <option value="">{banksLoading ? 'Loading…' : (banksError || 'No banks')}</option>
-                        ) : (
-                          bankOptions.map((b: BankOption) => (
-                            <option key={b.code} value={b.code}>{b.name}</option>
-                          ))
-                        )}
-                      </select>
+                      <span className="mobile-sell-label">Bank</span>
+                      <div className="mobile-sell-input-shell">
+                        <div className="mobile-sell-input-gradient">
+                          <select
+                            ref={firstInputRef as any}
+                            className="mobile-sell-input-field select"
+                            value={bankCode}
+                            disabled={banksLoading || bankOptions.length === 0}
+                            onChange={e => {
+                              const code = e.target.value
+                              const hit = bankOptions.find((b: BankOption) => b.code === code)
+                              if (hit) {
+                                setBankCode(hit.code)
+                                setBankName(hit.name)
+                              }
+                            }}
+                          >
+                            {bankOptions.length === 0 ? (
+                              <option value="">{banksLoading ? 'Loading…' : (banksError || 'No banks')}</option>
+                            ) : (
+                              bankOptions.map((b: BankOption) => (
+                                <option key={b.code} value={b.code}>{b.name}</option>
+                              ))
+                            )}
+                          </select>
+                          <span className="mobile-sell-dropdown-arrow">▼</span>
+                        </div>
+                      </div>
                     </label>
 
                     <label className="mobile-sell-input-wrap">
                       <span className="mobile-sell-label">Account Number</span>
-                      <input
-                        className="mobile-sell-input"
-                        value={accountNumber}
-                        onChange={e => setAccountNumber(e.target.value)}
-                        placeholder="e.g. 0123456789"
-                      />
+                      <div className="mobile-sell-input-shell">
+                        <div className="mobile-sell-input-gradient">
+                          <input
+                            className="mobile-sell-input-field"
+                            value={accountNumber}
+                            onChange={e => setAccountNumber(e.target.value)}
+                            placeholder="e.g. 0123456789"
+                          />
+                        </div>
+                      </div>
                     </label>
 
                     <label className="mobile-sell-input-wrap full-width">
                       <span className="mobile-sell-label">Account Name</span>
-                      <div className={`mobile-sell-account-name ${accountNameError ? 'error' : ''}`}>
-                        {accountNameLoading ? (
-                          <>
-                            <div className="mobile-sell-spinner"></div>
-                            Resolving...
-                          </>
-                        ) : accountNameError ? (
-                          accountNameError
-                        ) : accountName ? (
-                          accountName
-                        ) :
-                          'Account name'
-                        }
+                      <div className="mobile-sell-input-shell">
+                        <div className={`mobile-sell-account-name ${accountNameError ? 'error' : ''}`}>
+                          {accountNameLoading ? (
+                            <>
+                              <div className="mobile-sell-spinner"></div>
+                              Resolving...
+                            </>
+                          ) : accountNameError ? (
+                            accountNameError
+                          ) : accountName ? (
+                            accountName
+                          ) :
+                            'Account name'
+                          }
+                        </div>
                       </div>
                     </label>
 
