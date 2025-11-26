@@ -1076,7 +1076,6 @@ export default function MobileApp() {
                     onClick={handleSellClick}
                     aria-label="Sell Crypto"
                   >
-                    <Exchange02 className="sell-icon" size={16} />
                     <span>Sell</span>
                   </button>
                   <button
