@@ -167,7 +167,6 @@ export default function MobileSignIn({
         left: 0,
         width: '100vw',
         height: '100vh',
-        background: 'rgba(87, 93, 91, 0.5)', // #575d5b at 50% opacity
         zIndex: 999.5, // Above the page overlay (999) but below modal content (1000)
         pointerEvents: 'none'
       }} />
