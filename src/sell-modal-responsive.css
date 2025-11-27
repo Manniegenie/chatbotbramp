@@ -164,14 +164,7 @@
   transform: scale(1.01);
 }
 
-.mobile-sell-input-gradient {
-  position: relative;
-  border-radius: 18px;
-  padding: 1px;
-  background: linear-gradient(135deg, #A80077, #66FF00, #A80077);
-  background-size: 200% 200%;
-  animation: gradient-border 3s ease infinite;
-}
+
 
 .mobile-sell-input-field {
   width: 100%;
@@ -179,15 +172,12 @@
   border: none;
   padding: 14px 16px;
   font-size: 15px;
-  background: rgba(11, 11, 16, 0.92);
+  background: solid gray;
   color: #fff;
   outline: none;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
-.mobile-sell-input-field:focus {
-  box-shadow: inset 0 0 0 1px rgba(0, 115, 55, 0.8);
-}
 
 .mobile-sell-input-field::placeholder {
   color: rgba(255, 255, 255, 0.45);
@@ -263,21 +253,47 @@
 }
 
 .mobile-sell-button {
-  padding: 14px 18px;
-  border-radius: 14px;
-  font-size: 15px;
+  border-radius: 10px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   min-height: 48px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  transition: all 0.2s ease;
+  border: none;
+  position: relative;
+  z-index: 0;
+}
+.mobile-sell-button.primary {
+  flex: 6 0 0;
+  padding: 12px;
+  background: transparent;
+  color: white;
+  min-width: 0; /* Allow text to shrink if needed */
 }
 
-.mobile-sell-button.primary {
-  background: linear-gradient(135deg, #A80077, #66FF00);
-  color: #fff;
-  border: none;
-  box-shadow: 0 12px 24px rgba(0, 115, 55, 0.25);
+.mobile-sell-button.primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  padding: 1px;
+  background: linear-gradient(135deg, #A80077, #66FF00, #A80077);
+  background-size: 200% 200%;
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: -1;
+  animation: gradient-border 3s ease infinite;
 }
+
+  
+
 
 .mobile-sell-button.primary:hover {
   transform: translateY(-1px);
