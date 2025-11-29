@@ -5,13 +5,13 @@
 
 /* CSS Custom Properties */
 :root {
-  --bg: #000000;
+  --bg: #f7f3f3;
   --card: #12121a;
   --muted: #ffffff;
   --accent: #007337;
   --accent-rgb: 0, 115, 55;
-  --border: #1f2330;
-  --txt: #ffffff;
+  --border: #ffffff;
+  --txt: #000000;
   --shadow: rgba(0, 0, 0, 0.3);
   --gradient-start: rgba(11, 11, 16, 0.98);
   --gradient-end: rgba(11, 11, 16, 0.95);
@@ -72,7 +72,7 @@ body {
   height: 100dvh;
   width: 100vw;
   overflow: hidden;
-  background-color: #191919;
+  background-color: #ffffff;
 }
 
 button {
@@ -127,8 +127,8 @@ a {
   margin: 0;
   padding: 0;
   z-index: -2;
-  background-color: transparent;
-  background-image: var(--wallpaper-image, url('./assets/wallpaper2.jpg'));
+  background-color: white;
+  background-image: solid white;
   background-size: 100% 100%;
   background-position: center;
   background-repeat: no-repeat;
@@ -138,6 +138,9 @@ a {
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
+
+
+
 
 .mobile-page::after,
 .page::after {
@@ -199,10 +202,10 @@ a {
 }
 
 .mobile-logo {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 25px;
   min-width: 24px;
-  border-radius: 8px;
+  border-radius: 10px;
   object-fit: cover;
   flex-shrink: 0;
 }
@@ -225,80 +228,27 @@ a {
 }
 
 .mobile-auth-btn {
-  padding: 6px 12px;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  white-space: nowrap;
-  background: transparent;
-  color: white;
-  min-height: 28px;
-  min-width: 80px;
+  --primary-color: #645bff;
+  --secondary-color: #fff;
+  --hover-color: #111;
+  --arrow-width: 10px;
+  --arrow-stroke: 2px;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 20px;
+  color: var(--secondary-color);
+  padding: 1em 1.8em;
+  background: var(--primary-color);
   display: flex;
+  transition: 0.2s background;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
+  gap: 0.6em;
+  font-weight: bold;
 }
 
-.mobile-sign-in-btn {
-  gap: 3px !important; /* Very close to text */
-  background: linear-gradient(135deg, rgba(168, 0, 119, 0.2), rgba(102, 255, 0, 0.2), rgba(168, 0, 119, 0.2));
-  border: none !important;
-  position: relative;
-  z-index: 0;
-  min-width: auto;
-  width: auto;
-  padding-left: 16px;
-  padding-right: 16px;
-  display: flex;
-  align-items: center;
-}
 
-.mobile-sign-in-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 10px;
-  padding: 1px;
-  background: linear-gradient(135deg, #66FF00, #A80077);
-  background-size: 200% 200%;
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: destination-out;
-  mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  pointer-events: none;
-  z-index: -1;
-  animation: gradient-border 3s ease infinite;
-}
 
-.mobile-sign-in-btn svg,
-.mobile-sign-in-btn .login-icon {
-  stroke: #007337;
-  fill: none;
-  flex-shrink: 0;
-  width: 1.3em;
-  height: 1.3em;
-  margin-left: 0;
-  display: inline-block;
-  vertical-align: middle;
-  stroke-width: 2.5;
-}
 
-.mobile-sign-in-btn .sign-in-icon {
-  stroke: url(#sign-in-gradient);
-  fill: none;
-}
-
-.mobile-sign-in-btn span {
-  flex-shrink: 0;
-}
 
 .mobile-sell-btn-with-icon {
   display: flex;
@@ -314,83 +264,48 @@ a {
   height: 16px;
 }
 
-.mobile-auth-btn-secondary {
-  color: white;
-  border: 1px solid var(--accent);
-}
 
 .mobile-login-btn {
-  background: rgba(11, 11, 16, 0.2);
-  border: none;
-  position: relative;
-  z-index: 0;
-  min-width: auto;
-  width: auto;
-  padding-left: 12px;
-  padding-right: 12px;
+  --primary-color: #ffffff;
+  --secondary-color: #007337;
+  --hover-color: #111;
+  --arrow-width: 10px;
+  --arrow-stroke: 2px;
+  box-sizing: border-box;
+  border: 1px solid var(--secondary-color);
+  border-radius: 20px;
+  color: var(--secondary-color);
+  padding: 1em 1.8em;
+  background: var(--primary-color);
   display: flex;
+  transition: 0.2s background;
   align-items: center;
-  gap: 6px;
-  color: white;
+  gap: 0.6em;
+  font-weight: bold;
 }
 
-.mobile-login-btn img {
-  flex-shrink: 0;
-  display: block;
-}
+
 
 .mobile-create-account-btn {
-  background: transparent;
-  border: none;
-  position: relative;
-  z-index: 0;
-  min-width: auto;
-  width: auto;
-  padding-left: 12px;
-  padding-right: 12px;
+  --primary-color: #007337;
+  --secondary-color: #fff;
+  --hover-color: #111;
+  --arrow-width: 10px;
+  --arrow-stroke: 2px;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 20px;
+  color: var(--secondary-color);
+  padding: 1em 1.8em;
+  background: var(--primary-color);
   display: flex;
+  transition: 0.2s background;
   align-items: center;
+  gap: 0.6em;
+  font-weight: bold;
 }
 
-.mobile-create-account-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 10px;
-  padding: 1px;
-  background: linear-gradient(135deg, #66FF00, #A80077);
-  background-size: 200% 200%;
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: destination-out;
-  mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  pointer-events: none;
-  z-index: -1;
-}
 
-@keyframes gradient-border {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-.mobile-auth-btn:active {
-  transform: scale(0.95);
-}
-
-.mobile-auth-btn-secondary:active {
-  background: rgba(255, 255, 255, 0.05);
-}
 
 .mobile-nav-buttons {
   display: flex;
@@ -938,19 +853,19 @@ a {
    ============================================ */
 
 .mobile-composer {
-  position: sticky;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  gap: 8px;
-  padding: 12px;
-  padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
-  background: transparent;
-  border-top: none;
-  z-index: 10;
-  flex-shrink: 0;
-  margin-top: auto;
+  background-color: #eee;
+  border: none;
+  padding: 1rem;
+  font-size: 1rem;
+  width: 13em;
+  border-radius: 1rem;
+  color: lightcoral;
+  box-shadow: 0 0.4rem #dfd9d9;
+  cursor: pointer;
+}
+
+.input-wrapper input:focus {
+  outline-color: lightcoral;
 }
 
 .mobile-input-with-send {
@@ -959,126 +874,262 @@ a {
 
 
 
-
-.mobile-input {
-  flex: 1;
-  background: rgba(11, 11, 16, 0.2);
-  border: none;
-  border-radius: 32px;
-  padding: 12px 18px;
-  color: var(--txt);
-  font-size: 16px;
-  min-height: 48px;
-  outline: none;
-  transition: border-color 0.2s ease;
-  resize: none;
-  appearance: none;
-  -webkit-appearance: none;
-  box-shadow: none;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  position: relative;
-  z-index: 0; /* CHANGED: from 1 to 0 so ::before can be above */
-  overflow: visible; /* ADDED: prevent border-radius clipping */
-}
-
-.mobile-input::before {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  border-radius: 34px;
-  background: linear-gradient(90deg, #A80077, #66FF00, #A80077);
-  background-size: 200% 100%;
-  z-index: -1; /* This puts it behind the input content */
-  animation: gradient-flow 3s ease infinite;
-  pointer-events: none; /* ADDED: prevent interference */
-}
-
-@keyframes gradient-flow {
-  0% {
-    background-position: -100% 0%;
-  }
-  100% {
-    background-position: 200% 0%;
-  }
-}
 .mobile-input-shell {
-  flex: 1;
+  width: 100%;
+  position: relative;
+  border-radius: 20px;
+  /* Deep shadow behind the wrapper for depth */
+  box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.4); 
   display: flex;
-  transform: scale(0.92);
-  transform-origin: center;
-  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  align-items: center;
+  transition: transform 0.3s ease;
 }
 
+/* ============================================================= */
+/*  "Latest News" Header (fixed at top of section)              */
+/* ============================================================= */
 
-
-
-.mobile-input-shell:focus-within {
-  transform: scale(1);
+/* Optional accent line under title */
+/* ============================================================= */
+/*  MOBILE NEWS SECTION CSS                                      */
+/*  Fully compatible with existing mobile app styles            */
+/* ============================================================= */
+/* News Section Container */
+.mobile-news-section {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: transparent;
+  padding: 12px;
+  flex-shrink: 0;
 }
 
-/* SINGLE ::before rule - choose ONE of these options: */
+/* News Header */
+.mobile-news-header {
+  font-size: 19px;
+  font-weight: 700;
+  color: #000000;
+  margin: 0 12px 14px 12px;
+  padding-top: 4px;
+  letter-spacing: -0.3px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+  position: relative;
+}
 
-/* OPTION 1: Simple visible border (recommended) */
-.mobile-input::before {
+/* Accent line under header */
+.mobile-news-header::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, #A80077, #66FF00);
+  border-radius: 2px;
+  margin-top: 8px;
+  opacity: 0.8;
+}
+
+/* Scrollable News Cards Container */
+.mobile-news-cards-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scroll-behavior: smooth;
+}
+
+/* ============================================================= */
+/*  FEATURED NEWS CARD                                           */
+/* ============================================================= */
+.mobile-news-card-featured {
+  position: relative;
+  padding: 18px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.mobile-news-card-featured:hover,
+.mobile-news-card-featured:active {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  border-color: rgba(102, 255, 0, 0.4);
+}
+
+/* Shiny hover effect */
+.mobile-news-card-featured::before {
   content: '';
   position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  border-radius: 34px;
-  background: linear-gradient(90deg, #A80077, #66FF00, #A80077);
-  background-size: 200% 100%;
-  z-index: -1;
-  animation: gradient-flow 3s ease infinite;
+  top: 0; left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: left 0.7s;
+}
+.mobile-news-card-featured:hover::before {
+  left: 100%;
 }
 
-/* OPTION 2: Or use the mask method if you prefer */
-/* .mobile-input::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 34px;
-  padding: 2px;
-  background: linear-gradient(90deg, #A80077, #66FF00, #A80077);
-  background-size: 200% 100%;
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: destination-out;
-  mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  pointer-events: none;
-  z-index: -1;
-  animation: gradient-flow 3s ease infinite;
-} */
+/* Featured Card Title */
+.mobile-news-card-featured .mobile-news-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #000000;
+  margin: 0 0 10px 0;
+  line-height: 1.3;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
 
-@keyframes gradient-flow {
-  0% {
-    background-position: -100% 0%;
+/* Featured Card Description */
+.mobile-news-card-featured .mobile-news-card-description {
+  font-size: 14.5px;
+  color: #010101;
+  line-height: 1.55;
+  margin: 0 0 14px 0;
+  opacity: 0.95;
+}
+
+/* Featured Card Meta */
+.mobile-news-card-featured .mobile-news-card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12.5px;
+  color: #000000;
+  font-weight: 500;
+}
+.mobile-news-card-featured .mobile-news-card-date {
+  opacity: 0.9;
+}
+.mobile-news-card-featured .mobile-news-card-source {
+  background: rgba(168, 0, 119, 0.3);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+  color: #070707;
+}
+
+.mobile-news-cards-container.scrollable {
+  flex: 1;              /* Fill available vertical space */
+  overflow-y: auto;      /* Enable vertical scroll */
+  -webkit-overflow-scrolling: touch; /* Smooth scroll on iOS */
+}
+
+/* Optional: hide default scrollbar */
+.mobile-news-cards-container.scrollable::-webkit-scrollbar {
+  width: 6px;
+}
+
+.mobile-news-cards-container.scrollable::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+
+/* ============================================================= */
+/*  REGULAR NEWS CARDS                                           */
+/* ============================================================= */
+.mobile-news-card-item {
+  padding: 16px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.mobile-news-card-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
+}
+
+.mobile-news-card-item:last-child {
+  border-bottom: none;
+}
+
+.mobile-news-card-item .mobile-news-card-title {
+  font-size: 15.5px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 7px 0;
+  line-height: 1.35;
+}
+
+.mobile-news-card-item .mobile-news-card-description {
+  font-size: 13.5px;
+  color: #dddddd;
+  line-height: 1.5;
+  margin: 0 0 10px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.mobile-news-card-item .mobile-news-card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11.5px;
+  color: #aaaaaa;
+}
+
+.mobile-news-card-item .mobile-news-card-source {
+  font-weight: 600;
+  color: #A80077;
+}
+
+/* ============================================================= */
+/*  RESPONSIVE ADJUSTMENTS                                       */
+/* ============================================================= */
+@media screen and (min-width: 768px) {
+  .mobile-news-section {
+    padding: 24px;
   }
-  100% {
-    background-position: 200% 0%;
+  .mobile-news-header {
+    font-size: 28px;
+    margin-bottom: 20px;
+  }
+  .mobile-news-cards-container {
+    gap: 20px;
+  }
+  .mobile-news-card-featured,
+  .mobile-news-card-item {
+    padding: 24px;
+  }
+  .mobile-news-card-title {
+    font-size: 20px;
+  }
+  .mobile-news-card-description {
+    font-size: 15px;
   }
 }
 
-/* Remove these conflicting rules */
-/*
-.mobile-input.mobile-input-centered::before {
-  inset: 0 !important;
-  z-index: -1 !important;
+@media screen and (max-width: 374px) {
+  .mobile-news-header {
+    font-size: 20px;
+  }
+  .mobile-news-card-featured,
+  .mobile-news-card-item {
+    padding: 16px;
+  }
+  .mobile-news-card-title {
+    font-size: 16px;
+  }
+  .mobile-news-card-description {
+    font-size: 13px;
+  }
+  .mobile-news-card-meta {
+    font-size: 11px;
+  }
 }
 
-.mobile-input:focus::before {
-  animation: gradient-border 3s ease infinite;
-}
-*/
+
+
 
 .mobile-input-centered::placeholder {
   color: rgba(255, 255, 255, 0.6);
@@ -1087,12 +1138,6 @@ a {
 .mobile-input::placeholder {
   color: var(--muted);
   opacity: 1;
-}
-
-.mobile-input:disabled {
-  opacity: 0.6;
-  background: rgba(18, 18, 26, 0.5);
-  cursor: not-allowed;
 }
 
 /* ============================================
@@ -1119,26 +1164,94 @@ a {
 }
 
 .mobile-send-btn-inside {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  background: transparent;
   width: 40px;
   height: 40px;
-  min-width: 40px;
-  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
 }
 
-.mobile-send-btn:active:not(:disabled) {
-  transform: scale(0.95);
+/* Color adjustment for the send icon against the light input background */
+/* ============================================
+   Send Button - Solid Accent (#007337)
+   ============================================ */
+
+/* ============================================
+   Send Button - Force Solid #007337
+   ============================================ */
+
+.mobile-input-centered ~ .mobile-send-btn-inside {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  
+  /* Flex Layout */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* Initial Styles (Disabled) */
+  background-color: transparent;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  
+  /* Icon Color */
+  color: #a0a0a0; 
+  
+  /* Smooth transitions for background and color */
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  cursor: default;
 }
 
-.mobile-send-btn-inside:active:not(:disabled) {
+/* 2. SVG Color Inheritance */
+.mobile-send-btn-inside svg {
+  stroke: currentColor; /* Uses the parent's color property */
+  fill: none;
+  transition: transform 0.3s ease;
+}
+
+/* ============================================
+   ACTIVE STATE (User Typing)
+   ============================================ */
+
+.mobile-send-btn-inside:not(:disabled) {
+  /* SOLID ACCENT BACKGROUND */
+  background-color: #007337;
+  
+  /* WHITE ICON */
+  color: #ffffff;
+  
+  /* Shadow for depth */
+  box-shadow: 0 4px 10px rgba(0, 115, 55, 0.3);
+  
+  cursor: pointer;
+  transform: translateY(-50%) scale(1);
+}
+
+/* Hover Effect */
+.mobile-send-btn-inside:not(:disabled):hover {
+  background-color: #008540; /* Slightly lighter green on hover */
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 6px 15px rgba(0, 115, 55, 0.4);
+}
+
+/* Click/Press Effect */
+.mobile-send-btn-inside:not(:disabled):active {
   transform: translateY(-50%) scale(0.95);
+  box-shadow: 0 2px 5px rgba(0, 115, 55, 0.3);
 }
 
-.mobile-send-btn:disabled {
-  background: transparent;
-  opacity: 0.5;
-  box-shadow: none;
-  cursor: not-allowed;
-}
 
 .mobile-send-btn .send-icon {
   flex-shrink: 0;
@@ -1232,8 +1345,8 @@ a {
   }
 
   .mobile-input {
-    font-size: 16px;
-    padding: 10px 16px;
+    font-size: 10px;
+    padding: 15px 20px;
   }
 
   .mobile-footer {
@@ -1386,10 +1499,6 @@ a:focus-visible,
     border-width: 2px;
   }
 
-  .mobile-input {
-    border-width: 2px;
-  }
-
   .mobile-cta-btn,
   .mobile-send-btn {
     border: 2px solid currentColor;
@@ -1460,30 +1569,273 @@ a:focus-visible,
 }
 
 /* Mobile Sell Loading Overlay */
-.mobile-sell-loading-overlay {
+/* From Uiverse.io by dovatgabriel */ 
+.three-body {
+  --uib-size: 35px;
+  --uib-speed: 0.8s;
+  --uib-color: #5D3FD3;
+  position: relative;
+  display: inline-block;
+  height: var(--uib-size);
+  width: var(--uib-size);
+  animation: spin78236 calc(var(--uib-speed) * 2.5) infinite linear;
+ }
+ 
+ .three-body__dot {
   position: absolute;
+  height: 100%;
+  width: 30%;
+ }
+ 
+ .three-body__dot:after {
+  content: '';
+  position: absolute;
+  height: 0%;
+  width: 100%;
+  padding-bottom: 100%;
+  background-color: var(--uib-color);
+  border-radius: 50%;
+ }
+ 
+ .three-body__dot:nth-child(1) {
+  bottom: 5%;
+  left: 0;
+  transform: rotate(60deg);
+  transform-origin: 50% 85%;
+ }
+ 
+ .three-body__dot:nth-child(1)::after {
+  bottom: 0;
+  left: 0;
+  animation: wobble1 var(--uib-speed) infinite ease-in-out;
+  animation-delay: calc(var(--uib-speed) * -0.3);
+ }
+ 
+ .three-body__dot:nth-child(2) {
+  bottom: 5%;
+  right: 0;
+  transform: rotate(-60deg);
+  transform-origin: 50% 85%;
+ }
+ 
+ .three-body__dot:nth-child(2)::after {
+  bottom: 0;
+  left: 0;
+  animation: wobble1 var(--uib-speed) infinite
+     calc(var(--uib-speed) * -0.15) ease-in-out;
+ }
+ 
+ .three-body__dot:nth-child(3) {
+  bottom: -5%;
+  left: 0;
+  transform: translateX(116.666%);
+ }
+ 
+ .three-body__dot:nth-child(3)::after {
+  top: 0;
+  left: 0;
+  animation: wobble2 var(--uib-speed) infinite ease-in-out;
+ }
+ 
+ @keyframes spin78236 {
+  0% {
+   transform: rotate(0deg);
+  }
+ 
+  100% {
+   transform: rotate(360deg);
+  }
+ }
+ 
+ @keyframes wobble1 {
+  0%,
+   100% {
+   transform: translateY(0%) scale(1);
+   opacity: 1;
+  }
+ 
+  50% {
+   transform: translateY(-66%) scale(0.65);
+   opacity: 0.8;
+  }
+ }
+ 
+ @keyframes wobble2 {
+  0%,
+   100% {
+   transform: translateY(0%) scale(1);
+   opacity: 1;
+  }
+ 
+  50% {
+   transform: translateY(66%) scale(0.65);
+   opacity: 0.8;
+  }
+ }
+ 
+
+.mobile-sell-loading-spinner {
+ /* From Uiverse.io by dovatgabriel */ 
+.three-body {
+ --uib-size: 35px;
+ --uib-speed: 0.8s;
+ --uib-color: #5D3FD3;
+ position: relative;
+ display: inline-block;
+ height: var(--uib-size);
+ width: var(--uib-size);
+ animation: spin78236 calc(var(--uib-speed) * 2.5) infinite linear;
+}
+
+.three-body__dot {
+ position: absolute;
+ height: 100%;
+ width: 30%;
+}
+
+.three-body__dot:after {
+ content: '';
+ position: absolute;
+ height: 0%;
+ width: 100%;
+ padding-bottom: 100%;
+ background-color: var(--uib-color);
+ border-radius: 50%;
+}
+
+.three-body__dot:nth-child(1) {
+ bottom: 5%;
+ left: 0;
+ transform: rotate(60deg);
+ transform-origin: 50% 85%;
+}
+
+.three-body__dot:nth-child(1)::after {
+ bottom: 0;
+ left: 0;
+ animation: wobble1 var(--uib-speed) infinite ease-in-out;
+ animation-delay: calc(var(--uib-speed) * -0.3);
+}
+
+.three-body__dot:nth-child(2) {
+ bottom: 5%;
+ right: 0;
+ transform: rotate(-60deg);
+ transform-origin: 50% 85%;
+}
+
+.three-body__dot:nth-child(2)::after {
+ bottom: 0;
+ left: 0;
+ animation: wobble1 var(--uib-speed) infinite
+    calc(var(--uib-speed) * -0.15) ease-in-out;
+}
+
+.three-body__dot:nth-child(3) {
+ bottom: -5%;
+ left: 0;
+ transform: translateX(116.666%);
+}
+
+.three-body__dot:nth-child(3)::after {
+ top: 0;
+ left: 0;
+ animation: wobble2 var(--uib-speed) infinite ease-in-out;
+}
+
+@keyframes spin78236 {
+ 0% {
+  transform: rotate(0deg);
+ }
+
+ 100% {
+  transform: rotate(360deg);
+ }
+}
+
+@keyframes wobble1 {
+ 0%,
+  100% {
+  transform: translateY(0%) scale(1);
+  opacity: 1;
+ }
+
+ 50% {
+  transform: translateY(-66%) scale(0.65);
+  opacity: 0.8;
+ }
+}
+
+@keyframes wobble2 {
+ 0%,
+  100% {
+  transform: translateY(0%) scale(1);
+  opacity: 1;
+ }
+
+ 50% {
+  transform: translateY(66%) scale(0.65);
+  opacity: 0.8;
+ }
+}
+
+}
+
+/* From Uiverse.io by alexruix */ 
+/* The switch - the box around the slider */
+.switch {
+  font-size: 12px;           /* CHANGE ONLY THIS LINE TO CHANGE SIZE */
+  position: relative;
+  display: inline-block;
+  width: 3.5em;
+  height: 2em;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  --secondary-color: #007337;
+  --background: transparent;
+  position: absolute;
+  cursor: pointer;
   top: 0;
   left: 0;
   right: 0;
+  border: 1px solid var(--secondary-color);
   bottom: 0;
-  background: transparent;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  border-radius: 12px;
+  background-color: var(--background);
+  transition: .5s;
+  border-radius: 30px;
 }
 
-.mobile-sell-loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-top: 3px solid #007bff;
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 1.4em;
+  width: 1.4em;
   border-radius: 50%;
-  animation: mobile-sell-spin 1s linear infinite;
-  margin-bottom: 16px;
+  left: 10%;
+  bottom: 15%;
+  box-shadow: inset 8px -4px 0px 0px #fff000;
+  background: var(--background);
+  transition: .5s;
 }
+
+input:checked + .slider {
+  background-color: #007337;
+}
+
+input:checked + .slider:before {
+  transform: translateX(100%);
+  box-shadow: inset 15px -4px 0px 15px #fff000;
+}
+
 
 .mobile-sell-loading-text {
   color: white;
@@ -1500,20 +1852,63 @@ a:focus-visible,
    Centered Input Field (ChatGPT-style)
    ============================================ */
 
+/* ============================================
+   Centered Input Field (ChatGPT-style)
+   ============================================ */
+
 .mobile-centered-input {
+  /* Positioning */
   position: absolute;
-  top: 35%;
+  top: 5px; /* Pushes it down just enough to clear the header */
   left: 50%;
-  transform: translate(-50%, -50%);
-  width: calc(100% - 32px);
-  max-width: 384px;
+  /* Only translate X (horizontal), remove Y (vertical) centering */
+  transform: translate(-50%, 0); 
   z-index: 10;
+  
+  /* Sizing */
+  width: 90%;
+  max-width: 400px;
+  
+  /* DEPTH & GLASS STYLING */
+  background:  #007337;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  
+  
+  /* Rounding and Spacing */
+  border-radius: 32px;
+  padding: 32px 24px; /* Reduced top/bottom padding slightly since it's higher up */
+  
+  /* Borders (Glass effect) */
+  border-top: 1px solid rgba(255, 255, 255, 0.8);
+  border-left: 1px solid rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+
+  /* Shadow Lift */
+  box-shadow: 
+    0 20px 40px -10px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
+    
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.mobile-centered-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px; 
+  width: 100%;
+  align-items: center;
 }
 
 .mobile-app-logo {
-  width: 70px;
-  height: 70px;
-  margin: 0 auto 12px;
+  width: 150px;
+  height: 150px;
+  margin: 0 auto 25px;
   display: block;
   animation: fadeIn 0.5s ease-in-out;
   object-fit: contain;
@@ -1545,6 +1940,14 @@ a:focus-visible,
   }
 }
 
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+
 .mobile-centered-form {
   display: flex;
   flex-direction: column;
@@ -1553,103 +1956,48 @@ a:focus-visible,
 }
 
 .mobile-input-centered {
-  width: 100%;
-  border-radius: 32px;
-  padding: 24px;
-  font-size: 16px;
-  box-sizing: border-box;
-  min-height: 64px;
+  width: 100%; /* Fix: Was 13px, now fills container */
+  height: auto;
+  min-height: 56px;
   border: none;
   outline: none;
-  position: relative;
-  background: rgba(11, 11, 16, 0.2);
-  color: #ffffff;
-  z-index: 1;
-  isolation: isolate;
+  border-radius: 20px;
+  padding: 16px 20px;
+  padding-right: 60px; /* Space for send button */
+  /* Initial State: Inset Shadow (Neumorphic Pressed) */
+  background-color: #ffffff;
+  color: #000000;
+  font-size: 16px;
+  box-shadow: inset 2px 5px 10px rgba(0,0,0,0.2);
+  transition: all 300ms ease-in-out;
+}
+
+.mobile-input-centered::placeholder {
+  color: #777;
+  font-weight: 500;
+}
+
+/* Focus State: Pop out effect */
+.mobile-input-centered:focus {
+  background-color: white;
+  color: #000;
+  transform: scale(1.03); /* Slight zoom */
+  
+  /* Outer Glow/Shadow on Focus */
+  box-shadow: 
+    0 0 0 2px rgba(91, 162, 126, 0.1), /* Subtle green tint ring */
+    13px 13px 50px rgba(148, 147, 115, 0.1),
+    -13px -13px 50px #497958;
+}
+
+/* Ensure the shell doesn't clip the input when it scales up */
+.mobile-input-centered:focus + .mobile-send-btn {
+  transform: translateY(-50%) scale(1.1); /* Scale button with input */
 }
 
 /* Animated gradient border - same approach as sign up button */
-.mobile-input-centered::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 32px;
-  padding: 1px;
-  background: linear-gradient(135deg, #A80077, #66FF00, #A80077);
-  background-size: 200% 200%;
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: destination-out;
-  mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  pointer-events: none;
-  z-index: -1;
-  animation: gradient-border 3s ease infinite;
-}
 
 /* Also apply to mobile-input with mobile-input-centered class */
-.mobile-input.mobile-input-centered::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 32px;
-  padding: 1px;
-  background: linear-gradient(135deg, #A80077, #66FF00, #A80077);
-  background-size: 200% 200%;
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: destination-out;
-  mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  pointer-events: none;
-  z-index: -1;
-  animation: gradient-border 3s ease infinite;
-}
-
-.mobile-input-gradient-box {
-  position: relative;
-  display: flex;
-  align-items: center;
-  flex: 1;
-  min-width: 0;
-  border-radius: 32px;
-  background: rgba(11, 11, 16, 0.2);
-  padding: 1px;
-  z-index: 0;
-}
-
-.mobile-input-gradient-box .mobile-input {
-  width: 100%;
-  flex: 1;
-  min-width: 0;
-}
-
-.mobile-input-gradient-box::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 32px;
-  padding: 1px;
-  background: linear-gradient(135deg, #A80077, #66FF00, #A80077);
-  background-size: 200% 200%;
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: destination-out;
-  mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  pointer-events: none;
-  z-index: -1;
-  animation: gradient-border 3s ease infinite;
-}
 
 .mobile-send-inline {
   width: 36px;
@@ -1711,7 +2059,7 @@ a:focus-visible,
 
 .mobile-footer-links-bottom a {
   font-size: 8px;
-  color: #ffffff;
+  color: #000000;
   text-decoration: none;
   padding: 4px 6px;
   transition: color 0.2s ease;
@@ -1730,7 +2078,7 @@ a:focus-visible,
   border-radius: 8px;
   text-decoration: none;
   font-weight: 600;
-  color: #ffffff;
+  color: #000000;
   z-index: 0;
 }
 

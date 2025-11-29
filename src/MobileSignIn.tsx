@@ -1,216 +1,135 @@
-// src/MobileSignIn.tsx
+// Updated MobileSignIn Component with separate classes for header login text and close button
+// Header now says "Login" and has its own class: mobile-auth-header-login
+// Close button now has: mobile-auth-close-btn
+
 import React, { useState, useEffect } from 'react'
-import { tokenStore } from './lib/secureStore'
-import { normalizePhone } from './utils/phoneNormalization.test'
 import './mobile-auth.css'
 
-type ServerSuccess = {
-  success: true
-  message: string
-  accessToken: string
-  refreshToken: string
-  emailSent: boolean
-  user: {
-    id: string
-    email?: string
-    firstname?: string
-    lastname?: string
-    username?: string
-    phonenumber: string
-    kycLevel?: number
-    kycStatus?: string
-    walletGenerationStatus?: string
-    avatarUrl?: string
+const tokenStore = {
+  setTokens: (accessToken, refreshToken) => {
+    try {
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('refreshToken', refreshToken);
+    } catch (e) {
+      console.error('Error saving tokens', e);
+    }
+  },
+  setUser: (user) => {
+    try {
+      localStorage.setItem('user', JSON.stringify(user));
+    } catch (e) {
+      console.error('Error saving user', e);
+    }
   }
-}
+};
 
-type ServerError =
-  | { success: false; message: string; errors?: any[]; lockedUntil?: string; minutesRemaining?: number }
-  | { success: false; message: string }
+export default function MobileSignIn({ onSuccess, onCancel }) {
+  const API_BASE = 'http://localhost:4000';
+  const ENDPOINT = `${API_BASE}/signin/signin-pin`;
 
-export type SignInResult = {
-  accessToken: string
-  refreshToken: string
-  user: ServerSuccess['user']
-}
+  const [phone, setPhone] = useState('');
+  const [pin, setPin] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-export default function MobileSignIn({
-  onSuccess,
-  onCancel,
-}: {
-  onSuccess: (result: SignInResult) => void
-  onCancel: () => void
-}) {
-  const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
-  const ENDPOINT = `${API_BASE}/signin/signin-pin`
-
-  const [phone, setPhone] = useState('')
-  const [pin, setPin] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  // Load saved phone number on component mount
   useEffect(() => {
-    const savedPhone = localStorage.getItem('rememberedPhone')
-    if (savedPhone) {
-      setPhone(savedPhone)
-    }
-  }, [])
+    const savedPhone = localStorage.getItem('rememberedPhone');
+    if (savedPhone) setPhone(savedPhone);
+  }, []);
 
-  // Phone number normalization function
-  function normalizePhone(input: string): string {
-    const d = input.replace(/[^\d+]/g, '')
-
-    // Handle Nigerian phone numbers specifically
-    if (/^0\d{10}$/.test(d)) return '+234' + d.slice(1) // 08123456789 -> +2348123456789
-    if (/^234\d{10}$/.test(d)) return '+' + d // 2348123456789 -> +2348123456789
-    if (/^\+234\d{10}$/.test(d)) return d // +2348123456789 -> +2348123456789
-
-    // Handle 10-digit numbers that could be Nigerian (starting with 7, 8, or 9)
-    if (/^[789]\d{9}$/.test(d)) return '+234' + d // 8123456789 -> +2348123456789
-
-    // Handle other international formats
-    if (/^\+?\d{10,15}$/.test(d)) return d.startsWith('+') ? d : '+' + d
-
-    return d
+  function normalizePhone(input) {
+    const d = input.replace(/[^\d+]/g, '');
+    if (/^0\d{10}$/.test(d)) return '+234' + d.slice(1);
+    if (/^234\d{10}$/.test(d)) return '+' + d;
+    if (/^\+234\d{10}$/.test(d)) return d;
+    if (/^[789]\d{9}$/.test(d)) return '+234' + d;
+    if (/^\+?\d{10,15}$/.test(d)) return d.startsWith('+') ? d : '+' + d;
+    return d;
   }
 
-  function handlePhoneChange(value: string) {
-    // Remove all non-digits
-    let digits = value.replace(/\D/g, '')
-
-    // Limit to 11 digits (allowing 0 at the beginning)
-    digits = digits.slice(0, 11)
-
-    setPhone(digits)
+  function handlePhoneChange(v) {
+    let digits = v.replace(/\D/g, '').slice(0, 11);
+    setPhone(digits);
   }
 
-  async function submit(e?: React.FormEvent) {
-    e?.preventDefault()
+  async function submit(e) {
+    e?.preventDefault();
+    if (loading) return;
 
-    // Prevent duplicate submissions
-    if (loading) return
+    setError(null);
+    const phonenumber = normalizePhone(phone);
+    const passwordpin = String(pin).replace(/[^\d]/g, '').padStart(6, '0');
 
-    setError(null)
+    if (!/^\+234\d{10}$/.test(phonenumber)) return setError('Enter a valid Nigerian phone number.');
+    if (!/^\d{6}$/.test(passwordpin)) return setError('PIN must be exactly 6 digits.');
 
-    // Normalize phone number
-    const phonenumber = normalizePhone(phone)
-    const passwordpin = String(pin).replace(/[^\d]/g, '').padStart(6, '0')
-
-    // Validate normalized phone number
-    if (!/^\+234\d{10}$/.test(phonenumber)) {
-      return setError('Enter a valid Nigerian phone number.')
-    }
-    if (!/^\d{6}$/.test(passwordpin)) {
-      return setError('PIN must be exactly 6 digits.')
-    }
-
-    setLoading(true)
+    setLoading(true);
     try {
       const res = await fetch(ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phonenumber, passwordpin }),
-      })
+        body: JSON.stringify({ phonenumber, passwordpin })
+      });
 
-      const data: ServerSuccess | ServerError = await res.json().catch(
-        () =>
-          ({
-            success: false,
-            message: 'Unexpected server response.',
-          }) as ServerError
-      )
+      const data = await res.json().catch(() => ({ success: false, message: 'Unexpected server response.' }));
 
-      if (!res.ok || !('success' in data) || data.success === false) {
-        if ('minutesRemaining' in (data as any) && (data as any).minutesRemaining) {
-          setError(`${(data as any).message} (${(data as any).minutesRemaining} minutes remaining)`)
+      if (!res.ok || !data.success) {
+        if (data.minutesRemaining) {
+          setError(`${data.message} (${data.minutesRemaining} minutes remaining)`);
         } else {
-          setError((data as any).message || `Sign-in failed (HTTP ${res.status}).`)
+          setError(data.message || `Sign-in failed (HTTP ${res.status}).`);
         }
-        return
+        return;
       }
 
-      const ok = data as ServerSuccess
-      tokenStore.setTokens(ok.accessToken, ok.refreshToken)
-      tokenStore.setUser(ok.user)
+      tokenStore.setTokens(data.accessToken, data.refreshToken);
+      tokenStore.setUser(data.user);
+      localStorage.setItem('rememberedPhone', phone);
 
-      // Automatically save phone number
-      localStorage.setItem('rememberedPhone', phone)
-
-      onSuccess({ accessToken: ok.accessToken, refreshToken: ok.refreshToken, user: ok.user })
-    } catch (err: any) {
-      setError(`Network error: ${err.message}`)
+      onSuccess({ accessToken: data.accessToken, refreshToken: data.refreshToken, user: data.user });
+    } catch (err) {
+      setError(`Network error: ${err.message}`);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100vw',
-      height: '100vh',
-      background: 'transparent',
-      zIndex: 1000,
-      display: 'grid',
-      placeItems: 'start center',
-      padding: '16px',
-      overflow: 'hidden',
-      touchAction: 'none'
-    }}>
-      {/* Background container with notch fallback color at 50% opacity - covers full viewport behind modal */}
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        zIndex: 999.5, // Above the page overlay (999) but below modal content (1000)
-        pointerEvents: 'none'
-      }} />
-      <div style={{
-        position: 'relative',
-        zIndex: 1, // Above the background container
-        maxWidth: '359px',
-        width: '100%',
-        maxHeight: '64.125vh',
-        marginTop: '3.42vh',
-        marginLeft: 'auto',
-        marginRight: 'auto',
-        background: 'transparent',
-        border: '1px solid transparent',
-        borderRadius: '6.84px',
-        padding: '20.52px',
-        boxShadow: 'none',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
-        <div style={{ marginBottom: '12px', flexShrink: 0 }}>
-          <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 600, color: '#fff' }}>
-            Sign in
-          </h2>
-          <p style={{ marginTop: '4px', color: 'var(--muted)', fontSize: '0.8rem' }}>
-            Use your phone number and 6-digit PIN to continue.
-          </p>
+    <div className="mobile-auth-overlay">
+      <div className="mobile-auth-container">
+
+        <div className="mobile-auth-header">
+          <div className="mobile-auth-title-row">
+            
+            <h2 className="mobile-auth-header-login">Log In</h2>
+          </div>
+
+          <button type="button" className="mobile-auth-close-btn" onClick={onCancel}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
         </div>
 
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+        <div className="mobile-auth-body">
           <form onSubmit={submit} className="mobile-auth-form">
+
             <label className="mobile-auth-input-wrap">
               <span className="mobile-auth-label">Phone number</span>
-              <input
-                className="mobile-auth-input"
-                placeholder="08123456789"
-                value={phone}
-                onChange={(e) => handlePhoneChange(e.target.value)}
-                inputMode="numeric"
-                autoFocus
-                maxLength={11}
-                autoComplete="tel"
-              />
+              <div className="mobile-auth-phone-input">
+                <span className="mobile-auth-phone-prefix">+234</span>
+                <input
+                  className="mobile-auth-input"
+                  placeholder="812 345 6789"
+                  value={phone}
+                  onChange={(e) => handlePhoneChange(e.target.value)}
+                  inputMode="numeric"
+                  autoFocus
+                  maxLength={11}
+                  autoComplete="tel"
+                />
+              </div>
             </label>
 
             <label className="mobile-auth-input-wrap">
@@ -227,32 +146,18 @@ export default function MobileSignIn({
               />
             </label>
 
-            {error && (
-              <div className="mobile-auth-error">
-                ⚠️ {error}
-              </div>
-            )}
+            {error && <div className="mobile-auth-error">⚠️ {error}</div>}
 
             <div className="mobile-auth-button-row">
               <button className="mobile-auth-button primary" type="submit" disabled={loading}>
-                {loading ? 'Signing in…' : 'Sign in'}
-              </button>
-              <button
-                type="button"
-                className="mobile-auth-button outline"
-                onClick={onCancel}
-                disabled={loading}
-              >
-                Cancel
+                {loading ? 'Signing in…' : 'Login'}
               </button>
             </div>
 
-            <p className="mobile-auth-note">
-              Too many failed attempts can temporarily lock your account.
-            </p>
+            <p className="mobile-auth-note">Too many failed attempts can temporarily lock your account.</p>
           </form>
         </div>
       </div>
     </div>
-  )
+  );
 }

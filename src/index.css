@@ -135,14 +135,22 @@ a:hover { opacity: .92; }
 
 /* Buttons */
 .btn {
-  appearance: none; -webkit-appearance: none; cursor: pointer;
-  background: rgba(8, 8, 12, 0.95); color: #fff;
-  padding: 10px 14px; border-radius: 10px;
-  font-weight: 700; font-size: 15px; line-height: 1.35;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  transition: box-shadow .18s ease, transform .08s ease, opacity .2s ease, background .2s ease, border-color .2s ease;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.35); min-height: 40px;
-  -webkit-tap-highlight-color: transparent;
+  --primary-color: #645bff;
+  --secondary-color: #fff;
+  --hover-color: #111;
+  --arrow-width: 10px;
+  --arrow-stroke: 2px;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 20px;
+  color: var(--secondary-color);
+  padding: 1em 1.8em;
+  background: var(--primary-color);
+  display: flex;
+  transition: 0.2s background;
+  align-items: center;
+  gap: 0.6em;
+  font-weight: bold;
 }
 .btn:hover { box-shadow: 0 8px 26px rgba(0,0,0,.45); transform: translateY(-1px); }
 .btn:active { transform: translateY(1px); }
@@ -502,47 +510,7 @@ button, .hint { -webkit-tap-highlight-color: transparent; }
   background: #191919;
 }
 
-.preloader__spinner::before {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  padding: 4px;
-  background: linear-gradient(135deg, #A80077, #66FF00, #A80077);
-  background-size: 200% 200%;
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: destination-out;
-  mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  animation: preloaderSpin 1s linear infinite, preloaderGradient 3s ease infinite;
-}
 
-@keyframes preloaderSpin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes preloaderGradient {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-@keyframes preloaderStarTwinkle {
-  0% { transform: scale(0.8); opacity: 0.4; }
-  50% { transform: scale(1); opacity: 1; }
-  100% { transform: scale(0.6); opacity: 0.3; }
-}
 
 /* ===== Responsive tweaks ===== */
 @media (max-width: 640px) {

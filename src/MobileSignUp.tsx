@@ -78,7 +78,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
 
   const steps: StepId[] = ['firstname', 'lastname', 'phone', 'email', 'otp', 'pin']
   const [stepIndex, setStepIndex] = useState<number>(0)
-  const [showAllFields, setShowAllFields] = useState(false) // Show step-by-step approach
+  const [showAllFields, setShowAllFields] = useState(false)
   const [currentStepGroup, setCurrentStepGroup] = useState<'names' | 'contact' | 'otp' | 'pin'>('names')
 
   const [firstname, setFirstname] = useState('')
@@ -86,7 +86,6 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
 
-  // Auto-fill BVN with random 11-digit number for test flight (hidden from user)
   const [bvn, setBvn] = useState(() => {
     return Math.floor(10000000000 + Math.random() * 90000000000).toString()
   })
@@ -107,7 +106,6 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
 
   const currentStepId = steps[stepIndex]
 
-  // Resend OTP function
   const handleResendOtp = async () => {
     if (!phone) {
       setResendError('Phone number is required')
@@ -132,9 +130,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
         throw new Error(data.message || 'Failed to resend OTP')
       }
 
-      // Clear any existing OTP error and show success
       setOtpError(null)
-      // You could add a success message here if needed
 
     } catch (err: any) {
       setResendError(err.message || 'Failed to resend OTP')
@@ -146,15 +142,10 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
   function normalizePhone(input: string) {
     const d = input.replace(/[^\d+]/g, '')
 
-    // Handle Nigerian phone numbers specifically
-    if (/^0\d{10}$/.test(d)) return '+234' + d.slice(1) // 08123456789 -> +2348123456789
-    if (/^234\d{10}$/.test(d)) return '+' + d // 2348123456789 -> +2348123456789
-    if (/^\+234\d{10}$/.test(d)) return d // +2348123456789 -> +2348123456789
-
-    // Handle 10-digit numbers that could be Nigerian (starting with 7, 8, or 9)
-    if (/^[789]\d{9}$/.test(d)) return '+234' + d // 8123456789 -> +2348123456789
-
-    // Handle other international formats
+    if (/^0\d{10}$/.test(d)) return '+234' + d.slice(1)
+    if (/^234\d{10}$/.test(d)) return '+' + d
+    if (/^\+234\d{10}$/.test(d)) return d
+    if (/^[789]\d{9}$/.test(d)) return '+234' + d
     if (/^\+?\d{10,15}$/.test(d)) return d.startsWith('+') ? d : '+' + d
 
     return d
@@ -213,9 +204,7 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
     e?.preventDefault()
     setError(null)
 
-    // Handle step groups
     if (currentStepGroup === 'names') {
-      // Validate firstname and lastname individually
       const firstnameError = validateField('firstname')
       if (firstnameError) {
         setError(firstnameError)
@@ -231,7 +220,6 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
     }
 
     if (currentStepGroup === 'contact') {
-      // Validate all fields individually
       const firstnameError = validateField('firstname')
       if (firstnameError) {
         setError(firstnameError)
@@ -252,18 +240,15 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
         setError(emailError)
         return
       }
-      // Call signup API
       await doSignup()
       return
     }
 
-    // OTP step: call verify OTP API
     if (currentStepGroup === 'otp') {
       await doVerifyOtp()
       return
     }
 
-    // PIN step: call set PIN API
     if (currentStepGroup === 'pin') {
       await doSetPin()
       return
@@ -304,7 +289,6 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
       const ok = data as ServerSuccess
       if (ok.userId) setPendingUserId(ok.userId)
 
-      // Only move to OTP page if signup was successful
       setCurrentStepGroup('otp')
       setStepIndex(steps.indexOf('otp'))
     } catch (err: any) {
@@ -340,7 +324,6 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
       const ok: VerifySuccess = await res.json()
       setPendingUserId(ok.pendingUserId)
 
-      // move to PIN page
       setCurrentStepGroup('pin')
       setStepIndex(steps.indexOf('pin'))
     } catch (err: any) {
@@ -373,11 +356,9 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
 
       const ok: PinSuccess = await res.json()
 
-      // Store tokens and user info in secure storage
       tokenStore.setTokens(ok.accessToken, ok.refreshToken)
       tokenStore.setUser(ok.user)
 
-      // Complete signup after PIN is set
       onSuccess({
         success: true,
         message: 'Account created successfully!',
@@ -417,11 +398,18 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
     )
   }
 
+  function getHeaderTitle() {
+    if (currentStepGroup === 'names') return 'Your Name'
+    if (currentStepGroup === 'contact') return 'Contact Information'
+    if (currentStepId === 'otp') return 'Verify OTP'
+    if (currentStepId === 'pin') return 'Set your PIN'
+    return 'Create your account'
+  }
+
   function renderStep() {
-    // Handle step groups
     if (currentStepGroup === 'names') {
       return (
-        <div className="mobile-auth-fields">
+        <>
           <label className="mobile-auth-input-wrap">
             <span className="mobile-auth-label">First Name</span>
             <input
@@ -441,13 +429,13 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
               onChange={(e) => setLastname(e.target.value)}
             />
           </label>
-        </div>
+        </>
       )
     }
 
     if (currentStepGroup === 'contact') {
       return (
-        <div className="mobile-auth-fields">
+        <>
           <label className="mobile-auth-input-wrap">
             <span className="mobile-auth-label">Phone Number</span>
             <input
@@ -471,24 +459,46 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
               autoComplete="email"
             />
           </label>
-        </div>
+        </>
       )
     }
 
     if (currentStepGroup === 'otp') {
       return (
-        <label className="mobile-auth-input-wrap">
-          <span className="mobile-auth-label">Enter OTP</span>
-          <input
-            className="mobile-auth-input"
-            placeholder="123456"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
-            inputMode="numeric"
-            maxLength={6}
-            autoFocus
-          />
-        </label>
+        <>
+          <label className="mobile-auth-input-wrap">
+            <span className="mobile-auth-label">Enter OTP</span>
+            <input
+              className="mobile-auth-input"
+              placeholder="123456"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
+              inputMode="numeric"
+              maxLength={6}
+              autoFocus
+            />
+          </label>
+          {otpError && (
+            <div className="mobile-auth-error">
+              ⚠️ {otpError}
+            </div>
+          )}
+          {resendError && (
+            <div className="mobile-auth-error">
+              ⚠️ {resendError}
+            </div>
+          )}
+          <div className="mobile-auth-button-row">
+            <button
+              type="button"
+              className="mobile-auth-button outline"
+              onClick={handleResendOtp}
+              disabled={resendLoading || loading}
+            >
+              {resendLoading ? 'Sending…' : 'Resend OTP'}
+            </button>
+          </div>
+        </>
       )
     }
 
@@ -522,183 +532,62 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
               autoComplete="new-password"
             />
           </label>
+          {pinError && (
+            <div className="mobile-auth-error">
+              ⚠️ {pinError}
+            </div>
+          )}
         </>
       )
     }
 
-    switch (currentStepId) {
-      case 'otp':
-        return (
-          <>
-            <label className="mobile-auth-input-wrap">
-              <span className="mobile-auth-label">Enter OTP</span>
-              <input
-                className="mobile-auth-input"
-                placeholder="123456"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
-                inputMode="numeric"
-                maxLength={6}
-                autoFocus
-              />
-            </label>
-            {otpError && (
-              <div className="mobile-auth-error">
-                ⚠️ {otpError}
-              </div>
-            )}
-            {resendError && (
-              <div className="mobile-auth-error">
-                ⚠️ {resendError}
-              </div>
-            )}
-            <div className="mobile-auth-button-row">
-              <button
-                type="button"
-                className="mobile-auth-button outline"
-                onClick={handleResendOtp}
-                disabled={resendLoading || loading}
-              >
-                {resendLoading ? 'Sending…' : 'Resend OTP'}
-              </button>
-            </div>
-          </>
-        )
-      case 'pin':
-        return (
-          <>
-            <label className="mobile-auth-input-wrap">
-              <span className="mobile-auth-label">PIN (6 digits)</span>
-              <input
-                className="mobile-auth-input"
-                placeholder="••••••"
-                value={pin}
-                onChange={(e) => setPin(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
-                inputMode="numeric"
-                maxLength={6}
-                type="password"
-                autoFocus
-              />
-            </label>
-
-            <label className="mobile-auth-input-wrap">
-              <span className="mobile-auth-label">Confirm PIN</span>
-              <input
-                className="mobile-auth-input"
-                placeholder="••••••"
-                value={pin2}
-                onChange={(e) => setPin2(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
-                inputMode="numeric"
-                maxLength={6}
-                type="password"
-              />
-            </label>
-
-            {pinError && (
-              <div className="mobile-auth-error">
-                ⚠️ {pinError}
-              </div>
-            )}
-          </>
-        )
-      default:
-        return null
-    }
+    return null
   }
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100vw',
-      height: '100vh',
-      background: 'transparent',
-      zIndex: 1000,
-      display: 'grid',
-      placeItems: 'start center',
-      padding: '16px',
-      overflow: 'hidden',
-      touchAction: 'none'
-    }}>
-      <div style={{
-        maxWidth: '359px',
-        width: '100%',
-        maxHeight: '64.125vh',
-        marginTop: '3.42vh',
-        marginLeft: 'auto',
-        marginRight: 'auto',
-        background: 'transparent',
-        border: '1px solid transparent',
-        borderRadius: '6.84px',
-        padding: '20.52px',
-        boxShadow: 'none',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
-        <div style={{ marginBottom: '12px', flexShrink: 0 }}>
-          <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 600, color: 'var(--txt)' }}>
-            {currentStepGroup === 'names'
-              ? 'Your Name'
-              : currentStepGroup === 'contact'
-                ? 'Contact Information'
-                : currentStepId === 'otp'
-                  ? 'Verify OTP'
-                  : currentStepId === 'pin'
-                    ? 'Set your PIN'
-                    : 'Create your account'}
-          </h2>
-          <p style={{ marginTop: '4px', color: 'var(--muted)', fontSize: '0.8rem' }}>
-            {currentStepGroup === 'names'
-              ? "Let's start with your name."
-              : currentStepGroup === 'contact'
-                ? "Now we need your contact details."
-                : currentStepId === 'otp'
-                  ? 'Enter the 6-digit OTP sent to your phone.'
-                  : currentStepId === 'pin'
-                    ? 'Create a 6-digit PIN for sign-in and transactions.'
-                    : "We'll collect a few details. One step at a time."}
-          </p>
+    <div className="mobile-auth-overlay">
+      <div className="mobile-auth-container">
+        
+        <div className="mobile-auth-header">
+          <div className="mobile-auth-title-row">
+            <h2 className="mobile-auth-header-login">{getHeaderTitle()}</h2>
+          </div>
 
-          {currentStepId === 'otp' || currentStepId === 'pin' ? <ProgressDots /> : null}
+          <button type="button" className="mobile-auth-close-btn" onClick={onCancel}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
         </div>
 
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+        <div className="mobile-auth-body">
           <form onSubmit={handleSubmit} className="mobile-auth-form">
-            {!loading && (
-              <>
-                {renderStep()}
-                {error && (
-                  <div className="mobile-auth-error">
-                    ⚠️ {error}
-                  </div>
-                )}
-                <div className="mobile-auth-button-row">
-                  <button
-                    type="button"
-                    className="mobile-auth-button outline"
-                    onClick={onCancel}
-                    disabled={loading}
-                  >
-                    Cancel
-                  </button>
-                  <button type="submit" className="mobile-auth-button primary" disabled={loading}>
-                    {loading
-                      ? 'Processing…'
-                      : currentStepGroup === 'names'
-                        ? 'Continue'
-                        : currentStepGroup === 'contact'
-                          ? 'Create Account'
-                          : currentStepId === 'otp'
-                            ? 'Verify OTP'
-                            : currentStepId === 'pin'
-                              ? 'Complete'
-                              : 'Next'}
-                  </button>
-                </div>
-              </>
+            
+            {renderStep()}
+            
+            {error && (
+              <div className="mobile-auth-error">
+                ⚠️ {error}
+              </div>
             )}
+
+            <div className="mobile-auth-button-row">
+              <button type="submit" className="mobile-auth-button primary" disabled={loading}>
+                {loading
+                  ? 'Processing…'
+                  : currentStepGroup === 'names'
+                    ? 'Continue'
+                    : currentStepGroup === 'contact'
+                      ? 'Create Account'
+                      : currentStepId === 'otp'
+                        ? 'Verify OTP'
+                        : currentStepId === 'pin'
+                          ? 'Complete'
+                          : 'Next'}
+              </button>
+            </div>
+
           </form>
         </div>
       </div>

@@ -7,21 +7,20 @@ import { useInactivityTimer } from './lib/useInactivityTimer'
 import MobileSignIn, { SignInResult } from './MobileSignIn'
 import MobileSignUp, { SignUpResult } from './MobileSignUp'
 import MobileSell from './MobileSell'
-import MobileGame from './MobileGame';
-import MobileVoiceChat from './MobileVoiceChat';
-import MobileLiskWallet from './MobileLiskWallet';
+import MobileGame from './MobileGame'
+import MobileVoiceChat from './MobileVoiceChat'
+import MobileLiskWallet from './MobileLiskWallet'
 import BrampLogo from './assets/logo.jpeg'
 import micIcon from './assets/mic.png'
-import userIcon from './assets/user.png'
-import { Bitcoin, EthereumCircleFlat, Usdt, Usdc, Exchange02, Send } from './components/CryptoIcons'
+import { Bitcoin, EthereumCircleFlat, Usdt, Usdc, Send } from './components/CryptoIcons'
 import wallpaper2 from './assets/wallpaper2.jpg'
 import Preloader from './Preloader'
-import { MessageCircleIcon, Unlock } from 'lucide-react'
+import { MessageCircleIcon } from 'lucide-react'
 import './MobileApp.css'
-import { renderMessageText } from './utils/messageRenderer'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
+// --- Types & Interfaces ---
 type CTAButton = {
   id: string
   title: string
@@ -43,6 +42,89 @@ export type ChatMessage = {
   cta?: CTA | null
 }
 
+interface NewsCard {
+  id: string
+  title: string
+  description: string
+  date: string
+  source: string
+  url?: string
+}
+
+// --- Helper Components ---
+function MobileNewsSection() {
+  const newsCards: NewsCard[] = [
+    /* ...your news cards... */
+  ];
+
+  const handleCardClick = (card: NewsCard) => {
+    if (card.url) window.open(card.url, '_blank', 'noopener,noreferrer');
+  };
+
+  const featuredCard = newsCards[0];
+  const regularCards = newsCards.slice(1);
+
+  return (
+    <section className="mobile-news-section">
+      <h2 className="mobile-news-header">Latest News</h2>
+
+      <div className="mobile-news-background card-background">
+        {/* Make sure this div is scrollable */}
+        <div className="mobile-news-cards-container scrollable">
+          {featuredCard && (
+            <article
+              key={featuredCard.id}
+              className="mobile-news-card-featured"
+              onClick={() => handleCardClick(featuredCard)}
+              role="button"
+              tabIndex={0}
+            >
+              <h3 className="mobile-news-card-title">{featuredCard.title}</h3>
+              <p className="mobile-news-card-description">{featuredCard.description}</p>
+              <div className="mobile-news-card-meta">
+                <span>{featuredCard.date}</span>
+                <span>{featuredCard.source}</span>
+              </div>
+            </article>
+          )}
+
+          {regularCards.map((card) => (
+            <article
+              key={card.id}
+              className="mobile-news-card-item"
+              onClick={() => handleCardClick(card)}
+              role="button"
+              tabIndex={0}
+            >
+              <h3 className="mobile-news-card-title">{card.title}</h3>
+              <p className="mobile-news-card-description">{card.description}</p>
+              <div className="mobile-news-card-meta">
+                <span>{card.date}</span>
+                <span>{card.source}</span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
+
+function ThreeDotLoader() {
+  return (
+    <div className="typing-mobile">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <div className="dot"></div>
+        <div className="dot" style={{ animationDelay: '-0.16s' }}></div>
+        <div className="dot" style={{ animationDelay: '0s' }}></div>
+      </div>
+    </div>
+  )
+}
+
+// --- Utilities ---
 function getSessionId(): string {
   const key = 'bramp__session_id'
   let sid = localStorage.getItem(key)
@@ -60,9 +142,6 @@ function getTimeBasedGreeting(): string {
   else return 'Good evening'
 }
 
-
-// Token management functions are now imported from tokenManager.ts
-
 function getErrorMessage(e: unknown): string {
   if (e instanceof Error) return e.message
   if (typeof e === 'string') return e
@@ -73,10 +152,7 @@ function getErrorMessage(e: unknown): string {
   }
 }
 
-async function sendChatMessage(
-  message: string,
-  history: ChatMessage[]
-): Promise<{ reply: string; cta?: CTA | null; metadata?: any; browsing?: boolean }> {
+async function sendChatMessage(message: string, history: ChatMessage[]): Promise<{ reply: string; cta?: CTA | null; metadata?: any; browsing?: boolean }> {
   const response = await authFetch(`${API_BASE}/chatbot/chat`, {
     method: 'POST',
     body: JSON.stringify({
@@ -93,8 +169,6 @@ async function sendChatMessage(
   }
 
   const data = await response.json()
-
-  // If browsing is required, poll for results
   if (data.browsing) {
     return {
       reply: data?.reply ?? 'Gathering information...',
@@ -129,30 +203,15 @@ async function pollBrowsingResult(sessionId: string): Promise<{ reply: string; c
   }
 }
 
-/* ----------------------- Message rendering handled by shared utility ----------------------- */
-
-function ThreeDotLoader() {
-  return (
-    <div className="typing-mobile">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-        <div className="dot"></div>
-        <div className="dot" style={{ animationDelay: '-0.16s' }}></div>
-        <div className="dot" style={{ animationDelay: '0s' }}></div>
-      </div>
-    </div>
-  )
-}
-
+// --- Main Component ---
 export default function MobileApp() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [showPreloader, setShowPreloader] = useState(true)
-
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [showCenteredInput, setShowCenteredInput] = useState(true)
   const [showSignIn, setShowSignIn] = useState(false)
   const [hideSignUpButton, setHideSignUpButton] = useState(false)
-
   const [showSignUp, setShowSignUp] = useState(false)
   const [showSell, setShowSell] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
@@ -196,12 +255,6 @@ export default function MobileApp() {
     ? { opacity: 0, pointerEvents: 'none' }
     : undefined
 
-  // Debug ticker
-  useEffect(() => {
-    console.log('Mobile ticker text:', tickerText)
-  }, [tickerText])
-
-  // Cycle through icons
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIconIndex((prev) => (prev + 1) % icons.length)
@@ -209,21 +262,17 @@ export default function MobileApp() {
     return () => clearInterval(interval)
   }, [icons.length])
 
-  // Handle automatic sell modal opening
   useEffect(() => {
     if (shouldOpenSell && !showSell) {
-      // Use the same logic as manual button click
       handleSellClick()
       setShouldOpenSell(false)
     }
-  }, [shouldOpenSell, showSell, auth, setOpenSellAfterAuth, setShowSignIn, setShowCenteredInput, setShowSell, setShowMenu])
+  }, [shouldOpenSell, showSell, auth])
 
-  // Parse **text** to <strong>text</strong>
   function parseBoldText(text: string): string {
     return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
   }
 
-  // Mobile version of renderMessageText
   function renderMessageText(text: string): React.ReactNode {
     const paragraphs = text.split(/\r?\n\s*\r?\n/)
     const rendered: React.ReactNode[] = []
@@ -280,26 +329,18 @@ export default function MobileApp() {
       }
     } catch { }
 
-    // Setup automatic logout timer
     const cleanup = setupAutoLogoutTimer((reason) => {
-      // Handle auto-logout gracefully
       console.log('Auto-logout triggered:', reason)
-
-      // Clear auth state
       setAuth(null)
       setShowSell(false)
       setShowMenu(false)
       setShowSignIn(false)
       setShowSignUp(false)
       setOpenSellAfterAuth(false)
-
-      // Smooth transition back to centered input view
       setShowCenteredInput(true)
       setMessages([])
 
-      // Prevent iOS from going into protection mode
       if (typeof window !== 'undefined' && window.navigator?.userAgent?.includes('iPhone')) {
-        // Force a small DOM update to prevent iOS from thinking the page is inactive
         setTimeout(() => {
           document.body.style.transform = 'translateZ(0)'
           setTimeout(() => {
@@ -312,9 +353,8 @@ export default function MobileApp() {
     return cleanup
   }, [])
 
-  // 45-minute inactivity timer
   useInactivityTimer({
-    timeout: 45 * 60 * 1000, // 45 minutes
+    timeout: 45 * 60 * 1000,
     onInactive: () => {
       console.log('45 minutes of inactivity detected, returning to centered input')
       setShowCenteredInput(true)
@@ -322,39 +362,30 @@ export default function MobileApp() {
     }
   })
 
-  // Auto-scroll to bottom when messages or loading state changes
   useEffect(() => {
     if (endRef.current) {
       endRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' })
     }
   }, [messages, loading])
 
-
   const TICKER_SYMBOLS = ['BTC', 'ETH', 'USDT', 'USDC', 'BNB', 'SOL', 'NGNB']
-
   async function fetchTickerPrices(signal?: AbortSignal) {
     try {
       const symbolParam = TICKER_SYMBOLS.join(',')
-      const url = `${API_BASE}/prices/prices?symbols=${encodeURIComponent(
-        symbolParam
-      )}&changes=true&limit=9`
+      const url = `${API_BASE}/prices/prices?symbols=${encodeURIComponent(symbolParam)}&changes=true&limit=9`
       const resp = await authFetch(url, { method: 'GET', signal })
       if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${resp.statusText}`)
 
       const payload = await resp.json()
-      if (!payload?.success || !payload?.data) {
-        throw new Error('Invalid prices response')
-      }
+      if (!payload?.success || !payload?.data) return
 
       const { prices = {}, hourlyChanges = {} } = payload.data
-
       const items = TICKER_SYMBOLS.filter(
         (s) => s === 'NGNB' || typeof prices[s] === 'number'
       ).map((s) => {
         const priceVal = prices[s]
         const changeObj = hourlyChanges?.[s]
         const changePct = changeObj?.hourlyChange ?? changeObj?.percentageChange ?? null
-
         if (s === 'NGNB') {
           if (typeof priceVal === 'number') {
             const ngn = Number(priceVal)
@@ -362,9 +393,7 @@ export default function MobileApp() {
           }
           return 'NGNB — n/a'
         }
-
         if (typeof priceVal !== 'number') return `${s} — n/a`
-
         const usd = Number(priceVal)
         const changeText =
           changePct != null ? ` ${changePct > 0 ? '+' : ''}${Number(changePct).toFixed(1)}%` : ''
@@ -372,19 +401,12 @@ export default function MobileApp() {
           usd >= 1
             ? usd.toLocaleString(undefined, { maximumFractionDigits: 2 })
             : usd.toFixed(4).replace(/\.?0+$/, '')
-
         return `${s} $${usdStr}${changeText}`
       })
-
       const text = items.join('  •  ')
-      if (text) {
-        setTickerText(text)
-      } else {
-        setTickerText('BTC • ETH • USDT • Live crypto prices loading...')
-      }
+      if (text) setTickerText(text)
     } catch (err) {
       console.warn('Ticker fetch failed', err)
-      setTickerText('BTC • ETH • USDT • Live crypto prices')
     }
   }
 
@@ -394,16 +416,14 @@ export default function MobileApp() {
     return () => ac.abort()
   }, [])
 
-
   async function sendMessage(e?: React.FormEvent) {
     e?.preventDefault()
     const trimmed = input.trim()
     if (!trimmed || loading) return
 
-    // Switch to bottom input after first message
     if (showCenteredInput) {
       setShowCenteredInput(false)
-      setHideSignUpButton(true) // Hide sign up button once chat opens
+      setHideSignUpButton(true)
     }
 
     const userMsg: ChatMessage = {
@@ -416,7 +436,6 @@ export default function MobileApp() {
     setMessages((prev) => [...prev, userMsg])
     setInput('')
     setLoading(true)
-
     setTimeout(() => inputRef.current?.focus(), 0)
 
     let browsingData: { browsing?: boolean } | null = null
@@ -433,69 +452,47 @@ export default function MobileApp() {
         cta: data.cta || null,
       }
 
-      // Check if this message contains sell intent and should open modal instead
       const hasSellIntent = data.cta?.buttons?.some(btn => isSellCTA(btn))
       if (hasSellIntent) {
-        // Don't add the message to chat, just trigger modal opening
         setShouldOpenSell(true)
         setLoading(false)
       } else {
         setMessages((prev) => [...prev, aiMsg])
 
-        // If browsing is required, poll for results
         if (data.browsing) {
           const sessionId = getSessionId()
-          const maxAttempts = 60 // Poll for up to 3 minutes (60 * 3 seconds)
+          const maxAttempts = 60
           let attempts = 0
 
           pollInterval = setInterval(async () => {
             attempts++
             try {
               const browsingResult = await pollBrowsingResult(sessionId)
-
               if (browsingResult.completed) {
                 if (pollInterval) clearInterval(pollInterval)
-                // Replace the "this might take a while" message with the actual result
                 setMessages((prev) => {
                   const updated = [...prev]
-                  const browsingMsgIndex = updated.findIndex(m => m.id === aiMsg.id)
-                  if (browsingMsgIndex !== -1) {
-                    updated[browsingMsgIndex] = {
-                      ...updated[browsingMsgIndex],
-                      text: browsingResult.reply
-                    }
-                  }
+                  const idx = updated.findIndex(m => m.id === aiMsg.id)
+                  if (idx !== -1) updated[idx] = { ...updated[idx], text: browsingResult.reply }
                   return updated
                 })
                 setLoading(false)
               } else if (attempts >= maxAttempts) {
                 if (pollInterval) clearInterval(pollInterval)
-                setMessages((prev) => {
-                  const updated = [...prev]
-                  const browsingMsgIndex = updated.findIndex(m => m.id === aiMsg.id)
-                  if (browsingMsgIndex !== -1) {
-                    updated[browsingMsgIndex] = {
-                      ...updated[browsingMsgIndex],
-                      text: 'Sorry, the request took too long. Please try again.'
-                    }
-                  }
-                  return updated
-                })
                 setLoading(false)
               }
             } catch (pollError) {
-              console.error('Polling browsing result failed:', pollError)
+              console.error('Polling failed:', pollError)
               if (attempts >= maxAttempts) {
                 if (pollInterval) clearInterval(pollInterval)
                 setLoading(false)
               }
             }
-          }, 3000) // Poll every 3 seconds
+          }, 3000)
         } else {
           setLoading(false)
         }
       }
-
     } catch (error) {
       console.error('Chat message failed:', error)
       const errorMsg: ChatMessage = {
@@ -527,14 +524,7 @@ export default function MobileApp() {
     if (!btn) return false
     if (btn.id === 'start_sell') return true
     const url = String(btn.url || '').toLowerCase()
-    const sellPatterns = [
-      /\/sell($|\/|\?|#)/,
-      /chatbramp\.com\/sell/,
-      /localhost.*\/sell/,
-      /sell\.html?$/,
-      /\bsell\b/,
-    ]
-    return sellPatterns.some((rx) => rx.test(url))
+    return /\/sell($|\/|\?|#)|chatbramp\.com\/sell|localhost.*\/sell|sell\.html?$|\bsell\b/.test(url)
   }
 
   function handleSellClick(event?: React.MouseEvent) {
@@ -552,7 +542,6 @@ export default function MobileApp() {
   function handleKycClick(event?: React.MouseEvent) {
     event?.preventDefault()
     setShowMenu(false)
-    // KYC functionality disabled for now
     console.log('KYC button clicked - functionality disabled')
   }
 
@@ -582,7 +571,6 @@ export default function MobileApp() {
 
   function handleHintClick(hintText: string) {
     if (!loading) {
-      // Switch to bottom input when hint is clicked
       if (showCenteredInput) {
         setShowCenteredInput(false)
       }
@@ -617,17 +605,8 @@ export default function MobileApp() {
               setOpenSellAfterAuth(false)
               setShowSell(true)
             }
-
-            // Track Facebook pixel CompleteRegistration event
-            // Note: This fires on signin, but we'll add a flag to track if it's a new user
             if (typeof window !== 'undefined' && window.fbq) {
-              console.log('Firing Facebook pixel CompleteRegistration event (mobile signup)');
-              window.fbq('track', 'CompleteRegistration', {
-                value: 1,
-                currency: 'USD',
-              });
-            } else {
-              console.warn('Facebook pixel not loaded or window.fbq not available (mobile signup)');
+              window.fbq('track', 'CompleteRegistration', { value: 1, currency: 'USD' })
             }
           }}
         />
@@ -650,18 +629,9 @@ export default function MobileApp() {
                 ts: Date.now(),
               },
             ])
-
-            // Track Facebook pixel CompleteRegistration event
             if (typeof window !== 'undefined' && window.fbq) {
-              console.log('Firing Facebook pixel CompleteRegistration event (mobile signin)');
-              window.fbq('track', 'CompleteRegistration', {
-                value: 1,
-                currency: 'USD',
-              });
-            } else {
-              console.warn('Facebook pixel not loaded or window.fbq not available (mobile signin)');
+              window.fbq('track', 'CompleteRegistration', { value: 1, currency: 'USD' })
             }
-
             setShowSignIn(true)
           }}
         />
@@ -679,19 +649,17 @@ export default function MobileApp() {
                   m.cta?.type === 'button' &&
                   m.cta.buttons?.length > 0 && (
                     <div className="mobile-cta-buttons">
-                      {m.cta.buttons.map((btn, index) => {
-                        return (
-                          <a
-                            key={btn.id || btn.title || index}
-                            className="mobile-cta-btn"
-                            href={btn.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {btn.title}
-                          </a>
-                        )
-                      })}
+                      {m.cta.buttons.map((btn, index) => (
+                        <a
+                          key={btn.id || btn.title || index}
+                          className="mobile-cta-btn"
+                          href={btn.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {btn.title}
+                        </a>
+                      ))}
                     </div>
                   )}
               </div>
@@ -702,85 +670,69 @@ export default function MobileApp() {
         </div>
 
         {showCenteredInput ? (
-          <div className="mobile-centered-input">
-            <div className="mobile-centered-form">
-              <h2 style={{
-                position: 'absolute',
-                left: '-9999px',
-                top: '-9999px',
-                width: '1px',
-                height: '1px',
-                overflow: 'hidden',
-                visibility: 'hidden'
-              }}>
-                Secure Crypto to NGN Exchange
-              </h2>
-              <div style={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={currentIconIndex}
-                    className="mobile-app-logo"
-                    initial={{ opacity: 0, scale: 0.8, rotateY: -90 }}
-                    animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-                    exit={{ opacity: 0, scale: 0.8, rotateY: 90 }}
-                    transition={{
-                      duration: 0.6,
-                      ease: "easeInOut",
-                      type: "spring",
-                      stiffness: 100,
-                      damping: 15
-                    }}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  >
-                    {React.createElement(icons[currentIconIndex].component, { size: 62 })}
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-              <form 
-                style={{ display: 'flex', gap: '8px', width: '100%', alignItems: 'center', position: 'relative' }}
-                onSubmit={sendMessage}
-              >
-                <div className="mobile-input-shell">
-                  <div className="mobile-input-gradient-box" style={{ position: 'relative', flex: 1, minWidth: 0 }}>
-                    <input
-                      ref={inputRef}
-                      className="mobile-input mobile-input-centered mobile-input-with-send"
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      placeholder="Try: Sell 100 USDT to NGN"
-                      disabled={loading}
-                      style={{ paddingRight: '56px', width: '100%' }}
-                    />
-                    <button
-                      type="submit"
-                      className="mobile-send-btn mobile-send-btn-inside"
-                      disabled={loading || !input.trim()}
-                      aria-label="Send message"
-                      style={{
-                        position: 'absolute',
-                        right: '8px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        zIndex: 10
-                      }}
+          <div className="mobile-dashboard-container"
+            style={{
+              position: 'absolute',
+              top: '10px',
+              bottom: '60px',
+              left: 0,
+              right: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'flex-start',
+              paddingTop: '0px',
+              overflow: 'hidden'
+            }}
+          >
+            <div className="mobile-centered-input" style={{ position: 'relative', top: 'auto', left: 'auto', transform: 'none', marginBottom: '20px', flexShrink: 0 }}>
+              <div className="mobile-centered-form">
+                <h2 style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}>Secure Crypto to NGN Exchange</h2>
+
+                <div style={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={currentIconIndex}
+                      className="mobile-app-logo"
+                      initial={{ opacity: 0, scale: 0.8, rotateY: -90 }}
+                      animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+                      exit={{ opacity: 0, scale: 0.8, rotateY: 90 }}
+                      transition={{ duration: 0.6, type: "spring", stiffness: 100, damping: 15 }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
-                      {loading ? (
-                        <div className="mobile-spinner" />
-                      ) : (
-                        <Send
-                          size={20}
-                          active={Boolean(input.trim())}
-                          style={{
-                            opacity: loading || !input.trim() ? 0.6 : 1,
-                            transition: 'opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                            color: input.trim() ? undefined : 'rgba(255, 255, 255, 0.7)'
-                          }}
-                        />
-                      )}
-                    </button>
-                  </div>
+                      {React.createElement(icons[currentIconIndex].component, { size: 62 })}
+                    </motion.div>
+                  </AnimatePresence>
                 </div>
-              </form>
+
+                <form style={{ display: 'flex', gap: '8px', width: '100%', alignItems: 'center', position: 'relative' }} onSubmit={sendMessage}>
+                  <div className="mobile-input-shell">
+                    <div className="mobile-input-gradient-box" style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+                      <input
+                        ref={inputRef}
+                        className="mobile-input mobile-input-centered mobile-input-with-send"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder="Try: Sell 100 USDT to NGN"
+                        disabled={loading}
+                        style={{ paddingRight: '56px', width: '100%' }}
+                      />
+                      <button
+                        type="submit"
+                        className="mobile-send-btn mobile-send-btn-inside"
+                        disabled={loading || !input.trim()}
+                        aria-label="Send message"
+                      >
+                        {loading ? <div className="mobile-spinner" /> : <Send size={20} active={Boolean(input.trim())} />}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <div style={{ width: '100%', maxWidth: '100%', flex: 1, overflow: 'hidden', paddingBottom: '5px', minHeight: 0 }}>
+              <MobileNewsSection />
             </div>
           </div>
         ) : (
@@ -808,24 +760,9 @@ export default function MobileApp() {
             </div>
             {showHints && (
               <div className="mobile-hints">
-                <button
-                  className="mobile-hint"
-                  onClick={() => handleHintClick('Sell 100 USDT to NGN')}
-                >
-                  Sell USDT
-                </button>
-                <button
-                  className="mobile-hint"
-                  onClick={() => handleHintClick('Show my portfolio balance')}
-                >
-                  Portfolio
-                </button>
-                <button
-                  className="mobile-hint"
-                  onClick={() => handleHintClick('Current NGN rates')}
-                >
-                  NGN Rates
-                </button>
+                <button className="mobile-hint" onClick={() => handleHintClick('Sell 100 USDT to NGN')}>Sell USDT</button>
+                <button className="mobile-hint" onClick={() => handleHintClick('Show my portfolio balance')}>Portfolio</button>
+                <button className="mobile-hint" onClick={() => handleHintClick('Current NGN rates')}>NGN Rates</button>
               </div>
             )}
 
@@ -856,15 +793,7 @@ export default function MobileApp() {
                   {loading ? (
                     <div className="mobile-spinner" />
                   ) : (
-                    <Send
-                      size={20}
-                      active={Boolean(input.trim())}
-                      style={{
-                        opacity: loading || !input.trim() ? 0.6 : 1,
-                        transition: 'opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                        color: input.trim() ? undefined : 'rgba(255, 255, 255, 0.7)'
-                      }}
-                    />
+                    <Send size={20} active={Boolean(input.trim())} style={{ opacity: loading || !input.trim() ? 0.6 : 1, color: input.trim() ? undefined : 'rgba(255, 255, 255, 0.7)' }} />
                   )}
                 </button>
               </div>
@@ -896,119 +825,62 @@ export default function MobileApp() {
     )
   }
 
-
   if (showGame) {
     return (
-      <>
-        <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', '--wallpaper-image': `url(${wallpaper2})` } as React.CSSProperties}>
-          <MobileGame onClose={() => setShowGame(false)} />
-        </div>
-      </>
-    );
+      <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', '--wallpaper-image': `url(${wallpaper2})` } as React.CSSProperties}>
+        <MobileGame onClose={() => setShowGame(false)} />
+      </div>
+    )
   }
 
   if (showLiskWallet) {
     return (
-      <>
-        <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', '--wallpaper-image': `url(${wallpaper2})` } as React.CSSProperties}>
-          <MobileLiskWallet onClose={() => setShowLiskWallet(false)} />
-        </div>
-      </>
-    );
+      <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', '--wallpaper-image': `url(${wallpaper2})` } as React.CSSProperties}>
+        <MobileLiskWallet onClose={() => setShowLiskWallet(false)} />
+      </div>
+    )
   }
 
   if (showVoiceChat) {
     return (
-      <>
-        <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', '--wallpaper-image': `url(${wallpaper2})` } as React.CSSProperties}>
-          <MobileVoiceChat
-            onClose={() => setShowVoiceChat(false)}
-            onMessage={(text) => {
-              // Echo voice assistant response to chat
-              if (text) {
-                echoFromModalToChat(text);
-              }
-            }}
-            onSellIntent={() => {
-              // Open sell modal when sell intent detected in voice chat
-              setShowVoiceChat(false);
-              setShowSell(true);
-            }}
-          />
-        </div>
-      </>
-    );
+      <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', '--wallpaper-image': `url(${wallpaper2})` } as React.CSSProperties}>
+        <MobileVoiceChat
+          onClose={() => setShowVoiceChat(false)}
+          onMessage={(text) => { if (text) echoFromModalToChat(text) }}
+          onSellIntent={() => {
+            setShowVoiceChat(false)
+            setShowSell(true)
+          }}
+        />
+      </div>
+    )
   }
 
   if (showSell) {
     return (
-      <>
-        <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', '--wallpaper-image': `url(${wallpaper2})` } as React.CSSProperties}>
-          <MobileSell
-            open={showSell}
-            onClose={() => setShowSell(false)}
-            onChatEcho={echoFromModalToChat}
-            onStartInteraction={() => setShowCenteredInput(false)}
-          />
-        </div>
-      </>
-    );
+      <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', '--wallpaper-image': `url(${wallpaper2})` } as React.CSSProperties}>
+        <MobileSell
+          open={showSell}
+          onClose={() => setShowSell(false)}
+          onChatEcho={echoFromModalToChat}
+          onStartInteraction={() => setShowCenteredInput(false)}
+        />
+      </div>
+    )
   }
 
-  if (showSignIn) {
+  if (showSignIn || showSignUp) {
     return (
-      <>
-        <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', '--wallpaper-image': `url(${wallpaper2})` } as React.CSSProperties}>
-          <MobileSignIn
-            onCancel={() => {
-              setShowSignIn(false);
-              setOpenSellAfterAuth(false);
-            }}
-            onSuccess={(res) => {
-              setAuth(res);
-              setShowSignIn(false);
-              setShowCenteredInput(false);
-              const greeting = getTimeBasedGreeting();
-              const name = res.user.username || (res.user as any).firstname || 'there';
-              setMessages([
-                { id: crypto.randomUUID(), role: 'assistant', text: `${greeting}, ${name}! How can I help you today?`, ts: Date.now() },
-              ]);
-              if (openSellAfterAuth) {
-                setOpenSellAfterAuth(false);
-                setShowSell(true);
-              }
-            }}
-          />
-        </div>
-      </>
-    );
+      <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', '--wallpaper-image': `url(${wallpaper2})` } as React.CSSProperties}>
+        {renderMainContent()}
+      </div>
+    )
   }
 
-  if (showSignUp) {
-    return (
-      <>
-        <div className={pageClassName} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', '--wallpaper-image': `url(${wallpaper2})` } as React.CSSProperties}>
-          <MobileSignUp
-            onCancel={() => setShowSignUp(false)}
-            onSuccess={(_res: SignUpResult) => {
-              setShowSignUp(false);
-              setShowCenteredInput(false);
-              setMessages((prev) => [
-                ...prev,
-                { id: crypto.randomUUID(), role: 'assistant', text: 'Account created! Please verify your OTP to complete signup.', ts: Date.now() },
-              ]);
-              setShowSignIn(true);
-            }}
-          />
-        </div>
-      </>
-    );
-  }
-
-  // Normal (non-game) mobile app UI
   return (
     <>
       {showPreloader && <Preloader />}
+
       <svg width="0" height="0" style={{ position: 'absolute' }}>
         <defs>
           <linearGradient id="sign-in-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1022,83 +894,46 @@ export default function MobileApp() {
             <stop offset="100%" stopColor="#66FF00">
               <animate attributeName="stop-color" values="#66FF00;#A80077;#66FF00" dur="3s" repeatCount="indefinite" />
             </stop>
-            <animate attributeName="x1" values="0%;100%;0%" dur="3s" repeatCount="indefinite" />
-            <animate attributeName="y1" values="0%;100%;0%" dur="3s" repeatCount="indefinite" />
-            <animate attributeName="x2" values="100%;0%;100%" dur="3s" repeatCount="indefinite" />
-            <animate attributeName="y2" values="100%;0%;100%" dur="3s" repeatCount="indefinite" />
           </linearGradient>
         </defs>
       </svg>
+
       <div
         className={`${pageClassName} ${messages.length > 0 ? 'mobile-page--chat-active' : ''}`}
-        style={{
-          ...pageOverlayStyle,
-          '--wallpaper-image': `url(${wallpaper2})`
-        } as React.CSSProperties}
+        style={{ ...pageOverlayStyle, '--wallpaper-image': `url(${wallpaper2})` } as React.CSSProperties}
       >
         <header className="mobile-header">
           <div className="mobile-header-top">
             <div className="mobile-brand">
-              <img
-                src={BrampLogo}
-                alt="Bramp"
-                className="mobile-logo"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none'
-                }}
-              />
+              <img src={BrampLogo} alt="Bramp" className="mobile-logo" onError={(e) => { e.currentTarget.style.display = 'none' }} />
             </div>
 
             <div className="mobile-nav-buttons">
               {!auth ? (
-                <>
-                  <div className="mobile-auth-buttons">
-                    <button
-                      className="mobile-auth-btn mobile-login-btn"
-                      onClick={() => setShowSignIn(true)}
-                    >
-                      Login
+                <div className="mobile-auth-buttons">
+                  <label className="switch">
+                    <input type="checkbox" onChange={(e) => console.log('Night mode:', e.target.checked)} />
+                    <span className="slider"></span>
+                  </label>
+                  <button className="mobile-auth-btn mobile-login-btn" onClick={() => setShowSignIn(true)}>
+                    Log In <span className="arrow">›</span>
+                  </button>
+                  {!hideSignUpButton && (
+                    <button className="mobile-auth-btn mobile-create-account-btn" onClick={() => setShowSignUp(true)}>
+                      Get Started
                     </button>
-                    {!hideSignUpButton && (
-                      <button
-                        className="mobile-auth-btn mobile-create-account-btn"
-                        onClick={() => setShowSignUp(true)}
-                      >
-                        Get Started
-                      </button>
-                    )}
-                  </div>
-                </>
+                  )}
+                </div>
               ) : (
                 <>
-                  <button
-                    className="btn mobile-sell-btn mobile-sell-btn-with-icon"
-                    onClick={handleSellClick}
-                    aria-label="Sell Crypto"
-                  >
+                  <button className="btn mobile-sell-btn mobile-sell-btn-with-icon" onClick={handleSellClick} aria-label="Sell Crypto">
                     <span>Sell</span>
                   </button>
-                  <button
-                    className="btn mobile-sell-btn mobile-wallet-btn"
-                    onClick={handleLiskWalletClick}
-                    style={{ marginLeft: '8px' }}
-                    aria-label="Connect Wallet"
-                  >
+                  <button className="btn mobile-sell-btn mobile-wallet-btn" onClick={handleLiskWalletClick} style={{ marginLeft: '8px' }} aria-label="Connect Wallet">
                     Wallet
                   </button>
-                  <button
-                    className="mobile-menu-btn"
-                    onClick={() => setShowMenu(!showMenu)}
-                    aria-label="Menu"
-                  >
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                    >
+                  <button className="mobile-menu-btn" onClick={() => setShowMenu(!showMenu)} aria-label="Menu">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                       <line x1="3" y1="12" x2="21" y2="12"></line>
                       <line x1="3" y1="6" x2="21" y2="6"></line>
                       <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -1108,64 +943,25 @@ export default function MobileApp() {
               )}
             </div>
           </div>
-
         </header>
 
         {showMenu && auth && (
           <div className="mobile-menu-overlay" onClick={() => setShowMenu(false)}>
             <div className="mobile-menu" onClick={(e) => e.stopPropagation()}>
-              <button className="mobile-menu-item" onClick={handleKycClick}>
-                KYC
-              </button>
-              <button className="mobile-menu-item primary" onClick={handleSellClick}>
-                Sell Crypto
-              </button>
-              <button className="mobile-menu-item" onClick={handleGameClick}>
-                Game
-              </button>
-              <button className="mobile-menu-item" onClick={handleLiskWalletClick}>
-                Connect Wallet
-              </button>
-              <button className="mobile-menu-item" onClick={signOut}>
-                Sign Out
-              </button>
+              <button className="mobile-menu-item" onClick={handleKycClick}>KYC</button>
+              <button className="mobile-menu-item primary" onClick={handleSellClick}>Sell Crypto</button>
+              <button className="mobile-menu-item" onClick={handleGameClick}>Game</button>
+              <button className="mobile-menu-item" onClick={handleLiskWalletClick}>Connect Wallet</button>
+              <button className="mobile-menu-item" onClick={signOut}>Sign Out</button>
               <div className="mobile-menu-divider"></div>
-              <a
-                className="mobile-menu-item"
-                href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                AML/CFT Policy
-              </a>
-              <a
-                className="mobile-menu-item"
-                href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Privacy Policy
-              </a>
-              <a
-                className="mobile-menu-item"
-                href="https://www.instagram.com/chatbramp/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Instagram
-              </a>
+              <a className="mobile-menu-item" href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
+              <a className="mobile-menu-item" href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+              <a className="mobile-menu-item" href="https://www.instagram.com/chatbramp/" target="_blank" rel="noopener noreferrer">Instagram</a>
             </div>
           </div>
         )}
 
         {renderMainContent()}
-
-        <MobileSell
-          open={showSell}
-          onClose={() => setShowSell(false)}
-          onChatEcho={echoFromModalToChat}
-          onStartInteraction={() => setShowCenteredInput(false)}
-        />
 
         {!auth && showCenteredInput && (
           <footer className="mobile-footer">
@@ -1181,5 +977,5 @@ export default function MobileApp() {
         )}
       </div>
     </>
-  );
+  )
 }

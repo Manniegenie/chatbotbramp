@@ -5,76 +5,79 @@
 .mobile-auth-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  z-index: 100;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1000;
   animation: fadeIn 0.2s ease-out;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: grid;
+  place-items: start center;
   padding: 16px;
+  touch-action: none;
+  overflow: hidden;
 }
 
 .mobile-auth-container {
   width: 100%;
-  max-width: 400px;
-  background: var(--card);
-  color: var(--txt);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: var(--shadow);
+  max-width: 359px;
+  max-height: 64.125vh;
+  margin-top: 3.42vh;
+  margin-left: auto;
+  margin-right: auto;
+  background: #007337;
+  border-radius: 32px;
+  color: #ffffff;
   overflow: hidden;
   animation: scaleIn 120ms ease-out;
+  display: flex;
+  flex-direction: column;
 }
 
 .mobile-auth-header {
-  padding: 16px 18px;
+  margin: 10px;
+  padding: 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--border);
+  position: relative;
+  z-index: 10;
 }
 
 .mobile-auth-title-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
-.mobile-auth-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: #0d1512;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--border);
+.mobile-auth-close-btn {
+  background: transparent; /* Remove any background color */
+  border: none;            /* Remove any border */
+  padding: 0;              /* Optional: remove extra padding */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;            /* Icon color */
 }
+
+.mobile-auth-close-btn svg {
+  display: block;
+  stroke: currentColor;    /* Makes the 'X' follow the button color */
+}
+
 
 .mobile-auth-title {
   margin: 0;
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
+  color: #111;
 }
 
-.mobile-auth-close {
-  padding: 10px 14px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--txt);
-  border-radius: 10px;
-  cursor: pointer;
-}
 
 .mobile-auth-body {
-  padding: 18px;
-}
-
-.mobile-auth-description {
-  margin: 0 0 20px;
-  color: var(--muted);
-  font-size: 14px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
 }
 
 .mobile-auth-form {
@@ -82,298 +85,151 @@
   gap: 16px;
 }
 
-.mobile-auth-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-/* Prevent iOS keyboard issues */
-.mobile-auth-overlay {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  overflow: hidden !important;
-  touch-action: none !important;
-}
-
-.mobile-auth-container {
-  max-height: 85vh !important;
-  overflow: hidden !important;
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-.mobile-auth-form {
-  flex: 1 !important;
-  overflow: auto !important;
-  min-height: 0 !important;
-}
-
 .mobile-auth-input-wrap {
   display: grid;
-  gap: 6px;
+  gap: 8px;
   align-items: flex-start;
   width: 100%;
 }
 
 .mobile-auth-label {
-  font-size: 11px;
-  color: var(--muted);
+  font-size: 12px;
+  color: #ffffff;
+  font-weight: 700;
+  margin-left: 10px;
   white-space: nowrap;
   line-height: 1.4;
-  display: flex;
-  align-items: center;
-  min-height: 16px;
 }
 
 .mobile-auth-input {
-  background: rgba(11, 11, 16, 0.4);
-  color: var(--txt);
+  background-color: #e0e0e0;
+  color: #333;
   border: none;
-  border-radius: 10px;
-  padding: 12px;
+  border-radius: 20px;
+  padding: 14px 20px;
   outline: none;
-  font-size: 14px;
-  font-weight: 600;
-  min-height: 48px;
+  font-size: 15px;
+  font-weight: 500;
+  min-height: 52px;
   width: 100%;
   position: relative;
   z-index: 1;
-  transition: all 0.2s ease;
+  box-shadow: inset 2px 5px 10px rgba(0,0,0,0.15);
+  transition: background-color 0.2s ease;
 }
 
-/* Input wrap - no gradient border */
-.mobile-auth-input-wrap {
-  position: relative;
+.mobile-auth-input::placeholder {
+  color: #777;
 }
 
 .mobile-auth-input:focus {
-  outline: none;
-  box-shadow: none;
-  background: rgba(11, 11, 16, 0.4);
-}
-
-.mobile-auth-input:focus-visible {
-  outline: none;
-  box-shadow: none;
-  background: rgba(11, 11, 16, 0.2);
+  background-color: #ffffff;
+  color: #000;
+  box-shadow: inset 2px 5px 10px rgba(0,0,0,0.15);
 }
 
 .mobile-auth-phone-input {
   position: relative;
-  display: flex;
-  align-items: center;
+  width: 100%;
+}
+
+.mobile-auth-phone-input .mobile-auth-input {
+  padding-left: 85px;
 }
 
 .mobile-auth-phone-prefix {
   position: absolute;
-  left: 12px;
-  color: var(--txt);
-  font-size: 14px;
-  font-weight: 600;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #333;
+  font-size: 15px;
+  font-weight: 700;
   pointer-events: none;
   z-index: 2;
-}
-
-.mobile-auth-phone-input .mobile-auth-input {
-  padding-left: 60px;
+  display: flex;
+  align-items: center;
+  height: 100%;
 }
 
 .mobile-auth-error {
-  color: #fda4af;
-  font-size: 14px;
-  padding: 12px;
-  background: rgba(255, 0, 0, 0.1);
-  border-radius: 8px;
-  border: 1px solid rgba(255, 0, 0, 0.2);
+  color: #d32f2f;
+  font-size: 13px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  border: 1px solid rgba(211, 47, 47, 0.3);
+  font-weight: 600;
 }
 
-.mobile-auth-remember-me {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-}
 
-.mobile-auth-checkbox {
-  margin: 0;
-  width: 16px;
-  height: 16px;
-  accent-color: var(--accent);
-  cursor: pointer;
-}
 
-.mobile-auth-checkbox-label {
-  font-size: 0.8rem;
-  color: var(--muted);
-  cursor: pointer;
-  margin: 0;
-  user-select: none;
-}
+
+
+
 
 .mobile-auth-button-row {
   display: flex;
-  gap: 10px;
-  margin-top: 8px;
-  flex-direction: row-reverse; /* Reverse order: sign in on right, cancel on left */
+  gap: 12px;
+  margin-top: 12px;
+  flex-direction: row-reverse;
   align-items: stretch;
 }
 
 .mobile-auth-button {
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: 20px;
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
-  min-height: 48px;
+  min-height: 52px;
   transition: all 0.2s ease;
   border: none;
   position: relative;
-  z-index: 0;
 }
 
-/* Sign in button - resembles Get Started button, 60% width */
+/* PRIMARY BUTTON */
 .mobile-auth-button.primary {
   flex: 6 0 0;
-  padding: 12px;
-  background: transparent;
+  background: #007337;
   color: white;
-  min-width: 0; /* Allow text to shrink if needed */
+  box-shadow: 0 10px 20px -5px rgba(0, 115, 55, 0.4);
+  border: 1px solid rgba(255,255,255,0.2);
 }
 
-.mobile-auth-button.primary::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 10px;
-  padding: 1px;
-  background: linear-gradient(135deg, #A80077, #66FF00, #A80077);
-  background-size: 200% 200%;
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: destination-out;
-  mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  pointer-events: none;
-  z-index: -1;
-  animation: gradient-border 3s ease infinite;
-}
-
-/* Cancel button - resembles login button, 40% width */
-.mobile-auth-button.outline {
-  flex: 4 1 0;
-  padding: 12px;
-  background: rgba(11, 11, 16, 0.2);
-  color: var(--txt);
-  min-width: 0; /* Allow text to shrink if needed */
-  white-space: nowrap; /* Prevent text wrapping */
+.mobile-auth-button.primary:active {
+  transform: scale(0.97);
 }
 
 .mobile-auth-button:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
-}
-
-.mobile-auth-button:active:not(:disabled) {
-  transform: scale(0.98);
+  box-shadow: none;
 }
 
 .mobile-auth-note {
-  margin: 4px 0 0;
-  font-size: 12px;
-  color: var(--muted);
+  margin: 12px 0 0;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.8);
   text-align: center;
-}
-
-.mobile-auth-progress {
-  display: flex;
-  gap: 6px;
-  margin: 6px 0 10px;
-}
-
-.mobile-auth-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #242433;
-  display: inline-block;
-  opacity: 0.7;
-  transition: all 0.2s ease;
-}
-
-.mobile-auth-dot.active {
-  background: var(--accent);
-  opacity: 1;
-}
-
-.mobile-auth-hint {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 4px;
 }
 
 /* Animations */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes scaleIn {
-  from {
-    transform: translateY(8px) scale(0.98);
-    opacity: 0;
-  }
-  to {
-    transform: none;
-    opacity: 1;
-  }
+  from { transform: translateY(20px) scale(0.95); opacity: 0; }
+  to { transform: none; opacity: 1; }
 }
 
-@keyframes gradient-border {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-/* Responsive adjustments */
-@media screen and (max-width: 480px) {
+/* Mobile Responsive */
+@media screen and (max-height: 600px) {
   .mobile-auth-container {
-    max-height: 100vh;
-    border-radius: 0;
-    margin: -16px;
+    max-height: 95vh;
   }
-
-  .mobile-auth-header {
-    padding: 16px;
-  }
-
   .mobile-auth-body {
-    padding: 16px;
-  }
-
-  .mobile-auth-button {
-    padding: 10px;
-  }
-}
-
-/* iOS-specific adjustments */
-@supports (-webkit-touch-callout: none) {
-  .mobile-auth-input {
-    font-size: 16px !important;
+    overflow-y: auto;
   }
 }
