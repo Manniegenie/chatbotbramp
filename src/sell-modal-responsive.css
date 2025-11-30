@@ -1,57 +1,69 @@
 /* ============================================
-   Mobile Sell Modal Styles
+   Mobile Sell Modal Styles (Updated for Auth Consistency)
    ============================================ */
 
-   .mobile-sell-overlay {
+   /* --- Variables (Assuming these are defined elsewhere or globally) ---
+   --accent: Should be your primary button/dot color, likely #007337 or a highlight.
+   --border: Will be set to transparent or a very light gray due to light input fields.
+   --muted: Light gray text color for less important elements.
+   */
+
+  .mobile-sell-overlay {
     position: fixed;
     inset: 0;
-    background: transparent;
-    z-index: 100;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
     animation: fadeIn 0.2s ease-out;
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: grid;
+    place-items: start center;
     padding: 16px;
+    touch-action: none;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
   }
   
   .mobile-sell-container {
     width: 100%;
-    max-width: 480px;
-    background: rgba(4, 8, 11, 0.92);
-    color: var(--txt);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 24px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    max-width: 359px;
+   max-height: 95vh;
+    margin-top: 0;
+    margin-left: auto;
+    margin-right: auto;
+    /* AUTH MATCH: Background and text color */
+    background: #007337; 
+    border-radius: 32px;
+    color: #ffffff;
     overflow: hidden;
-    display: grid;
-    grid-template-rows: auto 1fr auto;
     animation: scaleIn 120ms ease-out;
-    max-height: min(calc(100vh - 32px), 540px);
-    margin: auto;
-    backdrop-filter: blur(32px);
-    -webkit-backdrop-filter: blur(32px);
+    display: flex;
+    flex-direction: column;
   }
   
   .mobile-sell-header {
-    padding: 12px 14px;
+    margin: 10px;
+    margin-bottom: 5px;
+    padding: 10px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid var(--border);
+    position: relative;
+    z-index: 10;
   }
   
   .mobile-sell-title-row {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 5px;
   }
   
   .mobile-sell-icon {
     width: 36px;
     height: 36px;
     border-radius: 10px;
+    /* AUTH MATCH: This might not be needed if not using an icon */
     background: #0d1512;
     display: grid;
     place-items: center;
@@ -60,8 +72,10 @@
   
   .mobile-sell-title {
     margin: 0;
-    font-size: 16px;
+    /* AUTH MATCH: Font size and weight adjusted */
+    font-size: 1.3rem; /* Keeping the 1.3rem from the JSX for prominence */
     font-weight: 700;
+    color: #ffffff; /* Ensuring title is white */
   }
   
   .mobile-sell-stepper {
@@ -76,11 +90,11 @@
     width: 8px;
     height: 8px;
     border-radius: 999px;
-    background: var(--border);
+    background: rgba(255, 255, 255, 0.4); /* Lighter border for contrast on green background */
   }
   
   .mobile-sell-dot.active {
-    background: var(--accent);
+    background: #ffffff; /* White active dot */
   }
   
   .mobile-sell-dot-separator {
@@ -88,17 +102,18 @@
     padding: 0 6px;
   }
   
-  .mobile-sell-close {
-    padding: 10px 14px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--txt);
-    border-radius: 10px;
-    cursor: pointer;
+  .mobile-sell-close {/* Remove any background color */
+  border: none;            /* Remove any border */
+  padding: 0;              /* Optional: remove extra padding */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;         
   }
   
   .mobile-sell-body {
-    padding: 12px;
+    padding: 12px 24px 24px; /* Added more padding bottom for consistency */
     overflow: auto;
     -webkit-overflow-scrolling: touch;
   }
@@ -114,20 +129,24 @@
   }
   
   .mobile-sell-error {
-    background: rgba(220, 50, 50, 0.1);
-    border: 1px solid rgba(220, 50, 50, 0.25);
+    /* AUTH MATCH: Error style */
+    color: #d32f2f;
+    font-size: 13px;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.7);
     border-radius: 12px;
-    padding: 14px;
+    border: 1px solid rgba(211, 47, 47, 0.3);
+    font-weight: 600;
   }
   
   .mobile-sell-error strong {
-    color: #ffaaaa;
+    color: #d32f2f; /* Using a darker red */
   }
   
   .mobile-sell-form {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px; /* AUTH MATCH: Slightly increased gap */
     width: 100%;
     max-width: 100%;
     overflow: hidden;
@@ -141,15 +160,18 @@
   
   .mobile-sell-input-wrap {
     display: grid;
-    gap: 6px;
+    gap: 8px; /* AUTH MATCH: Slightly increased gap */
     width: 100%;
   }
   
   .mobile-sell-label {
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.7);
+    /* AUTH MATCH: Label style */
+    color: #ffffff;
+    font-weight: 700;
+    margin-left: 10px;
     white-space: nowrap;
-    letter-spacing: 0.02em;
+    letter-spacing: normal; /* Removed letter spacing */
   }
   
   .mobile-sell-input-shell {
@@ -166,18 +188,29 @@
   
   .mobile-sell-input-field {
     width: 100%;
-    border-radius: 16px;
+    /* AUTH MATCH: Input Field Style */
+    background-color: #e0e0e0;
+    color: #333;
     border: none;
-    padding: 14px 16px;
-    font-size: 15px;
-    background: rgba(11, 11, 16, 0.92);
-    color: #fff;
+    border-radius: 20px;
+    padding: 14px 20px;
     outline: none;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    font-size: 15px;
+    font-weight: 500;
+    min-height: 52px;
+    box-shadow: inset 2px 5px 10px rgba(0,0,0,0.15);
+    transition: background-color 0.2s ease;
+  }
+
+  .mobile-sell-input-field:focus {
+    background-color: #ffffff;
+    color: #000;
+    box-shadow: inset 2px 5px 10px rgba(0,0,0,0.15);
   }
   
   .mobile-sell-input-field::placeholder {
-    color: rgba(255, 255, 255, 0.45);
+    /* AUTH MATCH: Placeholder color */
+    color: #777;
   }
   
   .mobile-sell-input-field:disabled {
@@ -197,7 +230,7 @@
     top: 50%;
     transform: translateY(-50%);
     pointer-events: none;
-    color: rgba(255, 255, 255, 0.6);
+    color: #777; /* AUTH MATCH: Adjusted color */
   }
   
   .mobile-sell-select-wrapper {
@@ -208,53 +241,53 @@
   
   .mobile-sell-dropdown-arrow {
     position: absolute;
-    right: 12px;
+    right: 18px; /* Adjusted position */
     top: 50%;
     transform: translateY(-50%);
     pointer-events: none;
-    color: var(--muted);
+    color: #333; /* Adjusted color to match input text */
     font-size: 12px;
-    z-index: 1;
+    z-index: 2; /* Increased z-index */
   }
   
   .mobile-sell-account-name {
-    background: rgba(11, 11, 16, 0.92);
-    color: var(--muted);
-    border-radius: 16px;
-    padding: 14px 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 48px;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    /* AUTH MATCH: Use light background/dark text for consistency */
+    background-color: #e0e0e0;
+    color: #333; 
+    border-radius: 20px;
+    padding: 14px 20px;
+    min-height: 52px;
+    box-shadow: inset 2px 5px 10px rgba(0,0,0,0.15);
   }
   
   .mobile-sell-account-name.error {
-    color: #ff6b6b;
+    color: #d32f2f; /* Error text color */
     box-shadow: inset 0 0 0 1px rgba(255, 107, 107, 0.6);
   }
   
   .mobile-sell-spinner {
     width: 12px;
     height: 12px;
-    border: 2px solid var(--border);
-    border-top: 2px solid var(--accent);
+    border: 2px solid rgba(0, 0, 0, 0.2); /* Darker border for light background */
+    border-top: 2px solid #007337; /* Primary brand color for spinner */
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
   
   .mobile-sell-button-row {
     display: flex;
-    justify-content: center;
-    gap: 10px;
+    gap: 12px; /* AUTH MATCH: Slightly increased gap */
+    margin-top: 12px;
+    flex-direction: row-reverse; /* Reverses order to match auth primary button on the right */
   }
   
   .mobile-sell-button {
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 600;
+    /* AUTH MATCH: Button shape and size */
+    border-radius: 20px; 
+    font-size: 15px;
+    font-weight: 700;
     cursor: pointer;
-    min-height: 48px;
+    min-height: 52px;
     transition: all 0.2s ease;
     border: none;
     position: relative;
@@ -262,57 +295,50 @@
   }
   
   .mobile-sell-button.primary {
-    flex: 1;
-    padding: 12px;
-    background: transparent;
+    flex: 6 0 0; /* AUTH MATCH: Flex sizing to make it primary */
+    padding: 12px 20px;
+    /* AUTH MATCH: Primary Button Style */
+    background: #007337;
     color: white;
-    min-width: 0;
+    box-shadow: 0 10px 20px -5px rgba(0, 115, 55, 0.4);
+    border: 1px solid rgba(255,255,255,0.2);
   }
   
+  /* Remove the gradient border used previously in sell modal */
   .mobile-sell-button.primary::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 10px;
-    padding: 1px;
-    background: linear-gradient(135deg, #A80077, #66FF00, #A80077);
-    background-size: 200% 200%;
-    -webkit-mask: 
-      linear-gradient(#fff 0 0) content-box, 
-      linear-gradient(#fff 0 0);
-    -webkit-mask-composite: destination-out;
-    mask: 
-      linear-gradient(#fff 0 0) content-box, 
-      linear-gradient(#fff 0 0);
-    mask-composite: exclude;
-    pointer-events: none;
-    z-index: -1;
-    animation: gradient-border 3s ease infinite;
+    content: none;
   }
   
   .mobile-sell-button.primary:hover {
     transform: translateY(-1px);
-    box-shadow: 0 18px 32px rgba(0, 115, 55, 0.35);
+    box-shadow: 0 12px 22px -5px rgba(0, 115, 55, 0.5); /* Slightly stronger hover shadow */
+  }
+
+  .mobile-sell-button.primary:active {
+    transform: scale(0.97); /* AUTH MATCH: Active state */
   }
   
   .mobile-sell-button.outline {
-    display: none;
+    flex: 1 0 0; /* Ensures the Cancel/Close button takes up remaining space */
+    display: block; /* Make outline buttons visible */
+    background: transparent;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: none;
   }
   
   .mobile-sell-button:disabled {
-    opacity: 0.5;
+    opacity: 0.6;
     cursor: not-allowed;
-  }
-  
-  .mobile-sell-button:active:not(:disabled) {
-    transform: scale(0.98);
+    box-shadow: none;
   }
   
   .mobile-sell-card {
-    border: 1px solid var(--border);
+    /* Using a distinct card style for summary elements */
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     padding: 14px;
-    background: #0e0f15;
+    background: rgba(0, 0, 0, 0.15); /* Slightly transparent dark card */
     display: grid;
     gap: 10px;
   }
@@ -345,7 +371,7 @@
   
   .mobile-sell-key {
     font-size: 12px;
-    color: var(--muted);
+    color: rgba(255, 255, 255, 0.8); /* Adjusted muted color for light text */
     line-height: 1.4;
     min-height: 16px;
     display: flex;
@@ -385,10 +411,11 @@
   }
   
   .mobile-sell-success-card {
-    background: rgba(0, 115, 55, 0.12);
-    border: 1px solid rgba(0, 115, 55, 0.35);
-    border-radius: 10px;
-    padding: 12px;
+    /* Success card adjusted to use dark theme colors */
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 12px;
+    padding: 14px;
     display: grid;
     gap: 10px;
     font-size: 13px;
@@ -408,24 +435,30 @@
     font-size: 12px;
     padding: 6px 10px;
     border-radius: 999px;
-    border: 1px solid var(--border);
-    background: #0d1210;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.3);
   }
   
   .mobile-sell-countdown span {
-    opacity: 0.6;
+    opacity: 0.8;
   }
   
   .mobile-sell-deposit-section {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    background: #0a0b0f;
-    padding: 12px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
+    gap: 16px; /* Increased gap for better spacing */
+    background: rgba(0, 0, 0, 0.2);
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     width: 100%;
     font-size: 13px;
+    /* On larger screens, arrange in a row with QR on the right */
+    @media (min-width: 400px) {
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
   }
   
   .mobile-sell-deposit-details {
@@ -433,12 +466,13 @@
     flex-direction: column;
     gap: 12px;
     width: 100%;
+    flex: 1;
   }
   
   .mobile-sell-deposit-title {
     margin: 0;
     font-size: 14px;
-    color: var(--accent);
+    color: #ffffff;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -446,13 +480,14 @@
   
   .mobile-sell-warning {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 6px;
     font-size: 12px;
     padding: 8px 10px;
     border-radius: 8px;
-    background: rgba(255, 170, 0, 0.08);
-    border: 1px solid rgba(255, 170, 0, 0.25);
+    /* Warning style adapted for dark theme */
+    background: rgba(255, 255, 0, 0.1);
+    border: 1px solid rgba(255, 255, 0, 0.25);
     width: 100%;
     text-align: left;
     line-height: 1.3;
@@ -464,12 +499,14 @@
     align-items: center;
     gap: 6px;
     padding: 10px;
-    background: #0a0b0f;
-    border: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 10px;
-    width: 100%;
-    max-width: 140px;
+    /* Fixed width/max-width for row layout */
+    width: 100px; 
+    max-width: 100px;
     margin: 0 auto;
+    flex-shrink: 0;
   }
   
   .mobile-qr-code {
@@ -484,13 +521,13 @@
   
   .mobile-qr-label {
     font-size: 10px;
-    color: var(--muted);
+    color: rgba(255, 255, 255, 0.7);
     text-align: center;
     width: 100%;
   }
   
   .mobile-sell-footer {
-    padding: 10px;
+    padding: 16px 24px; /* AUTH MATCH: Increased padding */
     display: flex;
     justify-content: space-between;
     gap: 8px;
@@ -500,7 +537,7 @@
   
   .mobile-sell-footer-text {
     font-size: 12px;
-    color: var(--muted);
+    color: rgba(255, 255, 255, 0.8); /* AUTH MATCH: Footer text color */
   }
   
   @keyframes fadeIn {
@@ -514,7 +551,7 @@
   
   @keyframes scaleIn {
     from {
-      transform: translateY(8px) scale(0.98);
+      transform: translateY(20px) scale(0.95); /* AUTH MATCH: scaleIn start */
       opacity: 0;
     }
     to {
@@ -536,8 +573,7 @@
   @media screen and (max-width: 480px) {
     .mobile-sell-container {
       max-height: 100vh;
-      border-radius: 0;
-      margin: -16px;
+      margin: 0;
     }
   
     .mobile-sell-form {
@@ -549,11 +585,11 @@
     }
   
     .mobile-sell-deposit-section {
-      grid-template-columns: 1fr;
+      flex-direction: column; /* Ensure vertical stack on small screens */
     }
   
     .mobile-qr-container {
-      margin: 0 auto;
+      margin: 10px auto 0;
     }
   }
   

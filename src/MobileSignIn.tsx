@@ -24,7 +24,7 @@ const tokenStore = {
 };
 
 export default function MobileSignIn({ onSuccess, onCancel }) {
-  const API_BASE = 'http://localhost:4000';
+  const API_BASE = 'https://priscaai.online';
   const ENDPOINT = `${API_BASE}/signin/signin-pin`;
 
   const [phone, setPhone] = useState('');

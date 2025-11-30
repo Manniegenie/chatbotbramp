@@ -35,6 +35,7 @@
 
 .mobile-auth-header {
   margin: 10px;
+  margin-bottom: 5px;
   padding: 10px;
   display: flex;
   align-items: center;
@@ -46,7 +47,7 @@
 .mobile-auth-title-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 5px;
 }
 
 .mobile-auth-close-btn {

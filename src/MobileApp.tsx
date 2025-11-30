@@ -52,64 +52,118 @@ interface NewsCard {
 }
 
 // --- Helper Components ---
+// Replace your MobileNewsSection function with this:
+
 function MobileNewsSection() {
   const newsCards: NewsCard[] = [
-    /* ...your news cards... */
+    {
+      id: '1',
+      title: 'Bitcoin Reaches New All-Time High',
+      description: 'Bitcoin surpasses $100,000 milestone as institutional adoption continues to grow across global markets.',
+      date: '2 hours ago',
+      source: 'CryptoNews',
+      url: 'https://example.com/btc-ath'
+    },
+    {
+      id: '2',
+      title: 'Ethereum 2.0 Upgrade Complete',
+      description: 'The network successfully transitions to proof-of-stake, reducing energy consumption by 99%.',
+      date: '5 hours ago',
+      source: 'BlockchainToday',
+      url: 'https://example.com/eth-upgrade'
+    },
+    {
+      id: '3',
+      title: 'Nigeria Launches Digital Currency Pilot',
+      description: 'Central Bank announces expanded testing of eNaira digital currency platform.',
+      date: '1 day ago',
+      source: 'FinTechAfrica',
+      url: 'https://example.com/enaira'
+    },
+    {
+      id: '4',
+      title: 'Stablecoin Adoption Grows in Africa',
+      description: 'USDT and USDC see 300% increase in African markets as hedge against inflation.',
+      date: '2 days ago',
+      source: 'CryptoAfrica',
+      url: 'https://example.com/stablecoin'
+    },
+    {
+      id: '5',
+      title: 'DeFi Protocol Launches in Lagos',
+      description: 'New decentralized finance platform aims to provide banking services to unbanked populations.',
+      date: '3 days ago',
+      source: 'Web3Africa',
+      url: 'https://example.com/defi-lagos'
+    },
+    {
+      id: '6',
+      title: 'Regulatory Framework for Crypto Assets',
+      description: 'SEC announces comprehensive guidelines for digital asset trading and custody.',
+      date: '4 days ago',
+      source: 'RegulatoryNews',
+      url: 'https://example.com/sec-crypto'
+    }
   ];
 
   const handleCardClick = (card: NewsCard) => {
     if (card.url) window.open(card.url, '_blank', 'noopener,noreferrer');
   };
 
-  const featuredCard = newsCards[0];
-  const regularCards = newsCards.slice(1);
-
   return (
     <section className="mobile-news-section">
-      <h2 className="mobile-news-header">Latest News</h2>
+      <h2 className="mobile-news-header">Latest</h2>
 
-      <div className="mobile-news-background card-background">
-        {/* Make sure this div is scrollable */}
-        <div className="mobile-news-cards-container scrollable">
-          {featuredCard && (
-            <article
-              key={featuredCard.id}
-              className="mobile-news-card-featured"
-              onClick={() => handleCardClick(featuredCard)}
-              role="button"
-              tabIndex={0}
-            >
-              <h3 className="mobile-news-card-title">{featuredCard.title}</h3>
-              <p className="mobile-news-card-description">{featuredCard.description}</p>
-              <div className="mobile-news-card-meta">
-                <span>{featuredCard.date}</span>
-                <span>{featuredCard.source}</span>
-              </div>
-            </article>
-          )}
+      <div className="mobile-news-cards-container">
+        {newsCards.map((card) => (
+          <article
+            key={card.id}
+            className="mobile-news-card"
+            onClick={() => handleCardClick(card)}
+            role="button"
+            tabIndex={0}
+          >
+            <div className="mobile-news-card-dots">
+              <div className="mobile-news-card-dot"></div>
+              <div className="mobile-news-card-dot"></div>
+              <div className="mobile-news-card-dot"></div>
+            </div>
 
-          {regularCards.map((card) => (
-            <article
-              key={card.id}
-              className="mobile-news-card-item"
-              onClick={() => handleCardClick(card)}
-              role="button"
-              tabIndex={0}
-            >
+            <div className="mobile-news-card-content">
               <h3 className="mobile-news-card-title">{card.title}</h3>
               <p className="mobile-news-card-description">{card.description}</p>
+              
               <div className="mobile-news-card-meta">
-                <span>{card.date}</span>
-                <span>{card.source}</span>
+                <span className="mobile-news-card-date">{card.date}</span>
+                <span className="mobile-news-card-source">{card.source}</span>
               </div>
-            </article>
-          ))}
-        </div>
+            </div>
+
+            <button className="mobile-news-card-button">
+              <span className="mobile-news-card-button-text">Explore Now</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                className="mobile-news-card-button-icon"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
+                />
+              </svg>
+            </button>
+
+            <div className="mobile-news-card-blur"></div>
+          </article>
+        ))}
       </div>
     </section>
   );
 }
-
 
 
 function ThreeDotLoader() {
@@ -238,9 +292,6 @@ export default function MobileApp() {
 
   const icons = [
     { component: Usdt, name: 'USDT' },
-    { component: Bitcoin, name: 'BTC' },
-    { component: EthereumCircleFlat, name: 'ETH' },
-    { component: Usdc, name: 'USDC' }
   ]
   const [currentIconIndex, setCurrentIconIndex] = useState(0)
 
@@ -689,7 +740,25 @@ export default function MobileApp() {
               <div className="mobile-centered-form">
                 <h2 style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}>Secure Crypto to NGN Exchange</h2>
 
-                <div style={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+<div style={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                  <div className="credit-card-chip-container" style={{ flexShrink: 0, height: '40px', width: '40px' }}>
+    <svg xml:space="preserve" viewBox="0 0 511 511" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" id="Capa_1" version="1.1" width="800px" height="800px" fill="#d4af37" className="chip">
+      <path d="M455.5,56h-400C24.897,56,0,80.897,0,111.5v288C0,430.103,24.897,455,55.5,455h400c30.603,0,55.5-24.897,55.5-55.5v-288
+	C511,80.897,486.103,56,455.5,56z M464,248H343v-56.5c0-4.687,3.813-8.5,8.5-8.5H464V248z M343,263h121v65H343V263z M479,223h17v65
+	h-17V223z M479,208v-65h17v65H479z M464,168H351.5c-12.958,0-23.5,10.542-23.5,23.5V408H183V103h272.5c4.687,0,8.5,3.813,8.5,8.5
+	V168z M168,248H47v-65h121V248z M32,288H15v-65h17V288z M47,263h121v65H47V263z M263,88V71h137v17H263z M248,88H111V71h137V88z
+	 M168,103v65H47v-56.5c0-4.687,3.813-8.5,8.5-8.5H168z M32,208H15v-65h17V208z M15,303h17v65H15V303z M47,343h121v65H55.5
+	c-4.687,0-8.5-3.813-8.5-8.5V343z M248,423v17H111v-17H248z M263,423h137v17H263V423z M343,408v-65h121v56.5
+	c0,4.687-3.813,8.5-8.5,8.5H343z M479,303h17v65h-17V303z M496,111.5V128h-17v-16.5c0-12.958-10.542-23.5-23.5-23.5H415V71h40.5
+	C477.832,71,496,89.168,496,111.5z M55.5,71H96v17H55.5C42.542,88,32,98.542,32,111.5V128H15v-16.5C15,89.168,33.168,71,55.5,71z
+	 M15,399.5V383h17v16.5c0,12.958,10.542,23.5,23.5,23.5H96v17H55.5C33.168,440,15,421.832,15,399.5z M455.5,440H415v-17h40.5
+	c12.958,0,23.5-10.542,23.5-23.5V383h17v16.5C496,421.832,477.832,440,455.5,440z"></path>
+    </svg>
+  </div>
+                  
+                  
+                  
+                  
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={currentIconIndex}
@@ -706,6 +775,8 @@ export default function MobileApp() {
                 </div>
 
                 <form style={{ display: 'flex', gap: '8px', width: '100%', alignItems: 'center', position: 'relative' }} onSubmit={sendMessage}>
+                 
+                 
                   <div className="mobile-input-shell">
                     <div className="mobile-input-gradient-box" style={{ position: 'relative', flex: 1, minWidth: 0 }}>
                       <input
@@ -713,7 +784,7 @@ export default function MobileApp() {
                         className="mobile-input mobile-input-centered mobile-input-with-send"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        placeholder="Try: Sell 100 USDT to NGN"
+                        placeholder="Try: Pay 100 USDT to John"
                         disabled={loading}
                         style={{ paddingRight: '56px', width: '100%' }}
                       />
@@ -736,7 +807,7 @@ export default function MobileApp() {
             </div>
           </div>
         ) : (
-          <>
+                  <>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px 12px' }}>
               <button
                 type="button"
@@ -746,7 +817,7 @@ export default function MobileApp() {
                 aria-label="Show hints"
                 style={{
                   background: 'transparent',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  border: '1px solid rgba(0, 0, 0, 0.15)',
                   padding: '8px',
                   minWidth: '44px',
                   height: '44px',
@@ -755,7 +826,7 @@ export default function MobileApp() {
                   justifyContent: 'center'
                 }}
               >
-                <MessageCircleIcon size={24} stroke={showHints ? 'url(#sign-in-gradient)' : 'rgba(255, 255, 255, 0.7)'} />
+                <MessageCircleIcon size={24} stroke={showHints ? '#007337' : 'rgba(0, 0, 0, 0.5)'} />
               </button>
             </div>
             {showHints && (
@@ -767,7 +838,7 @@ export default function MobileApp() {
             )}
 
             <form className="mobile-composer" onSubmit={sendMessage}>
-              <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+              <div className="mobile-input-shell">
                 <input
                   ref={inputRef}
                   className="mobile-input mobile-input-with-send"
@@ -775,25 +846,17 @@ export default function MobileApp() {
                   onChange={(e) => setInput(e.target.value)}
                   placeholder={loading ? 'Please wait…' : 'Chat Bramp AI...'}
                   disabled={loading}
-                  style={{ paddingRight: '56px' }}
                 />
                 <button
                   type="submit"
                   className="mobile-send-btn mobile-send-btn-inside"
                   disabled={loading || !input.trim()}
                   aria-label="Send message"
-                  style={{
-                    position: 'absolute',
-                    right: '8px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    zIndex: 10
-                  }}
                 >
                   {loading ? (
                     <div className="mobile-spinner" />
                   ) : (
-                    <Send size={20} active={Boolean(input.trim())} style={{ opacity: loading || !input.trim() ? 0.6 : 1, color: input.trim() ? undefined : 'rgba(255, 255, 255, 0.7)' }} />
+                    <Send size={20} active={Boolean(input.trim())} style={{ opacity: loading || !input.trim() ? 0.6 : 1, color: input.trim() ? undefined : 'rgba(0, 0, 0, 0.5)' }} />
                   )}
                 </button>
               </div>

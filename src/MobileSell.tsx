@@ -101,8 +101,6 @@ function prettyNgn(n: number) {
   return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 2 }).format(n)
 }
 
-// Countdown removed — no timeouts
-
 function friendlyError(_: any, fallback: string) {
   return 'Service unavailable. Please try again.'
 }
@@ -171,8 +169,6 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
   const [payError, setPayError] = useState<string | null>(null)
   const [payData, setPayData] = useState<PayoutRes | null>(null)
 
-  // No countdown
-
   // Banks
   const [banksLoading, setBanksLoading] = useState(false)
   const [banksError, setBanksError] = useState<string | null>(null)
@@ -182,8 +178,6 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
   const [ocrLoading, setOcrLoading] = useState(false)
   const [ocrError, setOcrError] = useState<string | null>(null)
   const banksFetchedRef = useRef(false)
-
-
 
   // Reset on open
   useEffect(() => {
@@ -395,36 +389,10 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
     ) : ''
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100vw',
-      height: '100vh',
-      background: 'rgba(0, 0, 0, 0.5)',
-      zIndex: 1000,
-      display: 'grid',
-      placeItems: 'start center',
-      padding: '16px',
-      overflow: 'hidden',
-      touchAction: 'none'
-    }} onClick={onClose}>
-      <div style={{
-        maxWidth: '420px',
-        width: '100%',
-        maxHeight: '80vh',
-        marginTop: '2vh',
-        marginLeft: 'auto',
-        marginRight: 'auto',
-        background: 'transparent',
-        border: '1px solid transparent',
-        borderRadius: '6.84px',
-        padding: '20.52px',
-        boxShadow: 'none',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column'
-      }} onClick={(e) => e.stopPropagation()}>
+    <div className="mobile-sell-overlay" onClick={onClose}>
+
+      <div className="mobile-sell-container" onClick={(e) => e.stopPropagation()}>
+
         {/* Loading Overlay */}
         {(initLoading || payLoading || accountNameLoading || banksLoading) && (
           <div className="mobile-sell-loading-overlay">
@@ -437,37 +405,41 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
             </div>
           </div>
         )}
-        {/* Header */}
-        <div style={{ marginBottom: '16px', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+
+        {/* Header (border removed from close button) */}
+        <div className="mobile-sell-header" style={{ flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div style={{ flex: 1 }}>
-            <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 600, color: 'var(--txt)' }}>
-              {step === 1 ? 'Start a Trade' : 'Payout Details'}
+            <h2 className="mobile-sell-title">
+              {headerTitle}
             </h2>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: '8px' }}>
-              <span style={{ width: 8, height: 8, borderRadius: 999, background: step >= 1 ? 'var(--accent)' : 'var(--border)' }}></span>
-              <span style={{ width: 8, height: 8, borderRadius: 999, background: step >= 2 ? 'var(--accent)' : 'var(--border)' }}></span>
+            <div className="mobile-sell-stepper" style={{ marginTop: '8px' }}>
+              {/* Stepper dots */}
+              <span className={`mobile-sell-dot ${step >= 1 ? 'active' : ''}`}></span>
+              <span className={`mobile-sell-dot ${step >= 2 ? 'active' : ''}`}></span>
             </div>
           </div>
+          {/* Close Button - BORDER REMOVED VIA INLINE STYLE */}
           <button
+            className="mobile-sell-close"
+            onClick={onClose}
             style={{
               appearance: 'none',
-              border: '1px solid var(--border)',
+              border: 'none', /* ✅ FIX: Border removed */
               background: 'transparent',
-              color: 'var(--muted)',
+              color: '#ffffff',
               padding: '4px 8px',
               borderRadius: 8,
               cursor: 'pointer',
               fontSize: '14px',
               alignSelf: 'flex-start'
             }}
-            onClick={onClose}
           >
             ✕
           </button>
         </div>
 
         {/* Body */}
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+        <div className="mobile-sell-body" style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           {/* STEP 1 — Start a Trade */}
           {step === 1 && (
             <div className="mobile-sell-section">
@@ -479,14 +451,15 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                 </div>
               )}
 
-              <form onSubmit={submitInitiate} className="mobile-sell-form">
+              {/* Note: Form fields are grouped here */}
+              <form id="start-sell-form" onSubmit={submitInitiate} className="mobile-sell-form">
                 {/* Token and Network on same line */}
                 <div className="mobile-sell-row">
                   <label className="mobile-sell-input-wrap">
                     <span className="mobile-sell-label">Token <span style={{ fontSize: '10px', opacity: 0.7 }}>▼</span></span>
                     <select
                       ref={firstInputRef as any}
-                      className="mobile-sell-input"
+                      className="mobile-sell-input-field"
                       value={token}
                       onChange={e => {
                         setToken(e.target.value as TokenSym)
@@ -500,7 +473,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                   <label className="mobile-sell-input-wrap">
                     <span className="mobile-sell-label">Network <span style={{ fontSize: '10px', opacity: 0.7 }}>▼</span></span>
                     <select
-                      className="mobile-sell-input"
+                      className="mobile-sell-input-field"
                       value={network}
                       onChange={e => {
                         setNetwork(e.target.value)
@@ -519,7 +492,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                   <label className="mobile-sell-input-wrap">
                     <span className="mobile-sell-label">Currency <span style={{ fontSize: '10px', opacity: 0.7 }}>▼</span></span>
                     <select
-                      className="mobile-sell-input"
+                      className="mobile-sell-input-field"
                       value={currency}
                       onChange={e => setCurrency(e.target.value as 'TOKEN' | 'NGN')}
                     >
@@ -532,7 +505,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                     <label className="mobile-sell-input-wrap">
                       <span className="mobile-sell-label">Amount ({token})</span>
                       <input
-                        className="mobile-sell-input"
+                        className="mobile-sell-input-field"
                         inputMode="decimal"
                         placeholder={`e.g. 100`}
                         value={amount}
@@ -546,7 +519,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                     <label className="mobile-sell-input-wrap">
                       <span className="mobile-sell-label">Amount (NGN)</span>
                       <input
-                        className="mobile-sell-input"
+                        className="mobile-sell-input-field"
                         inputMode="decimal"
                         placeholder="e.g. 50,000"
                         value={nairaAmount}
@@ -561,12 +534,6 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                       />
                     </label>
                   )}
-                </div>
-
-                <div className="mobile-sell-button-row">
-                  <button className="mobile-sell-button primary" disabled={initLoading}>
-                    {initLoading ? 'Starting…' : 'Start & Continue to Payout'}
-                  </button>
                 </div>
               </form>
             </div>
@@ -760,9 +727,13 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                               alignItems: 'center',
                               justifyContent: 'center',
                               padding: '8px',
-                              minWidth: '44px',
-                              height: '44px',
-                              position: 'relative'
+                              minWidth: '52px',
+                              height: '52px',
+                              borderRadius: '20px',
+                              border: '1px solid rgba(255, 255, 255, 0.3)',
+                              background: 'transparent',
+                              position: 'relative',
+                              color: '#ffffff',
                             }}
                             title={ocrLoading ? 'Scanning...' : 'Scan with Camera'}
                           >
@@ -770,8 +741,8 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                               <div style={{
                                 width: '24px',
                                 height: '24px',
-                                border: '2px solid rgba(0, 115, 55, 0.3)',
-                                borderTop: '2px solid var(--accent)',
+                                border: '2px solid rgba(255, 255, 255, 0.3)',
+                                borderTop: '2px solid #ffffff',
                                 borderRadius: '50%',
                                 animation: 'spin 1s linear infinite'
                               }} />
@@ -815,7 +786,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                       <span className="mobile-sell-label">Bank <span style={{ fontSize: '10px', opacity: 0.7 }}>▼</span></span>
                       <select
                         ref={firstInputRef as any}
-                        className="mobile-sell-input"
+                        className="mobile-sell-input-field"
                         value={bankCode}
                         disabled={banksLoading || bankOptions.length === 0}
                         onChange={e => {
@@ -840,7 +811,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                     <label className="mobile-sell-input-wrap">
                       <span className="mobile-sell-label">Account Number</span>
                       <input
-                        className="mobile-sell-input"
+                        className="mobile-sell-input-field"
                         value={accountNumber}
                         onChange={e => setAccountNumber(e.target.value)}
                         placeholder="e.g. 0123456789"
@@ -895,7 +866,8 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              opacity: copiedKey === 'addr2' ? 0.5 : 1
+                              opacity: copiedKey === 'addr2' ? 0.5 : 1,
+                              color: 'currentColor'
                             }}
                             title="Copy address"
                           >
@@ -921,7 +893,8 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                opacity: copiedKey === 'memo2' ? 0.5 : 1
+                                opacity: copiedKey === 'memo2' ? 0.5 : 1,
+                                color: 'currentColor'
                               }}
                               title="Copy memo"
                             >
@@ -975,13 +948,12 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
         {/* Footer */}
         <div className="mobile-sell-footer">
           <div className="mobile-sell-footer-text">
-            {step === 1
-              ? ''
-              : ''}
+            {step === 1 ? '' : ''}
           </div>
           <div className="mobile-sell-button-row">
             {step === 2 ? (
               !showFinalSummary ? (
+                // Step 2: Payout Submission button
                 <button
                   className="mobile-sell-button primary"
                   type="submit"
@@ -991,10 +963,19 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                   {payLoading ? 'Saving…' : 'Save Payout & Show Summary'}
                 </button>
               ) : (
-                <button className="mobile-sell-button outline" onClick={onClose}>Close</button>
+                // Step 2: Final Done/Close button
+                <button className="mobile-sell-button primary" onClick={onClose}>Done</button>
               )
             ) : (
-              <button className="mobile-sell-button outline" onClick={onClose}>Cancel</button>
+              // Step 1: Initiate Sell button (linked to the form via type="submit" and form ID)
+              <button
+                className="mobile-sell-button primary"
+                type="submit"
+                form="start-sell-form"
+                disabled={initLoading}
+              >
+                {initLoading ? 'Starting…' : 'Start & Continue to Payout'}
+              </button>
             )}
           </div>
         </div>
