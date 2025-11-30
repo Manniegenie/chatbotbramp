@@ -1,12 +1,28 @@
-// Updated MobileSignIn Component with separate classes for header login text and close button
-// Header now says "Login" and has its own class: mobile-auth-header-login
-// Close button now has: mobile-auth-close-btn
-
+// src/MobileSignIn.tsx
 import React, { useState, useEffect } from 'react'
 import './mobile-auth.css'
 
+// --- Types ---
+export interface User {
+  username?: string;
+  firstname?: string;
+  [key: string]: any;
+}
+
+export interface SignInResult {
+  accessToken: string;
+  refreshToken: string;
+  user: User;
+}
+
+interface MobileSignInProps {
+  onSuccess: (result: SignInResult) => void;
+  onCancel: () => void;
+}
+
+// --- Token Store Helper ---
 const tokenStore = {
-  setTokens: (accessToken, refreshToken) => {
+  setTokens: (accessToken: string, refreshToken: string) => {
     try {
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
@@ -14,7 +30,7 @@ const tokenStore = {
       console.error('Error saving tokens', e);
     }
   },
-  setUser: (user) => {
+  setUser: (user: User) => {
     try {
       localStorage.setItem('user', JSON.stringify(user));
     } catch (e) {
@@ -23,21 +39,22 @@ const tokenStore = {
   }
 };
 
-export default function MobileSignIn({ onSuccess, onCancel }) {
+export default function MobileSignIn({ onSuccess, onCancel }: MobileSignInProps) {
   const API_BASE = 'https://priscaai.online';
   const ENDPOINT = `${API_BASE}/signin/signin-pin`;
 
-  const [phone, setPhone] = useState('');
-  const [pin, setPin] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [phone, setPhone] = useState<string>('');
+  const [pin, setPin] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+  // Fixed: Initialize with string | null to allow string error messages later
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const savedPhone = localStorage.getItem('rememberedPhone');
     if (savedPhone) setPhone(savedPhone);
   }, []);
 
-  function normalizePhone(input) {
+  function normalizePhone(input: string): string {
     const d = input.replace(/[^\d+]/g, '');
     if (/^0\d{10}$/.test(d)) return '+234' + d.slice(1);
     if (/^234\d{10}$/.test(d)) return '+' + d;
@@ -47,12 +64,12 @@ export default function MobileSignIn({ onSuccess, onCancel }) {
     return d;
   }
 
-  function handlePhoneChange(v) {
+  function handlePhoneChange(v: string) {
     let digits = v.replace(/\D/g, '').slice(0, 11);
     setPhone(digits);
   }
 
-  async function submit(e) {
+  async function submit(e?: React.FormEvent) {
     e?.preventDefault();
     if (loading) return;
 
@@ -87,8 +104,10 @@ export default function MobileSignIn({ onSuccess, onCancel }) {
       localStorage.setItem('rememberedPhone', phone);
 
       onSuccess({ accessToken: data.accessToken, refreshToken: data.refreshToken, user: data.user });
-    } catch (err) {
-      setError(`Network error: ${err.message}`);
+    } catch (err: any) {
+      // Fixed: Cast err to any or Error to access message safely
+      const message = err instanceof Error ? err.message : String(err);
+      setError(`Network error: ${message}`);
     } finally {
       setLoading(false);
     }
@@ -100,7 +119,6 @@ export default function MobileSignIn({ onSuccess, onCancel }) {
 
         <div className="mobile-auth-header">
           <div className="mobile-auth-title-row">
-            
             <h2 className="mobile-auth-header-login">Log In</h2>
           </div>
 
