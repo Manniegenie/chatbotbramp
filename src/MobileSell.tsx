@@ -85,8 +85,12 @@ const NETWORKS_BY_TOKEN: Record<TokenSym, { code: string; label: string }[]> = {
   ],
 }
 
-function getHeaders() {
-  const { access } = tokenStore.getTokens()
+// FIX: Made async to support Web Crypto API (async storage)
+async function getHeaders() {
+  // Await the token store in case it's using the new Async/Promise based implementation
+  const tokens = await tokenStore.getTokens()
+  const access = tokens?.access
+
   const h = new Headers()
   h.set('Content-Type', 'application/json')
   if (access) h.set('Authorization', `Bearer ${access}`)
@@ -233,6 +237,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
         setBanksLoading(true)
         setBanksError(null)
         try {
+          // Public endpoint, likely doesn't need auth headers, but if it does, add await getHeaders()
           const res = await fetch(`${API_BASE}/fetchnaira/naira-accounts`, { method: 'GET', cache: 'no-store' })
           const json = await res.json()
           if (!res.ok) throw new Error(json?.error || `HTTP ${res.status}`)
@@ -278,7 +283,10 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
       try {
         const res = await fetch(
           `${API_BASE}/accountname/resolve?sortCode=${encodeURIComponent(bankCode)}&accountNumber=${encodeURIComponent(accountNumber)}`,
-          { method: 'GET', headers: getHeaders() }
+          {
+            method: 'GET',
+            headers: await getHeaders() // FIX: Await headers
+          }
         )
         const data = await res.json()
         if (!res.ok || !data.success) {
@@ -309,7 +317,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
     try {
       const res = await fetch(`${API_BASE}/sell/initiate`, {
         method: 'POST',
-        headers: getHeaders(),
+        headers: await getHeaders(), // FIX: Await headers
         body: JSON.stringify({
           token,
           network,
@@ -345,7 +353,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
     try {
       const res = await fetch(`${API_BASE}/sell/payout`, {
         method: 'POST',
-        headers: getHeaders(),
+        headers: await getHeaders(), // FIX: Await headers
         body: JSON.stringify({
           paymentId: initData.paymentId,
           bankName,
@@ -634,7 +642,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                                 // Send image directly to backend AI
                                 const resp = await fetch(`${API_BASE}/scan/image`, {
                                   method: 'POST',
-                                  headers: getHeaders(),
+                                  headers: await getHeaders(), // FIX: Await headers
                                   body: JSON.stringify({ imageDataUrl })
                                 })
 
