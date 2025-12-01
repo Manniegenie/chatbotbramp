@@ -1,13 +1,13 @@
 // src/MobileSell.tsx
 import React, { useEffect, useRef, useState } from 'react'
 import { tokenStore } from './lib/secureStore'
-import { authFetch, getAuthState, setupAutoLogoutTimer, clearAuth } from './lib/tokenManager' // ✅ Added imports
+import { authFetch, getAuthState, setupAutoLogoutTimer, clearAuth } from './lib/tokenManager' // ✅ Using authFetch
 import './sell-modal-responsive.css'
 import scannerIcon from './assets/scanner.png'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000'
 
-// --- Type Definitions (Keep Exactly as They Were) ---
+// --- Type Definitions (Kept Exactly as They Were) ---
 type BankOption = { name: string; code: string }
 
 type InitiateSellRes = {
@@ -87,18 +87,10 @@ const NETWORKS_BY_TOKEN: Record<TokenSym, { code: string; label: string }[]> = {
   ],
 }
 
-// ✅ FIX: This handles the new Async Token Store correctly
-async function getHeaders() {
-  const tokens = await tokenStore.getTokens()
-  const access = tokens?.access
+// ❌ Removed the redundant getHeaders() function. All authenticated calls 
+// now rely on the imported authFetch from tokenManager.
 
-  const h = new Headers()
-  h.set('Content-Type', 'application/json')
-  if (access) h.set('Authorization', `Bearer ${access}`)
-  return h
-}
-
-// --- Rest of helper functions (Keep Exactly as They Were) ---
+// --- Helper Functions ---
 function prettyAmount(n: number) {
   return new Intl.NumberFormat('en-NG', { maximumFractionDigits: 8 }).format(n)
 }
@@ -108,6 +100,10 @@ function prettyNgn(n: number) {
 }
 
 function friendlyError(_: any, fallback: string) {
+  // Check if the error is explicitly a 401 or 403 from the backend
+  if (_ && typeof _.message === 'string' && (_.message.includes('401') || _.message.includes('403'))) {
+    return 'Your session has expired. Please sign in again.'
+  }
   return 'Service unavailable. Please try again.'
 }
 
@@ -151,7 +147,7 @@ function QRCode({ data, size = 120 }: { data: string; size?: number }) {
 }
 
 export default function MobileSell({ open, onClose, onChatEcho, onStartInteraction }: MobileSellProps) {
-  // --- Component State (Keep Exactly as They Were) ---
+  // --- Component State ---
   const [step, setStep] = useState<1 | 2>(1)
   const [token, setToken] = useState<TokenSym>('USDT')
   const [network, setNetwork] = useState(NETWORKS_BY_TOKEN['USDT'][0].code)
@@ -179,7 +175,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
   const banksFetchedRef = useRef(false)
   const firstInputRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null)
   
-  // --- useEffect hooks (Keep Exactly as They Were) ---
+  // --- useEffect hooks (Cleanup and Setup) ---
   useEffect(() => {
     if (!open) return
     setStep(1)
@@ -220,7 +216,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
 
   useEffect(() => { firstInputRef.current?.focus() }, [step])
 
-  // Fetch banks - Uses standard fetch, assuming endpoint does not require auth
+  // Fetch banks (Assumed unauthenticated public endpoint - using standard fetch)
   useEffect(() => {
     if (!open || step !== 2 || banksFetchedRef.current) return
     banksFetchedRef.current = true
@@ -228,7 +224,6 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
         setBanksLoading(true)
         setBanksError(null)
         try {
-          // Using standard fetch here, as per the pattern from the MobileApp.tsx 'fetchTickerPrices' or assuming it's unauthenticated
           const res = await fetch(`${API_BASE}/fetchnaira/naira-accounts`, { method: 'GET', cache: 'no-store' })
           const json = await res.json()
           if (!res.ok) throw new Error(json?.error || `HTTP ${res.status}`)
@@ -258,7 +253,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
       })()
   }, [open, step])
 
-  // Resolve account name - Uses getHeaders for auth
+  // Resolve account name - ✅ Uses authFetch
   useEffect(() => {
     if (!open || step !== 2 || !bankCode || !accountNumber) return
     if (accountNumber.length < 10) {
@@ -272,11 +267,10 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
       setAccountNameError(null)
       setAccountName('')
       try {
-        const res = await fetch(
+        const res = await authFetch(
           `${API_BASE}/accountname/resolve?sortCode=${encodeURIComponent(bankCode)}&accountNumber=${encodeURIComponent(accountNumber)}`,
           {
             method: 'GET',
-            headers: await getHeaders() // ✅ Wait for headers
           }
         )
         const data = await res.json()
@@ -299,16 +293,15 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
     return () => clearTimeout(timeoutId)
   }, [open, step, bankCode, accountNumber])
 
-  // --- Submit functions (Keep logic, use getHeaders) ---
+  // --- Submit functions ---
   async function submitInitiate(e: React.FormEvent) {
     e.preventDefault()
     setInitError(null)
     setInitLoading(true)
     try {
-      // Using fetch + getHeaders for authenticated endpoints
-      const res = await fetch(`${API_BASE}/sell/initiate`, {
+      // ✅ Using authFetch for authenticated endpoint
+      const res = await authFetch(`${API_BASE}/sell/initiate`, {
         method: 'POST',
-        headers: await getHeaders(), // ✅ Wait for headers
         body: JSON.stringify({
           token,
           network,
@@ -342,10 +335,9 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
     }
     setPayLoading(true)
     try {
-      // Using fetch + getHeaders for authenticated endpoints
-      const res = await fetch(`${API_BASE}/sell/payout`, {
+      // ✅ Using authFetch for authenticated endpoint
+      const res = await authFetch(`${API_BASE}/sell/payout`, {
         method: 'POST',
-        headers: await getHeaders(), // ✅ Wait for headers
         body: JSON.stringify({
           paymentId: initData.paymentId,
           bankName,
@@ -365,7 +357,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
     }
   }
 
-  // --- OCR and scan logic (Keep logic, use getHeaders) ---
+  // --- OCR and scan logic ---
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
   function copyToClipboard(text: string, key: string) {
     navigator.clipboard?.writeText(text).then(() => {
@@ -479,8 +471,11 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                               });
                             };
                             const imageDataUrl = await compressImage(file);
-                            // Using fetch + getHeaders for authenticated endpoints
-                            const resp = await fetch(`${API_BASE}/scan/image`, { method: 'POST', headers: await getHeaders(), body: JSON.stringify({ imageDataUrl }) });
+                            // ✅ Using authFetch for authenticated endpoint
+                            const resp = await authFetch(`${API_BASE}/scan/image`, { 
+                                method: 'POST', 
+                                body: JSON.stringify({ imageDataUrl }) 
+                            });
                             if (!resp.ok) { setOcrError(`Scan failed (${resp.status}). Please try again.`); return; }
                             const payload = await resp.json().catch(() => ({ success: false }));
                             if (!payload.success) { setOcrError(payload.message || 'Could not extract account details.'); return; }
