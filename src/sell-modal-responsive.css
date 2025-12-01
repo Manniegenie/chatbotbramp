@@ -27,8 +27,9 @@
   
   .mobile-sell-container {
     width: 100%;
-    max-width: 359px;
-   max-height: 95vh;
+    max-width: 500px;
+    /* Updated to pin height */
+    max-height: 50vh; 
     margin-top: 0;
     margin-left: auto;
     margin-right: auto;
@@ -45,7 +46,8 @@
   .mobile-sell-header {
     margin: 10px;
     margin-bottom: 5px;
-    padding: 10px;
+    /* MODIFIED: Adjusted padding */
+    padding: 12px 24px 8px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -113,7 +115,8 @@
   }
   
   .mobile-sell-body {
-    padding: 12px 24px 24px; /* Added more padding bottom for consistency */
+    /* MODIFIED: Set symmetric padding */
+    padding: 12px 24px;
     overflow: auto;
     -webkit-overflow-scrolling: touch;
   }
@@ -497,12 +500,12 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
-    padding: 10px;
+    gap: 2px;
+    padding: 5px;
     background: rgba(0, 0, 0, 0.4);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 10px;
-    /* Fixed width/max-width for row layout */
+    /* Set fixed width for smaller QR code area */
     width: 100px; 
     max-width: 100px;
     margin: 0 auto;
@@ -527,7 +530,8 @@
   }
   
   .mobile-sell-footer {
-    padding: 16px 24px; /* AUTH MATCH: Increased padding */
+    /* MODIFIED: Adjusted padding to match header/body horizontal padding */
+    padding: 12px 24px; 
     display: flex;
     justify-content: space-between;
     gap: 8px;
@@ -572,7 +576,7 @@
   /* Responsive adjustments */
   @media screen and (max-width: 480px) {
     .mobile-sell-container {
-      max-height: 100vh;
+      max-height: 90vh; /* Use 90vh on small screens too */
       margin: 0;
     }
   
@@ -593,6 +597,7 @@
     }
   }
   
+  /* Retain original media query, ensuring consistency */
   @media screen and (max-height: 600px) {
     .mobile-sell-body {
       padding: 12px;

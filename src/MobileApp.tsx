@@ -603,11 +603,21 @@ export default function MobileApp() {
   function handleLiskWalletClick(event?: React.MouseEvent) {
     event?.preventDefault()
     setShowMenu(false)
-    if (!auth) {
-      setShowSignIn(true)
-      return
-    }
-    setShowLiskWallet(true)
+    // TEMPORARILY DISABLES FUNCTIONALITY
+    console.log('Wallet button clicked - functionality temporarily disabled')
+    // if (!auth) {
+    //   setShowSignIn(true)
+    //   return
+    // }
+    // setShowLiskWallet(true)
+  }
+  
+  // New handler to temporarily disable menu functionality
+  function handleMenuClick(event?: React.MouseEvent) {
+    event?.preventDefault()
+    console.log('Menu button clicked - functionality temporarily disabled')
+    // Optionally log the current state but prevent setting it:
+    // setShowMenu(!showMenu)
   }
 
   function echoFromModalToChat(text: string) {
@@ -863,8 +873,8 @@ export default function MobileApp() {
                   type="button"
                   className="mobile-send-btn"
                   onClick={() => setShowVoiceChat(true)}
-                  disabled={loading || !auth}
-                  aria-label="Voice chat"
+                  disabled={true} /* TEMPORARILY DISABLED */
+                  aria-label="Voice chat (Disabled)"
                   style={{
                     background: 'transparent',
                     border: '1px solid rgba(255, 255, 255, 0.15)',
@@ -972,6 +982,7 @@ export default function MobileApp() {
             <div className="mobile-nav-buttons">
               {!auth ? (
                 <div className="mobile-auth-buttons">
+                  {/* SWITCH REMAINS HERE FOR UN-AUTHENTICATED VIEW */}
                   <label className="switch">
                     <input type="checkbox" onChange={(e) => console.log('Night mode:', e.target.checked)} />
                     <span className="slider"></span>
@@ -987,13 +998,20 @@ export default function MobileApp() {
                 </div>
               ) : (
                 <>
+                  {/* ADDED SWITCH HERE FOR AUTHENTICATED VIEW */}
+                  <label className="switch" style={{ marginRight: '8px' }}>
+                    <input type="checkbox" onChange={(e) => console.log('Night mode:', e.target.checked)} />
+                    <span className="slider"></span>
+                  </label>
                   <button className="btn mobile-sell-btn mobile-sell-btn-with-icon" onClick={handleSellClick} aria-label="Sell Crypto">
                     <span>Sell</span>
                   </button>
+                  {/* RE-ADDED WALLET BUTTON */}
                   <button className="btn mobile-sell-btn mobile-wallet-btn" onClick={handleLiskWalletClick} style={{ marginLeft: '8px' }} aria-label="Connect Wallet">
                     Wallet
                   </button>
-                  <button className="mobile-menu-btn" onClick={() => setShowMenu(!showMenu)} aria-label="Menu">
+                  {/* UPDATED: Changed onClick to call the new disabled handler */}
+                  <button className="mobile-menu-btn" onClick={handleMenuClick} aria-label="Menu (Disabled)">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                       <line x1="3" y1="12" x2="21" y2="12"></line>
                       <line x1="3" y1="6" x2="21" y2="6"></line>

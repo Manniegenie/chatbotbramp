@@ -1,4 +1,3 @@
-// src/MobileSell.tsx
 import React, { useEffect, useRef, useState } from 'react'
 import { tokenStore } from './lib/secureStore'
 import { authFetch, getAuthState, setupAutoLogoutTimer, clearAuth } from './lib/tokenManager' // ✅ Using authFetch
@@ -130,7 +129,7 @@ function buildPayoutRecap(init: InitiateSellRes | null, p: PayoutRes) {
   ].join('\n')
 }
 
-function QRCode({ data, size = 120 }: { data: string; size?: number }) {
+function QRCode({ data, size = 80 }: { data: string; size?: number }) {
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(data)}&format=svg&bgcolor=0f1117&color=ffffff&margin=10`
 
   return (
@@ -524,7 +523,7 @@ export default function MobileSell({ open, onClose, onChatEcho, onStartInteracti
                     <div className="mobile-sell-grid-item"><div className="mobile-sell-key">Bank</div><div className="mobile-sell-value">{payData.payout.bankName}</div></div>
                     <div className="mobile-sell-grid-item"><div className="mobile-sell-key">Account</div><div className="mobile-sell-value">{payData.payout.accountName} — {payData.payout.accountNumber}</div></div>
                   </div>
-                  <div className="mobile-sell-button-row"><button className="mobile-sell-button primary" onClick={onClose}>Done</button></div>
+                  
                 </div>
               )}
             </div>
