@@ -53,65 +53,44 @@ interface NewsCard {
 
 // --- Helper Components ---
 function MobileNewsSection() {
-  const newsCards: NewsCard[] = [
-    {
-      id: '1',
-      title: 'Bitcoin Reaches New All-Time High',
-      description: 'Bitcoin surpasses $100,000 milestone as institutional adoption continues to grow across global markets.',
-      date: '2 hours ago',
-      source: 'CryptoNews',
-      url: 'https://example.com/btc-ath'
-    },
-    {
-      id: '2',
-      title: 'Ethereum 2.0 Upgrade Complete',
-      description: 'The network successfully transitions to proof-of-stake, reducing energy consumption by 99%.',
-      date: '5 hours ago',
-      source: 'BlockchainToday',
-      url: 'https://example.com/eth-upgrade'
-    },
-    {
-      id: '3',
-      title: 'Nigeria Launches Digital Currency Pilot',
-      description: 'Central Bank announces expanded testing of eNaira digital currency platform.',
-      date: '1 day ago',
-      source: 'FinTechAfrica',
-      url: 'https://example.com/enaira'
-    },
-    {
-      id: '4',
-      title: 'Stablecoin Adoption Grows in Africa',
-      description: 'USDT and USDC see 300% increase in African markets as hedge against inflation.',
-      date: '2 days ago',
-      source: 'CryptoAfrica',
-      url: 'https://example.com/stablecoin'
-    },
-    {
-      id: '5',
-      title: 'DeFi Protocol Launches in Lagos',
-      description: 'New decentralized finance platform aims to provide banking services to unbanked populations.',
-      date: '3 days ago',
-      source: 'Web3Africa',
-      url: 'https://example.com/defi-lagos'
-    },
-    {
-      id: '6',
-      title: 'Regulatory Framework for Crypto Assets',
-      description: 'SEC announces comprehensive guidelines for digital asset trading and custody.',
-      date: '4 days ago',
-      source: 'RegulatoryNews',
-      url: 'https://example.com/sec-crypto'
+  const [newsCards, setNewsCards] = useState<NewsCard[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    let isMounted = true
+
+    async function fetchNews() {
+      try {
+        const resp = await fetch(`${API_BASE}/news/news?limit=6`, { signal: controller.signal })
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+        const data = await resp.json()
+        if (isMounted && data?.success && Array.isArray(data.data)) {
+          setNewsCards(data.data)
+        }
+      } catch (err) {
+        console.error('Failed to fetch news:', err)
+      } finally {
+        if (isMounted) setLoading(false)
+      }
     }
-  ];
+
+    fetchNews()
+    return () => {
+      isMounted = false
+      controller.abort()
+    }
+  }, [])
 
   const handleCardClick = (card: NewsCard) => {
-    if (card.url) window.open(card.url, '_blank', 'noopener,noreferrer');
-  };
+    if (card.url) window.open(card.url, '_blank', 'noopener,noreferrer')
+  }
+
+  if (loading) return <div className="mobile-news-loading">Loading news…</div>
 
   return (
     <section className="mobile-news-section">
       <h2 className="mobile-news-header">Latest</h2>
-
       <div className="mobile-news-cards-container">
         {newsCards.map((card) => (
           <article
@@ -126,17 +105,14 @@ function MobileNewsSection() {
               <div className="mobile-news-card-dot"></div>
               <div className="mobile-news-card-dot"></div>
             </div>
-
             <div className="mobile-news-card-content">
               <h3 className="mobile-news-card-title">{card.title}</h3>
               <p className="mobile-news-card-description">{card.description}</p>
-              
               <div className="mobile-news-card-meta">
                 <span className="mobile-news-card-date">{card.date}</span>
                 <span className="mobile-news-card-source">{card.source}</span>
               </div>
             </div>
-
             <button className="mobile-news-card-button">
               <span className="mobile-news-card-button-text">Explore Now</span>
               <svg
@@ -154,15 +130,13 @@ function MobileNewsSection() {
                 />
               </svg>
             </button>
-
             <div className="mobile-news-card-blur"></div>
           </article>
         ))}
       </div>
     </section>
-  );
+  )
 }
-
 
 function ThreeDotLoader() {
   return (
@@ -612,12 +586,10 @@ export default function MobileApp() {
     // setShowLiskWallet(true)
   }
   
-  // New handler to temporarily disable menu functionality
+  // RESTORED: Handler to toggle menu functionality
   function handleMenuClick(event?: React.MouseEvent) {
     event?.preventDefault()
-    console.log('Menu button clicked - functionality temporarily disabled')
-    // Optionally log the current state but prevent setting it:
-    // setShowMenu(!showMenu)
+    setShowMenu(!showMenu)
   }
 
   function echoFromModalToChat(text: string) {
@@ -1010,8 +982,8 @@ export default function MobileApp() {
                   <button className="btn mobile-sell-btn mobile-wallet-btn" onClick={handleLiskWalletClick} style={{ marginLeft: '8px' }} aria-label="Connect Wallet">
                     Wallet
                   </button>
-                  {/* UPDATED: Changed onClick to call the new disabled handler */}
-                  <button className="mobile-menu-btn" onClick={handleMenuClick} aria-label="Menu (Disabled)">
+                  {/* RESTORED: Menu button functionality */}
+                  <button className="mobile-menu-btn" onClick={handleMenuClick} aria-label="Toggle Menu">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                       <line x1="3" y1="12" x2="21" y2="12"></line>
                       <line x1="3" y1="6" x2="21" y2="6"></line>

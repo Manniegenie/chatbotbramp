@@ -379,7 +379,7 @@ a {
 
 .mobile-menu-btn:active {
   transform: scale(0.95);
-  background: var(--border);
+  background: #007337;
 }
 
 .mobile-menu-btn svg {
@@ -479,7 +479,7 @@ a {
   width: 200px;
   max-width: 70vw;
   height: 100%;
-  background: transparent;
+  background: #007337;
   border-left: none;
   padding-top: 72px;
   padding-bottom: 16px;
@@ -546,7 +546,7 @@ a {
 }
 
 .mobile-menu-item.primary {
-  color: var(--accent);
+  color: #fff;
 }
 
 .mobile-menu-divider {
@@ -857,7 +857,8 @@ a {
   padding: 12px 16px;
   padding-bottom: calc(12px + env(safe-area-inset-bottom));
   background: #ffffff;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  /* FIX 1: Ensure the composer itself doesn't have an extra border */
+  border-top: none; 
   display: flex;
   gap: 8px;
   align-items: center;
@@ -1062,39 +1063,17 @@ a {
     height: 36px;
   }
 }
-/* ============================================================= */
-/*  "Latest News" Header (fixed at top of section)              */
-/* ============================================================= */
-
-/* Optional accent line under title */
-/* ============================================================= */
-/*  MOBILE NEWS SECTION CSS                                      */
-/*  Fully compatible with existing mobile app styles            */
-/* ============================================================= */
-/* News Section Container */
-.mobile-news-section {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  width: 100%;
-  padding: 0 20px; /* Example: Add horizontal padding to the section */
-  box-sizing: border-box;
-  background: transparent;
-  padding: 12px;
-  flex-shrink: 0;
-}
-
 
 
 /* ============================================================= */
-/*  MOBILE NEWS SECTION CSS - Swipeable Cards                   */
+/* MOBILE NEWS SECTION CSS - Swipeable Cards                   */
 /* ============================================================= */
 .mobile-news-section {
   display: flex;
   flex-direction: column;
   width: 100%;
   background: transparent;
-  padding: 12px;
+  padding: 5px;
   flex-shrink: 0;
   overflow: hidden;
 }
@@ -1117,8 +1096,9 @@ a {
   display: block;
   width: 40px;
   height: 3px;
-  background: linear-gradient(90deg, #007337, #8ea462);
-  border-radius: 2px;
+   border-radius: 20px;
+  background: linear-gradient(90deg, #007337, #007337);
+  border-radius: 36px;
   margin-top: 8px;
   opacity: 0.8;
 }
@@ -1132,7 +1112,7 @@ a {
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  padding: 8px 12px 20px;
+  padding: 8px 12px 40px;
   scroll-behavior: smooth;
 }
 
@@ -1193,8 +1173,8 @@ a {
 /* Decorative dots */
 .mobile-news-card-dots {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 10px;
+  right: 10px;
   display: flex;
   gap: 8px;
   z-index: 10;
@@ -1377,7 +1357,7 @@ a {
 }
 
 /* ============================================================= */
-/*  REGULAR NEWS CARDS                                           */
+/* REGULAR NEWS CARDS                                           */
 /* ============================================================= */
 .mobile-news-card-item {
   padding: 16px 12px;
@@ -1428,7 +1408,7 @@ a {
 }
 
 /* ============================================================= */
-/*  RESPONSIVE ADJUSTMENTS                                       */
+/* RESPONSIVE ADJUSTMENTS                                       */
 /* ============================================================= */
 @media screen and (min-width: 768px) {
   .mobile-news-section {
@@ -1467,10 +1447,11 @@ a {
   .mobile-news-card-description {
     font-size: 13px;
   }
-  .mobile-news-card-meta {
-    font-size: 11px;
-  }
 }
+
+/* ============================================================= */
+/* CREDIT CARD CHIP AND LOGO STYLES (CENTERED INPUT)            */
+/* ============================================================= */
 .credit-card-chip-container {
   /* Positioning for Top-Right placement (overrides original margin) */
   position: absolute;
@@ -1651,13 +1632,14 @@ a {
 .mobile-footer {
   position: absolute;
   bottom: 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
-  border-top: 1px solid rgba(0, 0, 0, 0.2);
+  /* FIX 2: Ensure the footer itself doesn't have borders that look like a line */
+  border-bottom: none;
+  border-top: none;
   left: 0;
   right: 0;
   width: 100%;
-  max-height: 60px;
-  min-height: 40px;
+  max-height: 30px;
+  min-height: 10px;
   background: #ffffff; 
   text-align: center;
   flex-shrink: 0;
