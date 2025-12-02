@@ -1452,7 +1452,27 @@ a {
 /* ============================================================= */
 /* CREDIT CARD CHIP AND LOGO STYLES (CENTERED INPUT)            */
 /* ============================================================= */
+.credit-card-chip-container {
+  /* Positioning for Top-Right placement (overrides original margin) */
+  position: absolute;
+  top: -20px; 
+  left: 130px;
+  z-index: 10;
+  
+  /* Size and Structure */
+  height: 40px;
+  width: 40px;
+  flex-shrink: 0;
+  border-radius: 4px; /* Soften edges *
+  
+  /* REMOVED: margin: 8px 0; and margin-left: -25%; as they conflict with absolute positioning */
+}
 
+.chip {
+  width: 100%;
+  height: 100%;
+  opacity: 100%;
+}
 
 
 .mobile-input-centered::placeholder {
