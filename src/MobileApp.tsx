@@ -51,55 +51,37 @@ interface NewsCard {
   url?: string
 }
 
-// --- NEW COMPONENT: SCATTERED COINS ---
+// --- UPDATED COMPONENT: STATIC ICONS ---
 const BackgroundCoins = React.memo(() => {
-  // Generate 30 random coins only once
-  const coins = useMemo(() => {
-    return Array.from({ length: 30 }).map((_, i) => ({
-      id: i,
-      top: Math.random() * 100, // 0-100%
-      left: Math.random() * 100, // 0-100%
-      // INCREASED SIZE: Randomly between 40px and 80px
-      size: 40 + Math.random() * 40, 
-      duration: 5 + Math.random() * 15, // 5s to 20s rotation speed
-      delay: -(Math.random() * 10), // Negative delay to start mid-animation
-      opacity: 0.2 + Math.random() * 0.5 // Random opacity for depth
-    }))
-  }, [])
-
   return (
-    <div className="bg-coin-container">
-      {coins.map((coin) => (
-        <div 
-          key={coin.id} 
-          className="bg-coin"
-          style={{
-            top: `${coin.top}%`,
-            left: `${coin.left}%`,
-            fontSize: `${coin.size}px`, // This scales the em units in CSS
-            opacity: coin.opacity,
-            animationDuration: `${coin.duration}s`,
-            animationDelay: `${coin.delay}s`
-          } as React.CSSProperties}
-        >
-          <div className="side heads">
-            <svg xmlns="http://www.w3.org/2000/svg" xmlSpace="preserve" width="100%" height="100%" version="1.1" shapeRendering="geometricPrecision" textRendering="geometricPrecision" imageRendering="optimizeQuality" fillRule="evenodd" clipRule="evenodd" viewBox="0 0 4091.27 4091.73" xmlnsXlink="http://www.w3.org/1999/xlink">
-              <g>
-                <path fill="#F7931A" fillRule="nonzero" d="M4030.06 2540.77c-273.24,1096.01 -1383.32,1763.02 -2479.46,1489.71 -1095.68,-273.24 -1762.69,-1383.39 -1489.33,-2479.31 273.12,-1096.13 1383.2,-1763.19 2479,-1489.95 1096.06,273.24 1763.03,1383.51 1489.76,2479.57l0.02 -0.02z"></path>
-                <path fill="white" fillRule="nonzero" d="M2947.77 1754.38c40.72,-272.26 -166.56,-418.61 -450,-516.24l91.95 -368.8 -224.5 -55.94 -89.51 359.09c-59.02,-14.72 -119.63,-28.59 -179.87,-42.34l90.16 -361.46 -224.36 -55.94 -92 368.68c-48.84,-11.12 -96.81,-22.11 -143.35,-33.69l0.26 -1.16 -309.59 -77.31 -59.72 239.78c0,0 166.56,38.18 163.05,40.53 90.91,22.69 107.35,82.87 104.62,130.57l-104.74 420.15c6.26,1.59 14.38,3.89 23.34,7.49 -7.49,-1.86 -15.46,-3.89 -23.73,-5.87l-146.81 588.57c-11.11,27.62 -39.31,69.07 -102.87,53.33 2.25,3.26 -163.17,-40.72 -163.17,-40.72l-111.46 256.98 292.15 72.83c54.35,13.63 107.61,27.89 160.06,41.3l-92.9 373.03 224.24 55.94 92 -369.07c61.26,16.63 120.71,31.97 178.91,46.43l-91.69 367.33 224.51 55.94 92.89 -372.33c382.82,72.45 670.67,43.24 791.83,-303.02 97.63,-278.78 -4.86,-439.58 -206.26,-544.44 146.69,-33.83 257.18,-130.31 286.64,-329.61l-0.07 -0.05zm-512.93 719.26c-69.38,278.78 -538.76,128.08 -690.94,90.29l123.28 -494.2c152.17,37.99 640.17,113.17 567.67,403.91zm69.43 -723.3c-63.29,253.58 -453.96,124.75 -580.69,93.16l111.77 -448.21c126.73,31.59 534.85,90.55 468.94,355.05l-0.02 0z"></path>
-              </g>
-            </svg>
-          </div>
-          <div className="side tails">
-            <svg xmlns="http://www.w3.org/2000/svg" className="svg_back" xmlSpace="preserve" width="100%" height="100%" version="1.1" shapeRendering="geometricPrecision" textRendering="geometricPrecision" imageRendering="optimizeQuality" fillRule="evenodd" clipRule="evenodd" viewBox="0 0 4091.27 4091.73" xmlnsXlink="http://www.w3.org/1999/xlink">
-              <g>
-                <path fill="#F7931A" fillRule="nonzero" d="M4030.06 2540.77c-273.24,1096.01 -1383.32,1763.02 -2479.46,1489.71 -1095.68,-273.24 -1762.69,-1383.39 -1489.33,-2479.31 273.12,-1096.13 1383.2,-1763.19 2479,-1489.95 1096.06,273.24 1763.03,1383.51 1489.76,2479.57l0.02 -0.02z"></path>
-                <path fill="white" fillRule="nonzero" d="M2947.77 1754.38c40.72,-272.26 -166.56,-418.61 -450,-516.24l91.95 -368.8 -224.5 -55.94 -89.51 359.09c-59.02,-14.72 -119.63,-28.59 -179.87,-42.34l90.16 -361.46 -224.36 -55.94 -92 368.68c-48.84,-11.12 -96.81,-22.11 -143.35,-33.69l0.26 -1.16 -309.59 -77.31 -59.72 239.78c0,0 166.56,38.18 163.05,40.53 90.91,22.69 107.35,82.87 104.62,130.57l-104.74 420.15c6.26,1.59 14.38,3.89 23.34,7.49 -7.49,-1.86 -15.46,-3.89 -23.73,-5.87l-146.81 588.57c-11.11,27.62 -39.31,69.07 -102.87,53.33 2.25,3.26 -163.17,-40.72 -163.17,-40.72l-111.46 256.98 292.15 72.83c54.35,13.63 107.61,27.89 160.06,41.3l-92.9 373.03 224.24 55.94 92 -369.07c61.26,16.63 120.71,31.97 178.91,46.43l-91.69 367.33 224.51 55.94 92.89 -372.33c382.82,72.45 670.67,43.24 791.83,-303.02 97.63,-278.78 -4.86,-439.58 -206.26,-544.44 146.69,-33.83 257.18,-130.31 286.64,-329.61l-0.07 -0.05zm-512.93 719.26c-69.38,278.78 -538.76,128.08 -690.94,90.29l123.28 -494.2c152.17,37.99 640.17,113.17 567.67,403.91zm69.43 -723.3c-63.29,253.58 -453.96,124.75 -580.69,93.16l111.77 -448.21c126.73,31.59 534.85,90.55 468.94,355.05l-0.02 0z"></path>
-              </g>
-            </svg>
-          </div>
-        </div>
-      ))}
+    <div className="bg-coin-container static-coins">
+      {/* BITCOIN ICON */}
+      <div className="static-coin bitcoin-pos">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 96 96" width="100%" height="100%">
+          <desc>Bitcoin Streamline Icon: https://streamlinehq.com</desc>
+          <path fill="url(#btc_grad)" d="M93.5941 59.3659C87.3143 84.5581 61.791 99.8717 36.6349 93.592 11.4422 87.3123-3.87179 61.7896 2.40804 36.6341 8.68787 11.4419 34.1744-3.87168 59.3672 2.40801 84.5232 8.65097 99.8739 34.1737 93.5941 59.3659Z" />
+          <path fill="#ffffff" d="M70.3781 42.1432c.918-6.2422-3.8187-9.6203-10.3547-11.8602l2.1297-8.482-5.1406-1.2852-2.0563 8.2617c-1.3585-.3304-2.7539-.6609-4.1492-.9546l2.0563-8.2985-5.1406-1.2851-2.093 8.4453c-1.1383-.2571-2.2399-.5141-3.3047-.7711v-.0367l-7.1234-1.7625-1.3586 5.5078s3.8187.8812 3.7453.9179c2.0929.5141 2.4601 1.9094 2.3867 3.011l-2.4234 9.657c.1468.0367.3304.0734.5507.1836-.1836-.0367-.3671-.0734-.5507-.1469l-3.3782 13.5125c-.257.6243-.9179 1.5789-2.35 1.2117.0368.0735-3.7453-.9179-3.7453-.9179l-2.5703 5.9117 6.7195 1.6891c1.2485.3304 2.4602.6242 3.6719.9546l-2.1297 8.5555 5.1407 1.2852 2.1296-8.4821c1.3954.3672 2.7907.7344 4.1125 1.0649l-2.0929 8.4453L48.2 77.7604l2.1297-8.5555c8.8125 1.6523 15.4219.9914 18.1758-6.9766 2.2398-6.389-.1102-10.0976-4.7368-12.5211 3.4149-.7711 5.9485-3.0109 6.6094-7.564ZM58.5914 58.6666c-1.5789 6.3891-12.3742 2.9375-15.8625 2.0563l2.8274-11.3461c3.4882.8812 14.7242 2.607 13.0351 9.2898ZM60.207 42.033c-1.4687 5.8383-10.4281 2.8641-13.3289 2.1297l2.5703-10.2813c2.9008.7344 12.2641 2.093 10.7586 8.1516Z" />
+          <defs>
+            <linearGradient id="btc_grad" x1={4698.49} x2={4698.49} y1={-1.214} y2={9400.05} gradientUnits="userSpaceOnUse">
+              <stop stopColor="#f9aa4b" />
+              <stop offset={1} stopColor="#f7931a" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+
+      {/* ETHEREUM ICON */}
+      <div className="static-coin eth-pos">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" width="100%" height="100%">
+          <desc>Ethereum Streamline Icon: https://streamlinehq.com</desc>
+          <path fill="#343434" d="m11.997875 0.25 -0.15755 0.5354925V16.324225l0.15755 0.15725 7.2129 -4.263525L11.997875 0.25Z" strokeWidth={0.25} />
+          <path fill="#8c8c8c" d="M11.997825 0.25 4.7849 12.21795l7.212925 4.2636V0.25Z" strokeWidth={0.25} />
+          <path fill="#3c3c3b" d="m11.99795 17.847175 -0.088775 0.108225v5.535225l0.088775 0.25935 7.2172 -10.1642 -7.2172 4.2614Z" strokeWidth={0.25} />
+          <path fill="#8c8c8c" d="M11.997825 23.749925V17.8471L4.7849 13.585725l7.212925 10.1642Z" strokeWidth={0.25} />
+          <path fill="#141414" d="M11.9978 16.481475 19.2106 12.218 11.9978 8.93955v7.541925Z" strokeWidth={0.25} />
+          <path fill="#393939" d="m4.7849 12.218 7.2128 4.263475V8.93955L4.7849 12.218Z" strokeWidth={0.25} />
+        </svg>
+      </div>
     </div>
   )
 })
@@ -630,16 +612,9 @@ export default function MobileApp() {
   function handleLiskWalletClick(event?: React.MouseEvent) {
     event?.preventDefault()
     setShowMenu(false)
-    // TEMPORARILY DISABLES FUNCTIONALITY
     console.log('Wallet button clicked - functionality temporarily disabled')
-    // if (!auth) {
-    //   setShowSignIn(true)
-    //   return
-    // }
-    // setShowLiskWallet(true)
   }
   
-  // RESTORED: Handler to toggle menu functionality
   function handleMenuClick(event?: React.MouseEvent) {
     event?.preventDefault()
     setShowMenu(!showMenu)
