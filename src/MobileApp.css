@@ -2490,8 +2490,8 @@ input:checked + .slider:before {
 .static-coin {
   position: absolute;
   opacity: 0.15; /* Subtle watermark effect */
-  width: 180px;  /* Size of the icons */
-  height: 180px;
+  width: 100px;  /* Size of the icons */
+  height: 100px;
 }
 
 /* Position Bitcoin: Top Left */
