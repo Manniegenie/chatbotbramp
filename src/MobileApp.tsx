@@ -91,6 +91,7 @@ const BackgroundCoins = React.memo(() => {
 function MobileNewsSection() {
   const [newsCards, setNewsCards] = useState<NewsCard[]>([])
   const [loading, setLoading] = useState(true)
+  const [activeIndex, setActiveIndex] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -140,9 +141,23 @@ function MobileNewsSection() {
       }, 3000) // Resume after 3 seconds of no interaction
     }
 
-    container.addEventListener('scroll', handleUserInteraction)
+    // Track active card based on scroll position
+    const updateActiveIndex = () => {
+      const cardWidth = 280 + 16 // card width + gap
+      const scrollLeft = container.scrollLeft
+      const newIndex = Math.round(scrollLeft / cardWidth)
+      setActiveIndex(Math.min(newIndex, newsCards.length - 1))
+    }
+
+    container.addEventListener('scroll', () => {
+      handleUserInteraction()
+      updateActiveIndex()
+    })
     container.addEventListener('touchstart', handleUserInteraction)
     container.addEventListener('mousedown', handleUserInteraction)
+    
+    // Initial update
+    updateActiveIndex()
 
     const autoScroll = setInterval(() => {
       if (isPaused) return
@@ -172,6 +187,16 @@ function MobileNewsSection() {
 
   const handleCardClick = (card: NewsCard) => {
     if (card.url) window.open(card.url, '_blank', 'noopener,noreferrer')
+  }
+
+  const handleDotClick = (index: number) => {
+    if (!containerRef.current) return
+    const cardWidth = 280 + 16 // card width + gap
+    containerRef.current.scrollTo({
+      left: index * cardWidth,
+      behavior: 'smooth'
+    })
+    setActiveIndex(index)
   }
 
   if (loading) {
@@ -230,6 +255,18 @@ function MobileNewsSection() {
           </article>
         ))}
       </div>
+      {newsCards.length > 0 && (
+        <div className="mobile-news-dots">
+          {newsCards.map((_, index) => (
+            <button
+              key={index}
+              className={`mobile-news-dot ${index === activeIndex ? 'active' : ''}`}
+              onClick={() => handleDotClick(index)}
+              aria-label={`Go to card ${index + 1}`}
+            />
+          ))}
+        </div>
+      )}
     </section>
   )
 }
