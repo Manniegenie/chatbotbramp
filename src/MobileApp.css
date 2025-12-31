@@ -226,6 +226,7 @@ a {
   gap: 8px;
   align-items: center;
   flex-shrink: 0;
+  min-height: 44px;
 }
 
 .mobile-auth-btn {
@@ -268,6 +269,8 @@ a {
   align-items: center;
   gap: 0.6em;
   font-weight: bold;
+  height: auto;
+  min-height: 44px;
 }
 
 
@@ -289,6 +292,8 @@ a {
   align-items: center;
   gap: 0.6em;
   font-weight: bold;
+  height: auto;
+  min-height: 44px;
 }
 
 
