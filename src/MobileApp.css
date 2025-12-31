@@ -1098,25 +1098,21 @@ a {
 .mobile-news-header {
   font-size: 15px;
   font-weight: 700;
-  background: linear-gradient(90deg, #007337 0%, #000000 50%, rgba(168, 0, 119, 1) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: #000000;
+  color: var(--txt);
   padding-top: 4px;
   letter-spacing: -0.3px;
   flex-shrink: 0;
   position: relative;
 }
 
-/* Accent line under header - yellow to match switch */
+/* Accent line under header - white */
 .mobile-news-header::after {
   content: '';
   display: block;
   width: 60px;
   height: 3px;
   border-radius: 20px;
-  background: #fff000;
+  background: #ffffff;
   margin-top: 8px;
   opacity: 1;
 }
@@ -1126,7 +1122,7 @@ a {
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #fff000;
+  color: #000000;
   font-size: 11px;
   font-weight: 600;
   pointer-events: none;
@@ -2385,9 +2381,16 @@ body.night-mode .mobile-news-card {
 }
 
 body.night-mode .mobile-news-card-meta,
-body.night-mode .mobile-news-card-date,
-body.night-mode .mobile-news-card-source {
+body.night-mode .mobile-news-card-date {
   color: #ffffff;
+}
+
+body.night-mode .mobile-news-card-source {
+  color: #007337;
+}
+
+body.night-mode .mobile-news-swipe-indicator {
+  color: #fff000;
 }
 
 /* Centered Input Card - Solid green in night mode */

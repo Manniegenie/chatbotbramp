@@ -1127,7 +1127,7 @@ export default function MobileApp() {
               {!auth ? (
                 <div className="mobile-auth-buttons">
                   {/* Logo beside switch - changes based on night mode */}
-                  <img src={nightMode ? logoPng : BrampLogo} alt="Logo" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
+                  <img src={nightMode ? logoPng : BrampLogo} alt="Logo" style={{ width: '40px', height: '40px', objectFit: 'contain', borderRadius: nightMode ? '0' : '10px' }} />
                   {/* SWITCH REMAINS HERE FOR UN-AUTHENTICATED VIEW */}
                   <label className="switch">
                     <input type="checkbox" checked={nightMode} onChange={(e) => setNightMode(e.target.checked)} />
@@ -1145,7 +1145,7 @@ export default function MobileApp() {
               ) : (
                 <>
                   {/* Logo beside switch - changes based on night mode */}
-                  <img src={nightMode ? logoPng : BrampLogo} alt="Logo" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
+                  <img src={nightMode ? logoPng : BrampLogo} alt="Logo" style={{ width: '40px', height: '40px', objectFit: 'contain', borderRadius: nightMode ? '0' : '10px' }} />
                   {/* ADDED SWITCH HERE FOR AUTHENTICATED VIEW */}
                   <label className="switch">
                     <input type="checkbox" checked={nightMode} onChange={(e) => setNightMode(e.target.checked)} />
