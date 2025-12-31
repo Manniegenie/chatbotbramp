@@ -884,10 +884,10 @@ export default function MobileApp() {
                     <motion.div
                       key={currentIconIndex}
                       className="mobile-app-logo"
-                      initial={{ opacity: 0, scale: 0.8, rotateY: -90 }}
-                      animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-                      exit={{ opacity: 0, scale: 0.8, rotateY: 90 }}
-                      transition={{ duration: 0.6, type: "spring", stiffness: 100, damping: 15 }}
+                      initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.9, y: -10 }}
+                      transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
                       style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
                       {React.createElement(icons[currentIconIndex].component, { size: 62 })}
@@ -1094,8 +1094,8 @@ export default function MobileApp() {
             <div className="mobile-nav-buttons">
               {!auth ? (
                 <div className="mobile-auth-buttons">
-                  {/* Logo beside switch */}
-                  <img src={logoPng} alt="Logo" style={{ width: '32px', height: '32px', objectFit: 'contain', marginRight: '8px' }} />
+                  {/* Logo beside switch - changes based on night mode */}
+                  <img src={nightMode ? logoPng : BrampLogo} alt="Logo" style={{ width: '32px', height: '32px', objectFit: 'contain', marginRight: '8px' }} />
                   {/* SWITCH REMAINS HERE FOR UN-AUTHENTICATED VIEW */}
                   <label className="switch">
                     <input type="checkbox" checked={nightMode} onChange={(e) => setNightMode(e.target.checked)} />
@@ -1112,8 +1112,8 @@ export default function MobileApp() {
                 </div>
               ) : (
                 <>
-                  {/* Logo beside switch */}
-                  <img src={logoPng} alt="Logo" style={{ width: '32px', height: '32px', objectFit: 'contain', marginRight: '8px' }} />
+                  {/* Logo beside switch - changes based on night mode */}
+                  <img src={nightMode ? logoPng : BrampLogo} alt="Logo" style={{ width: '32px', height: '32px', objectFit: 'contain', marginRight: '8px' }} />
                   {/* ADDED SWITCH HERE FOR AUTHENTICATED VIEW */}
                   <label className="switch" style={{ marginRight: '8px' }}>
                     <input type="checkbox" checked={nightMode} onChange={(e) => setNightMode(e.target.checked)} />
