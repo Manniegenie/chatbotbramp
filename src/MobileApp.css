@@ -1128,6 +1128,7 @@ a {
   scrollbar-width: none;
   padding: 8px 12px 40px;
   scroll-behavior: smooth;
+  box-shadow: none;
 }
 
 .mobile-news-cards-container::-webkit-scrollbar {
@@ -1153,11 +1154,18 @@ a {
   scroll-snap-align: start;
   transition: all 0.5s;
   flex-shrink: 0;
+  box-shadow: none;
 }
 
 .mobile-news-card:hover {
   box-shadow: 0 20px 40px #028336;
   transform: translateY(-4px);
+}
+
+/* Disable hover effects in night mode */
+body.night-mode .mobile-news-card:hover {
+  box-shadow: none;
+  transform: none;
 }
 
 /* Gradient overlay on hover */
@@ -1175,6 +1183,10 @@ a {
   opacity: 1;
 }
 
+body.night-mode .mobile-news-card:hover::before {
+  opacity: 0;
+}
+
 /* Animated radial glow */
 .mobile-news-card::after {
   content: '';
@@ -1184,29 +1196,13 @@ a {
   pointer-events: none;
 }
 
-/* Decorative dots */
+/* Decorative dots - removed */
 .mobile-news-card-dots {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  display: flex;
-  gap: 8px;
-  z-index: 10;
+  display: none;
 }
 
 .mobile-news-card-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #007337;
-}
-
-.mobile-news-card-dot:nth-child(2) {
-  background: #d3d2c7;
-}
-
-.mobile-news-card-dot:nth-child(3) {
-  background: rgba(232, 227, 91, 0.1);
+  display: none;
 }
 
 /* Card Content */
@@ -1222,6 +1218,10 @@ a {
 
 .mobile-news-card:hover .mobile-news-card-content {
   transform: translateY(-2px);
+}
+
+body.night-mode .mobile-news-card:hover .mobile-news-card-content {
+  transform: none;
 }
 
 .mobile-news-card-title {
@@ -2276,13 +2276,13 @@ body.night-mode .mobile-header-top {
   background: #000000;
 }
 
-/* News Area - White text in night mode */
+/* News Area - Keep gradient in night mode */
 body.night-mode .mobile-news-header {
-  background: none;
-  -webkit-background-clip: unset;
-  background-clip: unset;
-  -webkit-text-fill-color: #ffffff;
-  color: #ffffff;
+  /* Gradient remains the same in night mode */
+  background: linear-gradient(90deg, #ffffff, rgba(255, 255, 255, 0.9), rgba(168, 0, 119, 0.8));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 body.night-mode .mobile-news-card-title {

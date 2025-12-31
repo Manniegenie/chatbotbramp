@@ -91,6 +91,7 @@ const BackgroundCoins = React.memo(() => {
 function MobileNewsSection() {
   const [newsCards, setNewsCards] = useState<NewsCard[]>([])
   const [loading, setLoading] = useState(true)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -118,6 +119,57 @@ function MobileNewsSection() {
     }
   }, [])
 
+  // Auto-scroll carousel
+  useEffect(() => {
+    if (!containerRef.current || newsCards.length === 0) return
+
+    const container = containerRef.current
+    const maxScroll = container.scrollWidth - container.clientWidth
+    if (maxScroll <= 0) return
+
+    let direction = 1
+    let isPaused = false
+    let pauseTimeout: NodeJS.Timeout | null = null
+
+    // Pause auto-scroll when user interacts
+    const handleUserInteraction = () => {
+      isPaused = true
+      if (pauseTimeout) clearTimeout(pauseTimeout)
+      pauseTimeout = setTimeout(() => {
+        isPaused = false
+      }, 3000) // Resume after 3 seconds of no interaction
+    }
+
+    container.addEventListener('scroll', handleUserInteraction)
+    container.addEventListener('touchstart', handleUserInteraction)
+    container.addEventListener('mousedown', handleUserInteraction)
+
+    const autoScroll = setInterval(() => {
+      if (isPaused) return
+
+      const currentScroll = container.scrollLeft
+      const newScroll = currentScroll + direction * 0.5
+
+      if (newScroll >= maxScroll) {
+        direction = -1
+        container.scrollTo({ left: maxScroll, behavior: 'auto' })
+      } else if (newScroll <= 0) {
+        direction = 1
+        container.scrollTo({ left: 0, behavior: 'auto' })
+      } else {
+        container.scrollTo({ left: newScroll, behavior: 'auto' })
+      }
+    }, 20) // Smooth animation
+
+    return () => {
+      clearInterval(autoScroll)
+      if (pauseTimeout) clearTimeout(pauseTimeout)
+      container.removeEventListener('scroll', handleUserInteraction)
+      container.removeEventListener('touchstart', handleUserInteraction)
+      container.removeEventListener('mousedown', handleUserInteraction)
+    }
+  }, [newsCards])
+
   const handleCardClick = (card: NewsCard) => {
     if (card.url) window.open(card.url, '_blank', 'noopener,noreferrer')
   }
@@ -134,7 +186,7 @@ function MobileNewsSection() {
   return (
     <section className="mobile-news-section">
       <h2 className="mobile-news-header">Latest</h2>
-      <div className="mobile-news-cards-container">
+      <div className="mobile-news-cards-container" ref={containerRef}>
         {newsCards.map((card) => (
           <article
             key={card.id}
@@ -142,12 +194,13 @@ function MobileNewsSection() {
             onClick={() => handleCardClick(card)}
             role="button"
             tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                handleCardClick(card)
+              }
+            }}
           >
-            <div className="mobile-news-card-dots">
-              <div className="mobile-news-card-dot"></div>
-              <div className="mobile-news-card-dot"></div>
-              <div className="mobile-news-card-dot"></div>
-            </div>
             <div className="mobile-news-card-content">
               <h3 className="mobile-news-card-title">{card.title}</h3>
               <p className="mobile-news-card-description">{card.description}</p>
