@@ -216,6 +216,15 @@ function MobileNewsSection() {
     <section className="mobile-news-section">
       <h2 className="mobile-news-header">Latest</h2>
       <div className="mobile-news-cards-container" ref={containerRef}>
+        {/* Swipe indicator */}
+        {newsCards.length > 1 && (
+          <div className="mobile-news-swipe-indicator">
+            <span>Swipe</span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
+          </div>
+        )}
         {newsCards.map((card) => (
           <article
             key={card.id}
@@ -1095,9 +1104,9 @@ export default function MobileApp() {
               {!auth ? (
                 <div className="mobile-auth-buttons">
                   {/* Logo beside switch - changes based on night mode */}
-                  <img src={nightMode ? logoPng : BrampLogo} alt="Logo" style={{ width: '32px', height: '32px', objectFit: 'contain', marginRight: '8px' }} />
+                  <img src={nightMode ? logoPng : BrampLogo} alt="Logo" style={{ width: '40px', height: '40px', objectFit: 'contain', marginRight: '12px' }} />
                   {/* SWITCH REMAINS HERE FOR UN-AUTHENTICATED VIEW */}
-                  <label className="switch">
+                  <label className="switch" style={{ marginRight: '12px' }}>
                     <input type="checkbox" checked={nightMode} onChange={(e) => setNightMode(e.target.checked)} />
                     <span className="slider"></span>
                   </label>
@@ -1113,9 +1122,9 @@ export default function MobileApp() {
               ) : (
                 <>
                   {/* Logo beside switch - changes based on night mode */}
-                  <img src={nightMode ? logoPng : BrampLogo} alt="Logo" style={{ width: '32px', height: '32px', objectFit: 'contain', marginRight: '8px' }} />
+                  <img src={nightMode ? logoPng : BrampLogo} alt="Logo" style={{ width: '40px', height: '40px', objectFit: 'contain', marginRight: '12px' }} />
                   {/* ADDED SWITCH HERE FOR AUTHENTICATED VIEW */}
-                  <label className="switch" style={{ marginRight: '8px' }}>
+                  <label className="switch" style={{ marginRight: '12px' }}>
                     <input type="checkbox" checked={nightMode} onChange={(e) => setNightMode(e.target.checked)} />
                     <span className="slider"></span>
                   </label>
