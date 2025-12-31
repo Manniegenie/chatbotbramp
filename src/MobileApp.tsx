@@ -92,6 +92,27 @@ const BackgroundCoins = React.memo(() => {
 })
 
 // --- Helper Components ---
+function formatNewsTime(dateString: string): string {
+  try {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffMins = Math.floor(diffMs / 60000)
+    const diffHours = Math.floor(diffMins / 60)
+    const diffDays = Math.floor(diffHours / 24)
+
+    if (diffMins < 1) return 'Just now'
+    if (diffMins < 60) return `${diffMins}m ago`
+    if (diffHours < 24) return `${diffHours}h ago`
+    if (diffDays < 7) return `${diffDays}d ago`
+
+    // For older news, show just the time
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+  } catch {
+    return dateString
+  }
+}
+
 function MobileNewsSection() {
   const [newsCards, setNewsCards] = useState<NewsCard[]>([])
   const [loading, setLoading] = useState(true)
@@ -214,8 +235,8 @@ function MobileNewsSection() {
 
   return (
     <section className="mobile-news-section">
-      <h2 className="mobile-news-header">Latest</h2>
-      <div className="mobile-news-cards-container" ref={containerRef}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 12px 16px 12px' }}>
+        <h2 className="mobile-news-header" style={{ margin: 0 }}>Latest</h2>
         {/* Swipe indicator */}
         {newsCards.length > 1 && (
           <div className="mobile-news-swipe-indicator">
@@ -225,6 +246,8 @@ function MobileNewsSection() {
             </svg>
           </div>
         )}
+      </div>
+      <div className="mobile-news-cards-container" ref={containerRef}>
         {newsCards.map((card) => (
           <article
             key={card.id}
@@ -243,7 +266,7 @@ function MobileNewsSection() {
               <h3 className="mobile-news-card-title">{card.title}</h3>
               <p className="mobile-news-card-description">{card.description}</p>
               <div className="mobile-news-card-meta">
-                <span className="mobile-news-card-date">{card.date}</span>
+                <span className="mobile-news-card-date">{formatNewsTime(card.date)}</span>
                 <span className="mobile-news-card-source">{card.source}</span>
               </div>
             </div>
@@ -1104,9 +1127,9 @@ export default function MobileApp() {
               {!auth ? (
                 <div className="mobile-auth-buttons">
                   {/* Logo beside switch - changes based on night mode */}
-                  <img src={nightMode ? logoPng : BrampLogo} alt="Logo" style={{ width: '40px', height: '40px', objectFit: 'contain', marginRight: '12px' }} />
+                  <img src={nightMode ? logoPng : BrampLogo} alt="Logo" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
                   {/* SWITCH REMAINS HERE FOR UN-AUTHENTICATED VIEW */}
-                  <label className="switch" style={{ marginRight: '12px' }}>
+                  <label className="switch">
                     <input type="checkbox" checked={nightMode} onChange={(e) => setNightMode(e.target.checked)} />
                     <span className="slider"></span>
                   </label>
@@ -1122,9 +1145,9 @@ export default function MobileApp() {
               ) : (
                 <>
                   {/* Logo beside switch - changes based on night mode */}
-                  <img src={nightMode ? logoPng : BrampLogo} alt="Logo" style={{ width: '40px', height: '40px', objectFit: 'contain', marginRight: '12px' }} />
+                  <img src={nightMode ? logoPng : BrampLogo} alt="Logo" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
                   {/* ADDED SWITCH HERE FOR AUTHENTICATED VIEW */}
-                  <label className="switch" style={{ marginRight: '12px' }}>
+                  <label className="switch">
                     <input type="checkbox" checked={nightMode} onChange={(e) => setNightMode(e.target.checked)} />
                     <span className="slider"></span>
                   </label>

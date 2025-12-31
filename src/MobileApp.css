@@ -223,7 +223,7 @@ a {
 
 .mobile-auth-buttons {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
   flex-shrink: 0;
 }
@@ -298,7 +298,7 @@ a {
 
 .mobile-nav-buttons {
   display: flex;
-  gap: 6px;
+  gap: 10px;
   align-items: center;
   justify-content: flex-end;
   width: 100%;
@@ -1103,7 +1103,6 @@ a {
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: #000000;
-  margin: 0 12px 16px 12px;
   padding-top: 4px;
   letter-spacing: -0.3px;
   flex-shrink: 0;
@@ -1124,33 +1123,28 @@ a {
 
 /* Swipe indicator */
 .mobile-news-swipe-indicator {
-  position: absolute;
-  top: 50%;
-  right: 20px;
-  transform: translateY(-50%);
   display: flex;
   align-items: center;
   gap: 4px;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 12px;
+  color: #fff000;
+  font-size: 11px;
   font-weight: 600;
   pointer-events: none;
-  z-index: 5;
   animation: swipeHint 2s ease-in-out infinite;
 }
 
 .mobile-news-swipe-indicator svg {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
 }
 
 @keyframes swipeHint {
   0%, 100% {
-    transform: translateY(-50%) translateX(0);
+    transform: translateX(0);
     opacity: 0.8;
   }
   50% {
-    transform: translateY(-50%) translateX(-8px);
+    transform: translateX(-6px);
     opacity: 1;
   }
 }
