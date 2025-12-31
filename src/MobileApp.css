@@ -1100,7 +1100,10 @@ a {
 .mobile-news-header {
   font-size: 15px;
   font-weight: 700;
-  color: #ffffff;
+  background: linear-gradient(135deg, #edb5dc, #66FF00, #A80077);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   padding-top: 4px;
   letter-spacing: -0.3px;
   flex-shrink: 0;
