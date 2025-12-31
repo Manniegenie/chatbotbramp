@@ -1092,7 +1092,7 @@ a {
 .mobile-news-header {
   font-size: 15px;
   font-weight: 700;
-  background: linear-gradient(90deg, #000000 0%, #000000 60%, rgba(168, 0, 119, 0.8) 100%);
+  background: linear-gradient(90deg, #000000 0%, #000000 50%, rgba(168, 0, 119, 1) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -1149,7 +1149,8 @@ a {
   align-items: flex-start;
   flex-direction: column;
   gap: 16px;
-  backdrop-filter: blur(12px);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   cursor: pointer;
   scroll-snap-align: start;
   transition: all 0.5s;
@@ -1187,12 +1188,12 @@ body.night-mode .mobile-news-card:hover::before {
   opacity: 0;
 }
 
-/* Animated radial glow */
+/* Animated radial glow - removed whitish background */
 .mobile-news-card::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 50%, #e6f1ec, transparent 60%);
+  background: transparent;
   pointer-events: none;
 }
 
@@ -2316,7 +2317,7 @@ body.night-mode .mobile-header-top {
 /* News Area - Keep gradient in night mode */
 body.night-mode .mobile-news-header {
   /* Gradient on last text like night mode */
-  background: linear-gradient(90deg, #ffffff 0%, #ffffff 60%, rgba(168, 0, 119, 0.8) 100%);
+  background: linear-gradient(90deg, #ffffff 0%, #ffffff 50%, rgba(168, 0, 119, 1) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
