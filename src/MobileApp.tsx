@@ -13,6 +13,9 @@ import MobileLiskWallet from './MobileLiskWallet'
 import BrampLogo from './assets/logo.jpeg'
 import micIcon from './assets/mic.png'
 import logoPng from './assets/logo.png'
+import tronPng from './assets/tron.png'
+import usdcPng from './assets/usdc.png'
+import shibaPng from './assets/shiba-inu.png'
 import { Bitcoin, EthereumCircleFlat, Usdt, Usdc, Send } from './components/CryptoIcons'
 import SpinnerLoader from './components/SpinnerLoader'
 import wallpaper2 from './assets/wallpaper2.jpg'
@@ -386,7 +389,10 @@ export default function MobileApp() {
   const [tickerText, setTickerText] = useState<string>('')
 
   const icons = [
-    { component: () => <img src={logoPng} alt="Logo" style={{ width: '62px', height: '62px', objectFit: 'contain' }} />, name: 'Logo' },
+    { component: Usdt, name: 'USDT' },
+    { component: () => <img src={tronPng} alt="Tron" style={{ width: '62px', height: '62px', objectFit: 'contain' }} />, name: 'Tron' },
+    { component: () => <img src={usdcPng} alt="USDC" style={{ width: '62px', height: '62px', objectFit: 'contain' }} />, name: 'USDC' },
+    { component: () => <img src={shibaPng} alt="Shiba Inu" style={{ width: '62px', height: '62px', objectFit: 'contain' }} />, name: 'Shiba' },
   ]
   const [currentIconIndex, setCurrentIconIndex] = useState(0)
 
@@ -1088,6 +1094,8 @@ export default function MobileApp() {
             <div className="mobile-nav-buttons">
               {!auth ? (
                 <div className="mobile-auth-buttons">
+                  {/* Logo beside switch */}
+                  <img src={logoPng} alt="Logo" style={{ width: '32px', height: '32px', objectFit: 'contain', marginRight: '8px' }} />
                   {/* SWITCH REMAINS HERE FOR UN-AUTHENTICATED VIEW */}
                   <label className="switch">
                     <input type="checkbox" checked={nightMode} onChange={(e) => setNightMode(e.target.checked)} />
@@ -1104,6 +1112,8 @@ export default function MobileApp() {
                 </div>
               ) : (
                 <>
+                  {/* Logo beside switch */}
+                  <img src={logoPng} alt="Logo" style={{ width: '32px', height: '32px', objectFit: 'contain', marginRight: '8px' }} />
                   {/* ADDED SWITCH HERE FOR AUTHENTICATED VIEW */}
                   <label className="switch" style={{ marginRight: '8px' }}>
                     <input type="checkbox" checked={nightMode} onChange={(e) => setNightMode(e.target.checked)} />
