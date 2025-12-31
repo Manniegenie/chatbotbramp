@@ -1126,46 +1126,54 @@ export default function MobileApp() {
             <div className="mobile-nav-buttons">
               {!auth ? (
                 <div className="mobile-auth-buttons">
-                  {/* Logo beside switch - changes based on night mode */}
-                  <img src={nightMode ? logoPng : BrampLogo} alt="Logo" style={{ width: '40px', height: '40px', objectFit: 'contain', borderRadius: nightMode ? '0' : '10px' }} />
-                  {/* SWITCH REMAINS HERE FOR UN-AUTHENTICATED VIEW */}
-                  <label className="switch">
-                    <input type="checkbox" checked={nightMode} onChange={(e) => setNightMode(e.target.checked)} />
-                    <span className="slider"></span>
-                  </label>
-                  <button className="mobile-auth-btn mobile-login-btn" onClick={() => setShowSignIn(true)}>
-                    Log In <span className="arrow">›</span>
-                  </button>
-                  {!hideSignUpButton && (
-                    <button className="mobile-auth-btn mobile-create-account-btn" onClick={() => setShowSignUp(true)}>
-                      Get Started
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    {/* Logo beside switch - changes based on night mode */}
+                    <img src={nightMode ? logoPng : BrampLogo} alt="Logo" style={{ width: '40px', height: '40px', objectFit: 'contain', borderRadius: nightMode ? '0' : '10px' }} />
+                    {/* SWITCH REMAINS HERE FOR UN-AUTHENTICATED VIEW */}
+                    <label className="switch">
+                      <input type="checkbox" checked={nightMode} onChange={(e) => setNightMode(e.target.checked)} />
+                      <span className="slider"></span>
+                    </label>
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <button className="mobile-auth-btn mobile-login-btn" onClick={() => setShowSignIn(true)}>
+                      Log In <span className="arrow">›</span>
                     </button>
-                  )}
+                    {!hideSignUpButton && (
+                      <button className="mobile-auth-btn mobile-create-account-btn" onClick={() => setShowSignUp(true)}>
+                        Get Started
+                      </button>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <>
-                  {/* Logo beside switch - changes based on night mode */}
-                  <img src={nightMode ? logoPng : BrampLogo} alt="Logo" style={{ width: '40px', height: '40px', objectFit: 'contain', borderRadius: nightMode ? '0' : '10px' }} />
-                  {/* ADDED SWITCH HERE FOR AUTHENTICATED VIEW */}
-                  <label className="switch">
-                    <input type="checkbox" checked={nightMode} onChange={(e) => setNightMode(e.target.checked)} />
-                    <span className="slider"></span>
-                  </label>
-                  <button className="btn mobile-sell-btn mobile-sell-btn-with-icon" onClick={handleSellClick} aria-label="Sell Crypto">
-                    <span>Sell</span>
-                  </button>
-                  {/* RE-ADDED WALLET BUTTON */}
-                  <button className="btn mobile-sell-btn mobile-wallet-btn" onClick={handleLiskWalletClick} style={{ marginLeft: '8px' }} aria-label="Connect Wallet">
-                    Wallet
-                  </button>
-                  {/* RESTORED: Menu button functionality */}
-                  <button className="mobile-menu-btn" onClick={handleMenuClick} aria-label="Toggle Menu">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                      <line x1="3" y1="12" x2="21" y2="12"></line>
-                      <line x1="3" y1="6" x2="21" y2="6"></line>
-                      <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
-                  </button>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    {/* Logo beside switch - changes based on night mode */}
+                    <img src={nightMode ? logoPng : BrampLogo} alt="Logo" style={{ width: '40px', height: '40px', objectFit: 'contain', borderRadius: nightMode ? '0' : '10px' }} />
+                    {/* ADDED SWITCH HERE FOR AUTHENTICATED VIEW */}
+                    <label className="switch">
+                      <input type="checkbox" checked={nightMode} onChange={(e) => setNightMode(e.target.checked)} />
+                      <span className="slider"></span>
+                    </label>
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <button className="btn mobile-sell-btn mobile-sell-btn-with-icon" onClick={handleSellClick} aria-label="Sell Crypto">
+                      <span>Sell</span>
+                    </button>
+                    {/* RE-ADDED WALLET BUTTON */}
+                    <button className="btn mobile-sell-btn mobile-wallet-btn" onClick={handleLiskWalletClick} aria-label="Connect Wallet">
+                      Wallet
+                    </button>
+                    {/* RESTORED: Menu button functionality */}
+                    <button className="mobile-menu-btn" onClick={handleMenuClick} aria-label="Toggle Menu">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                      </svg>
+                    </button>
+                  </div>
                 </>
               )}
             </div>
