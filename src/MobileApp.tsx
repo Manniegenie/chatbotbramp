@@ -1084,10 +1084,6 @@ export default function MobileApp() {
         
         <header className="mobile-header">
           <div className="mobile-header-top">
-            <div className="mobile-brand">
-              <img src={BrampLogo} alt="Bramp" className="mobile-logo" onError={(e) => { e.currentTarget.style.display = 'none' }} />
-            </div>
-
             <div className="mobile-nav-buttons">
               {!auth ? (
                 <div className="mobile-auth-buttons">

@@ -1231,16 +1231,22 @@ body.night-mode .mobile-news-card:hover::before {
 }
 
 /* Night mode dots */
+body.night-mode .mobile-news-dots {
+  display: flex;
+}
+
 body.night-mode .mobile-news-dot {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.4);
 }
 
 body.night-mode .mobile-news-dot:hover {
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.7);
 }
 
 body.night-mode .mobile-news-dot.active {
-  background: rgba(168, 0, 119, 0.8);
+  background: rgba(168, 0, 119, 1);
+  width: 24px;
+  border-radius: 4px;
 }
 
 /* Card Content */
@@ -2317,10 +2323,11 @@ body.night-mode .mobile-header-top {
 /* News Area - Keep gradient in night mode */
 body.night-mode .mobile-news-header {
   /* Gradient on last text like night mode */
-  background: linear-gradient(90deg, #ffffff 0%, #ffffff 50%, rgba(168, 0, 119, 1) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  background: linear-gradient(90deg, #ffffff 0%, #ffffff 50%, rgba(168, 0, 119, 1) 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
 }
 
 body.night-mode .mobile-news-card-title {
