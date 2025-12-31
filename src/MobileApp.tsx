@@ -129,7 +129,7 @@ function MobileNewsSection() {
 
     let direction = 1
     let isPaused = false
-    let pauseTimeout: NodeJS.Timeout | null = null
+    let pauseTimeout: ReturnType<typeof setTimeout> | null = null
 
     // Pause auto-scroll when user interacts
     const handleUserInteraction = () => {
