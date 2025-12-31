@@ -1100,7 +1100,7 @@ a {
 .mobile-news-header {
   font-size: 15px;
   font-weight: 700;
-  color: var(--txt);
+  color: #ffffff;
   padding-top: 4px;
   letter-spacing: -0.3px;
   flex-shrink: 0;
@@ -1307,7 +1307,7 @@ body.night-mode .mobile-news-card:hover .mobile-news-card-content {
 .mobile-news-card-title {
   font-size: 22px;
   font-weight: 700;
-  background: linear-gradient(90deg, #010101, rgba(0, 0, 0, 0.9), rgba(168, 0, 119, 0.8));
+  background: linear-gradient(135deg, #edb5dc, #66FF00, #A80077);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
