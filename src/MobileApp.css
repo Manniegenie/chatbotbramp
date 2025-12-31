@@ -1076,6 +1076,7 @@ a {
   padding: 5px;
   flex-shrink: 0;
   overflow: hidden;
+  box-shadow: none;
 }
 
 .mobile-news-loading {
@@ -1091,6 +1092,10 @@ a {
 .mobile-news-header {
   font-size: 15px;
   font-weight: 700;
+  background: linear-gradient(90deg, #010101, rgba(0, 0, 0, 0.9), rgba(168, 0, 119, 0.8));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   color: #000000;
   margin: 0 12px 16px 12px;
   padding-top: 4px;
@@ -2273,6 +2278,10 @@ body.night-mode .mobile-header-top {
 
 /* News Area - White text in night mode */
 body.night-mode .mobile-news-header {
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  -webkit-text-fill-color: #ffffff;
   color: #ffffff;
 }
 
