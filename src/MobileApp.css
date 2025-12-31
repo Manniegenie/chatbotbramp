@@ -226,7 +226,6 @@ a {
   gap: 8px;
   align-items: center;
   flex-shrink: 0;
-  min-height: 44px;
 }
 
 .mobile-auth-btn {
@@ -239,13 +238,14 @@ a {
   border: 0;
   border-radius: 20px;
   color: var(--secondary-color);
-  padding: 1em 1.8em;
+  padding: 0.5em 1.2em;
   background: var(--primary-color);
   display: flex;
   transition: 0.2s background;
   align-items: center;
   gap: 0.6em;
   font-weight: bold;
+  font-size: 14px;
 }
 
 
@@ -262,15 +262,14 @@ a {
   border: 1px solid var(--secondary-color);
   border-radius: 20px;
   color: var(--secondary-color);
-  padding: 1em 1.8em;
+  padding: 0.5em 1.2em;
   background: var(--primary-color);
   display: flex;
   transition: 0.2s background;
   align-items: center;
   gap: 0.6em;
   font-weight: bold;
-  height: auto;
-  min-height: 44px;
+  font-size: 14px;
 }
 
 
@@ -285,15 +284,14 @@ a {
   border: 0;
   border-radius: 20px;
   color: var(--secondary-color);
-  padding: 1em 1.8em;
+  padding: 0.5em 1.2em;
   background: var(--primary-color);
   display: flex;
   transition: 0.2s background;
   align-items: center;
   gap: 0.6em;
   font-weight: bold;
-  height: auto;
-  min-height: 44px;
+  font-size: 14px;
 }
 
 
