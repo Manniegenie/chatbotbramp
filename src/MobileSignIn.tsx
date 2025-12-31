@@ -1,5 +1,7 @@
 // src/MobileSignIn.tsx
 import React, { useState, useEffect } from 'react'
+import { LogIn, User } from 'lucide-react'
+import SpinnerLoader from './components/SpinnerLoader'
 import './mobile-auth.css'
 
 // --- Types ---
@@ -113,6 +115,7 @@ export default function MobileSignIn({ onSuccess, onCancel }: MobileSignInProps)
       <div className="mobile-auth-container">
         <div className="mobile-auth-header">
           <div className="mobile-auth-title-row">
+            <User size={20} style={{ marginRight: '8px', flexShrink: 0 }} />
             <h2 className="mobile-auth-header-login">Log In</h2>
           </div>
 
@@ -161,7 +164,17 @@ export default function MobileSignIn({ onSuccess, onCancel }: MobileSignInProps)
 
             <div className="mobile-auth-button-row">
               <button className="mobile-auth-button primary" type="submit" disabled={loading}>
-                {loading ? 'Signing in…' : 'Login'}
+                {loading ? (
+                  <>
+                    <SpinnerLoader size="small" variant="white" className="spinner-loader--inline" />
+                    Signing in…
+                  </>
+                ) : (
+                  <>
+                    <LogIn size={18} style={{ marginRight: '8px' }} />
+                    Login
+                  </>
+                )}
               </button>
             </div>
 

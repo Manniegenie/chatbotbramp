@@ -1,5 +1,7 @@
 // src/MobileSignUp.tsx
 import React, { useState } from 'react'
+import { UserPlus, ArrowRight, ShieldCheck, Check, Lock, Mail, Phone, User } from 'lucide-react'
+import SpinnerLoader from './components/SpinnerLoader'
 import { tokenStore } from './lib/secureStore'
 import { normalizePhone } from './utils/phoneNormalization.test'
 import './mobile-auth.css'
@@ -406,6 +408,23 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
     return 'Create your account'
   }
 
+  function getHeaderIcon() {
+    if (currentStepGroup === 'names') return <User size={20} />
+    if (currentStepGroup === 'contact') return <Mail size={20} />
+    if (currentStepId === 'otp') return <ShieldCheck size={20} />
+    if (currentStepId === 'pin') return <Lock size={20} />
+    return <UserPlus size={20} />
+  }
+
+  function getButtonIcon() {
+    if (loading) return null
+    if (currentStepGroup === 'names') return <ArrowRight size={18} />
+    if (currentStepGroup === 'contact') return <UserPlus size={18} />
+    if (currentStepId === 'otp') return <ShieldCheck size={18} />
+    if (currentStepId === 'pin') return <Check size={18} />
+    return <ArrowRight size={18} />
+  }
+
   function renderStep() {
     if (currentStepGroup === 'names') {
       return (
@@ -495,7 +514,14 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
               onClick={handleResendOtp}
               disabled={resendLoading || loading}
             >
-              {resendLoading ? 'Sending…' : 'Resend OTP'}
+              {resendLoading ? (
+                <>
+                  <SpinnerLoader size="small" variant="primary" className="spinner-loader--inline" />
+                  Sending…
+                </>
+              ) : (
+                'Resend OTP'
+              )}
             </button>
           </div>
         </>
@@ -550,6 +576,9 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
         
         <div className="mobile-auth-header">
           <div className="mobile-auth-title-row">
+            <span style={{ marginRight: '8px', flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+              {getHeaderIcon()}
+            </span>
             <h2 className="mobile-auth-header-login">{getHeaderTitle()}</h2>
           </div>
 
@@ -574,17 +603,29 @@ export default function MobileSignUp({ onSuccess, onCancel }: SignUpProps) {
 
             <div className="mobile-auth-button-row">
               <button type="submit" className="mobile-auth-button primary" disabled={loading}>
-                {loading
-                  ? 'Processing…'
-                  : currentStepGroup === 'names'
-                    ? 'Continue'
-                    : currentStepGroup === 'contact'
-                      ? 'Create Account'
-                      : currentStepId === 'otp'
-                        ? 'Verify OTP'
-                        : currentStepId === 'pin'
-                          ? 'Complete'
-                          : 'Next'}
+                {loading ? (
+                  <>
+                    <SpinnerLoader size="small" variant="white" className="spinner-loader--inline" />
+                    Processing…
+                  </>
+                ) : (
+                  <>
+                    {getButtonIcon() && (
+                      <span style={{ marginRight: '8px', display: 'flex', alignItems: 'center' }}>
+                        {getButtonIcon()}
+                      </span>
+                    )}
+                    {currentStepGroup === 'names'
+                      ? 'Continue'
+                      : currentStepGroup === 'contact'
+                        ? 'Create Account'
+                        : currentStepId === 'otp'
+                          ? 'Verify OTP'
+                          : currentStepId === 'pin'
+                            ? 'Complete'
+                            : 'Next'}
+                  </>
+                )}
               </button>
             </div>
 

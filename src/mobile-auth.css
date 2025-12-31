@@ -183,6 +183,9 @@
   font-weight: 700;
   cursor: pointer;
   min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s ease;
   border: none;
   position: relative;

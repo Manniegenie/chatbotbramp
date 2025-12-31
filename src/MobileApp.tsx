@@ -13,6 +13,7 @@ import MobileLiskWallet from './MobileLiskWallet'
 import BrampLogo from './assets/logo.jpeg'
 import micIcon from './assets/mic.png'
 import { Bitcoin, EthereumCircleFlat, Usdt, Usdc, Send } from './components/CryptoIcons'
+import SpinnerLoader from './components/SpinnerLoader'
 import wallpaper2 from './assets/wallpaper2.jpg'
 import Preloader from './Preloader'
 import { MessageCircleIcon } from 'lucide-react'
@@ -121,7 +122,14 @@ function MobileNewsSection() {
     if (card.url) window.open(card.url, '_blank', 'noopener,noreferrer')
   }
 
-  if (loading) return <div className="mobile-news-loading">Loading news…</div>
+  if (loading) {
+    return (
+      <div className="mobile-news-loading">
+        <SpinnerLoader size="medium" variant="primary" />
+        <span style={{ marginLeft: '12px', color: 'var(--txt)' }}>Loading news…</span>
+      </div>
+    )
+  }
 
   return (
     <section className="mobile-news-section">
@@ -170,18 +178,6 @@ function MobileNewsSection() {
         ))}
       </div>
     </section>
-  )
-}
-
-function ThreeDotLoader() {
-  return (
-    <div className="typing-mobile">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-        <div className="dot"></div>
-        <div className="dot" style={{ animationDelay: '-0.16s' }}></div>
-        <div className="dot" style={{ animationDelay: '0s' }}></div>
-      </div>
-    </div>
   )
 }
 
@@ -282,6 +278,7 @@ export default function MobileApp() {
   const [showVoiceChat, setShowVoiceChat] = useState(false)
   const [showLiskWallet, setShowLiskWallet] = useState(false)
   const [showHints, setShowHints] = useState(false)
+  const [nightMode, setNightMode] = useState(true)
 
   const [auth, setAuth] = useState<SignInResult | null>(() => {
     const authState = getAuthState()
@@ -306,6 +303,21 @@ export default function MobileApp() {
     const timer = window.setTimeout(() => setShowPreloader(false), 3000)
     return () => window.clearTimeout(timer)
   }, [])
+
+  // Toggle night-mode class on body and html
+  useEffect(() => {
+    if (nightMode) {
+      document.body.classList.add('night-mode')
+      document.documentElement.classList.add('night-mode')
+    } else {
+      document.body.classList.remove('night-mode')
+      document.documentElement.classList.remove('night-mode')
+    }
+    return () => {
+      document.body.classList.remove('night-mode')
+      document.documentElement.classList.remove('night-mode')
+    }
+  }, [nightMode])
 
   const overlayActive = showSignIn || showSignUp || showSell || showVoiceChat || showMenu || showLiskWallet
   const pageClassName = overlayActive ? 'mobile-page mobile-page--overlay' : 'mobile-page'
@@ -724,7 +736,11 @@ export default function MobileApp() {
               </div>
             </div>
           ))}
-          {loading && <ThreeDotLoader />}
+          {loading && (
+            <div className="typing-mobile">
+              <SpinnerLoader size="small" variant="primary" />
+            </div>
+          )}
           <div ref={endRef} />
         </div>
 
@@ -802,7 +818,7 @@ export default function MobileApp() {
                         disabled={loading || !input.trim()}
                         aria-label="Send message"
                       >
-                        {loading ? <div className="mobile-spinner" /> : <Send size={20} active={Boolean(input.trim())} />}
+                        {loading ? <SpinnerLoader size="small" variant="white" /> : <Send size={20} active={Boolean(input.trim())} />}
                       </button>
                     </div>
                   </div>
@@ -862,7 +878,7 @@ export default function MobileApp() {
                   aria-label="Send message"
                 >
                   {loading ? (
-                    <div className="mobile-spinner" />
+                    <SpinnerLoader size="small" variant="white" />
                   ) : (
                     <Send size={20} active={Boolean(input.trim())} style={{ opacity: loading || !input.trim() ? 0.6 : 1, color: input.trim() ? undefined : 'rgba(0, 0, 0, 0.5)' }} />
                   )}
@@ -987,7 +1003,7 @@ export default function MobileApp() {
                 <div className="mobile-auth-buttons">
                   {/* SWITCH REMAINS HERE FOR UN-AUTHENTICATED VIEW */}
                   <label className="switch">
-                    <input type="checkbox" onChange={(e) => console.log('Night mode:', e.target.checked)} />
+                    <input type="checkbox" checked={nightMode} onChange={(e) => setNightMode(e.target.checked)} />
                     <span className="slider"></span>
                   </label>
                   <button className="mobile-auth-btn mobile-login-btn" onClick={() => setShowSignIn(true)}>
@@ -1003,7 +1019,7 @@ export default function MobileApp() {
                 <>
                   {/* ADDED SWITCH HERE FOR AUTHENTICATED VIEW */}
                   <label className="switch" style={{ marginRight: '8px' }}>
-                    <input type="checkbox" onChange={(e) => console.log('Night mode:', e.target.checked)} />
+                    <input type="checkbox" checked={nightMode} onChange={(e) => setNightMode(e.target.checked)} />
                     <span className="slider"></span>
                   </label>
                   <button className="btn mobile-sell-btn mobile-sell-btn-with-icon" onClick={handleSellClick} aria-label="Sell Crypto">

@@ -1,11 +1,14 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2020",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
-
     "strict": true,
     "noEmit": true,
     "skipLibCheck": true,
@@ -14,10 +17,21 @@
     "resolveJsonModule": true,
     "useDefineForClassFields": true,
     "isolatedModules": true,
-
-    "types": ["vite/client"],
-    "typeRoots": ["./node_modules/@types", "./src/types"]
+    "types": [
+      "vite/client"
+    ],
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ]
   },
-  "include": ["src", "src/types"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "src",
+    "src/types"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ],
+  "extends": "expo/tsconfig.base"
 }
