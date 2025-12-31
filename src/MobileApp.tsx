@@ -12,6 +12,7 @@ import MobileVoiceChat from './MobileVoiceChat'
 import MobileLiskWallet from './MobileLiskWallet'
 import BrampLogo from './assets/logo.jpeg'
 import micIcon from './assets/mic.png'
+import logoPng from './assets/logo.png'
 import { Bitcoin, EthereumCircleFlat, Usdt, Usdc, Send } from './components/CryptoIcons'
 import SpinnerLoader from './components/SpinnerLoader'
 import wallpaper2 from './assets/wallpaper2.jpg'
@@ -385,7 +386,7 @@ export default function MobileApp() {
   const [tickerText, setTickerText] = useState<string>('')
 
   const icons = [
-    { component: Usdt, name: 'USDT' },
+    { component: () => <img src={logoPng} alt="Logo" style={{ width: '62px', height: '62px', objectFit: 'contain' }} />, name: 'Logo' },
   ]
   const [currentIconIndex, setCurrentIconIndex] = useState(0)
 
