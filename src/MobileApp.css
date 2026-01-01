@@ -2375,6 +2375,12 @@ body.night-mode .mobile-news-swipe-indicator {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Crypto Price Cards - Add spacing from input card */
+.mobile-crypto-price-section {
+  margin-top: 20px;
+  padding-top: 20px;
+}
+
 /* Crypto Price Cards - Night Mode Styles */
 body.night-mode .mobile-crypto-price-section h3,
 body.night-mode .mobile-crypto-price-section .mobile-news-card h3 {
