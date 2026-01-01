@@ -1192,35 +1192,7 @@ a {
   box-shadow: none;
 }
 
-.mobile-news-card:hover {
-  box-shadow: 0 20px 40px #028336;
-  transform: translateY(-4px);
-}
-
-/* Disable hover effects in night mode */
-body.night-mode .mobile-news-card:hover {
-  box-shadow: none;
-  transform: none;
-}
-
-/* Gradient overlay on hover */
-.mobile-news-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: #fbfbfb;
-  opacity: 0;
-  transition: opacity 0.5s;
-  border-radius: 24px;
-}
-
-.mobile-news-card:hover::before {
-  opacity: 1;
-}
-
-body.night-mode .mobile-news-card:hover::before {
-  opacity: 0;
-}
+/* Hover effects removed */
 
 /* Animated radial glow - removed whitish background */
 .mobile-news-card::after {
@@ -1299,13 +1271,6 @@ body.night-mode .mobile-news-dot.active {
   flex: 1;
 }
 
-.mobile-news-card:hover .mobile-news-card-content {
-  transform: translateY(-2px);
-}
-
-body.night-mode .mobile-news-card:hover .mobile-news-card-content {
-  transform: none;
-}
 
 .mobile-news-card-title {
   font-size: 22px;
@@ -2396,6 +2361,24 @@ body.night-mode .mobile-news-card-source {
 
 body.night-mode .mobile-news-swipe-indicator {
   color: #007337;
+}
+
+/* Crypto Price Cards - Night Mode Styles */
+body.night-mode .mobile-crypto-price-section h3,
+body.night-mode .mobile-crypto-price-section .mobile-news-card h3 {
+  background: linear-gradient(135deg, #edb5dc, #66FF00, #A80077) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+}
+
+body.night-mode .mobile-crypto-price-section .mobile-news-card > div > div {
+  background: linear-gradient(135deg, #edb5dc, #66FF00, #A80077) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
 }
 
 /* Centered Input Card - Solid green in night mode */

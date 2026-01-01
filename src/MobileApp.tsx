@@ -256,7 +256,7 @@ function MobileCryptoPriceScroll() {
 
   const getChangeColor = (change?: number) => {
     if (!change) return 'rgba(255, 255, 255, 0.6)'
-    return change > 0 ? '#00ff88' : '#ff4444'
+    return '#007337'
   }
 
   const getChangeIcon = (change?: number) => {
