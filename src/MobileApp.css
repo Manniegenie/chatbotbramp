@@ -1096,57 +1096,48 @@ a {
   color: var(--txt);
 }
 
-/* News Header */
-.mobile-news-header {
-  font-size: 15px;
+/* Snake-game-like Scrolling Header */
+.mobile-news-scroll-header {
+  height: 40px;
+  overflow: hidden;
+  position: relative;
+  margin: 0 0 16px 0;
+  background: rgba(0, 115, 55, 0.1);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.mobile-news-scroll-text {
+  display: inline-block;
+  white-space: nowrap;
+  font-size: 14px;
   font-weight: 700;
   background: linear-gradient(135deg, #edb5dc, #66FF00, #A80077);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  padding-top: 4px;
-  letter-spacing: -0.3px;
-  flex-shrink: 0;
-  position: relative;
+  letter-spacing: 0.5px;
+  animation: newsScrollMarquee 30s linear infinite;
+  -webkit-animation: newsScrollMarquee 30s linear infinite;
+  padding: 0 20px;
 }
 
-/* Accent line under header - white */
-.mobile-news-header::after {
-  content: '';
-  display: block;
-  width: 60px;
-  height: 3px;
-  border-radius: 20px;
-  background: #ffffff;
-  margin-top: 8px;
-  opacity: 1;
-}
-
-/* Swipe indicator */
-.mobile-news-swipe-indicator {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: #000000;
-  font-size: 11px;
-  font-weight: 600;
-  pointer-events: none;
-  animation: swipeHint 2s ease-in-out infinite;
-}
-
-.mobile-news-swipe-indicator svg {
-  width: 16px;
-  height: 16px;
-}
-
-@keyframes swipeHint {
-  0%, 100% {
-    transform: translateX(0);
-    opacity: 0.8;
+@keyframes newsScrollMarquee {
+  0% {
+    transform: translateX(100%);
   }
-  50% {
-    transform: translateX(-6px);
-    opacity: 1;
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@-webkit-keyframes newsScrollMarquee {
+  0% {
+    -webkit-transform: translateX(100%);
+  }
+  100% {
+    -webkit-transform: translateX(-100%);
   }
 }
 
