@@ -1132,6 +1132,11 @@ a {
   font-weight: 600;
   pointer-events: none;
   animation: swipeHint 2s ease-in-out infinite;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 4px 8px;
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .mobile-news-swipe-indicator svg {
@@ -2326,8 +2331,8 @@ body.night-mode .mobile-header-top {
 
 /* News Area - Keep gradient in night mode */
 body.night-mode .mobile-news-header {
-  /* Gradient on last text like night mode */
-  background: linear-gradient(90deg, #ffffff 0%, #ffffff 50%, rgba(168, 0, 119, 1) 100%) !important;
+  /* Use same gradient as light mode */
+  background: linear-gradient(135deg, #edb5dc, #66FF00, #A80077) !important;
   -webkit-background-clip: text !important;
   background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
@@ -2361,6 +2366,8 @@ body.night-mode .mobile-news-card-source {
 
 body.night-mode .mobile-news-swipe-indicator {
   color: #007337;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Crypto Price Cards - Night Mode Styles */
