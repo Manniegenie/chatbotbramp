@@ -2309,16 +2309,21 @@ body.night-mode .page::before {
   }
 }
 
-/* Notch/Safe Area - Black in night mode */
-body.night-mode .mobile-header::before {
+/* Notch/Safe Area - White in light mode */
+.mobile-header::before {
   content: '';
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   height: env(safe-area-inset-top, 0px);
-  background: #000000;
+  background: #ffffff;
   z-index: 60;
+}
+
+/* Notch/Safe Area - Black in night mode */
+body.night-mode .mobile-header::before {
+  background: #000000;
 }
 
 body.night-mode .mobile-header {
