@@ -1170,6 +1170,13 @@ export default function MobileApp() {
             }}
           >
             <div className="mobile-centered-input" style={{ position: 'relative', top: 'auto', left: 'auto', transform: 'none', marginBottom: '20px', flexShrink: 0 }}>
+              {nightMode && (
+                <>
+                  <span style={{ position: 'absolute', top: '10px', left: '15px', fontSize: '16px', opacity: 0.25, color: '#26a17b', animation: 'float 3.5s ease-in-out infinite', animationDelay: '0.5s' }}>₮</span>
+                  <span style={{ position: 'absolute', bottom: '15px', right: '30px', fontSize: '14px', opacity: 0.25, color: '#f3ba2f', animation: 'float 4.5s ease-in-out infinite', animationDelay: '1.5s' }}>◆</span>
+                  <span style={{ position: 'absolute', top: '50%', left: '5px', fontSize: '12px', opacity: 0.2, color: '#627eea', animation: 'float 4s ease-in-out infinite', animationDelay: '2s' }}>Ξ</span>
+                </>
+              )}
               <div className="mobile-centered-form">
                 <h2 style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}>Secure Crypto to NGN Exchange</h2>
 

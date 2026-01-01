@@ -179,7 +179,7 @@ a {
   border-bottom: none;
   padding-top: 12px;
   flex-shrink: 0;
-  background: transparent; /* Let wallpaper show through */
+  background: #ffffff;
 }
 
 .mobile-header-top {
@@ -189,7 +189,7 @@ a {
   padding: 12px 8px;
   gap: 8px;
   min-height: 56px;
-  background: transparent; /* Let wallpaper show through */
+  background: #ffffff;
   width: 100%;
 }
 
@@ -2202,10 +2202,10 @@ a:focus-visible,
 
 }
 
-/* From Uiverse.io by alexruix */ 
+/* From Uiverse.io by alexruix */
 /* The switch - the box around the slider */
 .switch {
-  font-size: 12px;           /* CHANGE ONLY THIS LINE TO CHANGE SIZE */
+  font-size: 6px;           /* CHANGE ONLY THIS LINE TO CHANGE SIZE */
   position: relative;
   margin-right: 10px;
   display: inline-block;
@@ -2408,6 +2408,40 @@ body.night-mode .mobile-centered-input {
   border-left: 1px solid rgba(255, 255, 255, 0.2);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   border-right: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+/* Floating crypto icons around input card - Night mode only */
+body.night-mode .mobile-centered-input::before {
+  content: '₿';
+  position: absolute;
+  top: -15px;
+  right: 20px;
+  font-size: 20px;
+  opacity: 0.3;
+  color: #f7931a;
+  animation: float 3s ease-in-out infinite;
+}
+
+body.night-mode .mobile-centered-input::after {
+  content: '◈';
+  position: absolute;
+  bottom: -10px;
+  left: 25px;
+  font-size: 18px;
+  opacity: 0.3;
+  color: #627eea;
+  animation: float 4s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 body.night-mode .mobile-centered-input-title,
