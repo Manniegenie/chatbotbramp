@@ -113,6 +113,286 @@ function formatNewsTime(dateString: string): string {
   }
 }
 
+// --- Crypto Price Ticker Types ---
+type CryptoPrice = {
+  symbol: string
+  price: number
+  hourlyChange?: number
+  percentageChange?: number
+}
+
+function MobileCryptoPriceScroll() {
+  const [prices, setPrices] = useState<CryptoPrice[]>([])
+  const [loading, setLoading] = useState(true)
+  const [priceUpdates, setPriceUpdates] = useState<Record<string, 'up' | 'down' | null>>({})
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const previousPricesRef = useRef<Record<string, number>>({})
+  const TICKER_SYMBOLS = ['BTC', 'ETH', 'USDT', 'USDC', 'BNB', 'SOL', 'NGNB', 'TRX', 'DOGE', 'ADA', 'XRP']
+
+  const fetchPrices = async (signal?: AbortSignal) => {
+    try {
+      const symbolParam = TICKER_SYMBOLS.join(',')
+      const url = `${API_BASE}/prices/prices?symbols=${encodeURIComponent(symbolParam)}&changes=true&limit=20`
+      const resp = await authFetch(url, { method: 'GET', signal })
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+
+      const payload = await resp.json()
+      if (!payload?.success || !payload?.data) return
+
+      const { prices: priceData = {}, hourlyChanges = {} } = payload.data
+      const priceList: CryptoPrice[] = TICKER_SYMBOLS
+        .filter((s) => s === 'NGNB' || typeof priceData[s] === 'number')
+        .map((s) => {
+          const priceVal = priceData[s]
+          const changeObj = hourlyChanges?.[s]
+          const changePct = changeObj?.hourlyChange ?? changeObj?.percentageChange ?? null
+
+          return {
+            symbol: s,
+            price: typeof priceVal === 'number' ? priceVal : 0,
+            hourlyChange: changePct,
+            percentageChange: changePct
+          }
+        })
+
+      // Track price changes for animations
+      const updates: Record<string, 'up' | 'down' | null> = {}
+      priceList.forEach((crypto) => {
+        const prevPrice = previousPricesRef.current[crypto.symbol]
+        if (prevPrice !== undefined && prevPrice !== crypto.price) {
+          updates[crypto.symbol] = crypto.price > prevPrice ? 'up' : 'down'
+          setTimeout(() => {
+            setPriceUpdates((prev) => ({ ...prev, [crypto.symbol]: null }))
+          }, 2000)
+        }
+        previousPricesRef.current[crypto.symbol] = crypto.price
+      })
+
+      if (Object.keys(updates).length > 0) {
+        setPriceUpdates(updates)
+      }
+
+      setPrices(priceList)
+      setLoading(false)
+    } catch (err) {
+      console.error('Failed to fetch crypto prices:', err)
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    const controller = new AbortController()
+    fetchPrices(controller.signal)
+
+    // Fetch every 10 minutes (600000 ms)
+    const interval = setInterval(() => {
+      fetchPrices()
+    }, 600000)
+
+    return () => {
+      controller.abort()
+      clearInterval(interval)
+    }
+  }, [])
+
+  // Auto-scroll animation
+  useEffect(() => {
+    if (!scrollContainerRef.current || prices.length === 0) return
+
+    const container = scrollContainerRef.current
+    let scrollAmount = 0
+    let direction = 1
+    let isPaused = false
+    let pauseTimeout: ReturnType<typeof setTimeout> | null = null
+
+    const handleUserInteraction = () => {
+      isPaused = true
+      if (pauseTimeout) clearTimeout(pauseTimeout)
+      pauseTimeout = setTimeout(() => {
+        isPaused = false
+      }, 3000)
+    }
+
+    container.addEventListener('touchstart', handleUserInteraction)
+    container.addEventListener('mousedown', handleUserInteraction)
+
+    const autoScroll = setInterval(() => {
+      if (isPaused) return
+
+      const maxScroll = container.scrollWidth - container.clientWidth
+
+      if (maxScroll <= 0) return
+
+      scrollAmount += direction * 1
+
+      if (scrollAmount >= maxScroll) {
+        direction = -1
+        scrollAmount = maxScroll
+      } else if (scrollAmount <= 0) {
+        direction = 1
+        scrollAmount = 0
+      }
+
+      container.scrollTo({ left: scrollAmount, behavior: 'auto' })
+    }, 30)
+
+    return () => {
+      clearInterval(autoScroll)
+      if (pauseTimeout) clearTimeout(pauseTimeout)
+      container.removeEventListener('touchstart', handleUserInteraction)
+      container.removeEventListener('mousedown', handleUserInteraction)
+    }
+  }, [prices])
+
+  const formatPrice = (symbol: string, price: number) => {
+    if (symbol === 'NGNB') {
+      return `₦${price.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+    }
+    if (price >= 1) {
+      return `$${price.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+    }
+    return `$${price.toFixed(4).replace(/\.?0+$/, '')}`
+  }
+
+  const getChangeColor = (change?: number) => {
+    if (!change) return 'rgba(255, 255, 255, 0.6)'
+    return change > 0 ? '#00ff88' : '#ff4444'
+  }
+
+  const getChangeIcon = (change?: number) => {
+    if (!change) return ''
+    return change > 0 ? '▲' : '▼'
+  }
+
+  if (loading) {
+    return (
+      <div style={{
+        padding: '20px',
+        textAlign: 'center',
+        color: 'var(--txt)'
+      }}>
+        <SpinnerLoader size="medium" variant="primary" />
+        <span style={{ marginLeft: '12px' }}>Loading prices...</span>
+      </div>
+    )
+  }
+
+  return (
+    <section className="mobile-crypto-price-section">
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        margin: '0 12px 16px 12px'
+      }}>
+        <h2 className="mobile-news-header" style={{ margin: 0 }}>Live Prices</h2>
+        {prices.length > 3 && (
+          <div className="mobile-news-swipe-indicator">
+            <span>Swipe</span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
+          </div>
+        )}
+      </div>
+
+      <div
+        ref={scrollContainerRef}
+        className="mobile-news-cards-container"
+        style={{
+          display: 'flex',
+          gap: '16px',
+          overflowX: 'auto',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          padding: '0 12px'
+        }}
+      >
+        {prices.map((crypto, index) => {
+          const updateState = priceUpdates[crypto.symbol]
+          return (
+            <motion.div
+              key={crypto.symbol}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                scale: updateState ? 1.05 : 1
+              }}
+              transition={{
+                duration: 0.5,
+                delay: index * 0.1,
+                scale: { duration: 0.3 }
+              }}
+              className="mobile-news-card"
+              style={{
+                minWidth: '200px',
+                padding: '20px',
+                background: updateState === 'up'
+                  ? 'linear-gradient(135deg, rgba(0, 255, 136, 0.15) 0%, rgba(102, 255, 0, 0.15) 100%)'
+                  : updateState === 'down'
+                  ? 'linear-gradient(135deg, rgba(255, 68, 68, 0.15) 0%, rgba(168, 0, 119, 0.15) 100%)'
+                  : 'linear-gradient(135deg, rgba(168, 0, 119, 0.1) 0%, rgba(102, 255, 0, 0.1) 100%)',
+                backdropFilter: 'blur(10px)',
+                border: `1px solid ${updateState ? (updateState === 'up' ? 'rgba(0, 255, 136, 0.3)' : 'rgba(255, 68, 68, 0.3)') : 'rgba(255, 255, 255, 0.1)'}`,
+                borderRadius: '16px',
+                cursor: 'default',
+                transition: 'all 0.3s ease-in-out',
+                boxShadow: updateState ? '0 4px 20px rgba(168, 0, 119, 0.2)' : 'none'
+              }}
+            >
+              <div style={{ marginBottom: '12px' }}>
+                <h3 style={{
+                  fontSize: '24px',
+                  fontWeight: 'bold',
+                  color: 'var(--txt)',
+                  margin: 0
+                }}>
+                  {crypto.symbol}
+                </h3>
+              </div>
+
+              <motion.div
+                style={{ marginBottom: '8px' }}
+                animate={{
+                  scale: updateState ? [1, 1.1, 1] : 1
+                }}
+                transition={{ duration: 0.5 }}
+              >
+                <div style={{
+                  fontSize: '20px',
+                  fontWeight: '600',
+                  color: 'var(--txt)'
+                }}>
+                  {formatPrice(crypto.symbol, crypto.price)}
+                </div>
+              </motion.div>
+
+              {crypto.hourlyChange !== null && crypto.hourlyChange !== undefined && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontSize: '14px',
+                  color: getChangeColor(crypto.hourlyChange),
+                  fontWeight: '500'
+                }}>
+                  <span>{getChangeIcon(crypto.hourlyChange)}</span>
+                  <span>
+                    {crypto.hourlyChange > 0 ? '+' : ''}
+                    {crypto.hourlyChange.toFixed(2)}%
+                  </span>
+                  <span style={{ fontSize: '12px', opacity: 0.7 }}>1h</span>
+                </div>
+              )}
+            </motion.div>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
 function MobileNewsSection() {
   const [newsCards, setNewsCards] = useState<NewsCard[]>([])
   const [loading, setLoading] = useState(true)
@@ -956,7 +1236,7 @@ export default function MobileApp() {
             </div>
 
             <div style={{ width: '100%', maxWidth: '100%', flex: 1, overflow: 'hidden', paddingBottom: '5px', minHeight: 0 }}>
-              <MobileNewsSection />
+              <MobileCryptoPriceScroll />
             </div>
           </div>
         ) : (
