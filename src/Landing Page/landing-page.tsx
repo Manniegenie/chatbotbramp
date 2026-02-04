@@ -7,10 +7,13 @@ import PriceTicker from './PriceTicker'
 export default function LandingPage() {
   const textBefore = "Flip Your Crypto to Cash and "
   const textAccent = "Back!"
-  const fullText = textBefore + textAccent
-  const [displayedText, setDisplayedText] = useState('')
-  const [showCursor, setShowCursor] = useState(true)
-  const hasAnimated = useRef(false)
+  const [showLottie, setShowLottie] = useState(false)
+  
+  // Split text into parts: "Flip " | "Your" | " Crypto to Cash " | "and " | "Back!"
+  const part1 = "Flip "
+  const part2 = "Your"
+  const part3 = " Crypto to Cash "
+  const part4 = "and "
 
   // Typewriter effect for white container text
   const containerText = "Send 20000 naira to Henry's Opay"
@@ -20,42 +23,20 @@ export default function LandingPage() {
   const [sendButtonClicked, setSendButtonClicked] = useState(false)
 
   useEffect(() => {
-    // Only animate once
-    if (hasAnimated.current) return
+    // Show Lottie animation after title appears (1s animation + 0.5s delay)
+    const timer = setTimeout(() => {
+      setShowLottie(true)
+    }, 1500)
     
-    hasAnimated.current = true
-    let currentIndex = 0
-    const typingSpeed = 100 // milliseconds per character
-    let typingTimer: NodeJS.Timeout | null = null
-
-    const typeWriter = () => {
-      if (currentIndex < fullText.length) {
-        setDisplayedText(fullText.slice(0, currentIndex + 1))
-        currentIndex++
-        typingTimer = setTimeout(typeWriter, typingSpeed)
-      } else {
-        // Hide cursor after animation completes
-        setTimeout(() => {
-          setShowCursor(false)
-        }, 1000)
-      }
-    }
-
-    // Start typing after a short delay
-    const startTimer = setTimeout(typeWriter, 500)
-    
-    return () => {
-      clearTimeout(startTimer)
-      if (typingTimer) clearTimeout(typingTimer)
-    }
-  }, [fullText])
+    return () => clearTimeout(timer)
+  }, [])
 
   // Typewriter effect for container text
   useEffect(() => {
     if (containerHasAnimated.current) return
     
-    // Start after the main title finishes typing
-    const delay = fullText.length * 100 + 1500 + 500 // Wait for title + cursor hide + delay
+    // Start after the main title appears (1s animation + 0.5s delay)
+    const delay = 1500
     
     containerHasAnimated.current = true
     let currentIndex = 0
@@ -86,29 +67,7 @@ export default function LandingPage() {
       clearTimeout(startTimer)
       if (typingTimer) clearTimeout(typingTimer)
     }
-  }, [containerText, fullText])
-
-  // Split displayed text to highlight "Your" and "Back"
-  const beforeLength = textBefore.length
-  const accentLength = textAccent.length
-  const displayedBefore = displayedText.slice(0, beforeLength)
-  const displayedAccent = displayedText.slice(beforeLength, beforeLength + accentLength)
-  
-  // Split text into parts: "Flip " | "Your" | " Crypto to Cash " | "and " | "Back"
-  const part1 = "Flip "
-  const part2 = "Your"
-  const part3 = " Crypto to Cash "
-  const part4 = "and "
-  
-  const part1Length = part1.length
-  const part2Length = part2.length
-  const part3Length = part3.length
-  const part4Length = part4.length
-  
-  const displayedPart1 = displayedBefore.slice(0, part1Length)
-  const displayedPart2 = displayedBefore.slice(part1Length, part1Length + part2Length)
-  const displayedPart3 = displayedBefore.slice(part1Length + part2Length, part1Length + part2Length + part3Length)
-  const displayedPart4 = displayedBefore.slice(part1Length + part2Length + part3Length, part1Length + part2Length + part3Length + part4Length)
+  }, [containerText])
 
   return (
     <div className="landing-page">
@@ -173,27 +132,22 @@ export default function LandingPage() {
           <h1 className="landing-hero-title">
             <span className="landing-title-placeholder" aria-hidden="true">Flip Your Crypto to Cash <br />and Back!</span>
             <span className="landing-title-content">
-              {displayedPart1}
-              {displayedPart2 && <span className="landing-hero-accent">{displayedPart2}</span>}
-              {displayedPart3}
+              {part1}
+              <span className="landing-hero-accent">{part2}</span>
+              {part3}
               <br />
-              {displayedPart4}
-              {displayedAccent && (
-                <>
-                  <span className="landing-hero-accent">{displayedAccent}</span>
-                  {!showCursor && (
-                    <span className="landing-lottie-animation">
-                      <DotLottieReact
-                        src="https://lottie.host/19969e37-481f-4c95-a087-d3b646d00b16/YgfV82zZok.lottie"
-                        loop
-                        autoplay
-                        style={{ width: '100%', height: '100%' }}
-                      />
-                    </span>
-                  )}
-                </>
+              {part4}
+              <span className="landing-hero-accent">{textAccent}</span>
+              {showLottie && (
+                <span className="landing-lottie-animation">
+                  <DotLottieReact
+                    src="https://lottie.host/19969e37-481f-4c95-a087-d3b646d00b16/YgfV82zZok.lottie"
+                    loop
+                    autoplay
+                    style={{ width: '100%', height: '100%' }}
+                  />
+                </span>
               )}
-              {showCursor && <span className="typewriter-cursor">|</span>}
             </span>
           </h1>
           <div className="landing-download-badges">
