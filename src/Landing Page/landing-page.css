@@ -87,7 +87,7 @@ body {
 .landing-nav-links {
   display: flex;
   align-items: center;
-  gap: 48px;
+  gap: 1rem;
   flex: 0 0 auto;
   justify-content: center;
   height: auto;
@@ -126,6 +126,12 @@ body {
 
 .landing-nav-link:hover {
   color: var(--accent-color);
+}
+
+.landing-nav-separator {
+  color: var(--text-primary);
+  font-weight: 400;
+  user-select: none;
 }
 
 .landing-nav-download {
@@ -172,6 +178,10 @@ body {
   overflow: hidden;
 }
 
+.landing-section-hero .landing-container {
+  z-index: 20;
+}
+
 /* Next section: accent color background */
 .landing-section-next {
   background-color: var(--accent-color);
@@ -198,6 +208,48 @@ body {
   color: #FFFFFF;
 }
 
+/* Third section - black background */
+.landing-section-third {
+  background-color: #000000;
+  min-height: 60vh;
+  padding: 4rem 0;
+  color: #FFFFFF;
+}
+
+.landing-section-third .landing-container {
+  color: #FFFFFF;
+}
+
+.landing-section-third-title {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  text-align: center;
+  margin: 0;
+  min-height: 1.2em;
+}
+
+.landing-section-third-title .third-section-highlight {
+  color: var(--accent-color);
+}
+
+.landing-section-third-lottie {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 300px;
+  height: 300px;
+  margin: 2rem auto 0;
+}
+
+.landing-section-third-lottie dotlottie-player,
+.landing-section-third-lottie dotlottie-wc {
+  width: 100% !important;
+  height: 100% !important;
+}
+
 .landing-features-app-img {
   display: block;
   max-width: 320px;
@@ -205,6 +257,22 @@ body {
   margin: 0 auto;
   border-radius: 24px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.landing-section-fourth-images {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.landing-section-fourth-images .landing-features-app-img {
+  flex: 0 1 280px;
+  max-width: 320px;
+  width: 100%;
 }
 
 .typewriter-cursor {
@@ -238,11 +306,12 @@ body {
   text-align: center;
   letter-spacing: -0.02em;
   position: relative;
-  z-index: 6;
+  z-index: 20;
   transform: translateY(-50px);
   min-height: 84px; /* Reserve space for full text height */
   display: block;
   line-height: 1.15;
+  opacity: 1;
 }
 
 .landing-title-placeholder {
@@ -268,16 +337,14 @@ body {
   width: 100%;
   text-align: center;
   animation: titleAppear 1s ease-out forwards;
-  opacity: 0;
+  opacity: 1;
 }
 
 @keyframes titleAppear {
   0% {
-    opacity: 0;
     transform: translateX(-50%) translateY(20px);
   }
   100% {
-    opacity: 1;
     transform: translateX(-50%) translateY(0);
   }
 }
@@ -784,6 +851,16 @@ body {
 
   .landing-container {
     padding: 0 16px;
+  }
+
+  .landing-section-fourth-images {
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .landing-section-fourth-images .landing-features-app-img {
+    flex: 0 1 140px;
+    max-width: 160px;
   }
 
   /* Ticker directly under menu bar on mobile — no top offset */

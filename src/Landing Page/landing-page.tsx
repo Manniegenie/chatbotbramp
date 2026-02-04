@@ -30,6 +30,22 @@ export default function LandingPage() {
   const featuresSectionRef = useRef<HTMLElement>(null)
   const featuresHasAnimated = useRef(false)
 
+  // Third section: typewriter when in view
+  const thirdSectionText = "One Wallet For Everything..."
+  const [thirdDisplayedText, setThirdDisplayedText] = useState('')
+  const [thirdShowCursor, setThirdShowCursor] = useState(true)
+  const [thirdSectionInView, setThirdSectionInView] = useState(false)
+  const thirdSectionRef = useRef<HTMLElement>(null)
+  const thirdHasAnimated = useRef(false)
+
+  // Fifth section: typewriter when in view, same green accent as fourth
+  const fifthSectionText = "Make Payments in Seconds at Retail Stores."
+  const [fifthDisplayedText, setFifthDisplayedText] = useState('')
+  const [fifthShowCursor, setFifthShowCursor] = useState(true)
+  const [fifthSectionInView, setFifthSectionInView] = useState(false)
+  const fifthSectionRef = useRef<HTMLElement>(null)
+  const fifthHasAnimated = useRef(false)
+
   useEffect(() => {
     // Show Lottie animation after title appears (1s animation + 0.5s delay)
     const timer = setTimeout(() => {
@@ -170,6 +186,108 @@ export default function LandingPage() {
     }
   }, [featuresSectionInView, featuresText])
 
+  // Intersection Observer: detect when Third section is in view
+  useEffect(() => {
+    const section = thirdSectionRef.current
+    if (!section) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setThirdSectionInView(true)
+            setThirdDisplayedText('')
+            setThirdShowCursor(true)
+            thirdHasAnimated.current = false
+          } else {
+            setThirdSectionInView(false)
+          }
+        })
+      },
+      { threshold: 0.3 }
+    )
+    observer.observe(section)
+    return () => observer.disconnect()
+  }, [])
+
+  // Typewriter for Third section when in view
+  useEffect(() => {
+    if (!thirdSectionInView || thirdHasAnimated.current) return
+
+    let currentIndex = 0
+    const typingSpeed = 100
+    let typingTimer: ReturnType<typeof setTimeout> | null = null
+
+    const typeWriter = () => {
+      if (currentIndex < thirdSectionText.length) {
+        setThirdDisplayedText(thirdSectionText.slice(0, currentIndex + 1))
+        currentIndex++
+        typingTimer = setTimeout(typeWriter, typingSpeed)
+      } else {
+        thirdHasAnimated.current = true
+        setTimeout(() => setThirdShowCursor(false), 800)
+      }
+    }
+
+    const startTimer = setTimeout(typeWriter, 200)
+
+    return () => {
+      clearTimeout(startTimer)
+      if (typingTimer) clearTimeout(typingTimer)
+    }
+  }, [thirdSectionInView, thirdSectionText])
+
+  // Intersection Observer: detect when Fifth section is in view
+  useEffect(() => {
+    const section = fifthSectionRef.current
+    if (!section) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setFifthSectionInView(true)
+            setFifthDisplayedText('')
+            setFifthShowCursor(true)
+            fifthHasAnimated.current = false
+          } else {
+            setFifthSectionInView(false)
+          }
+        })
+      },
+      { threshold: 0.3 }
+    )
+    observer.observe(section)
+    return () => observer.disconnect()
+  }, [])
+
+  // Typewriter for Fifth section when in view
+  useEffect(() => {
+    if (!fifthSectionInView || fifthHasAnimated.current) return
+
+    let currentIndex = 0
+    const typingSpeed = 100
+    let typingTimer: ReturnType<typeof setTimeout> | null = null
+
+    const typeWriter = () => {
+      if (currentIndex < fifthSectionText.length) {
+        setFifthDisplayedText(fifthSectionText.slice(0, currentIndex + 1))
+        currentIndex++
+        typingTimer = setTimeout(typeWriter, typingSpeed)
+      } else {
+        fifthHasAnimated.current = true
+        setTimeout(() => setFifthShowCursor(false), 800)
+      }
+    }
+
+    const startTimer = setTimeout(typeWriter, 200)
+
+    return () => {
+      clearTimeout(startTimer)
+      if (typingTimer) clearTimeout(typingTimer)
+    }
+  }, [fifthSectionInView, fifthSectionText])
+
   return (
     <div className="landing-page">
       {/* Top bar: nav + ticker — fixed, not scrollable */}
@@ -178,18 +296,11 @@ export default function LandingPage() {
           <div className="landing-nav-container">
             <img src="/app-icon.png" alt="Bramp" className="landing-nav-logo" />
             <div className="landing-nav-links">
-              <a href="#philosophy" className="landing-nav-link">
-                <img src="/icons/philosophy.png" alt="Philosophy" className="landing-nav-link-icon" />
-                Philosophy
-              </a>
-              <a href="#features" className="landing-nav-link">
-                <img src="/icons/jigsaw.png" alt="Features" className="landing-nav-link-icon" />
-                Features
-              </a>
-              <a href="#faqs" className="landing-nav-link">
-                <img src="/icons/chat.png" alt="FAQs" className="landing-nav-link-icon" />
-                FAQs
-              </a>
+              <a href="#philosophy" className="landing-nav-link">Philosophy</a>
+              <span className="landing-nav-separator" aria-hidden="true">|</span>
+              <a href="#features" className="landing-nav-link">Features</a>
+              <span className="landing-nav-separator" aria-hidden="true">|</span>
+              <a href="#faqs" className="landing-nav-link">FAQs</a>
             </div>
             <button className="landing-nav-download">
               <Download size={16} />
@@ -313,6 +424,61 @@ export default function LandingPage() {
             {featuresShowCursor && <span className="typewriter-cursor">|</span>}
           </h2>
           <img src="/IMG_0322.PNG" alt="Fund Crypto, Spend Naira - Bramp app portfolio" className="landing-features-app-img" />
+        </div>
+      </section>
+
+      {/* Third section - black background, green & white text */}
+      <section ref={thirdSectionRef} id="third" className="landing-section landing-section-third" aria-label="One Wallet">
+        <div className="landing-container">
+          <h2 className="landing-section-third-title">
+            {thirdDisplayedText.length <= 4 ? (
+              thirdDisplayedText
+            ) : thirdDisplayedText.length <= 11 ? (
+              <>One <span className="third-section-highlight">{thirdDisplayedText.slice(4)}</span></>
+            ) : thirdDisplayedText.length <= 15 ? (
+              <>One <span className="third-section-highlight">Wallet</span>{thirdDisplayedText.slice(11)}</>
+            ) : (
+              <>One <span className="third-section-highlight">Wallet</span> For <span className="third-section-highlight">{thirdDisplayedText.slice(15)}</span></>
+            )}
+            {thirdShowCursor && <span className="typewriter-cursor">|</span>}
+          </h2>
+          <div className="landing-section-third-lottie">
+            <DotLottieReact
+              src="https://lottie.host/27f006e7-26d4-4a34-a833-cd2ffa3bc8e8/FoivP3FZFd.lottie"
+              loop
+              autoplay
+              style={{ width: '100%', height: '100%' }}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Fourth section - images only, same green accent design */}
+      <section id="deposit-send" className="landing-section landing-section-next" aria-label="Deposit and Send">
+        <div className="landing-container">
+          <div className="landing-section-fourth-images">
+            <img src="/IMG_0324.PNG" alt="Select Token - Bramp app" className="landing-features-app-img" />
+            <img src="/IMG_0325.PNG" alt="Send Payment - Bramp app" className="landing-features-app-img" />
+          </div>
+        </div>
+      </section>
+
+      {/* Fifth section - same green accent as fourth */}
+      <section ref={fifthSectionRef} id="payments" className="landing-section landing-section-next" aria-label="Make Payments in Seconds at Retail Stores">
+        <div className="landing-container">
+          <h2 className="landing-section-next-title">
+            {fifthDisplayedText.length <= 17 ? (
+              fifthDisplayedText
+            ) : fifthDisplayedText.length <= 25 ? (
+              <>Make Payments in <span className="features-highlight">{fifthDisplayedText.slice(17)}</span></>
+            ) : fifthDisplayedText.length <= 28 ? (
+              <>Make Payments in <span className="features-highlight">Seconds</span>{fifthDisplayedText.slice(25)}</>
+            ) : (
+              <>Make Payments in <span className="features-highlight">Seconds</span> at <span className="features-highlight">{fifthDisplayedText.slice(28)}</span></>
+            )}
+            {fifthShowCursor && <span className="typewriter-cursor">|</span>}
+          </h2>
+          <img src="/craig-lovelidge-v1UDAHfmdZ8-unsplash.jpg" alt="Retail store - Make payments in seconds" className="landing-features-app-img" />
         </div>
       </section>
     </div>
