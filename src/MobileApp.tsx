@@ -1441,7 +1441,7 @@ export default function MobileApp() {
               <button className="mobile-menu-item" onClick={signOut}>Sign Out</button>
               <div className="mobile-menu-divider"></div>
               <a className="mobile-menu-item" href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
-              <a className="mobile-menu-item" href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+              <a className="mobile-menu-item" href="/privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
               <a className="mobile-menu-item" href="https://www.instagram.com/chatbramp/" target="_blank" rel="noopener noreferrer">Instagram</a>
             </div>
           </div>
@@ -1453,7 +1453,7 @@ export default function MobileApp() {
           <footer className="mobile-footer">
             <div className="mobile-footer-links-bottom">
               <a href="https://drive.google.com/file/d/11qmXGhossotfF4MTfVaUPac-UjJgV42L/view?usp=drive_link" target="_blank" rel="noopener noreferrer">AML/CFT Policy</a>
-              <a href="https://drive.google.com/file/d/1brtkc1Tz28Lk3Xb7C0t3--wW7829Txxw/view?usp=drive_link" target="_blank" rel="noopener noreferrer" className="footer-privacy-link">Privacy</a>
+              <a href="/privacy.html" target="_blank" rel="noopener noreferrer" className="footer-privacy-link">Privacy</a>
               <a href="https://www.instagram.com/chatbramp/" target="_blank" rel="noopener noreferrer">Instagram</a>
               <a href="https://www.youtube.com/@Chatbramp" target="_blank" rel="noopener noreferrer">YouTube</a>
               <a href="https://x.com/Chatbramp" target="_blank" rel="noopener noreferrer">Twitter</a>
