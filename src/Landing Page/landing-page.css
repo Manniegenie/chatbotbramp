@@ -160,6 +160,7 @@ body {
   padding-top: 136px; /* 56px (nav height) + 36px (ticker height) + 44px (spacing) */
   position: relative;
   z-index: 2;
+  overflow: hidden;
 }
 
 .landing-container {
@@ -265,6 +266,19 @@ body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   transition: all 0.3s ease;
+  animation: badgeAppear 0.8s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes badgeAppear {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -280,6 +294,14 @@ body {
 .landing-badge:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.landing-badge:nth-child(1) {
+  animation-delay: 0.2s;
+}
+
+.landing-badge:nth-child(2) {
+  animation-delay: 0.4s;
 }
 
 .landing-badge-icon-wrapper {
@@ -399,7 +421,7 @@ body {
   top: 56px; /* Nav height */
   left: 0;
   width: 100%;
-  background-color: var(--bg-secondary);
+  background-color: transparent;
   z-index: 100;
   overflow: hidden;
   padding: 12px 0;
@@ -475,7 +497,7 @@ body {
 
 /* Decorative Icons */
 .landing-decorative-icons {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
@@ -490,79 +512,91 @@ body {
   width: 75px;
   height: 75px;
   object-fit: contain;
-  animation: float 6s ease-in-out infinite;
-  opacity: 0.9;
+  opacity: 0.7;
 }
 
 .decorative-icon-5-mobile {
   display: none; /* Hidden on desktop */
+  opacity: 0.55;
 }
 
 /* Scattered icon positions - kept away from center content area, well-spaced */
+/* Alternating opacity for an intriguing layered feel */
 .decorative-icon-1 {
-  top: 150px;
+  top: 170px;
   left: 2%;
   animation-delay: 0s;
+  opacity: 0.5;
 }
 
 .decorative-icon-2 {
-  top: 320px;
+  top: 340px;
   left: 1%;
   animation-delay: 0.5s;
+  opacity: 0.75;
 }
 
 .decorative-icon-3 {
-  top: 480px;
+  top: 500px;
   left: 3%;
   animation-delay: 1s;
+  opacity: 0.45;
 }
 
 .decorative-icon-4 {
-  top: 180px;
+  top: 200px;
   right: 2%;
   animation-delay: 1.5s;
+  opacity: 0.7;
 }
 
 .decorative-icon-5 {
-  top: 240px;
+  top: 260px;
   right: 6%;
   animation-delay: 2s;
+  opacity: 0.55;
 }
 
 .decorative-icon-6 {
-  top: 540px;
+  top: 560px;
   right: 3%;
   animation-delay: 2.5s;
+  opacity: 0.65;
 }
 
 .decorative-icon-7 {
-  top: 120px;
+  top: 140px;
   left: calc(6% + 200px);
   animation-delay: 3s;
+  opacity: 0.6;
 }
 
 .decorative-icon-8 {
-  top: 420px;
+  top: 440px;
   left: calc(5% + 100px);
   animation-delay: 3.5s;
+  opacity: 0.5;
 }
 
 .decorative-icon-9 {
-  top: 390px;
+  top: 410px;
   right: calc(1% + 200px);
   animation-delay: 4s;
+  opacity: 0.8;
 }
 
 .decorative-icon-10 {
-  bottom: 120px;
+  bottom: 100px;
   left: 4%;
   animation-delay: 4.5s;
+  opacity: 0.45;
 }
 
 .decorative-icon-11 {
-  bottom: 100px;
+  bottom: 80px;
   right: 4%;
   animation-delay: 5s;
+  opacity: 0.7;
 }
 
 @keyframes float {
@@ -719,8 +753,8 @@ body {
     font-size: 12px;
   }
   .decorative-icon {
-    width: 50px;
-    height: 50px;
+    width: 47px;
+    height: 47px;
   }
 
   /* Hide Solana and Binance on mobile */
@@ -731,64 +765,64 @@ body {
 
   /* Scattered icons on mobile - littered around but away from center content */
   .decorative-icon-1 {
-    top: 140px;
+    top: 160px;
     left: 2%;
   }
 
   .decorative-icon-2 {
-    top: 330px;
+    top: 350px;
     left: 1%;
   }
 
   .decorative-icon-3 {
-    top: 580px;
+    top: 600px;
     left: 3%;
   }
 
   .decorative-icon-4 {
-    top: 160px;
+    top: 180px;
     right: 2%;
   }
 
   .decorative-icon-5 {
     display: block; /* Show USDC on mobile */
-    top: 660px;
-    right: 0;
+    top: 680px;
+    right: 150px;
   }
 
   .decorative-icon-5-mobile {
     display: block;
-    top: 320px;
+    top: 340px;
     right: 1%;
   }
 
   .decorative-icon-6 {
-    top: 570px;
+    top: 590px;
     right: 3%;
   }
 
   .decorative-icon-7 {
-    top: 120px;
+    top: 140px;
     left: calc(6% + 150px);
   }
 
   .decorative-icon-8 {
-    top: 650px;
+    top: 670px;
     left: 0;
   }
 
   .decorative-icon-9 {
-    top: 250px;
+    top: 270px;
     right: 6%;
   }
 
   .decorative-icon-10 {
-    bottom: 100px;
+    bottom: 80px;
     left: 4%;
   }
 
   .decorative-icon-11 {
-    bottom: 80px;
+    bottom: 60px;
     right: 4%;
   }
 

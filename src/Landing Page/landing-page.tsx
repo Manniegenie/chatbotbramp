@@ -48,6 +48,30 @@ export default function LandingPage() {
     return () => mediaQuery.removeEventListener('change', updateThemeColor)
   }, [])
 
+  useEffect(() => {
+    // Load Tawk.to widget
+    if (window.Tawk_API) return // Already loaded
+
+    const TAWK_PROPERTY_ID = import.meta.env.VITE_TAWK_PROPERTY_ID || '68ff552f1a60b619594aac17'
+    const TAWK_WIDGET_ID = import.meta.env.VITE_TAWK_WIDGET_ID || '1j8im9gmc'
+
+    window.Tawk_API = window.Tawk_API || {}
+    window.Tawk_LoadStart = new Date()
+
+    const script = document.createElement('script')
+    script.async = true
+    script.src = `https://embed.tawk.to/${TAWK_PROPERTY_ID}/${TAWK_WIDGET_ID}`
+    script.charset = 'UTF-8'
+    script.setAttribute('crossorigin', '*')
+    
+    const firstScript = document.getElementsByTagName('script')[0]
+    if (firstScript && firstScript.parentNode) {
+      firstScript.parentNode.insertBefore(script, firstScript)
+    } else {
+      document.body.appendChild(script)
+    }
+  }, [])
+
   // Typewriter effect for container text
   useEffect(() => {
     if (containerHasAnimated.current) return
@@ -116,35 +140,34 @@ export default function LandingPage() {
       {/* Price Ticker */}
       <PriceTicker />
 
-      {/* Decorative Icons */}
-      <div className="landing-decorative-icons">
-        {/* Bitcoin */}
-        <img src="/icons/btc-icon.png?v=2" alt="Bitcoin" className="decorative-icon decorative-icon-1" />
-        {/* Ethereum */}
-        <img src="/icons/eth-icon.png?v=2" alt="Ethereum" className="decorative-icon decorative-icon-2" />
-        {/* Solana */}
-        <img src="/icons/sol-icon.png?v=2" alt="Solana" className="decorative-icon decorative-icon-3" />
-        {/* USDT */}
-        <img src="/icons/usdt-icon.png?v=2" alt="USDT" className="decorative-icon decorative-icon-4" />
-        {/* USDC */}
-        <img src="/icons/usdc-icon.png?v=2" alt="USDC" className="decorative-icon decorative-icon-5" />
-        {/* NGN - Mobile replacement for USDC */}
-        <img src="/icons/NGNZ.png?v=2" alt="NGN" className="decorative-icon decorative-icon-5-mobile" />
-        {/* BNB */}
-        <img src="/icons/bnb-icon.png?v=2" alt="BNB" className="decorative-icon decorative-icon-6" />
-        {/* MATIC */}
-        <img src="/icons/matic-icon.png?v=2" alt="MATIC" className="decorative-icon decorative-icon-7" />
-        {/* Tron */}
-        <img src="/icons/Tron.png?v=2" alt="Tron" className="decorative-icon decorative-icon-8" />
-        {/* NGN */}
-        <img src="/icons/NGNZ.png?v=2" alt="NGN" className="decorative-icon decorative-icon-9" />
-        {/* AVAX */}
-        <img src="/icons/avax-icon.png?v=2" alt="AVAX" className="decorative-icon decorative-icon-10" />
-        {/* DOGE */}
-        <img src="/icons/doge-icon.png?v=2" alt="DOGE" className="decorative-icon decorative-icon-11" />
-      </div>
-
       <section className="landing-section landing-section-hero">
+        {/* Decorative Icons */}
+        <div className="landing-decorative-icons">
+          {/* Bitcoin */}
+          <img src="/icons/btc-icon.png?v=2" alt="Bitcoin" className="decorative-icon decorative-icon-1" />
+          {/* Ethereum */}
+          <img src="/icons/eth-icon.png?v=2" alt="Ethereum" className="decorative-icon decorative-icon-2" />
+          {/* Solana */}
+          <img src="/icons/sol-icon.png?v=2" alt="Solana" className="decorative-icon decorative-icon-3" />
+          {/* USDT */}
+          <img src="/icons/usdt-icon.png?v=2" alt="USDT" className="decorative-icon decorative-icon-4" />
+          {/* USDC */}
+          <img src="/icons/usdc-icon.png?v=2" alt="USDC" className="decorative-icon decorative-icon-5" />
+          {/* NGN - Mobile replacement for USDC */}
+          <img src="/icons/NGNZ.png?v=2" alt="NGN" className="decorative-icon decorative-icon-5-mobile" />
+          {/* BNB */}
+          <img src="/icons/bnb-icon.png?v=2" alt="BNB" className="decorative-icon decorative-icon-6" />
+          {/* MATIC */}
+          <img src="/icons/matic-icon.png?v=2" alt="MATIC" className="decorative-icon decorative-icon-7" />
+          {/* Tron */}
+          <img src="/icons/Tron.png?v=2" alt="Tron" className="decorative-icon decorative-icon-8" />
+          {/* NGN */}
+          <img src="/icons/NGNZ.png?v=2" alt="NGN" className="decorative-icon decorative-icon-9" />
+          {/* AVAX */}
+          <img src="/icons/avax-icon.png?v=2" alt="AVAX" className="decorative-icon decorative-icon-10" />
+          {/* DOGE */}
+          <img src="/icons/doge-icon.png?v=2" alt="DOGE" className="decorative-icon decorative-icon-11" />
+        </div>
         <div className="landing-container">
           <h1 className="landing-hero-title">
             <span className="landing-title-placeholder" aria-hidden="true">Flip Your Crypto to Cash <br />and Back!</span>
