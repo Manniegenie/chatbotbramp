@@ -148,27 +148,12 @@ function shouldLoadMobileApp(): boolean {
 // Root element
 const root = document.getElementById('root')!
 
-// Load the appropriate app version
-if (shouldLoadMobileApp()) {
-  console.log('📱 Loading Mobile App...')
+// Always load Landing Page (App) for both mobile and desktop
+console.log('🌐 Loading Landing Page...')
 
-  // Dynamically import mobile app
-  import('./MobileApp').then(({ default: MobileApp }) => {
-    createRoot(root).render(<MobileApp />)
-  }).catch((err) => {
-    console.error('Failed to load Mobile App:', err)
-    // Fallback to desktop app if mobile fails
-    import('./App').then(({ default: App }) => {
-      createRoot(root).render(<App />)
-    })
-  })
-} else {
-  console.log('🖥️ Loading Desktop App...')
-
-  // Load desktop app
-  import('./App').then(({ default: App }) => {
-    createRoot(root).render(<App />)
-  }).catch((err) => {
-    console.error('Failed to load Desktop App:', err)
-  })
-}
+// Load landing page app
+import('./App').then(({ default: App }) => {
+  createRoot(root).render(<App />)
+}).catch((err) => {
+  console.error('Failed to load App:', err)
+})

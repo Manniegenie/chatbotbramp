@@ -1,5 +1,13 @@
 // src/App.tsx
 import React from 'react'
+import LandingPage from './Landing Page/landing-page'
+
+export default function App() {
+  return <LandingPage />
+}
+
+// Maintenance page code (commented out for now)
+/*
 import { motion } from 'framer-motion'
 import BrampLogo from './assets/logo.jpeg'
 import wallpaper1 from './assets/wallpaper1.jpg'
@@ -187,3 +195,4 @@ export default function App() {
     </>
   )
 }
+*/
