@@ -31,6 +31,23 @@ export default function LandingPage() {
     return () => clearTimeout(timer)
   }, [])
 
+  useEffect(() => {
+    // Update theme-color meta tag based on device preference
+    const updateThemeColor = () => {
+      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+      if (metaThemeColor) {
+        metaThemeColor.setAttribute('content', isDark ? '#121212' : '#FFFFFF')
+      }
+    }
+
+    updateThemeColor()
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    mediaQuery.addEventListener('change', updateThemeColor)
+    
+    return () => mediaQuery.removeEventListener('change', updateThemeColor)
+  }, [])
+
   // Typewriter effect for container text
   useEffect(() => {
     if (containerHasAnimated.current) return
