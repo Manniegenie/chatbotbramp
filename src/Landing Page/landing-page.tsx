@@ -112,33 +112,33 @@ export default function LandingPage() {
 
   return (
     <div className="landing-page">
-      {/* Top Navigation Menu */}
-      <nav className="landing-nav">
-        <div className="landing-nav-container">
-          <img src="/app-icon.png" alt="Bramp" className="landing-nav-logo" />
-          <div className="landing-nav-links">
-            <a href="#philosophy" className="landing-nav-link">
-              <img src="/icons/philosophy.png" alt="Philosophy" className="landing-nav-link-icon" />
-              Philosophy
-            </a>
-            <a href="#features" className="landing-nav-link">
-              <img src="/icons/jigsaw.png" alt="Features" className="landing-nav-link-icon" />
-              Features
-            </a>
-            <a href="#faqs" className="landing-nav-link">
-              <img src="/icons/chat.png" alt="FAQs" className="landing-nav-link-icon" />
-              FAQs
-            </a>
+      {/* Top bar: nav + ticker — fixed, not scrollable */}
+      <header className="landing-top-bar">
+        <nav className="landing-nav">
+          <div className="landing-nav-container">
+            <img src="/app-icon.png" alt="Bramp" className="landing-nav-logo" />
+            <div className="landing-nav-links">
+              <a href="#philosophy" className="landing-nav-link">
+                <img src="/icons/philosophy.png" alt="Philosophy" className="landing-nav-link-icon" />
+                Philosophy
+              </a>
+              <a href="#features" className="landing-nav-link">
+                <img src="/icons/jigsaw.png" alt="Features" className="landing-nav-link-icon" />
+                Features
+              </a>
+              <a href="#faqs" className="landing-nav-link">
+                <img src="/icons/chat.png" alt="FAQs" className="landing-nav-link-icon" />
+                FAQs
+              </a>
+            </div>
+            <button className="landing-nav-download">
+              <Download size={16} />
+              <span>Download</span>
+            </button>
           </div>
-          <button className="landing-nav-download">
-            <Download size={16} />
-            <span>Download</span>
-          </button>
-        </div>
-      </nav>
-
-      {/* Price Ticker */}
-      <PriceTicker />
+        </nav>
+        <PriceTicker />
+      </header>
 
       <section className="landing-section landing-section-hero">
         {/* Decorative Icons */}
@@ -234,6 +234,14 @@ export default function LandingPage() {
               </svg>
             </button>
           </div>
+        </div>
+      </section>
+
+      {/* Next section - accent background (Features) */}
+      <section className="landing-section landing-section-next" aria-label="Features">
+        <div className="landing-container">
+          <h2 className="landing-section-next-title">Features</h2>
+          {/* Placeholder for Features content */}
         </div>
       </section>
     </div>

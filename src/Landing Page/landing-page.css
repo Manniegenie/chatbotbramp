@@ -40,15 +40,23 @@ body {
   padding-top: env(safe-area-inset-top);
 }
 
-/* Top Navigation Menu */
-.landing-nav {
+/* Top bar: fixed and static — nav + ticker both stay at top, do not scroll with page */
+.landing-top-bar {
   position: fixed;
   top: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background-color: transparent;
+}
+
+/* Top Navigation Menu — transparent so ticker visible behind */
+.landing-nav {
+  position: relative;
+  z-index: 2; /* above ticker so nav sits on top */
   width: 100%;
   max-width: 1728px;
-  z-index: 1000;
+  margin: 0 auto;
   padding: 0 24px;
 }
 
@@ -84,14 +92,15 @@ body {
   justify-content: center;
   height: auto;
   padding: 8px 20px;
-  background-color: var(--nav-bg);
+  background-color: transparent;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
 }
 
 @media (prefers-color-scheme: dark) {
   .landing-nav-links {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    background-color: transparent;
+    box-shadow: none;
   }
 }
 
@@ -161,6 +170,27 @@ body {
   position: relative;
   z-index: 2;
   overflow: hidden;
+}
+
+/* Next section: accent color background */
+.landing-section-next {
+  background-color: var(--accent-color);
+  min-height: 60vh;
+  padding: 4rem 0;
+  color: #FFFFFF;
+}
+
+.landing-section-next .landing-container {
+  color: #FFFFFF;
+}
+
+.landing-section-next-title {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #000000;
+  text-align: center;
+  margin: 0 0 2rem 0;
 }
 
 .landing-container {
@@ -415,14 +445,12 @@ body {
   color: #FFFFFF;
 }
 
-/* Price Ticker */
+/* Price Ticker — static with page (inside fixed .landing-top-bar), stays at top; marquee scrolls behind nav */
 .price-ticker-container {
-  position: fixed;
-  top: 56px; /* Nav height */
-  left: 0;
+  position: relative;
+  z-index: 1;
   width: 100%;
   background-color: transparent;
-  z-index: 100;
   overflow: hidden;
   padding: 12px 0;
 }
@@ -732,9 +760,9 @@ body {
     padding: 0 16px;
   }
 
+  /* Ticker directly under menu bar on mobile — no top offset */
   .price-ticker-container {
-    top: 60px;
-    padding: 10px 0;
+    padding: 8px 0;
   }
 
   .price-ticker-item {
