@@ -191,6 +191,32 @@ body {
   color: #000000;
   text-align: center;
   margin: 0 0 2rem 0;
+  min-height: 1.2em;
+}
+
+.landing-section-next-title .features-highlight {
+  color: #FFFFFF;
+}
+
+.landing-features-app-img {
+  display: block;
+  max-width: 320px;
+  width: 100%;
+  margin: 0 auto;
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.typewriter-cursor {
+  display: inline-block;
+  animation: blink 1s step-end infinite;
+  margin-left: 2px;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
 }
 
 .landing-container {

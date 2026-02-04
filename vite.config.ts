@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  assetsInclude: ['**/*.PNG'],
   server: {
     host: true, // Expose on network
     port: 5173,

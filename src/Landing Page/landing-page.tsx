@@ -22,6 +22,14 @@ export default function LandingPage() {
   const containerHasAnimated = useRef(false)
   const [sendButtonClicked, setSendButtonClicked] = useState(false)
 
+  // Features section: typewriter when in view
+  const featuresText = "Fund Crypto, Spend Naira"
+  const [featuresDisplayedText, setFeaturesDisplayedText] = useState('')
+  const [featuresShowCursor, setFeaturesShowCursor] = useState(true)
+  const [featuresSectionInView, setFeaturesSectionInView] = useState(false)
+  const featuresSectionRef = useRef<HTMLElement>(null)
+  const featuresHasAnimated = useRef(false)
+
   useEffect(() => {
     // Show Lottie animation after title appears (1s animation + 0.5s delay)
     const timer = setTimeout(() => {
@@ -109,6 +117,58 @@ export default function LandingPage() {
       if (typingTimer) clearTimeout(typingTimer)
     }
   }, [containerText])
+
+  // Intersection Observer: detect when Features section is in view
+  useEffect(() => {
+    const section = featuresSectionRef.current
+    if (!section) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setFeaturesSectionInView(true)
+            // Reset so typewriter can run again when section comes back into view
+            setFeaturesDisplayedText('')
+            setFeaturesShowCursor(true)
+            featuresHasAnimated.current = false
+          } else {
+            setFeaturesSectionInView(false)
+          }
+        })
+      },
+      { threshold: 0.3 }
+    )
+    observer.observe(section)
+    return () => observer.disconnect()
+  }, [])
+
+  // Typewriter for Features section when in view
+  useEffect(() => {
+    if (!featuresSectionInView || featuresHasAnimated.current) return
+
+    let currentIndex = 0
+    const typingSpeed = 100
+    let typingTimer: ReturnType<typeof setTimeout> | null = null
+
+    const typeWriter = () => {
+      if (currentIndex < featuresText.length) {
+        setFeaturesDisplayedText(featuresText.slice(0, currentIndex + 1))
+        currentIndex++
+        typingTimer = setTimeout(typeWriter, typingSpeed)
+      } else {
+        featuresHasAnimated.current = true
+        setTimeout(() => setFeaturesShowCursor(false), 800)
+      }
+    }
+
+    const startTimer = setTimeout(typeWriter, 200)
+
+    return () => {
+      clearTimeout(startTimer)
+      if (typingTimer) clearTimeout(typingTimer)
+    }
+  }, [featuresSectionInView, featuresText])
 
   return (
     <div className="landing-page">
@@ -238,10 +298,21 @@ export default function LandingPage() {
       </section>
 
       {/* Next section - accent background (Features) */}
-      <section className="landing-section landing-section-next" aria-label="Features">
+      <section ref={featuresSectionRef} id="features" className="landing-section landing-section-next" aria-label="Features">
         <div className="landing-container">
-          <h2 className="landing-section-next-title">Features</h2>
-          {/* Placeholder for Features content */}
+          <h2 className="landing-section-next-title">
+            {featuresDisplayedText.length <= 5 ? (
+              featuresDisplayedText
+            ) : featuresDisplayedText.length <= 11 ? (
+              <>Fund <span className="features-highlight">{featuresDisplayedText.slice(5)}</span></>
+            ) : featuresDisplayedText.length <= 19 ? (
+              <>Fund <span className="features-highlight">Crypto</span>{featuresDisplayedText.slice(11)}</>
+            ) : (
+              <>Fund <span className="features-highlight">Crypto</span>, Spend <span className="features-highlight">{featuresDisplayedText.slice(19)}</span></>
+            )}
+            {featuresShowCursor && <span className="typewriter-cursor">|</span>}
+          </h2>
+          <img src="/IMG_0322.PNG" alt="Fund Crypto, Spend Naira - Bramp app portfolio" className="landing-features-app-img" />
         </div>
       </section>
     </div>
