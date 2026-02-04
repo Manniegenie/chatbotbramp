@@ -58,7 +58,7 @@ export default function LandingPage() {
     containerHasAnimated.current = true
     let currentIndex = 0
     const typingSpeed = 80 // milliseconds per character
-    let typingTimer: NodeJS.Timeout | null = null
+    let typingTimer: ReturnType<typeof setTimeout> | null = null
 
     const typeWriter = () => {
       if (currentIndex < containerText.length) {

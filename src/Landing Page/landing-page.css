@@ -524,8 +524,8 @@ body {
 }
 
 .decorative-icon-5 {
-  top: 390px;
-  right: calc(1% + 200px);
+  top: 240px;
+  right: 6%;
   animation-delay: 2s;
 }
 
@@ -548,8 +548,8 @@ body {
 }
 
 .decorative-icon-9 {
-  top: 240px;
-  right: 6%;
+  top: 390px;
+  right: calc(1% + 200px);
   animation-delay: 4s;
 }
 
