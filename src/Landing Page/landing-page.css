@@ -491,7 +491,7 @@ body {
   height: 75px;
   object-fit: contain;
   animation: float 6s ease-in-out infinite;
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
 .decorative-icon-5-mobile {
@@ -723,6 +723,12 @@ body {
     height: 50px;
   }
 
+  /* Hide Solana and Binance on mobile */
+  .decorative-icon-3,
+  .decorative-icon-6 {
+    display: none;
+  }
+
   /* Scattered icons on mobile - littered around but away from center content */
   .decorative-icon-1 {
     top: 140px;
@@ -730,7 +736,7 @@ body {
   }
 
   .decorative-icon-2 {
-    top: 300px;
+    top: 330px;
     left: 1%;
   }
 
@@ -747,7 +753,7 @@ body {
   .decorative-icon-5 {
     display: block; /* Show USDC on mobile */
     top: 660px;
-    right: calc(3% + 40px);
+    right: 0;
   }
 
   .decorative-icon-5-mobile {
@@ -768,11 +774,11 @@ body {
 
   .decorative-icon-8 {
     top: 650px;
-    left: calc(5% + 100px);
+    left: 0;
   }
 
   .decorative-icon-9 {
-    top: 220px;
+    top: 250px;
     right: 6%;
   }
 
