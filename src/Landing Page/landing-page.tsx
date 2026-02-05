@@ -492,10 +492,6 @@ export default function LandingPage() {
             <span className="landing-footer-separator" aria-hidden="true">|</span>
             <a href="/faq.html" className="landing-footer-link">FAQs</a>
           </div>
-          <a href="#download" className="landing-footer-download">
-            <Download size={16} />
-            <span>Download</span>
-          </a>
           <div className="landing-footer-legal">
             <a href="/privacy.html" className="landing-footer-link">Privacy Policy</a>
             <span className="landing-footer-separator" aria-hidden="true">|</span>
