@@ -1206,3 +1206,118 @@ body {
     max-width: 1600px;
   }
 }
+
+/* Footer - black background */
+.landing-footer {
+  background-color: #000000;
+  color: #FFFFFF;
+  padding: 3rem 24px;
+}
+
+.landing-footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.landing-footer-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.landing-footer-link {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #FFFFFF;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.landing-footer-link:hover {
+  color: var(--accent-color);
+}
+
+.landing-footer-separator {
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 400;
+  user-select: none;
+}
+
+.landing-footer-download {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #FFFFFF;
+  background-color: var(--accent-color);
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.landing-footer-download:hover {
+  background-color: #015a2d;
+  transform: translateY(-1px);
+}
+
+.landing-footer-social {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.landing-footer-social-link {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #FFFFFF;
+  text-decoration: none;
+  opacity: 0.9;
+  transition: color 0.2s ease, opacity 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.landing-footer-social-link:hover {
+  color: var(--accent-color);
+  opacity: 1;
+}
+
+@media (min-width: 768px) {
+  .landing-footer-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing-footer {
+    padding: 2rem 16px;
+  }
+
+  .landing-footer-nav,
+  .landing-footer-social {
+    gap: 0.75rem;
+  }
+
+  .landing-footer-link,
+  .landing-footer-social-link {
+    font-size: 13px;
+  }
+}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Download } from 'lucide-react'
+import { Download, Youtube, Instagram, Twitter, BookOpen } from 'lucide-react'
 import { DotLottieReact } from '@lottiefiles/dotlottie-react'
 import './landing-page.css'
 import PriceTicker from './PriceTicker'
@@ -311,7 +311,7 @@ export default function LandingPage() {
         <PriceTicker />
       </header>
 
-      <section className="landing-section landing-section-hero">
+      <section id="download" className="landing-section landing-section-hero">
         {/* Decorative Icons */}
         <div className="landing-decorative-icons">
           {/* Bitcoin */}
@@ -481,6 +481,41 @@ export default function LandingPage() {
           <img src="/craig-lovelidge-v1UDAHfmdZ8-unsplash.jpg" alt="Retail store - Make payments in seconds" className="landing-features-app-img" />
         </div>
       </section>
+
+      {/* Footer - black background, nav links + Download + social media */}
+      <footer className="landing-footer">
+        <div className="landing-footer-container">
+          <div className="landing-footer-nav">
+            <a href="#philosophy" className="landing-footer-link">Philosophy</a>
+            <span className="landing-footer-separator" aria-hidden="true">|</span>
+            <a href="#features" className="landing-footer-link">Features</a>
+            <span className="landing-footer-separator" aria-hidden="true">|</span>
+            <a href="#faqs" className="landing-footer-link">FAQs</a>
+          </div>
+          <a href="#download" className="landing-footer-download">
+            <Download size={16} />
+            <span>Download</span>
+          </a>
+          <div className="landing-footer-social">
+            <a href="https://m.youtube.com/@Chatbramp" target="_blank" rel="noopener noreferrer" className="landing-footer-social-link" aria-label="YouTube">
+              <Youtube size={20} />
+              <span>YouTube</span>
+            </a>
+            <a href="https://x.com/chatbramp?s=21" target="_blank" rel="noopener noreferrer" className="landing-footer-social-link" aria-label="X (Twitter)">
+              <Twitter size={20} />
+              <span>X</span>
+            </a>
+            <a href="https://www.instagram.com/chatbramp?igsh=ZzEwMjFkeXViOW8=" target="_blank" rel="noopener noreferrer" className="landing-footer-social-link" aria-label="Instagram">
+              <Instagram size={20} />
+              <span>Instagram</span>
+            </a>
+            <a href="https://medium.com/@chatbramp/article-1-introduction-e8f86489e6d4" target="_blank" rel="noopener noreferrer" className="landing-footer-social-link" aria-label="Medium">
+              <BookOpen size={20} />
+              <span>Medium</span>
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
