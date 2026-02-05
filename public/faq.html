@@ -4,85 +4,122 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Frequently Asked Questions — ChatBramp AI Terminal</title>
+    <title>FAQs — Bramp</title>
     <link rel="canonical" href="https://chatbramp.com/faq.html" />
-    <meta name="description"
-        content="Frequently asked questions about ChatBramp AI Terminal - Learn how to buy and sell cryptocurrency, understand fees, security, and more." />
+    <meta name="description" content="Frequently asked questions about Bramp — The payments app that brings crypto and fiat together." />
     <meta name="robots" content="index, follow" />
-
-    <!-- Open Graph -->
-    <meta property="og:title" content="Frequently Asked Questions — ChatBramp AI Terminal" />
-    <meta property="og:description"
-        content="Frequently asked questions about ChatBramp AI Terminal - Learn how to buy and sell cryptocurrency, understand fees, security, and more." />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://chatbramp.com/faq.html" />
-    <meta property="og:image" content="https://chatbramp.com/og-cover.jpg" />
-
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Frequently Asked Questions — ChatBramp AI Terminal" />
-    <meta name="twitter:description"
-        content="Frequently asked questions about ChatBramp AI Terminal - Learn how to buy and sell cryptocurrency, understand fees, security, and more." />
-    <meta name="twitter:image" content="https://chatbramp.com/og-cover.jpg" />
+    <link rel="icon" type="image/jpeg" href="/logo.jpeg" />
 
     <style>
+        :root {
+            --bramp-primary: #017338;
+            --bramp-bg: #F0FFF7;
+            --bramp-surface: #FFFFFF;
+            --bramp-text: #1E1E1E;
+            --bramp-text-secondary: #6B6B6B;
+            --bramp-border: #E5E5E5;
+        }
+
+        * { box-sizing: border-box; }
+
         body {
-            max-width: 860px;
-            margin: 24px auto;
-            padding: 0 16px;
-            font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
-            line-height: 1.6;
-            color: #333;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.65;
+            color: var(--bramp-text);
+            background-color: var(--bramp-bg);
+            min-height: 100vh;
         }
 
-        h1 {
-            font-size: 2em;
-            margin-bottom: 0.5em;
-            color: #000;
+        .header {
+            background: var(--bramp-surface);
+            border-bottom: 1px solid var(--bramp-border);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
         }
 
-        h2 {
-            font-size: 1.5em;
-            margin-top: 1.5em;
-            margin-bottom: 0.5em;
-            color: #000;
+        .header img { height: 40px; width: auto; display: block; }
+
+        .header h1 { margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--bramp-primary); }
+
+        .header-link { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; }
+
+        .header-link:hover h1 { color: var(--bramp-primary); }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 32px 24px 48px;
         }
 
-        .faq-item {
-            margin-bottom: 2em;
-            padding-bottom: 1.5em;
-            border-bottom: 1px solid #e0e0e0;
+        .content {
+            background: var(--bramp-surface);
+            border-radius: 16px;
+            padding: 32px 40px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--bramp-border);
         }
 
-        .faq-item:last-child {
-            border-bottom: none;
+        h1 { font-size: 1.75rem; font-weight: 700; color: var(--bramp-text); margin: 0 0 1em 0; }
+
+        h2 { font-size: 1.25rem; font-weight: 600; color: var(--bramp-primary); margin: 2em 0 0.75em 0; }
+
+        h2:first-of-type { margin-top: 1em; }
+
+        p { margin: 0 0 1em 0; color: var(--bramp-text); }
+
+        ul { margin: 0 0 1em 0; padding-left: 1.5em; color: var(--bramp-text); }
+
+        li { margin-bottom: 0.5em; }
+
+        .intro { color: var(--bramp-text-secondary); font-size: 1rem; }
+
+        .cta-section {
+            margin-top: 2.5em;
+            padding: 1.5em;
+            background: rgba(1, 115, 56, 0.08);
+            border-radius: 12px;
+            border: 1px solid rgba(1, 115, 56, 0.2);
         }
 
-        .faq-question {
-            font-weight: 600;
-            font-size: 1.1em;
-            margin-bottom: 0.5em;
-            color: #000;
-        }
-
-        .faq-answer {
-            color: #555;
-            line-height: 1.7;
-        }
+        .cta-section p:last-child { margin-bottom: 0; }
 
         .back-link {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             margin-top: 2em;
-            color: #007bff;
+            padding: 10px 16px;
+            background: var(--bramp-primary);
+            color: #fff !important;
+            border-radius: 10px;
+            font-weight: 500;
             text-decoration: none;
         }
 
-        .back-link:hover {
-            text-decoration: underline;
+        .back-link:hover { opacity: 0.9; text-decoration: none; }
+
+        .why-list { list-style: none; padding-left: 0; }
+
+        .why-list li {
+            padding-left: 1.5em;
+            position: relative;
+            margin-bottom: 0.75em;
+        }
+
+        .why-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--bramp-primary);
+            font-weight: 700;
         }
     </style>
 
-    <!-- FAQPage Schema -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -90,50 +127,26 @@
       "mainEntity": [
         {
           "@type": "Question",
-          "name": "How do I sell cryptocurrency on ChatBramp AI?",
+          "name": "What is Bramp?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Select 'Sell' in the terminal, choose your crypto, enter amount, get a quote, send crypto to the provided address, and receive NGN in your bank account."
+            "text": "Bramp is a payments app that allows users to make payments using both crypto and fiat. It is built to empower users with the right technologies for the future, while keeping everyday payments simple and accessible."
           }
         },
         {
           "@type": "Question",
-          "name": "What are the fees for using ChatBramp AI Terminal?",
+          "name": "What can I do with Bramp?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Fees are transparent and displayed before each transaction. Rates vary by cryptocurrency and transaction size."
+            "text": "Make fast and reliable payments using crypto or fiat from one app. Pay for everyday utilities such as airtime, data, cable TV, and electricity. Fund your wallet easily using crypto transfers or fiat options. Enjoy lightning-fast transactions, AI-powered payments with natural language support, and 24/7 customer support."
           }
         },
         {
           "@type": "Question",
-          "name": "How long does it take to receive NGN after selling crypto?",
+          "name": "Why choose Bramp?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Once your crypto deposit is confirmed, NGN is typically credited to your bank account within minutes to a few hours."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Is ChatBramp AI Terminal safe and secure?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes. We use licensed payment partners, encrypted communications, and comply with financial regulations including AML/CFT policies."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Which cryptocurrencies can I trade on ChatBramp AI?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "We support Bitcoin (BTC), Ethereum (ETH), USDT, USDC, Solana (SOL), BNB, Polygon (MATIC), and Avalanche (AVAX)."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Do I need to create an account to use ChatBramp AI Terminal?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Some features may require account creation for security and compliance. Check the current requirements in the terminal interface."
+            "text": "One app for both crypto and fiat payments, fast and reliable transactions, simple and intuitive user experience, built for everyday use, and designed for the future."
           }
         }
       ]
@@ -142,57 +155,55 @@
 </head>
 
 <body>
-    <h1>Frequently Asked Questions</h1>
+    <header class="header">
+        <a href="/" class="header-link">
+            <img src="/app-icon.png" alt="Bramp" />
+            <h1>Bramp</h1>
+        </a>
+    </header>
 
-    <div class="faq-item">
-        <div class="faq-question">How do I sell cryptocurrency on ChatBramp AI?</div>
-        <div class="faq-answer">
-            Select "Sell" in the terminal, choose your crypto, enter amount, get a quote, send crypto to the provided
-            address, and receive NGN in your bank account.
-        </div>
+    <div class="container">
+        <article class="content">
+            <h1>Frequently Asked Questions</h1>
+
+            <h2>Bramp</h2>
+            <p class="intro">Bramp is a payments app that allows users to make payments using both crypto and fiat. It is built to empower users with the right technologies for the future, while keeping everyday payments simple and accessible.</p>
+            <p>Bramp focuses on turning crypto into something practical and usable in daily life, not just an asset to hold.</p>
+
+            <h2>What You Can Do With Bramp</h2>
+            <ul>
+                <li>Make fast and reliable payments using crypto or fiat from one app.</li>
+                <li>Pay for everyday utilities such as airtime, data, cable TV, and electricity using crypto or fiat.</li>
+                <li>Fund your wallet easily using crypto transfers or fiat options.</li>
+                <li>Enjoy lightning-fast transactions built on modern and reliable infrastructure.</li>
+                <li>Use AI-powered payments with natural language support to send money and complete transactions more easily.</li>
+                <li>Get access to 24/7 customer support whenever you need help.</li>
+            </ul>
+
+            <h2>Built for the Future of Payments</h2>
+            <p>Bramp is designed to support real-world crypto usage, especially for retail payments. Our goal is to make it easy for users to spend crypto at stores, for services, and for everyday needs.</p>
+            <p>We believe crypto should be usable, simple, and integrated into daily life.</p>
+
+            <h2>Our Vision</h2>
+            <p>Bramp aims to help position Nigeria as a hub for retail crypto utility. We are building infrastructure that enables users and businesses to use crypto seamlessly for everyday transactions.</p>
+            <p>Our focus is on accessibility, speed, and real-world adoption.</p>
+
+            <h2>Why Bramp</h2>
+            <ul class="why-list">
+                <li>One app for both crypto and fiat payments</li>
+                <li>Fast and reliable transactions</li>
+                <li>Simple and intuitive user experience</li>
+                <li>Built for everyday use</li>
+                <li>Designed for the future</li>
+            </ul>
+
+            <div class="cta-section">
+                <h2>Download Bramp</h2>
+                <p>Bramp brings crypto and fiat together in one simple payments app, built for today and ready for the future.</p>
+                <a href="/" class="back-link">← Back to Bramp</a>
+            </div>
+        </article>
     </div>
-
-    <div class="faq-item">
-        <div class="faq-question">What are the fees for using ChatBramp AI Terminal?</div>
-        <div class="faq-answer">
-            Fees are transparent and displayed before each transaction. Rates vary by cryptocurrency and transaction
-            size.
-        </div>
-    </div>
-
-    <div class="faq-item">
-        <div class="faq-question">How long does it take to receive NGN after selling crypto?</div>
-        <div class="faq-answer">
-            Once your crypto deposit is confirmed, NGN is typically credited to your bank account within minutes to a
-            few hours.
-        </div>
-    </div>
-
-    <div class="faq-item">
-        <div class="faq-question">Is ChatBramp AI Terminal safe and secure?</div>
-        <div class="faq-answer">
-            Yes. We use licensed payment partners, encrypted communications, and comply with financial regulations
-            including AML/CFT policies.
-        </div>
-    </div>
-
-    <div class="faq-item">
-        <div class="faq-question">Which cryptocurrencies can I trade on ChatBramp AI?</div>
-        <div class="faq-answer">
-            We support Bitcoin (BTC), Ethereum (ETH), USDT, USDC, Solana (SOL), BNB, Polygon (MATIC), and Avalanche
-            (AVAX).
-        </div>
-    </div>
-
-    <div class="faq-item">
-        <div class="faq-question">Do I need to create an account to use ChatBramp AI Terminal?</div>
-        <div class="faq-answer">
-            Some features may require account creation for security and compliance. Check the current requirements in
-            the terminal interface.
-        </div>
-    </div>
-
-    <a href="/" class="back-link">← Back to ChatBramp AI Terminal</a>
 </body>
 
 </html>

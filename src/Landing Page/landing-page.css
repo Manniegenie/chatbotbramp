@@ -1297,6 +1297,53 @@ body {
   opacity: 1;
 }
 
+.landing-footer-badges {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.landing-footer-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: #FFFFFF;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.landing-footer-badge:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--accent-color);
+}
+
+.landing-footer-badge .landing-play-icon,
+.landing-footer-badge .landing-apple-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.landing-footer-legal {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.landing-footer-copyright {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
 @media (min-width: 768px) {
   .landing-footer-container {
     flex-direction: row;
