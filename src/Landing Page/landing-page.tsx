@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Download, Youtube, Instagram, Twitter, BookOpen } from 'lucide-react'
+import { Youtube, Instagram, Twitter, BookOpen } from 'lucide-react'
 import { DotLottieReact } from '@lottiefiles/dotlottie-react'
 import './landing-page.css'
 import PriceTicker from './PriceTicker'
@@ -302,10 +302,6 @@ export default function LandingPage() {
               <span className="landing-nav-separator" aria-hidden="true">|</span>
               <a href="/faq.html" className="landing-nav-link">FAQs</a>
             </div>
-            <button className="landing-nav-download">
-              <Download size={16} />
-              <span>Download</span>
-            </button>
           </div>
         </nav>
         <PriceTicker />
