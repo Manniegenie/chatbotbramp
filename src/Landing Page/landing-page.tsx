@@ -301,6 +301,8 @@ export default function LandingPage() {
               <a href="#features" className="landing-nav-link">Features</a>
               <span className="landing-nav-separator" aria-hidden="true">|</span>
               <a href="/faq.html" className="landing-nav-link">FAQs</a>
+              <span className="landing-nav-separator" aria-hidden="true">|</span>
+              <a href="/support.html" className="landing-nav-link">Support</a>
             </div>
           </div>
         </nav>
@@ -487,6 +489,8 @@ export default function LandingPage() {
             <a href="#features" className="landing-footer-link">Features</a>
             <span className="landing-footer-separator" aria-hidden="true">|</span>
             <a href="/faq.html" className="landing-footer-link">FAQs</a>
+            <span className="landing-footer-separator" aria-hidden="true">|</span>
+            <a href="/support.html" className="landing-footer-link">Support</a>
           </div>
           <div className="landing-footer-legal">
             <a href="/privacy.html" className="landing-footer-link">Privacy Policy</a>
