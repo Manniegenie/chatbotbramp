@@ -360,7 +360,7 @@ export default function LandingPage() {
             </span>
           </h1>
           <div className="landing-download-badges">
-            <a href="https://docs.google.com/forms/d/e/1FAIpQLSckzac4-IH2ePdb9MRy_CcZOlmoJ7260xeCBjWnm3vcCxiMxg/viewform?usp=header" target="_blank" rel="noopener noreferrer" className="landing-badge landing-badge-google-play">
+            <a href="https://play.google.com/store/apps/details?id=com.manniegenie.chatbramp" target="_blank" rel="noopener noreferrer" className="landing-badge landing-badge-google-play">
               <div className="landing-badge-icon-wrapper">
                 <svg className="landing-play-icon" viewBox="0 0 24 24" fill="none">
                   <path d="M3 20.5V3.5C3 2.91 3.34 2.39 3.84 2.15L13.69 12L3.84 21.85C3.34 21.61 3 21.09 3 20.5Z" fill="#00D95F"/>
@@ -516,7 +516,7 @@ export default function LandingPage() {
             </a>
           </div>
           <div className="landing-footer-badges">
-            <a href="https://docs.google.com/forms/d/e/1FAIpQLSckzac4-IH2ePdb9MRy_CcZOlmoJ7260xeCBjWnm3vcCxiMxg/viewform?usp=header" target="_blank" rel="noopener noreferrer" className="landing-footer-badge landing-footer-badge-google">
+            <a href="https://play.google.com/store/apps/details?id=com.manniegenie.chatbramp" target="_blank" rel="noopener noreferrer" className="landing-footer-badge landing-footer-badge-google">
               <svg className="landing-play-icon" viewBox="0 0 24 24" fill="none">
                 <path d="M3 20.5V3.5C3 2.91 3.34 2.39 3.84 2.15L13.69 12L3.84 21.85C3.34 21.61 3 21.09 3 20.5Z" fill="#00D95F"/>
                 <path d="M16.81 15.12L6.05 21.34L14.54 12.85L16.81 15.12Z" fill="#FFDA2D"/>
