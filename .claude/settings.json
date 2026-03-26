@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.chatbramp.com)",
+      "Bash(find /c/Users/HP/Lejerli-website -name *.html)",
+      "Bash(curl -s \"https://www.chatbramp.com/\")",
+      "Bash(curl -s \"https://www.chatbramp.com/assets/index-DM3WMspJ.css\")",
+      "Bash(curl -s \"https://www.chatbramp.com/assets/index-CyYsUsAe.js\")",
+      "Bash(find /c/Users/HP/Chatbramp -name *.jsx -o -name *.tsx -o -name *.css)",
+      "Bash(find /c/Users/HP/Chatbramp -name faq*)",
+      "Bash(find /c/Users/HP/Chatbramp-app -name *.html -o -name faq*)",
+      "Bash(find /c/Users/HP/Chatbramp-app -name faq* -o -name *.html)",
+      "Bash(npm install:*)",
+      "Bash(find /c/Users/HP/Chatbot -name message*)",
+      "Bash(find /c/Users/HP/Chatbot -name apple*)",
+      "Bash(find /c/Users/HP/Chatbot -name instagram*)",
+      "Bash(find /c/Users/HP/Chatbot -name twitter*)"
+    ]
+  }
+}

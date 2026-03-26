@@ -2,208 +2,887 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>FAQs — Bramp</title>
-    <link rel="canonical" href="https://chatbramp.com/faq.html" />
-    <meta name="description" content="Frequently asked questions about Bramp — The payments app that brings crypto and fiat together." />
-    <meta name="robots" content="index, follow" />
-    <link rel="icon" type="image/jpeg" href="/logo.jpeg" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Bramp" />
+  <meta name="theme-color" content="#FFFFFF" id="theme-color-meta" />
+  <title>FAQs — Bramp</title>
+  <link rel="canonical" href="https://chatbramp.com/faq.html" />
+  <meta name="description" content="Frequently asked questions about Bramp — The payments app that brings crypto and fiat together." />
+  <meta name="robots" content="index, follow" />
+  <link rel="icon" type="image/png" href="/app-icon.png" />
 
-    <style>
-        :root {
-            --bramp-primary: #017338;
-            --bramp-bg: #F0FFF7;
-            --bramp-surface: #FFFFFF;
-            --bramp-text: #1E1E1E;
-            --bramp-text-secondary: #6B6B6B;
-            --bramp-border: #E5E5E5;
+  <!-- Same Google Font as Landing Page -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is Bramp?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Bramp is a payments app that allows users to make payments using both crypto and fiat. It is built to empower users with the right technologies for the future, while keeping everyday payments simple and accessible."
         }
-
-        * { box-sizing: border-box; }
-
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            line-height: 1.65;
-            color: var(--bramp-text);
-            background-color: var(--bramp-bg);
-            min-height: 100vh;
+      },
+      {
+        "@type": "Question",
+        "name": "What can I do with Bramp?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Make fast and reliable payments using crypto or fiat from one app. Pay for everyday utilities such as airtime, data, cable TV, and electricity. Fund your wallet easily using crypto transfers or fiat options. Enjoy lightning-fast transactions, AI-powered payments with natural language support, and 24/7 customer support."
         }
-
-        .header {
-            background: var(--bramp-surface);
-            border-bottom: 1px solid var(--bramp-border);
-            padding: 16px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
+      },
+      {
+        "@type": "Question",
+        "name": "Why choose Bramp?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "One app for both crypto and fiat payments, fast and reliable transactions, simple and intuitive user experience, built for everyday use, and designed for the future."
         }
+      }
+    ]
+  }
+  </script>
 
-        .header img { height: 40px; width: auto; display: block; }
-
-        .header h1 { margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--bramp-primary); }
-
-        .header-link { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; }
-
-        .header-link:hover h1 { color: var(--bramp-primary); }
-
-        .container {
-            max-width: 720px;
-            margin: 0 auto;
-            padding: 32px 24px 48px;
-        }
-
-        .content {
-            background: var(--bramp-surface);
-            border-radius: 16px;
-            padding: 32px 40px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-            border: 1px solid var(--bramp-border);
-        }
-
-        h1 { font-size: 1.75rem; font-weight: 700; color: var(--bramp-text); margin: 0 0 1em 0; }
-
-        h2 { font-size: 1.25rem; font-weight: 600; color: var(--bramp-primary); margin: 2em 0 0.75em 0; }
-
-        h2:first-of-type { margin-top: 1em; }
-
-        p { margin: 0 0 1em 0; color: var(--bramp-text); }
-
-        ul { margin: 0 0 1em 0; padding-left: 1.5em; color: var(--bramp-text); }
-
-        li { margin-bottom: 0.5em; }
-
-        .intro { color: var(--bramp-text-secondary); font-size: 1rem; }
-
-        .cta-section {
-            margin-top: 2.5em;
-            padding: 1.5em;
-            background: rgba(1, 115, 56, 0.08);
-            border-radius: 12px;
-            border: 1px solid rgba(1, 115, 56, 0.2);
-        }
-
-        .cta-section p:last-child { margin-bottom: 0; }
-
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            margin-top: 2em;
-            padding: 10px 16px;
-            background: var(--bramp-primary);
-            color: #fff !important;
-            border-radius: 10px;
-            font-weight: 500;
-            text-decoration: none;
-        }
-
-        .back-link:hover { opacity: 0.9; text-decoration: none; }
-
-        .why-list { list-style: none; padding-left: 0; }
-
-        .why-list li {
-            padding-left: 1.5em;
-            position: relative;
-            margin-bottom: 0.75em;
-        }
-
-        .why-list li::before {
-            content: "✓";
-            position: absolute;
-            left: 0;
-            color: var(--bramp-primary);
-            font-weight: 700;
-        }
-    </style>
-
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "What is Bramp?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Bramp is a payments app that allows users to make payments using both crypto and fiat. It is built to empower users with the right technologies for the future, while keeping everyday payments simple and accessible."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "What can I do with Bramp?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Make fast and reliable payments using crypto or fiat from one app. Pay for everyday utilities such as airtime, data, cable TV, and electricity. Fund your wallet easily using crypto transfers or fiat options. Enjoy lightning-fast transactions, AI-powered payments with natural language support, and 24/7 customer support."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Why choose Bramp?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "One app for both crypto and fiat payments, fast and reliable transactions, simple and intuitive user experience, built for everyday use, and designed for the future."
-          }
-        }
-      ]
+  <style>
+    /* =============================================
+       Variables — matches landing-page.css exactly
+       ============================================= */
+    :root {
+      --text-primary: #1E1E1E;
+      --text-secondary: #6b7280;
+      --bg-primary: #FFFFFF;
+      --bg-secondary: #F0FFF7;
+      --nav-bg: #FFFFFF;
+      --card-bg: #FFFFFF;
+      --accent-color: #017338;
     }
-    </script>
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --text-primary: #FFFFFF;
+        --text-secondary: #a8a8aa;
+        --bg-primary: #121212;
+        --bg-secondary: #1c1c1e;
+        --nav-bg: #1c1c1e;
+        --card-bg: #1c1c1e;
+        --accent-color: #02D96A;
+      }
+    }
+
+    /* =============================================
+       Reset
+       ============================================= */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, 'Segoe UI', Roboto, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    a { -webkit-tap-highlight-color: transparent; }
+
+    /* =============================================
+       Fixed top bar — nav only (no price ticker)
+       ============================================= */
+    .landing-top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background-color: var(--bg-primary);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .landing-top-bar {
+        border-bottom-color: rgba(255, 255, 255, 0.06);
+      }
+    }
+
+    .landing-nav {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 1728px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .landing-nav-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      padding: 8px 8px 8px 8px;
+      gap: 32px;
+      background-color: transparent;
+    }
+
+    .landing-nav-logo {
+      height: 36px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .landing-nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex: 0 0 auto;
+    }
+
+    .landing-nav-link {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      text-decoration: none;
+      transition: color 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .landing-nav-link:hover { color: var(--accent-color); }
+
+    .landing-nav-link.active { color: var(--accent-color); font-weight: 600; }
+
+    .landing-nav-separator {
+      color: var(--text-secondary);
+      font-weight: 400;
+      user-select: none;
+    }
+
+    /* =============================================
+       Hero section — white/dark, full-height, with page split
+       ============================================= */
+    .faq-hero {
+      min-height: 100vh;
+      background-color: var(--bg-primary);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding-top: 80px; /* clear fixed nav */
+      padding-bottom: 60px;
+      padding-left: 24px;
+      padding-right: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Decorative blurred blobs — same feel as landing page */
+    .faq-hero::before {
+      content: '';
+      position: absolute;
+      top: 15%;
+      left: -10%;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(1, 115, 56, 0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .faq-hero::after {
+      content: '';
+      position: absolute;
+      bottom: 10%;
+      right: -8%;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(1, 115, 56, 0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .faq-hero-inner {
+      max-width: 720px;
+      width: 100%;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .faq-hero-tag {
+      display: inline-block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent-color);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .faq-hero-title {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+      font-size: 56px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.25rem;
+    }
+
+    .faq-hero-title .accent { color: var(--accent-color); }
+
+    .faq-hero-subtitle {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      max-width: 480px;
+      margin: 0 auto 2.5rem;
+      line-height: 1.7;
+    }
+
+    /* Scroll cue arrow */
+    .faq-scroll-cue {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      margin-top: 0.5rem;
+      animation: bounceDown 2s ease-in-out infinite;
+    }
+
+    .faq-scroll-cue svg { opacity: 0.5; }
+
+    @keyframes bounceDown {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(8px); }
+    }
+
+    /* =============================================
+       Green sections — matches .landing-section-next
+       ============================================= */
+    .faq-section-green {
+      background-color: var(--accent-color);
+      color: #ffffff;
+      padding: 5rem 24px;
+    }
+
+    .faq-section-green-inner {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .faq-section-green-title {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #000000;
+      margin-bottom: 2.5rem;
+      text-align: center;
+    }
+
+    .faq-section-green-title .white { color: #ffffff; }
+
+    /* Q&A accordion items */
+    .faq-item {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 14px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      transition: background 0.2s ease;
+    }
+
+    .faq-item:hover { background: rgba(255, 255, 255, 0.15); }
+
+    .faq-question {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px 24px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #ffffff;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .faq-question-chevron {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      color: rgba(255, 255, 255, 0.7);
+      transition: transform 0.3s ease;
+    }
+
+    .faq-item.open .faq-question-chevron { transform: rotate(180deg); }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease;
+    }
+
+    .faq-item.open .faq-answer { max-height: 600px; }
+
+    .faq-answer-inner {
+      padding: 0 24px 20px;
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.88);
+      line-height: 1.7;
+    }
+
+    .faq-answer-inner ul {
+      padding-left: 1.25em;
+      margin-top: 0.5em;
+    }
+
+    .faq-answer-inner li { margin-bottom: 0.5em; }
+
+    /* =============================================
+       Black section — matches .landing-section-third
+       ============================================= */
+    .faq-section-black {
+      background-color: #000000;
+      color: #ffffff;
+      padding: 5rem 24px;
+    }
+
+    .faq-section-black-inner {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .faq-section-black-title {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 2.5rem;
+      text-align: center;
+    }
+
+    .faq-section-black-title .green { color: var(--accent-color); }
+
+    .faq-section-black .faq-item {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .faq-section-black .faq-item:hover { background: rgba(255, 255, 255, 0.08); }
+
+    /* =============================================
+       Why Bramp — white/dark section with check list
+       ============================================= */
+    .faq-section-why {
+      background-color: var(--bg-primary);
+      padding: 5rem 24px;
+    }
+
+    .faq-section-why-inner {
+      max-width: 720px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .faq-section-why-title {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 2.5rem;
+    }
+
+    .faq-section-why-title .accent { color: var(--accent-color); }
+
+    .faq-why-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      text-align: left;
+    }
+
+    .faq-why-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(0, 0, 0, 0.07);
+      border-radius: 14px;
+      padding: 20px 20px 20px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .faq-why-card {
+        border-color: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      }
+    }
+
+    .faq-why-check {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+      background: var(--accent-color);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 700;
+      margin-top: 1px;
+    }
+
+    .faq-why-card-text {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+
+    /* =============================================
+       Footer — matches landing-footer exactly
+       ============================================= */
+    .landing-footer {
+      background-color: #000000;
+      color: #FFFFFF;
+      padding: 3rem 24px;
+    }
+
+    .landing-footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .landing-footer-nav {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .landing-footer-link {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: #FFFFFF;
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .landing-footer-link:hover { color: var(--accent-color); }
+
+    .landing-footer-separator {
+      color: rgba(255, 255, 255, 0.4);
+      user-select: none;
+    }
+
+    .landing-footer-legal {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .landing-footer-social {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .landing-footer-social-link {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: color 0.2s ease;
+    }
+
+    .landing-footer-social-link:hover { color: var(--accent-color); }
+
+    .landing-footer-badges {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .landing-footer-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 1.2rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      color: #ffffff;
+      text-decoration: none;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .landing-footer-badge:hover {
+      border-color: var(--accent-color);
+      background: rgba(1, 115, 56, 0.1);
+    }
+
+    .landing-footer-badge svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+    .landing-footer-copyright {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.4);
+      text-align: center;
+    }
+
+    /* =============================================
+       Responsive
+       ============================================= */
+    @media (max-width: 768px) {
+      .landing-nav { padding: 0 12px; }
+      .landing-nav-container { gap: 16px; height: 56px; }
+      .landing-nav-links { gap: 14px; flex: 1; justify-content: center; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+      .landing-nav-links::-webkit-scrollbar { display: none; }
+      .landing-nav-link { font-size: 13px; white-space: nowrap; flex-shrink: 0; }
+
+      .faq-hero { padding-top: 76px; }
+      .faq-hero-title { font-size: 38px; }
+
+      .faq-section-green, .faq-section-black, .faq-section-why { padding: 4rem 20px; }
+      .faq-section-green-title, .faq-section-black-title, .faq-section-why-title { font-size: 1.6rem; }
+
+      .faq-why-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 480px) {
+      .landing-nav { padding: 0 8px; }
+      .landing-nav-link { font-size: 11px; }
+      .faq-hero-title { font-size: 30px; }
+      .faq-section-green, .faq-section-black, .faq-section-why { padding: 3rem 16px; }
+      .faq-question { padding: 16px 18px; font-size: 0.95rem; }
+      .faq-answer-inner { padding: 0 18px 16px; }
+    }
+
+    @media (min-width: 1440px) {
+      .faq-hero-title { font-size: 64px; }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        transition-duration: 0.001ms !important;
+      }
+    }
+
+    ::selection { background: rgba(1, 115, 56, 0.25); }
+  </style>
 </head>
 
 <body>
-    <header class="header">
-        <a href="/" class="header-link">
-            <img src="/app-icon.png" alt="Bramp" />
-            <h1>Bramp</h1>
+
+  <!-- =================== FIXED NAV =================== -->
+  <header class="landing-top-bar">
+    <nav class="landing-nav" aria-label="Main navigation">
+      <div class="landing-nav-container">
+        <a href="/" aria-label="Bramp home">
+          <img src="/app-icon.png" alt="Bramp" class="landing-nav-logo" />
         </a>
-    </header>
+        <div class="landing-nav-links">
+          <a href="/#philosophy" class="landing-nav-link">Philosophy</a>
+          <span class="landing-nav-separator" aria-hidden="true">|</span>
+          <a href="/#features" class="landing-nav-link">Features</a>
+          <span class="landing-nav-separator" aria-hidden="true">|</span>
+          <a href="/faq.html" class="landing-nav-link active" aria-current="page">FAQs</a>
+          <span class="landing-nav-separator" aria-hidden="true">|</span>
+          <a href="/support.html" class="landing-nav-link">Support</a>
+        </div>
+      </div>
+    </nav>
+  </header>
 
-    <div class="container">
-        <article class="content">
-            <h1>Frequently Asked Questions</h1>
-
-            <h2>Bramp</h2>
-            <p class="intro">Bramp is a payments app that allows users to make payments using both crypto and fiat. It is built to empower users with the right technologies for the future, while keeping everyday payments simple and accessible.</p>
-            <p>Bramp focuses on turning crypto into something practical and usable in daily life, not just an asset to hold.</p>
-
-            <h2>What You Can Do With Bramp</h2>
-            <ul>
-                <li>Make fast and reliable payments using crypto or fiat from one app.</li>
-                <li>Pay for everyday utilities such as airtime, data, cable TV, and electricity using crypto or fiat.</li>
-                <li>Fund your wallet easily using crypto transfers or fiat options.</li>
-                <li>Enjoy lightning-fast transactions built on modern and reliable infrastructure.</li>
-                <li>Use AI-powered payments with natural language support to send money and complete transactions more easily.</li>
-                <li>Get access to 24/7 customer support whenever you need help.</li>
-            </ul>
-
-            <h2>Built for the Future of Payments</h2>
-            <p>Bramp is designed to support real-world crypto usage, especially for retail payments. Our goal is to make it easy for users to spend crypto at stores, for services, and for everyday needs.</p>
-            <p>We believe crypto should be usable, simple, and integrated into daily life.</p>
-
-            <h2>Our Vision</h2>
-            <p>Bramp aims to help position Nigeria as a hub for retail crypto utility. We are building infrastructure that enables users and businesses to use crypto seamlessly for everyday transactions.</p>
-            <p>Our focus is on accessibility, speed, and real-world adoption.</p>
-
-            <h2>Why Bramp</h2>
-            <ul class="why-list">
-                <li>One app for both crypto and fiat payments</li>
-                <li>Fast and reliable transactions</li>
-                <li>Simple and intuitive user experience</li>
-                <li>Built for everyday use</li>
-                <li>Designed for the future</li>
-            </ul>
-
-            <div class="cta-section">
-                <h2>Download Bramp</h2>
-                <p>Bramp brings crypto and fiat together in one simple payments app, built for today and ready for the future.</p>
-                <a href="/" class="back-link">← Back to Bramp</a>
-            </div>
-        </article>
+  <!-- =================== HERO SECTION =================== -->
+  <section class="faq-hero">
+    <div class="faq-hero-inner">
+      <span class="faq-hero-tag">Help &amp; Info</span>
+      <h1 class="faq-hero-title">
+        Frequently Asked<br />
+        <span class="accent">Questions</span>
+      </h1>
+      <p class="faq-hero-subtitle">
+        Everything you need to know about Bramp — the payments app that brings crypto and fiat together.
+      </p>
+      <div class="faq-scroll-cue" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14M5 12l7 7 7-7"/>
+        </svg>
+      </div>
     </div>
-</body>
+  </section>
 
+  <!-- =================== GREEN SECTION: What is Bramp =================== -->
+  <section class="faq-section-green">
+    <div class="faq-section-green-inner">
+      <h2 class="faq-section-green-title">About <span class="white">Bramp</span></h2>
+
+      <div class="faq-item open">
+        <button class="faq-question" aria-expanded="true">
+          What is Bramp?
+          <svg class="faq-question-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">
+            Bramp is a payments app that allows users to make payments using both crypto and fiat. It is built to empower users with the right technologies for the future, while keeping everyday payments simple and accessible. Bramp focuses on turning crypto into something practical and usable in daily life — not just an asset to hold.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          What can I do with Bramp?
+          <svg class="faq-question-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">
+            <ul>
+              <li>Make fast and reliable payments using crypto or fiat from one app.</li>
+              <li>Pay for everyday utilities such as airtime, data, cable TV, and electricity using crypto or fiat.</li>
+              <li>Fund your wallet easily using crypto transfers or fiat options.</li>
+              <li>Enjoy lightning-fast transactions built on modern and reliable infrastructure.</li>
+              <li>Use AI-powered payments with natural language support to send money and complete transactions more easily.</li>
+              <li>Get access to 24/7 customer support whenever you need help.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          Is Bramp available on iOS and Android?
+          <svg class="faq-question-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">
+            Bramp is available on Android via Google Play. iOS is coming soon — join the waitlist using the App Store link on our homepage to be notified when it launches.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== BLACK SECTION: Payments & Vision =================== -->
+  <section class="faq-section-black">
+    <div class="faq-section-black-inner">
+      <h2 class="faq-section-black-title">Payments &amp; <span class="green">Vision</span></h2>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          What is Bramp built for?
+          <svg class="faq-question-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">
+            Bramp is designed to support real-world crypto usage, especially for retail payments. Our goal is to make it easy for users to spend crypto at stores, for services, and for everyday needs. We believe crypto should be usable, simple, and integrated into daily life.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          What is Bramp's vision?
+          <svg class="faq-question-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">
+            Bramp aims to help position Nigeria as a hub for retail crypto utility. We are building infrastructure that enables users and businesses to use crypto seamlessly for everyday transactions. Our focus is on accessibility, speed, and real-world adoption.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          Does Bramp support AI-powered payments?
+          <svg class="faq-question-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">
+            Yes. Bramp includes an AI-powered payments interface that lets you describe what you want to do in plain language — for example, "Pay 100 USDT to John" — and the app handles the rest. It's designed to make crypto payments as simple as sending a text message.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== WHY BRAMP SECTION =================== -->
+  <section class="faq-section-why">
+    <div class="faq-section-why-inner">
+      <h2 class="faq-section-why-title">Why <span class="accent">Bramp?</span></h2>
+      <div class="faq-why-grid">
+        <div class="faq-why-card">
+          <div class="faq-why-check">✓</div>
+          <span class="faq-why-card-text">One app for both crypto and fiat payments</span>
+        </div>
+        <div class="faq-why-card">
+          <div class="faq-why-check">✓</div>
+          <span class="faq-why-card-text">Fast and reliable transactions</span>
+        </div>
+        <div class="faq-why-card">
+          <div class="faq-why-check">✓</div>
+          <span class="faq-why-card-text">Simple and intuitive user experience</span>
+        </div>
+        <div class="faq-why-card">
+          <div class="faq-why-check">✓</div>
+          <span class="faq-why-card-text">Built for everyday use</span>
+        </div>
+        <div class="faq-why-card">
+          <div class="faq-why-check">✓</div>
+          <span class="faq-why-card-text">AI-powered natural language payments</span>
+        </div>
+        <div class="faq-why-card">
+          <div class="faq-why-check">✓</div>
+          <span class="faq-why-card-text">Designed for the future of finance</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== FOOTER =================== -->
+  <footer class="landing-footer">
+    <div class="landing-footer-container">
+      <nav class="landing-footer-nav" aria-label="Footer navigation">
+        <a href="/#philosophy" class="landing-footer-link">Philosophy</a>
+        <span class="landing-footer-separator" aria-hidden="true">|</span>
+        <a href="/#features" class="landing-footer-link">Features</a>
+        <span class="landing-footer-separator" aria-hidden="true">|</span>
+        <a href="/faq.html" class="landing-footer-link">FAQs</a>
+        <span class="landing-footer-separator" aria-hidden="true">|</span>
+        <a href="/support.html" class="landing-footer-link">Support</a>
+      </nav>
+
+      <div class="landing-footer-legal">
+        <a href="/privacy.html" class="landing-footer-link">Privacy Policy</a>
+        <span class="landing-footer-separator" aria-hidden="true">|</span>
+        <a href="/aml-cft.html" class="landing-footer-link">AML CFT Policy</a>
+      </div>
+
+      <div class="landing-footer-social">
+        <a href="https://m.youtube.com/@Chatbramp" target="_blank" rel="noopener noreferrer" class="landing-footer-social-link" aria-label="YouTube">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>
+          <span>YouTube</span>
+        </a>
+        <a href="https://x.com/chatbramp?s=21" target="_blank" rel="noopener noreferrer" class="landing-footer-social-link" aria-label="X (Twitter)">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          <span>X</span>
+        </a>
+        <a href="https://www.instagram.com/chatbramp?igsh=ZzEwMjFkeXViOW8=" target="_blank" rel="noopener noreferrer" class="landing-footer-social-link" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+          <span>Instagram</span>
+        </a>
+        <a href="https://medium.com/@chatbramp/article-1-introduction-e8f86489e6d4" target="_blank" rel="noopener noreferrer" class="landing-footer-social-link" aria-label="Medium">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.54 12a6.8 6.8 0 01-6.77 6.82A6.8 6.8 0 010 12a6.8 6.8 0 016.77-6.82A6.8 6.8 0 0113.54 12zM20.96 12c0 3.54-1.51 6.42-3.38 6.42-1.87 0-3.39-2.88-3.39-6.42s1.52-6.42 3.39-6.42 3.38 2.88 3.38 6.42M24 12c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75C23.47 6.25 24 8.83 24 12z"/></svg>
+          <span>Medium</span>
+        </a>
+      </div>
+
+      <div class="landing-footer-badges">
+        <a href="https://play.google.com/store/apps/details?id=com.manniegenie.chatbramp" target="_blank" rel="noopener noreferrer" class="landing-footer-badge">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M3 20.5V3.5C3 2.91 3.34 2.39 3.84 2.15L13.69 12L3.84 21.85C3.34 21.61 3 21.09 3 20.5Z" fill="#00D95F"/>
+            <path d="M16.81 15.12L6.05 21.34L14.54 12.85L16.81 15.12Z" fill="#FFDA2D"/>
+            <path d="M3.84 2.15C4.03 2.06 4.23 2 4.45 2C4.66 2 4.87 2.06 5.05 2.15L15.81 8.38L13.69 12L3.84 2.15Z" fill="#FF3E3E"/>
+            <path d="M16.81 8.88L19.96 10.75C20.54 11.07 21 11.7 21 12.5C21 13.3 20.54 13.93 19.96 14.25L16.81 16.12L14.54 13.85L16.81 8.88Z" fill="#4C8BF5"/>
+          </svg>
+          <span>Get on Android</span>
+        </a>
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSckzac4-IH2ePdb9MRy_CcZOlmoJ7260xeCBjWnm3vcCxiMxg/viewform?usp=header" target="_blank" rel="noopener noreferrer" class="landing-footer-badge">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.1 22C7.79 22.05 6.8 20.68 5.96 19.47C4.25 17 2.94 12.45 4.7 9.39C5.57 7.87 7.13 6.91 8.82 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.1 17.41 12.63C17.44 15.65 20.06 16.66 20.09 16.67C20.06 16.74 19.67 18.11 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z"/></svg>
+          <span>Get on iOS</span>
+        </a>
+      </div>
+
+      <p class="landing-footer-copyright">© <script>document.write(new Date().getFullYear())</script> Bramp Africa Limited. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    // ===== Theme color meta tag =====
+    (function () {
+      var meta = document.getElementById('theme-color-meta')
+      function updateTheme() {
+        var isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (meta) meta.setAttribute('content', isDark ? '#121212' : '#FFFFFF')
+      }
+      updateTheme()
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme)
+    })()
+
+    // ===== FAQ accordion =====
+    document.querySelectorAll('.faq-question').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var item = btn.closest('.faq-item')
+        var isOpen = item.classList.contains('open')
+
+        // Close all in the same section
+        var section = item.closest('section')
+        section.querySelectorAll('.faq-item.open').forEach(function (openItem) {
+          openItem.classList.remove('open')
+          openItem.querySelector('.faq-question').setAttribute('aria-expanded', 'false')
+        })
+
+        // Toggle clicked
+        if (!isOpen) {
+          item.classList.add('open')
+          btn.setAttribute('aria-expanded', 'true')
+        }
+      })
+    })
+  </script>
+
+</body>
 </html>
