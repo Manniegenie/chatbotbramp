@@ -349,12 +349,63 @@ export default function LandingPage() {
               <span className="landing-hero-accent">{textAccent}</span>
               {showLottie && (
                 <span className="landing-lottie-animation">
-                  <DotLottieReact
-                    src="https://lottie.host/19969e37-481f-4c95-a087-d3b646d00b16/YgfV82zZok.lottie"
-                    loop
-                    autoplay
-                    style={{ width: '100%', height: '100%' }}
-                  />
+                  <svg className="landing-globe" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Spinning globe">
+                    <defs>
+                      <radialGradient id="globeOcean" cx="38%" cy="32%" r="75%">
+                        <stop offset="0%" stopColor="#0d5c39" />
+                        <stop offset="60%" stopColor="#08422a" />
+                        <stop offset="100%" stopColor="#042a1a" />
+                      </radialGradient>
+                      <radialGradient id="globeShade" cx="50%" cy="50%" r="50%">
+                        <stop offset="55%" stopColor="#000000" stopOpacity="0" />
+                        <stop offset="100%" stopColor="#000000" stopOpacity="0.45" />
+                      </radialGradient>
+                      <radialGradient id="globeGlare" cx="34%" cy="28%" r="40%">
+                        <stop offset="0%" stopColor="#ffffff" stopOpacity="0.35" />
+                        <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+                      </radialGradient>
+                      <clipPath id="globeClip">
+                        <circle cx="100" cy="100" r="92" />
+                      </clipPath>
+                    </defs>
+
+                    {/* Ocean sphere */}
+                    <circle cx="100" cy="100" r="92" fill="url(#globeOcean)" />
+
+                    {/* Scrolling continents (two identical tiles for a seamless loop) */}
+                    <g clipPath="url(#globeClip)">
+                      <g fill="#02D96A" opacity="0.92">
+                        <animateTransform attributeName="transform" type="translate" from="0 0" to="-200 0" dur="16s" repeatCount="indefinite" />
+                        {/* Tile A */}
+                        <path d="M18 70 q20 -22 46 -14 q22 7 14 30 q-6 18 -30 20 q-30 3 -34 -18 q-3 -12 4 -18 Z" />
+                        <path d="M78 46 q18 -10 30 4 q10 12 -2 24 q-16 14 -32 6 q-12 -8 -8 -20 q3 -9 12 -14 Z" />
+                        <path d="M60 118 q22 -14 40 2 q14 14 2 32 q-16 20 -40 12 q-18 -8 -16 -28 q1 -12 14 -20 Z" />
+                        <path d="M132 96 q20 -12 34 6 q10 14 -4 28 q-18 16 -34 4 q-10 -10 -6 -24 q2 -8 10 -14 Z" />
+                        <ellipse cx="150" cy="58" rx="16" ry="11" />
+                        {/* Tile B (+200) */}
+                        <path d="M218 70 q20 -22 46 -14 q22 7 14 30 q-6 18 -30 20 q-30 3 -34 -18 q-3 -12 4 -18 Z" />
+                        <path d="M278 46 q18 -10 30 4 q10 12 -2 24 q-16 14 -32 6 q-12 -8 -8 -20 q3 -9 12 -14 Z" />
+                        <path d="M260 118 q22 -14 40 2 q14 14 2 32 q-16 20 -40 12 q-18 -8 -16 -28 q1 -12 14 -20 Z" />
+                        <path d="M332 96 q20 -12 34 6 q10 14 -4 28 q-18 16 -34 4 q-10 -10 -6 -24 q2 -8 10 -14 Z" />
+                        <ellipse cx="350" cy="58" rx="16" ry="11" />
+                      </g>
+
+                      {/* Wireframe latitude/longitude lines */}
+                      <g fill="none" stroke="#ffffff" strokeOpacity="0.10" strokeWidth="1">
+                        <ellipse cx="100" cy="100" rx="92" ry="30" />
+                        <ellipse cx="100" cy="100" rx="92" ry="62" />
+                        <line x1="8" y1="100" x2="192" y2="100" />
+                        <ellipse cx="100" cy="100" rx="30" ry="92" />
+                        <ellipse cx="100" cy="100" rx="62" ry="92" />
+                      </g>
+                    </g>
+
+                    {/* 3D shading + top-left glare */}
+                    <circle cx="100" cy="100" r="92" fill="url(#globeShade)" />
+                    <circle cx="100" cy="100" r="92" fill="url(#globeGlare)" />
+                    {/* Rim */}
+                    <circle cx="100" cy="100" r="92" fill="none" stroke="#02D96A" strokeOpacity="0.55" strokeWidth="2" />
+                  </svg>
                 </span>
               )}
             </span>
