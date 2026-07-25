@@ -298,7 +298,7 @@ body {
 
 .landing-hero-title {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
-  font-size: 64px;
+  font-size: 52px;
   font-weight: 700;
   line-height: 1.1;
   color: var(--text-primary);
@@ -308,7 +308,7 @@ body {
   position: relative;
   z-index: 20;
   transform: translateY(-50px);
-  min-height: 84px; /* Reserve space for full text height */
+  min-height: 68px; /* Reserve space for full text height */
   display: block;
   line-height: 1.15;
   opacity: 1;
@@ -318,7 +318,7 @@ body {
   visibility: hidden;
   display: block;
   height: auto;
-  font-size: 64px;
+  font-size: 52px;
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.02em;
@@ -762,12 +762,12 @@ body {
   }
 
   .landing-hero-title {
-    font-size: 56px;
-    min-height: 74px; /* Reserve space for full text height */
+    font-size: 46px;
+    min-height: 60px; /* Reserve space for full text height */
   }
 
   .landing-title-placeholder {
-    font-size: 56px;
+    font-size: 46px;
   }
 
   .landing-container {
@@ -838,10 +838,10 @@ body {
   }
 
   .landing-hero-title {
-    font-size: 44px;
+    font-size: 38px;
     transform: translateY(-50px);
     line-height: 1.2;
-    min-height: 58px; /* Reserve space for full text height */
+    min-height: 47px; /* Reserve space for full text height */
   }
 
   .landing-title-content br {
@@ -849,7 +849,7 @@ body {
   }
 
   .landing-title-placeholder {
-    font-size: 44px;
+    font-size: 38px;
     line-height: 1.2;
   }
 
@@ -1077,14 +1077,14 @@ body {
   }
 
   .landing-hero-title {
-    font-size: 36px;
+    font-size: 30px;
     transform: translateY(-40px);
     letter-spacing: -0.01em;
-    min-height: 48px; /* Reserve space for full text height */
+    min-height: 39px; /* Reserve space for full text height */
   }
 
   .landing-title-placeholder {
-    font-size: 36px;
+    font-size: 30px;
     letter-spacing: -0.01em;
   }
 
@@ -1188,12 +1188,12 @@ body {
 /* Large desktop adjustments */
 @media (min-width: 1440px) {
   .landing-hero-title {
-    font-size: 72px;
-    min-height: 95px; /* Reserve space for full text height */
+    font-size: 58px;
+    min-height: 76px; /* Reserve space for full text height */
   }
 
   .landing-title-placeholder {
-    font-size: 72px;
+    font-size: 58px;
   }
 
   .landing-container {
@@ -1204,12 +1204,12 @@ body {
 /* Extra large desktop */
 @media (min-width: 1920px) {
   .landing-hero-title {
-    font-size: 80px;
-    min-height: 106px; /* Reserve space for full text height */
+    font-size: 64px;
+    min-height: 85px; /* Reserve space for full text height */
   }
 
   .landing-title-placeholder {
-    font-size: 80px;
+    font-size: 64px;
   }
 
   .landing-container {
