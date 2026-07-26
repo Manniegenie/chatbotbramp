@@ -348,18 +348,20 @@ export default function LandingPage() {
               <br />
               {part4}
               <span className="landing-hero-accent">{textAccent}</span>
-              {showLottie && (
-                <span className="landing-lottie-animation">
-                  <DotLottieReact
-                    src={worldAnimation}
-                    loop
-                    autoplay
-                    style={{ width: '100%', height: '100%' }}
-                  />
-                </span>
-              )}
             </span>
           </h1>
+          {showLottie && (
+            <div className="landing-globe-wrap">
+              <span className="landing-lottie-animation">
+                <DotLottieReact
+                  src={worldAnimation}
+                  loop
+                  autoplay
+                  style={{ width: '100%', height: '100%' }}
+                />
+              </span>
+            </div>
+          )}
           <div className="landing-download-badges">
             <a href="https://play.google.com/store/apps/details?id=com.manniegenie.chatbramp" target="_blank" rel="noopener noreferrer" className="landing-badge landing-badge-google-play">
               <div className="landing-badge-icon-wrapper">

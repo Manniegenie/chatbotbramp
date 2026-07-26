@@ -353,10 +353,14 @@ body {
   color: var(--accent-color);
 }
 
+.landing-globe-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: -24px;
+}
+
 .landing-lottie-animation {
-  display: inline-block;
-  vertical-align: middle;
-  margin-left: 8px;
+  display: block;
   width: 150px;
   height: 150px;
 }
