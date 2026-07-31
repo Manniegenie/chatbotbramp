@@ -6,15 +6,15 @@ import PriceTicker from './PriceTicker'
 import worldAnimation from '../assets/World.json?url'
 
 export default function LandingPage() {
-  const textBefore = "Money moves, Money "
-  const textAccent = "Travels."
+  const textBefore = "Move money like it's "
+  const textAccent = "yours."
   const [showLottie, setShowLottie] = useState(false)
 
-  // Split into parts: "Money " | "moves" | ", " | "Money "
-  const part1 = "Money "
-  const part2 = "moves"
-  const part3 = ", "
-  const part4 = "Money "
+  // Split into parts: "Move " | "money" | " like it's" | ""
+  const part1 = "Move "
+  const part2 = "money"
+  const part3 = " like it's"
+  const part4 = ""
 
   // Typewriter effect for white container text
   const containerText = "Send 20000 naira to Henry's Opay"
@@ -340,7 +340,7 @@ export default function LandingPage() {
         </div>
         <div className="landing-container">
           <h1 className="landing-hero-title">
-            <span className="landing-title-placeholder" aria-hidden="true">Money moves, <br />Money Travels.</span>
+            <span className="landing-title-placeholder" aria-hidden="true">Move money like it's <br />yours.</span>
             <span className="landing-title-content">
               {part1}
               <span className="landing-hero-accent">{part2}</span>
