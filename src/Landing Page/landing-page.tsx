@@ -4,6 +4,27 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react'
 import './landing-page.css'
 import PriceTicker from './PriceTicker'
 import worldAnimation from '../assets/World.json?url'
+import featureShot1 from '../assets/IMG_7665.png'
+import featureShot2 from '../assets/IMG_7666.png'
+import featureShot3 from '../assets/IMG_7667.png'
+import featureShot4 from '../assets/IMG_7668.png'
+import featureShot5 from '../assets/IMG_7669.png'
+import featureShot6 from '../assets/IMG_7670.png'
+import featureShot7 from '../assets/IMG_7671.png'
+import featureShot8 from '../assets/IMG_7813.png'
+import featureShot9 from '../assets/IMG_7814.png'
+
+const featureCarouselImages = [
+  { src: featureShot1, alt: 'Ask me anything - Bramp AI chat on the dashboard' },
+  { src: featureShot2, alt: 'Bramp app walkthrough screenshot' },
+  { src: featureShot3, alt: 'Select a token to deposit - Bramp wallet' },
+  { src: featureShot4, alt: 'Bramp app walkthrough screenshot' },
+  { src: featureShot5, alt: 'Bramp app walkthrough screenshot' },
+  { src: featureShot6, alt: 'Bramp app walkthrough screenshot' },
+  { src: featureShot7, alt: 'Bramp app walkthrough screenshot' },
+  { src: featureShot8, alt: 'Bramp app walkthrough screenshot' },
+  { src: featureShot9, alt: 'Bramp app walkthrough screenshot' },
+]
 
 export default function LandingPage() {
   const textBefore = "Move money like it's "
@@ -424,7 +445,18 @@ export default function LandingPage() {
             )}
             {featuresShowCursor && <span className="typewriter-cursor">|</span>}
           </h2>
-          <img src="/IMG_0322.PNG" alt="Fund Crypto, Spend Naira - Bramp app portfolio" className="landing-features-app-img" />
+          <div className="landing-features-carousel" role="list">
+            {featureCarouselImages.map((image, index) => (
+              <img
+                key={image.src}
+                src={image.src}
+                alt={image.alt}
+                className="landing-features-app-img landing-features-carousel-item"
+                role="listitem"
+                loading={index === 0 ? 'eager' : 'lazy'}
+              />
+            ))}
+          </div>
         </div>
       </section>
 
