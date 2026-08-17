@@ -34,7 +34,7 @@ export default function LandingPage() {
   // Split into parts: "Move " | "money" | " like it's" | ""
   const part1 = "Move "
   const part2 = "money"
-  const part3 = " like it's"
+  const part3 = " like it's "
   const part4 = ""
 
   // Typewriter effect for white container text
