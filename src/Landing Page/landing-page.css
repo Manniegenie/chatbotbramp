@@ -1412,3 +1412,78 @@ body {
     font-size: 13px;
   }
 }
+
+/* Hamburger menu (phones): the nav links fold into a panel that drops under
+   the top bar over a dimmed page. Hidden on wider screens. */
+.landing-menu-button {
+  display: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.landing-menu-button svg {
+  width: 24px;
+  height: 24px;
+}
+
+.landing-menu-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: rgba(0, 0, 0, 0.4);
+  animation: landingMenuFade 0.2s ease both;
+}
+
+.landing-menu-panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  display: grid;
+  padding: 8px 20px 16px;
+  background-color: var(--bg-primary);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  animation: landingMenuDrop 0.2s ease both;
+}
+
+.landing-menu-link {
+  padding: 14px 4px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+.landing-menu-link:last-child {
+  border-bottom: 0;
+}
+
+.landing-menu-link:hover {
+  color: var(--accent-color);
+}
+
+@keyframes landingMenuFade {
+  from { opacity: 0; }
+}
+
+@keyframes landingMenuDrop {
+  from { opacity: 0; transform: translateY(-8px); }
+}
+
+@media (max-width: 768px) {
+  .landing-nav-links {
+    display: none;
+  }
+
+  .landing-menu-button {
+    display: grid;
+  }
+}

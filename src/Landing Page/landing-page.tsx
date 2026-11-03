@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Youtube, Instagram, Twitter, BookOpen } from 'lucide-react'
+import { Youtube, Instagram, Twitter, BookOpen, Menu, X } from 'lucide-react'
 import { DotLottieReact } from '@lottiefiles/dotlottie-react'
 import './landing-page.css'
 import PriceTicker from './PriceTicker'
@@ -30,6 +30,17 @@ export default function LandingPage() {
   const textBefore = "Move money like it's "
   const textAccent = "yours."
   const [showLottie, setShowLottie] = useState(false)
+
+  // Mobile nav: links fold into a hamburger; closes on a link tap, Escape or the backdrop
+  const [menuOpen, setMenuOpen] = useState(false)
+  const closeMenu = () => setMenuOpen(false)
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false) }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [menuOpen])
 
   // Split into parts: "Move " | "money" | " like it's" | ""
   const part1 = "Move "
@@ -326,9 +337,30 @@ export default function LandingPage() {
               <span className="landing-nav-separator" aria-hidden="true">|</span>
               <a href="/support.html" className="landing-nav-link">Support</a>
             </div>
+            <button
+              type="button"
+              className="landing-menu-button"
+              onClick={() => setMenuOpen(open => !open)}
+              aria-expanded={menuOpen}
+              aria-controls="landing-mobile-menu"
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            >
+              {menuOpen ? <X strokeWidth={2} aria-hidden="true" /> : <Menu strokeWidth={2} aria-hidden="true" />}
+            </button>
           </div>
         </nav>
         <PriceTicker />
+        {menuOpen && (
+          <>
+            <div className="landing-menu-scrim" onClick={closeMenu} aria-hidden="true" />
+            <div id="landing-mobile-menu" className="landing-menu-panel">
+              <a href="#philosophy" className="landing-menu-link" onClick={closeMenu}>Philosophy</a>
+              <a href="#features" className="landing-menu-link" onClick={closeMenu}>Features</a>
+              <a href="/faq.html" className="landing-menu-link" onClick={closeMenu}>FAQs</a>
+              <a href="/support.html" className="landing-menu-link" onClick={closeMenu}>Support</a>
+            </div>
+          </>
+        )}
       </header>
 
       <section id="download" className="landing-section landing-section-hero">
