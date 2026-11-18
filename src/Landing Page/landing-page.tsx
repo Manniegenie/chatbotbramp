@@ -336,6 +336,8 @@ export default function LandingPage() {
               <a href="/faq.html" className="landing-nav-link">FAQs</a>
               <span className="landing-nav-separator" aria-hidden="true">|</span>
               <a href="/support.html" className="landing-nav-link">Support</a>
+              <span className="landing-nav-separator" aria-hidden="true">|</span>
+              <a href="https://bramp.shop" className="landing-nav-link">Storefront</a>
             </div>
             <button
               type="button"
@@ -358,6 +360,7 @@ export default function LandingPage() {
               <a href="#features" className="landing-menu-link" onClick={closeMenu}>Features</a>
               <a href="/faq.html" className="landing-menu-link" onClick={closeMenu}>FAQs</a>
               <a href="/support.html" className="landing-menu-link" onClick={closeMenu}>Support</a>
+              <a href="https://bramp.shop" className="landing-menu-link" onClick={closeMenu}>Storefront</a>
             </div>
           </>
         )}
