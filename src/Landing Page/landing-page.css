@@ -10,18 +10,20 @@
   --nav-bg: #FFFFFF;
   --card-bg: #FFFFFF;
   --accent-color: #017338;
+  --accent-bg: #017338;   /* the green section bands */
 }
 
-/* Dark Mode Variables */
+/* Dark Mode Variables: bramp.shop's night palette (WhatsApp dark) */
 @media (prefers-color-scheme: dark) {
   :root {
-    --text-primary: #FFFFFF;
-    --text-secondary: #a8a8aa;
-    --bg-primary: #121212;
-    --bg-secondary: #1c1c1e;
-    --nav-bg: #1c1c1e;
-    --card-bg: #1c1c1e;
-    --accent-color: #02D96A;
+    --text-primary: #E9EDEF;
+    --text-secondary: #8696A0;
+    --bg-primary: #0B141A;
+    --bg-secondary: #111B21;
+    --nav-bg: #0B141A;
+    --card-bg: #1F2C34;
+    --accent-color: #02D96A;  /* bright green: text, highlights, buttons */
+    --accent-bg: #103928;     /* deep green bands, as on bramp.shop */
   }
 }
 
@@ -184,7 +186,7 @@ body {
 
 /* Next section: accent color background */
 .landing-section-next {
-  background-color: var(--accent-color);
+  background-color: var(--accent-bg);
   min-height: 60vh;
   padding: 4rem 0;
   color: #FFFFFF;
@@ -206,6 +208,17 @@ body {
 
 .landing-section-next-title .features-highlight {
   color: #FFFFFF;
+}
+
+/* Black bands ("One Wallet", Storefront) take bramp.shop's night band in dark mode. */
+@media (prefers-color-scheme: dark) {
+  .landing-section-third { background-color: #111B21; }
+}
+
+/* On the deep green band in dark mode, black headings wouldn't read. */
+@media (prefers-color-scheme: dark) {
+  .landing-section-next-title { color: #E9EDEF; }
+  .landing-section-next-title .features-highlight { color: var(--accent-color); }
 }
 
 /* Storefront section (black band, like "One Wallet") */
