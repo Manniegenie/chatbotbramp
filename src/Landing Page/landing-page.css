@@ -208,6 +208,93 @@ body {
   color: #FFFFFF;
 }
 
+/* Storefront section (black band, like "One Wallet") */
+.landing-storefront {
+  display: grid;
+  gap: 2.5rem;
+  align-items: center;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+@media (min-width: 900px) {
+  .landing-storefront { grid-template-columns: 1.1fr 1fr; gap: 4rem; }
+}
+
+.landing-storefront-copy { text-align: left; }
+
+.landing-storefront-eyebrow {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #02D96A; /* bright green: readable on the black band in both themes */
+}
+
+.landing-section-third-title.landing-storefront-title { text-align: left; line-height: 1.15; }
+.landing-storefront .landing-storefront-title .third-section-highlight { color: #02D96A; }
+
+.landing-storefront-lede {
+  margin: 1.25rem 0 0;
+  max-width: 34rem;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.landing-storefront-points {
+  list-style: none;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.landing-storefront-points li {
+  position: relative;
+  padding-left: 1.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.landing-storefront-points li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  font-weight: 700;
+  color: #02D96A;
+}
+
+.landing-storefront-cta {
+  display: inline-block;
+  margin-top: 2rem;
+  padding: 0.85rem 1.75rem;
+  border-radius: 999px;
+  background: #02D96A;
+  color: #000000;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.landing-storefront-cta:hover { transform: translateY(-1px); opacity: 0.92; }
+
+.landing-storefront-img {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  aspect-ratio: 5 / 4;
+  object-fit: cover;
+  border-radius: 24px;
+}
+
+@media (max-width: 768px) {
+  .landing-section-third-title.landing-storefront-title { font-size: 2rem; }
+}
+
 /* Third section - black background */
 .landing-section-third {
   background-color: #000000;

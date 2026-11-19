@@ -550,6 +550,31 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Storefront - black background like "One Wallet"; the product lives on bramp.shop */}
+      <section id="storefront" className="landing-section landing-section-third" aria-label="Bramp Storefront">
+        <div className="landing-container">
+          <div className="landing-storefront">
+            <div className="landing-storefront-copy">
+              <span className="landing-storefront-eyebrow">Storefront</span>
+              <h2 className="landing-section-third-title landing-storefront-title">
+                Trade while you sleep. Your OTC desk <span className="third-section-highlight">on WhatsApp</span>
+              </h2>
+              <p className="landing-storefront-lede">
+                Share one link. Stella, our WhatsApp assistant, buys USDT, USDC, BTC, ETH, SOL and BNB from your customers
+                at your rate and pays them naira, automatically, any time of day.
+              </p>
+              <ul className="landing-storefront-points">
+                <li>A deposit address for every customer, so payments match themselves</li>
+                <li>Payouts that send themselves the moment a deposit confirms</li>
+                <li>Every customer on record in the Bramp app, ready to filter and export</li>
+              </ul>
+              <a href="https://bramp.shop" className="landing-storefront-cta">Explore Storefront</a>
+            </div>
+            <img src="/storefront.jpg" alt="A trader smiling at a payment alert on his phone" className="landing-storefront-img" loading="lazy" />
+          </div>
+        </div>
+      </section>
+
       {/* Footer - black background, nav links + Download + social media */}
       <footer className="landing-footer">
         <div className="landing-footer-container">
@@ -561,6 +586,8 @@ export default function LandingPage() {
             <a href="/faq.html" className="landing-footer-link">FAQs</a>
             <span className="landing-footer-separator" aria-hidden="true">|</span>
             <a href="/support.html" className="landing-footer-link">Support</a>
+            <span className="landing-footer-separator" aria-hidden="true">|</span>
+            <a href="https://bramp.shop" className="landing-footer-link">Storefront</a>
           </div>
           <div className="landing-footer-legal">
             <a href="/privacy.html" className="landing-footer-link">Privacy Policy</a>
