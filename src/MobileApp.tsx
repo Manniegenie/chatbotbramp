@@ -1248,7 +1248,7 @@ export default function MobileApp() {
                   className="mobile-input mobile-input-with-send"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder={loading ? 'Please wait…' : 'Chat Bramp AI...'}
+                  placeholder={loading ? 'Please wait…' : 'Chat with Stella...'}
                   disabled={loading}
                 />
                 <button

@@ -15,7 +15,7 @@ import featureShot8 from '../assets/IMG_7813.png'
 import featureShot9 from '../assets/IMG_7814.png'
 
 const featureCarouselImages = [
-  { src: featureShot1, alt: 'Ask me anything - Bramp AI chat on the dashboard' },
+  { src: featureShot1, alt: 'Ask me anything - chat with Stella on the dashboard' },
   { src: featureShot2, alt: 'Bramp app walkthrough screenshot' },
   { src: featureShot3, alt: 'Select a token to deposit - Bramp wallet' },
   { src: featureShot4, alt: 'Bramp app walkthrough screenshot' },
